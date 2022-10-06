@@ -5,7 +5,7 @@ import { AriaComTexture } from "../components/core/aria-com-texture";
 import { AriaComFog } from "../components/effects/aria-com-fog";
 import { AriaComCube } from "../components/geometry/aria-com-cube";
 import { AriaComRect } from "../components/geometry/aria-com-rect";
-import { AriaComSkybox } from "../components/legacy/aria-com-skybox";
+import { AriaComSkyboxLegacy } from "../components/legacy/aria-com-skybox-legacy";
 import { AriaComLightSet } from "../components/light/aria-com-light-set";
 import { AriaComPBR } from "../components/material/aria-com-pbr";
 import { AriaComSimplePBR } from "../components/material/aria-com-simple-pbr";
@@ -50,7 +50,7 @@ export class AriaStageFog extends AriaStage{
         camera.registerInteractionEvent()
 
         //Skybox Shader
-        const skyCom = new AriaComSkybox(gl)
+        const skyCom = new AriaComSkyboxLegacy(gl)
         await skyCom.loadTexFromFolder("./skybox/")
         skyCom.initBuffer()
 

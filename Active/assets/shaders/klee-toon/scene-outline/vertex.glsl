@@ -19,7 +19,7 @@ uniform float uCamAspect;
 
 void main(){
     //Vertex
-    const float fTranslation = 0.001;
+    const float fTranslation = 0.0007;
     vNorm = (uModel * vec4(aNorm,0.0)).xyz;
     vec4 extDir = uProj * vec4(vNorm,0.0);
     vec3 extDir3 = normalize(extDir.xyz);

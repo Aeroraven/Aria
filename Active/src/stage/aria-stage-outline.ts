@@ -77,11 +77,11 @@ export class AriaStageToonOutline extends AriaStage{
             .setTex(assets.getTexture("klee/org"))
 
         //Main Scene:
-        const lightProjPos = [-50,70,0]//[-30,100,-20]
+        const lightProjPos = [0,60,30]//[-30,100,-20]
         const kleeScene = (<AriaComScene>AriaComScene.create(gl))
         const kleeModel = (<AriaComModel>AriaComModel.create(gl))
         const stageLight = (<AriaComLightSet>AriaComLightSet.create(gl))
-            .addDirectionalLight([1,-1,0],[10,10,10],lightProjPos)
+            .addDirectionalLight([1,-2,-1],[10,10,10],lightProjPos)
         
         //Floor
         const floorShadowTex = (<AriaComTexture>AriaComTexture.create(gl))
@@ -133,7 +133,7 @@ export class AriaStageToonOutline extends AriaStage{
                 .setNumVertices(kleeLoader.getElements(i))
             const kleeMesh = (<AriaComMesh>AriaComMesh.create(gl))
                 .setCamera(camera)
-                .setShader(assets.getShader("klee/scene"))
+                .setShader(assets.getShader("klee-toon/scene"))
                 .setBuffer(kleeBuffer)
                 .setTexture(AriaComMeshTextureType.acmtDiffuse,kleeBaseTex)
                 .setTexture(AriaComMeshTextureType.acmtSpecular,kleeShadowTex)
@@ -177,7 +177,7 @@ export class AriaStageToonOutline extends AriaStage{
         
         const sceneRecover = ()=>{
             for(let i=0;i<kleeMeshes.length;i++){
-                kleeMeshes[i].setShader(assets.getShader("klee/scene"))
+                kleeMeshes[i].setShader(assets.getShader("klee-toon/scene"))
             }
         }
 
@@ -215,6 +215,7 @@ export class AriaStageToonOutline extends AriaStage{
 
             //FXAA
             clearScene(gl)
+            //kleeScene.renderLightDepthMapS(0)
             fxaaPass.render()
         }
 

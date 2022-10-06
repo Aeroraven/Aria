@@ -39,7 +39,7 @@ WaveResponse sphericalWave(vec2 source,vec2 pos,float freq,float phase,float amp
     dfy*=ampl;
     
     float dfz = 1.0;
-    vec3 waveNormal = normalize(vec3(dfx,dfy,dfz));
+    vec3 waveNormal = (vec3(dfx,dfy,dfz));
 
     WaveResponse ret = WaveResponse(response,waveNormal);
     return ret;
@@ -47,6 +47,7 @@ WaveResponse sphericalWave(vec2 source,vec2 pos,float freq,float phase,float amp
 
 WaveResponse waveFunction(vec2 pos){
     WaveResponse ret = sphericalWave(vec2(-2.0,2.0)*vec2(uCamAspect,1.0),pos,12.0,0.0,0.008,0.0004);
+    ret.normal = normalize(ret.normal);
     return ret;
 }
 

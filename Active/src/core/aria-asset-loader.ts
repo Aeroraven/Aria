@@ -127,6 +127,13 @@ export class AriaAssetLoader{
             {name:"klee-ssr/postmix",v:"./shaders/%name%/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
             {name:"klee-toon/scene-outline",v:"./shaders/%name%/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
             {name:"water-wave",v:"./shaders/%name%/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
+            {name:"gerstner-wave-2/scene",v:"./shaders/%name%/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
+            {name:"gerstner-wave-2/wave",v:"./shaders/%name%/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
+            {name:"gerstner-wave-2/water-depth",v:"./shaders/gerstner-wave-2/wave/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
+            {name:"gerstner-wave-2/floor",v:"./shaders/%name%/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
+            {name:"gerstner-wave-2/zfilter",v:"./shaders/%name%/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
+            {name:"gerstner-wave-2/wave-normal",v:"./shaders/gerstner-wave-2/wave/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
+            {name:"klee-toon/scene",v:"./shaders/%name%/vertex.glsl",f:"./shaders/%name%/fragment.glsl"},
         ]
 
         for(let el of shaderLists){

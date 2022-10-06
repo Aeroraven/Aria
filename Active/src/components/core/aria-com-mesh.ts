@@ -19,7 +19,8 @@ export interface IAriaRenderable{
 export enum AriaComMeshTextureType{
     acmtDiffuse = "texDiffuse",
     acmtSpecular = "texSpecular",
-    acmtNormal = "texNormal"
+    acmtNormal = "texNormal",
+    acmtAlbedo = "texAlbedo"
 }
 
 
@@ -48,12 +49,14 @@ export class AriaComMesh extends AriaComponent implements IAriaRenderable,IAriaC
         this.texUniformMaps = [
             {k:AriaComMeshTextureType.acmtDiffuse,u:"uDiffuse"},
             {k:AriaComMeshTextureType.acmtSpecular,u:"uSpecular"},
-            {k:AriaComMeshTextureType.acmtNormal,u:"uNormal"}
+            {k:AriaComMeshTextureType.acmtNormal,u:"uNormal"},
+            {k:AriaComMeshTextureType.acmtAlbedo,u:"uAlbedo"}
         ]
         this.texUniformOrds = [
             gl.TEXTURE0,
             gl.TEXTURE1,
-            gl.TEXTURE2
+            gl.TEXTURE2,
+            gl.TEXTURE3
         ]
         this.reservedKeys = ["light","buffer","material"]
     }

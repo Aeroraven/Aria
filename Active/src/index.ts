@@ -30,7 +30,7 @@ async function main(){
 
     //Params 
     const chosenStage = (()=>{
-        const defaultString = "waterwave"
+        const defaultString = "standing_in_water"
         const titlePrefix = "Aeroraven Demo"
         const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
             || (window.location.href += "?stage="+defaultString)
@@ -46,7 +46,8 @@ async function main(){
             {key:"vol_light", stage:AriaStageVolumetricFog, name:"Volumetric Lighting"},
             {key:"ssao", stage:AriaStageSSAO, name:"Screen Space Ambient Occlusion"},
             {key:"ssr", stage:AriaStageSSR, name:"Screen Space Reflection"},
-            {key:"ts_outline", stage:AriaStageToonOutline, name:"Toon Shading Outline"},
+            {key:"ts_outline", stage:AriaStageToonOutline, name:"Toon Shading"},
+            {key:"toon", stage:AriaStageToonOutline, name:"Toon Shading"},
             {key:"waterwave", stage:AriaStageWaterwave, name:"Spherical Wave & Refraction"},
         ]
         let defaultType = AriaStage
