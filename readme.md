@@ -30,7 +30,7 @@ Execute the command `npm run build` to build the production bundle.
 
 Open the browser with url param `stage` to choose stages
 
-Available stages are `gltf`, `fog`, `value_noise`, `perlin_noise`, `volume_render`, `fxaa`, `gerstner_wave`, `vol_light`, `ssao`, `ssr`
+Available stages are：
 
 1. `fog`: Foggy Scene (C1S1 - C5S5)
 2. `value_noise`: Shader noise generated using pseudo random function and fractal mixing (C6S1)
@@ -42,8 +42,9 @@ Available stages are `gltf`, `fog`, `value_noise`, `perlin_noise`, `volume_rende
 8. `vol_light`: A simple volumetric lighted scene (C6S6)
 9. `ssao`: Screen space ambient occlusion (C6S7)
 10. `ssr`: Screen space reflection (C6S8)
-11. `ts-outline`: Outline shader (C6S9)
+11. `ts-outline`: Outline shader (C6S9, C6S11)
 11. `waterwave`: Refraction under the circumstance of spherical wave, without depth difference (C6S10)
+11. `fluid`: Fluid Simulation (C6S12)
 
 
 
@@ -63,7 +64,7 @@ The license coincides with the repository to which this project belongs
 
 
 
-### Material Referenced / Acknowledgements
+### Materials Referenced / Acknowledgements
 
 **Wavefront African Model \(Incl. Specular, Diffuse, Normal Texture\)**  : By Dmitry V. Sokolov. In Project "TinyRenderer" https://github.com/ssloy/tinyrenderer
 
@@ -92,3 +93,5 @@ https://zhuanlan.zhihu.com/p/404778222
 http://www.alexandre-pestana.com/volumetric-lights/
 
 https://zhuanlan.zhihu.com/p/415500177
+
+https://blog.csdn.net/zju_fish1996/article/details/52293782
