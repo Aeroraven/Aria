@@ -44,7 +44,7 @@ Available stages are：
 10. `ssr`: Screen space reflection (C6S8)
 11. `ts-outline`: Outline shader (C6S9, C6S11)
 11. `waterwave`: Refraction under the circumstance of spherical wave, without depth difference (C6S10)
-11. `fluid`: Fluid Simulation (C6S12)
+11. `fluid`: Fluid simulation (C6S12、C6S13)  (In progress & with flaws)
 
 
 
