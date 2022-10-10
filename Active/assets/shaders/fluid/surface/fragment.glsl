@@ -1,10 +1,10 @@
 #version 300 es
 precision highp float;
-in mediump vec4 vColor;
-in mediump vec2 vTex;
-in mediump vec3 vNorm;
-in mediump vec4 vFragPos;
-in mediump vec4 vModelPos;
+in highp vec4 vColor;
+in highp vec2 vTex;
+in highp vec3 vNorm;
+in highp vec4 vFragPos;
+in highp vec4 vModelPos;
 
 uniform sampler2D uDiffuse; //Color
 uniform sampler2D uSpecular; //Pos
@@ -24,55 +24,74 @@ void main(){
     int found = 0;
     int invalidCounter = 0;
     const float ETA_FLUID = 1.30;
-    const float MARCH_DELTA_LEN = 0.005;
-    const int MARCH_STEPS = 800;
-    const int MAX_TRIES = 500;
-    const float EPS = 1e-2;
+    
+    const int MARCH_STEPS = 600;
+    const int MAX_TRIES = 400;
+    const int ITERS = 4;
+    const float EPS = 3e-3;
+    const float EPS2 = 1e-3;
+
+    float marchDeltaLen = 0.005;
     vec3 eyeRay = normalize(vec3(0.0,0.0,-1.0)); //OR: vModelPos.xyz;
     vec3 startPoint = vModelPos.xyz;
     vec3 surfNorm = normalize(vNorm);
-    vec3 refractRay = refract(eyeRay,surfNorm,ETA_FLUID);
-    vec3 marchDelta = refractRay * MARCH_DELTA_LEN;
+    vec3 refractRay = normalize(refract(eyeRay,surfNorm,ETA_FLUID));
+    vec3 marchDelta = refractRay * marchDeltaLen;
     vec4 envPos = vec4(0.0);
     vec3 curPos = startPoint;
-
-    for(int i=0;i<MARCH_STEPS;i++){
-        curPos=startPoint + marchDelta * float(i);
-        //Find pos map
-        vec4 curPosProjH = uProj * vec4(curPos,1.0);
-        vec3 curPosProj = curPosProjH.xyz / curPosProjH.w;
-        curPosProj = (curPosProj+1.0)*0.5;
-        envPos = texture(uSpecular,curPosProj.xy); //model pos
-        if(envPos.z-0.1>curPos.z){
-            invalidCounter++;
-            if(invalidCounter > 10){
+    vec3 lastPos = startPoint;
+    for(int T=0;T<ITERS;T++){
+        for(int i=1;i<MARCH_STEPS;i++){
+            curPos=startPoint + marchDelta * float(i);
+            //Find pos map
+            vec4 curPosProjH = uProj * vec4(curPos,1.0);
+            vec3 curPosProj = curPosProjH.xyz / curPosProjH.w;
+            curPosProj = (curPosProj+1.0)*0.5;
+            envPos = texture(uSpecular,curPosProj.xy); //model pos
+            if(curPosProj.x<0.0||curPosProj.x>1.0||curPosProj.y<0.0||curPosProj.y>1.0){
                 break;
             }
+            if(envPos.z>curPos.z){
+                invalidCounter++;
+                if(invalidCounter > 100){
+                    break;
+                }
+            }
+            if(length(envPos.xyz-curPos)<=EPS){
+                vec4 envColor = texture(uDiffuse,curPosProj.xy);
+                fragmentColor = envColor*0.5 + difColor*0.5;
+                found = 1;
+                break;
+            }
+            if(invalidCounter==0){
+                lastPos = curPos;
+            }
         }
-        if(abs(envPos.z-curPos.z)<=EPS){
-            vec4 envColor = texture(uDiffuse,curPosProj.xy);
-            fragmentColor = envColor*0.5 + difColor*0.5;
-            found = 1;
+        if(found==1){
             break;
         }
+        startPoint = lastPos;
+        marchDeltaLen *= 0.25;
+        marchDelta = refractRay * marchDeltaLen;
     }
+    
     //Binary search 
     if(found==0){
-        vec3 lp = curPos;
-        vec3 rp = startPoint;
+        vec3 lp = curPos; //z^
+        vec3 rp = lastPos; //zv
         for(int i=0;i<MAX_TRIES;i++){
             vec3 md = (lp+rp)/2.0;
             vec4 vpCoordH = uProj * vec4(md,1.0);
             vec3 vpCoord = vpCoordH.xyz / vpCoordH.w;
-            vec2 vpTex = vpCoord.xy * 0.5 + 0.5;
+            vec2 vpTex = (vpCoord.xy+1.0)*0.5;
             vec4 vpDest = texture(uSpecular,vpTex);
-            if(abs(vpDest.z - md.z)<EPS){
+            if(length(vpDest.xyz - md)<=EPS2){
                 found=1;
-                vec4 envColor = vec4(texture(uDiffuse,vpTex).xyz,1.5);  
+                vec4 envColor = vec4(texture(uDiffuse,vpTex).xyz,1.0);  
                 fragmentColor = envColor*0.5 + difColor*0.5;
                 break;
             }
-            if(vpDest.z>md.z){
+            if(vpDest.z<=md.z){
                 rp = md;
             }else{
                 lp = md;
@@ -82,4 +101,5 @@ void main(){
     if(found==0){
         fragmentColor = vec4(0.3)*0.5 + difColor*0.5;
     }
+    //fragmentColor = vec4(vec3(refractRay.y),1.0);
 }

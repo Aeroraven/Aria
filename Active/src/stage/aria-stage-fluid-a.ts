@@ -50,15 +50,15 @@ export class AriaStageFluidA extends AriaStage{
 
         //Camera
         camera.registerInteractionEvent();
-        camera.camFront = new Float32Array([-0.24152889847755432, -0.8619058132171631, -0.44584986567497253]);
-        camera.camLookAt = new Float32Array([0.8792697787284851, -0.41054654121398926, 0.24152882397174835, 0, 0, 0.5070682764053345, 0.8619058728218079, 0, -0.47632408142089844, -0.7578478455543518, 0.44584980607032776, 0, 1.6368223428726196, 3.1248891353607178, -7.541825294494629, 1])
-        camera.camPos = new Float32Array( [1.6652722358703613, 4.915811538696289, 6.510369777679443])
+        camera.camFront = new Float32Array([-0.13435085117816925, -0.9426882266998291, -0.30543214082717896]);
+        camera.camLookAt = new Float32Array([0.9153583645820618, -0.3795640468597412, 0.13435086607933044, 0, 0, 0.3336748480796814, 0.9426882266998291, 0, -0.40264007449150085, -0.8628975749015808, 0.3054320812225342, 0, 1.441541314125061, 1.8171310424804688, -1.019317626953125, 1])
+        camera.camPos = new Float32Array( [-0.49286314845085144, 0.3545677661895752, 2.4597525596618652])
         camera.disableInteraction()
         ;(<any>window).cam = camera
 
         //Env Map Buffer
         const fpMarchOpt = AriaFramebufferOption.create().setHdr(true).setScaler(0.9)
-        const fpFramebufferOpt = AriaFramebufferOption.create().setHdr(true).setScaler(1)
+        const fpFramebufferOpt = AriaFramebufferOption.create().setHdr(true).setScaler(2)
         const fpEnvPos = new AriaFramebuffer(gl,fpFramebufferOpt)
         const fpEnvDiffuse = new AriaFramebuffer(gl,fpFramebufferOpt)
         const fpScene = new AriaFramebuffer(gl,fpMarchOpt)
@@ -147,7 +147,7 @@ export class AriaStageFluidA extends AriaStage{
         }
         const floorGeometry = (<AriaComCube>AriaComCube.create(gl))
             .scale(200)
-            .translate(0,-7,0)
+            .translate(0,-6,0)
             .setTopOnly(true)
         const floorBuffer = (<AriaComBuffers>AriaComBuffers.create(gl))
             .addGeometry(floorGeometry)

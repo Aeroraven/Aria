@@ -1,9 +1,9 @@
 #version 300 es
 precision highp float;
-in mediump vec4 vColor;
-in mediump vec2 vTex;
-in mediump vec3 vNorm;
-in mediump vec4 vFragPos;
+in highp vec4 vColor;
+in highp vec2 vTex;
+in highp vec3 vNorm;
+in highp vec4 vFragPos;
 
 uniform sampler2D uDiffuse;
 uniform sampler2D uSpecular;

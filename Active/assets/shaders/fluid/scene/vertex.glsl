@@ -4,10 +4,10 @@ in vec4 aVert;
 in vec2 aTex;
 in vec3 aNorm;
 
-out mediump vec4 vColor;
-out mediump vec2 vTex;
-out mediump vec3 vNorm;
-out mediump vec4 vFragPos;
+out highp vec4 vColor;
+out highp vec2 vTex;
+out highp vec3 vNorm;
+out highp vec4 vFragPos;
 
 
 uniform mat4 uModelInvTrans;
