@@ -42,9 +42,14 @@ Available stages are：
 8. `vol_light`: A simple volumetric lighted scene (C6S6)
 9. `ssao`: Screen space ambient occlusion (C6S7)
 10. `ssr`: Screen space reflection (C6S8)
-11. `ts-outline`: Outline shader (C6S9, C6S11)
-11. `waterwave`: Refraction under the circumstance of spherical wave, without depth difference (C6S10)
-11. `fluid`: Fluid simulation (C6S12、C6S13)  (In progress & with flaws)
+11. `ts-outline`: Toon shader (C6S9, C6S11)
+    - C6S9: Outline depiction using normal vector
+    - C6S11: Binary light ramping
+12. `waterwave`: Refraction under the circumstance of spherical wave, without depth difference (C6S10)
+13. `fluid`: Fluid simulation (C6S12 - C6S14)  (In progress & with flaws)
+    - C6S12: Numerical simulation of disturbed fluid surface
+    - C6S13: Ray-marching based refraction simulation
+    - C6S14: Water caustics
 
 
 
@@ -95,3 +100,5 @@ http://www.alexandre-pestana.com/volumetric-lights/
 https://zhuanlan.zhihu.com/p/415500177
 
 https://blog.csdn.net/zju_fish1996/article/details/52293782
+
+https://madebyevan.com/webgl-water/
