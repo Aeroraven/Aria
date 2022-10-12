@@ -21,7 +21,7 @@ void main(){
     vPosC = (vPosC+1.0)*0.5;
 
     vec3 texColor = pow(texture(uDiffuse, vTex).rgb, vec3(2.2));
-    vec3 light = (uModel * vec4(-1.0,1.0,0.0,0.0)).xyz;
+    vec3 light = (uModel * vec4(0.0,1.0,0.0,0.0)).xyz;
     float ambient = 0.25;
     float diffuse = max(dot(vNorm,light),0.0);
     vec3 mixedColor = texColor * (ambient+diffuse);

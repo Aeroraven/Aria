@@ -102,14 +102,14 @@ export class AriaStageFluidA extends AriaStage{
 
         //Fluid Surface
         let d = 0.005
-        let c = 0.1
-        let t = 0.01
+        let c = 0.08
+        let t = 0.02
         let mu = 0.05
         
         const postOrgRect = (<AriaComFluidSurface>AriaComFluidSurface.create(gl))
             .translate(-5,-4,-2)
-            .scale(20)
-            .setDensity(80)
+            .scale(2.7)
+            .setDensity(120)
             .setFluidParams(c,d,t,mu)
             .initFluid()
 
@@ -190,8 +190,8 @@ export class AriaStageFluidA extends AriaStage{
         } 
 
         //Disturbance
-        postOrgRect.addPointInterference(40,40,0.01)
-        postOrgRect.addPointInterference(20,60,0.01)
+        postOrgRect.addPointInterference(60,60,0.02)
+        postOrgRect.addPointInterference(30,90,0.02)
 
         //Shader Changes
         const setDepthRender = ()=>{

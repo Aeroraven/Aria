@@ -20,7 +20,9 @@ uniform mat4 uLightModel[20];
 out vec4 fragmentColor;
 
 void main(){
-    float oldSize = length(dFdx(vOldPos)) * length(dFdy(vOldPos));
-    float newSize = length(dFdx(vNewPos)) * length(dFdy(vNewPos));
+    vec3 op = vOldPos;
+    vec3 np = vNewPos;
+    float oldSize = length(dFdx(op)) * length(dFdy(op));
+    float newSize = length(dFdx(np)) * length(dFdy(np));
     fragmentColor = vec4(vec3(oldSize/newSize)*0.1,1.0);
 }

@@ -5,4 +5,8 @@ export class AriaStage{
         AriaPageIndicator.getInstance().updateLoadingTip("ERROR: The stage given is invalid")
     }
     public async render(gl:WebGL2RenderingContext):Promise<any>{}
+
+    public updateErrorTip(x:string){
+        AriaPageIndicator.getInstance().updateLoadingTip(x)
+    }
 }

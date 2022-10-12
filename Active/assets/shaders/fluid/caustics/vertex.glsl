@@ -33,7 +33,7 @@ vec3 projIntersect(vec3 startPoint,vec3 refractRay){
     vec3 st = startPoint;
     const int MARCH_STEPS = 600;
     const int ITERS = 16;
-    const float EPS = 2e-3;
+    const float EPS = 3e-3;
     float marchDeltaLen = 0.002;
 
     vec3 marchDelta = refractRay * marchDeltaLen;
@@ -54,7 +54,7 @@ vec3 projIntersect(vec3 startPoint,vec3 refractRay){
             }
             if(envPos.z>curPos.z){
                 invalidCounter++;
-                if(invalidCounter > 100){
+                if(invalidCounter > 50){
                     break;
                 }
             }

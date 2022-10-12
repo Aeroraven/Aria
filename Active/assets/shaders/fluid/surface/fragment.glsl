@@ -20,19 +20,19 @@ out vec4 fragmentColor;
 void main(){
     vec3 lightDir = (vec4(0.0,1.0,0.0,0.0)).xyz;
     float diffuse = max(0.0,dot(normalize(vNorm),lightDir));
-    vec4 difColor = vec4(vec3(0.0,0.5,1.0)*(diffuse*0.5+0.5),1.0);
+    vec4 difColor = vec4(vec3(0.1,0.5,1.0)*(diffuse*0.5+0.5),1.0);
     //Surface Refraction Starts Here
     int found = 0;
     int invalidCounter = 0;
     const float ETA_FLUID = 1.30;
     
-    const int MARCH_STEPS = 600;
-    const int MAX_TRIES = 400;
-    const int ITERS = 5;
-    const float EPS = 2e-3;
+    const int MARCH_STEPS = 500;
+    const int MAX_TRIES = 50;
+    const int ITERS = 4;
+    const float EPS = 4e-3;
     const float EPS2 = 1e-3;
 
-    float marchDeltaLen = 0.005;
+    float marchDeltaLen = 0.006;
     vec3 eyeRay = normalize(vec3(0.0,0.0,-1.0)); //OR: vModelPos.xyz;
     vec3 startPoint = vModelPos.xyz;
     vec3 surfNorm = normalize(vNorm);

@@ -64,7 +64,7 @@ export class AriaComFluidSurface extends AriaComponent implements IAriaComGeomet
         this.pbuf.forEach((buf)=>{
             for(let i=0;i<this.de;i++){
                 for(let j=0;j<this.de;j++){
-                    let lt = [i*this.distance,0,j*this.distance]
+                    let lt = [i/this.de*this.sc,0,j/this.de*this.sc]
                     lt.forEach((el)=>{
                         buf.push(el)
                     })
@@ -95,44 +95,28 @@ export class AriaComFluidSurface extends AriaComponent implements IAriaComGeomet
             return [dx,dy,dz]
         }
 
-        for(let i=0;i<this.de-1;i++){
-            for(let j=0;j<this.de-1;j++){
-                let delta = this.distance
-
+        for(let i=0;i<this.de;i++){
+            for(let j=0;j<this.de;j++){
                 let lts = (i*this.de+j)*3
                 let lt = [this.pbuf[this.pcurBuf][lts],this.pbuf[this.pcurBuf][lts+1],this.pbuf[this.pcurBuf][lts+2]]
-
                 let a1 = getNorm(i,j)
-                let a2 = getNorm(i+1,j)
-                let a3 = getNorm(i+1,j+1)
-                let a4 = getNorm(i,j+1)
-                
-
                 this.orgv.push(lt[0],yCurr(i,j),lt[2])
-                this.orgv.push(lt[0]+delta,yCurr(i+1,j),lt[2])
-                this.orgv.push(lt[0]+delta,yCurr(i+1,j+1),lt[2]+delta)
                 this.texv.push(0,0)
-                this.texv.push(1,0)
-                this.texv.push(1,1)
                 this.norv.push(a1[0],a1[1],a1[2])
-                this.norv.push(a2[0],a2[1],a2[2])
-                this.norv.push(a3[0],a3[1],a3[2])
-
-                this.orgv.push(lt[0]+delta,yCurr(i+1,j+1),lt[2]+delta)
-                this.orgv.push(lt[0],yCurr(i,j+1),lt[2]+delta)
-                this.orgv.push(lt[0],yCurr(i,j),lt[2])
-                this.texv.push(1,1)
-                this.texv.push(0,1)
-                this.texv.push(0,0)
-                this.norv.push(a3[0],a3[1],a3[2])
-                this.norv.push(a4[0],a4[1],a4[2])
-                this.norv.push(a1[0],a1[1],a1[2])
-                
             }
         }
-        for(let i=0;i<this.de*this.de*6;i++){
-            this.elv.push(idx)
-            idx++;
+        const gid = (di:number,dj:number)=>{
+            return (di*this.de+dj)
+        }
+        for(let i=0;i<this.de-1;i++){
+            for(let j=0;j<this.de-1;j++){
+                let ida = gid(i,j)
+                let idb = gid(i+1,j)
+                let idc = gid(i+1,j+1)
+                let idd = gid(i,j+1)
+                this.elv.push(ida,idb,idc,idc,idd,ida)
+                idx+=6
+            }
         }
     }
 
@@ -246,7 +230,9 @@ export class AriaComFluidSurface extends AriaComponent implements IAriaComGeomet
             gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(this.norv),gl.STATIC_DRAW)
             p.getBuffer().set("norm", normBuffer)
 
-            p.getBuffer().setNumVertices(this.de*this.de*6)
+            p.getBuffer().setNumVertices((this.de-1)*(this.de-1)*6)
+
+            console.log(this.de*this.de*6,this.elv.length)
 
         } else {
             throw new Error("Parent should be AriaComBuffers")
