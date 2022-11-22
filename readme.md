@@ -8,7 +8,7 @@ None of reactive front-end frameworks, like react or angular, are used.
 
 
 
-## Foreword
+<!--## Foreword
 
 After years chasing so-called wealth and fame, I think I have gone astray in past few years when I ignored my original oath for myself. We were taught to be subject to requirements, and were called for competition. 
 
@@ -17,7 +17,7 @@ The art of the computer science lies in its freedom, instead of "requirements" a
 It is a shame that some education settings are too outmoded. Take my undergraduate university as an example, it's terrible that teachers asked students to make game in ugly commandline (console), or focus more on documents instead of practicing. It's weird to write mobile apps, backend apps again and again. Only few of lectures deeply attracted me.
 
 This code repository might serve as an observer. It might prove that, as time passes, occupation might be subject to the reality, research tendency might be subject to the worldly pressure, traditional laws might be outdated,  but our heart will stand.
-
+-->
 
 
 ## All Demos
