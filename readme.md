@@ -8,18 +8,6 @@ None of reactive front-end frameworks, like react or angular, are used.
 
 
 
-<!--## Foreword
-
-After years chasing so-called wealth and fame, I think I have gone astray in past few years when I ignored my original oath for myself. We were taught to be subject to requirements, and were called for competition. 
-
-The art of the computer science lies in its freedom, instead of "requirements" and "endless documents". When I retracing my earlier life, I remember that I tried to re-implementing a Minecraft, tried to find simple cross-site leaks of some educational websites. I still remember that a guest teacher attended the OI lecture and said "Love for computer originates from electronic games". This moment impressed me, for it conveyed that "freedom and curiosity are the things adolescence might chase"
-
-It is a shame that some education settings are too outmoded. Take my undergraduate university as an example, it's terrible that teachers asked students to make game in ugly commandline (console), or focus more on documents instead of practicing. It's weird to write mobile apps, backend apps again and again. Only few of lectures deeply attracted me.
-
-This code repository might serve as an observer. It might prove that, as time passes, occupation might be subject to the reality, research tendency might be subject to the worldly pressure, traditional laws might be outdated,  but our heart will stand.
--->
-
-
 ## All Demos
 
 Here are all demos implemented in this repository
