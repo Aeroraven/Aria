@@ -22,7 +22,6 @@ export class AriaShader{
         if(!this.enabled){
             throw new Error("Shader is invalid")
         }
-        //console.log(this.gl.getAttribLocation(this.shaderProgram,key),key)
         return this.gl.getAttribLocation(this.shaderProgram,key)
     }
     getUniform(key:string){

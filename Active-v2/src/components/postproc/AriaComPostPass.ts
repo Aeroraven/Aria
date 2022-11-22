@@ -1,0 +1,55 @@
+import { AriaComponent } from "../../core/AriaComponent";
+import { AriaRenderOps } from "../../core/AriaRenderOps";
+import { AriaShaderOps, AriaShaderUniformTp } from "../../core/AriaShaderOps";
+import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
+import { AriaFramebufferOption } from "../base/AriaComFramebuffer";
+import { IAriaCanavs } from "../base/interface/IAriaCanvas";
+import { IAriaRenderable } from "../base/interface/IAriaRenderable";
+import { AriaComCamera } from "../camera/AriaComCamera";
+import { AriaComGeometry } from "../geometry/AriaComGeometry";
+import { AriaComRectangle } from "../geometry/AriaComRectangle";
+import { AriaComTestGeometry } from "../geometry/AriaComTestGeometry";
+import { AriaComMaterial } from "../material/AriaComMaterial";
+
+export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
+    private _material: AriaComMaterial|null = null
+    private _geometry: AriaComGeometry
+    private _components:  IAriaShaderEmitter[] = []
+
+    protected _inputCanvas: IAriaCanavs[] = []
+    protected _inputCanvasName: string[] = []
+    private _canvasConfig: AriaFramebufferOption = new AriaFramebufferOption()
+
+    constructor(){
+        super("AriaCom/PostPass")
+        this._geometry = new AriaComRectangle(); 
+        const cam = new AriaComCamera()
+        //cam.initInteraction()
+        this._components.push(cam)
+    }
+    public setMaterial(m:AriaComMaterial){
+        this._material = m
+        return this
+    }
+    public addInput(m:IAriaCanavs, w:string="uSourceFrame"){
+        this._inputCanvas.push(m)
+        this._inputCanvasName.push(w)
+        return this
+    }
+    render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
+        AriaRenderOps.clearScreen()
+        this._material!.use()
+        if(this._inputCanvas.length==0){
+            this._logError("Input canvas cannot be empty")
+        }
+        for(let i=0;i<this._inputCanvas.length;i++){
+            AriaShaderOps.defineUniform(this._inputCanvasName[i],AriaShaderUniformTp.ASU_TEX2D,this._inputCanvas[i].getTex())
+        }
+        
+        this._geometry.exportToShader()
+        this._components.forEach((el)=>{
+            el.exportToShader()
+        })
+        AriaRenderOps.renderInstanced(this._geometry.getVertexNumber())
+    }
+}

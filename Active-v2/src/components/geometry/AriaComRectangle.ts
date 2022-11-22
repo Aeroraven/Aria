@@ -1,0 +1,53 @@
+import { AriaShaderOps } from "../../core/AriaShaderOps";
+import { AriaComEBO } from "../base/AriaComEBO";
+import { AriaComVAO } from "../base/AriaComVAO";
+import { AriaComGeometry, AriaGeometryVars } from "./AriaComGeometry";
+
+export class AriaComRectangle extends AriaComGeometry{
+    private posBuf: AriaComVAO
+    private texBuf: AriaComVAO
+    private eleBuf: AriaComEBO
+
+    constructor(){
+        super("AriaCom/Rectangle")
+        this.posBuf = new AriaComVAO()
+        this.eleBuf = new AriaComEBO()
+        this.texBuf = new AriaComVAO()
+
+        this.posBuf.setData([
+          //Front
+          -1, -1,  -1,   
+           1, -1,  -1,   
+           1,  1,  -1,   
+           1,  1,  -1,   
+          -1,  1,  -1,   
+          -1, -1,  -1,   
+        ])
+
+        this.texBuf.setData([
+            //Front
+             0,  0,    
+             1,  0,    
+             1,  1,     
+             1,  1,    
+             0,  1,   
+             0,  0,    
+        ])
+
+        const eleData = []
+        for(let i=0;i<6;i++){
+            eleData.push(i)
+        }
+        this.eleBuf.setData(eleData)
+    }
+
+    public exportToShader(): void {
+        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
+        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_TEXTURE_POSITION, this.texBuf, 2)
+        this.eleBuf.bind()
+    }
+
+    public  getVertexNumber(): number{
+        return 6
+    }
+}
