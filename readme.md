@@ -203,7 +203,7 @@ I might change the engine this repository depends on to some I listed in my pers
 
 ### License
 
-This repository is licensed under AGPL-3.0 License, referenced models and textures are excluded.
+This repository is licensed under GPL-3.0 License, referenced models and textures are excluded.
 
 Licenses for referenced models and textures coincide with the license of original repository they belong to, or the license their author determined.
 
