@@ -96,8 +96,8 @@ export class AriaComGLTFLoader extends AriaComponent{
     private getTexBuffer(id:number):AriaLoaderGLTFBuf{
         const gl = AriaEnv.env
         if(this.model?.meshes[id].texCoord?.buffer instanceof WebGLBuffer){
-            console.log(this.model?.meshes[id].texCoord?.size, this.model?.meshes[id].texCoord?.type)
-            console.log(gl.FLOAT,gl.INT,gl.UNSIGNED_INT)
+            //console.log(this.model?.meshes[id].texCoord?.size, this.model?.meshes[id].texCoord?.type)
+            //console.log(gl.FLOAT,gl.INT,gl.UNSIGNED_INT)
             return {
                 buffer: <WebGLBuffer>this.model?.meshes[id].texCoord?.buffer,
                 size: this.model?.meshes[id].texCoord?.size || 2,
@@ -109,7 +109,7 @@ export class AriaComGLTFLoader extends AriaComponent{
     }
     private getBaseMaterialTexture(id:number){
         const w = <WebGLTexture> this.model?.materials[this.model?.meshes[id].material].baseColorTexture
-        console.log(w)
+        //console.log(w)
         return w
     }
     private getElementBuffer(id:number){

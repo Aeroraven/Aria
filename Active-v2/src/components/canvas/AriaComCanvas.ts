@@ -8,9 +8,9 @@ import { AriaComCanvasManager } from "./AriaComCanvasManager";
 
 export class AriaComCanvas extends AriaComponent implements IAriaCanavs{
     fbo:IAriaGLBuffer<WebGLFramebuffer> & IAriaTextureAttached
-    constructor(scale:number=1,enableHdr:boolean=true){
+    constructor(scale:number=1,enableHdr:boolean=true,enableMipMap:boolean=false){
         super("AriaCom/Canvas")
-        const fboOpt = AriaFramebufferOption.create().setScaler(scale).setHdr(enableHdr)
+        const fboOpt = AriaFramebufferOption.create().setScaler(scale).setHdr(enableHdr).setMipMap(enableMipMap)
         this.fbo = new AriaComFramebuffer(fboOpt)
     }
     compose(proc: () => any) {

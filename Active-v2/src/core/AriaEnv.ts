@@ -13,5 +13,12 @@ export class AriaEnv extends AriaObject{
     public static get canvas() {
         return AriaEnvCore.getInstance().getCanvas()
     }
+
+    public static get docBody(){
+        return document.body
+    }
     
+    public static get doc(){
+        return document
+    }
 }

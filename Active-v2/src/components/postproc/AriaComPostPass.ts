@@ -18,6 +18,7 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
 
     protected _inputCanvas: IAriaCanavs[] = []
     protected _inputCanvasName: string[] = []
+    protected _inputCanvasMap:Map<string,IAriaCanavs> = new Map<string,IAriaCanavs>()
     private _canvasConfig: AriaFramebufferOption = new AriaFramebufferOption()
 
     constructor(){
@@ -34,6 +35,8 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
     public addInput(m:IAriaCanavs, w:string="uSourceFrame"){
         this._inputCanvas.push(m)
         this._inputCanvasName.push(w)
+        this._inputCanvasMap.set(w,m)
+        this._logInfo("Added input :"+w)
         return this
     }
     render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
@@ -42,14 +45,19 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
         if(this._inputCanvas.length==0){
             this._logError("Input canvas cannot be empty")
         }
-        for(let i=0;i<this._inputCanvas.length;i++){
-            AriaShaderOps.defineUniform(this._inputCanvasName[i],AriaShaderUniformTp.ASU_TEX2D,this._inputCanvas[i].getTex())
-        }
+        this._inputCanvasMap.forEach((value,key)=>{
+            AriaShaderOps.defineUniform(key,AriaShaderUniformTp.ASU_TEX2D,value.getTex())
+        })
         
         this._geometry.exportToShader()
         this._components.forEach((el)=>{
             el.exportToShader()
         })
+        if(preTriggers){
+            preTriggers.forEach((el)=>{
+                el()
+            })
+        }
         AriaRenderOps.renderInstanced(this._geometry.getVertexNumber())
     }
 }

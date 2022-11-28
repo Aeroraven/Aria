@@ -176,7 +176,6 @@ float blendTop(int dir){
         }
     }
     
-    
     //Conditions
     leftOffset -= 0.5*texOffset.x;
     rightOffset += 0.5*texOffset.x;
@@ -192,7 +191,6 @@ float blendLeft(int dir){
     float rightOffset = vTex.y;
     int leftDev = 0, rightDev = 0, leftType = 0, rightType = 0;
 
-    
     //Find Bottom Edge: Check Channel Green
     for(int i=0;i<maxSteps;i++){
         float leftPos = -float(i) * texOffset.y + vTex.y;
@@ -281,7 +279,5 @@ void main(){
     float retLeft = blendLeft(0);
     float retRight = blendLeft(1);
 
-
     fragmentColor = clamp(vec4(retLeft,retTop,-retRight,-retBottom),vec4(0.0), vec4(1.0));  
-    
 }

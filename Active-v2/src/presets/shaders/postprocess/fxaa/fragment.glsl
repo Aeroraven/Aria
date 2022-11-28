@@ -158,6 +158,4 @@ void main(){
         fragmentColor = texture(uSourceFrame,vTex);  
         //fragmentColor = vec4(0.0);   
     }
-
-    
 }

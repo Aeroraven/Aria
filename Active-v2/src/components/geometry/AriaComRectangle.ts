@@ -13,7 +13,10 @@ export class AriaComRectangle extends AriaComGeometry{
         this.posBuf = new AriaComVAO()
         this.eleBuf = new AriaComEBO()
         this.texBuf = new AriaComVAO()
-
+        this.generateBuffer()
+        this._valid = true
+    }
+    private generateBuffer(){
         this.posBuf.setData([
           //Front
           -1, -1,  -1,   
@@ -42,6 +45,7 @@ export class AriaComRectangle extends AriaComGeometry{
     }
 
     public exportToShader(): void {
+        super.exportToShader()
         AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
         AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_TEXTURE_POSITION, this.texBuf, 2)
         this.eleBuf.bind()

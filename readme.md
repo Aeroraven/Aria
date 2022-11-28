@@ -4,11 +4,11 @@ This repository is here for **personal purpose**. It serves as the record for th
 
 None of third party libraries which directly encapsulate WebGL interfaces are adopted.
 
-None of reactive front-end frameworks, like react or angular, are used.
+None of reactive front-end frameworks, like react, vue or angular, are used.
 
 
 
-## All Demos
+## I. All Demos
 
 Here are all demos implemented in this repository
 
@@ -25,7 +25,7 @@ These sections contains the basic part and are all implemented in non-object-ori
   - Section 2: Loading Wavefront Object
   - Section 3: Light Mapping
   - Section 4: Spotlight
-- **Chapter 3: Advanced Buffers and Environmental Lighting **
+- **Chapter 3: Advanced Buffers and Environmental Lighting**
   - Section 1: Depth Shader
   - Section 2: Outline Drawing Using Stencil Test
   - Section 3: Convolution & Blur
@@ -38,7 +38,7 @@ These sections contains the basic part and are all implemented in non-object-ori
 - **Chapter 5: Simulation of Better Lighting  II**
   - Section 1: Reviewing Techniques
   - Section 2: PBR
-  - Section 3: Bloom Postprocessing
+  - Section 3: Bloom Postprocessing I (Simple Blur)
   - Section 4: Shadow Map for Directional Lights & PCF
   - Section 5: PBR Using Textures   
 
@@ -90,14 +90,27 @@ This part is implemented in partially-encapsulated WebGL
 The architecture is refactored.
 
 - **Chapter 7: Draw for Liberty**
-  - **Part 1: Anti Aliasing II**
-    - Section 1: Morphological Anti-aliasing (MLAA)
+  
+  - Section 0: Code Refactoring
+  
+  - Section 1: Morphological Anti-aliasing (MLAA)
+  
+  - Section 2: Kawase Blur
+  
+  - Section 3: MipMap Texture
+  
+  - Section 4: Bloom Postprocessing II (Down-sample & Up-sample)
+  
+    
+  
 
 
 
-## Instructions (v2) 
+## II. Instructions/V2
 
 ### How to Run
+
+> ALL ACTIONS SHOULD BE DONE IN FOLDER  `Active-v2`
 
 Install a browser which supports WebGL2
 
@@ -109,29 +122,35 @@ Execute the command `npm run build` to build the production bundle.
 
 ### Available Stages 
 
-It will launch `MLAA` Demo
+Open `http://localhost:1551` when Webpack is ready. Then you can browse available examples in the homepage.
+
+Open the browser with url param `stage` to choose stages is also viable.
+
+Available stages are：
+
+1. `bloom`: Bloom effect using down-sample & up-sample and Gaussian blur (C7S4)
+2. `antialiasing`: Anti-aliasing postprocessing algorithms include FXAA & MLAA (C7S1)
+3. `blur`: Blurring postprocessing algorithms include Gaussian, Kawase and Mipmap (C7S2, C7S3)
 
 
-
-
-
-## Instructions (v1) 
 
 ### Main Dependencies
 
-Nodejs, Webpack, Axios, TypeScript(ts-loader)，gl-matrix-ts, webgl-gltf
+Nodejs, Webpack, Axios, TypeScript(ts-loader)，gl-matrix-ts, webgl-gltf, ts-shader-loader
 
 
+
+## III. Instructions/V1 
 
 ### How to Run
+
+> ALL ACTION SHOULD BE DONE IN FOLDER `Active-v1`.
 
 Install a browser which supports WebGL2
 
 Execute the command `npm run deploy` to establish the debug server.
 
 Execute the command `npm run build` to build the production bundle.
-
-
 
 
 
@@ -168,7 +187,13 @@ All scenes have been implemented in non-optimized version. Do not run on devices
 
 
 
-## Acknowledgement & License
+### Main Dependencies
+
+Nodejs, Webpack, Axios, TypeScript(ts-loader)，gl-matrix-ts, webgl-gltf
+
+
+
+## IV. Acknowledgement & License
 
 ### Future Plans
 
@@ -178,13 +203,15 @@ I might change the engine this repository depends on to some I listed in my pers
 
 ### License
 
-The license coincides with the repository to which this project belongs.
+This repository is licensed under AGPL-3.0 License, referenced models and textures are excluded.
+
+Licenses for referenced models and textures coincide with the license of original repository they belong to, or the license their author determined.
 
 
 
 ### Materials Referenced / Acknowledgements
 
-**Wavefront African Model \(Incl. Specular, Diffuse, Normal Texture\)**  : By Dmitry V. Sokolov. In Project "TinyRenderer" https://github.com/ssloy/tinyrenderer
+**Wavefront African Model and Textures**  : By Dmitry V. Sokolov. In Project "TinyRenderer" https://github.com/ssloy/tinyrenderer
 
 **Bonzai Volume Texture**: By Leandro Barbagallo. In Project "WebGLVolumeRendering" https://github.com/lebarba/WebGLVolumeRendering/
 
@@ -192,7 +219,7 @@ The license coincides with the repository to which this project belongs.
 
 **Wood PBR Texture:** https://freepbr.com/wp-content/uploads/bl/bamboo-wood-semigloss-bl.zip
 
-**Klee GLTF Model**: By INSTICT. In Creation "Klee FBX", Converted by Sktechfab, Re-exported using Blender. https://sketchfab.com/3d-models/klee-fbx-eb4ba3c0d92349cfaf7361e4e55604f0
+**Klee GLTF Model**: By INSTICT. In Creation "Klee FBX", Converted by Sketchfab, Re-exported using Blender. https://sketchfab.com/3d-models/klee-fbx-eb4ba3c0d92349cfaf7361e4e55604f0
 
 
 
@@ -200,18 +227,30 @@ The license coincides with the repository to which this project belongs.
 
 ### Tutorials Referenced / Acknowledgements
 
-https://learnopengl.com/
+**V1 And Before**
 
-https://github.com/lebarba/WebGLVolumeRendering/
+Basic Tutorial: https://learnopengl.com/
 
-https://zhuanlan.zhihu.com/p/431384101
+Volumetric Rendering: https://github.com/lebarba/WebGLVolumeRendering/
 
-https://zhuanlan.zhihu.com/p/404778222
+FXAA: https://zhuanlan.zhihu.com/p/431384101
 
-http://www.alexandre-pestana.com/volumetric-lights/
+Gerstner Wave: https://zhuanlan.zhihu.com/p/404778222
 
-https://zhuanlan.zhihu.com/p/415500177
+Volumetric Light: http://www.alexandre-pestana.com/volumetric-lights/
 
-https://blog.csdn.net/zju_fish1996/article/details/52293782
+Toon Shader: https://zhuanlan.zhihu.com/p/415500177
 
-https://madebyevan.com/webgl-water/
+Fluid Simulation: https://blog.csdn.net/zju_fish1996/article/details/52293782
+
+Caustics: https://madebyevan.com/webgl-water/
+
+**V2**
+
+Mipmap: https://learnopengl.com/
+
+MLAA: https://zhuanlan.zhihu.com/p/342211163
+
+Bloom: https://zhuanlan.zhihu.com/p/525500877
+
+Kawase Blur: https://zhuanlan.zhihu.com/p/125744132

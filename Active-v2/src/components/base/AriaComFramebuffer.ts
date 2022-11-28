@@ -9,8 +9,10 @@ export class AriaFramebufferOption{
     depthMap:boolean
     scaler:number
     regularRect:boolean
+    mipmap:boolean
     constructor(){
-        this.regularRect = false
+        this.mipmap = false
+        this.regularRect = true
         this.enableHdr = true
         this.depthMap = false
         this.scaler = 1
@@ -24,6 +26,10 @@ export class AriaFramebufferOption{
     }
     setHdr(x:boolean){
         this.enableHdr = x
+        return this
+    }
+    setMipMap(x:boolean){
+        this.mipmap = x
         return this
     }
     setDepthMap(x:boolean){
@@ -55,7 +61,7 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaGLBuffer<W
         gl.bindTexture(gl.TEXTURE_2D,this.tex)
         if(this.options.enableHdr){
             if(this.options.regularRect){
-                gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,1024*this.options.scaler,1024*this.options.scaler,0,gl.RGBA,gl.FLOAT,null)
+                gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,2048*this.options.scaler,2048*this.options.scaler,0,gl.RGBA,gl.FLOAT,null)
             }else{
                 gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,window.innerWidth*this.options.scaler,window.innerHeight*this.options.scaler,0,gl.RGBA,gl.FLOAT,null)
             }
@@ -67,8 +73,14 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaGLBuffer<W
         else{
             gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,window.innerWidth*this.options.scaler,window.innerHeight*this.options.scaler,0,gl.RGB,gl.UNSIGNED_BYTE,null)
         }
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
+        if(this.options.mipmap){
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        }else{
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        }
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.bindTexture(gl.TEXTURE_2D,null);
         if(this.options.depthMap){
             gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,this.tex,0)
@@ -83,7 +95,7 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaGLBuffer<W
         }else{
             gl.bindRenderbuffer(gl.RENDERBUFFER,this.rbo)
             if(this.options.regularRect){
-                gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH24_STENCIL8,1024*this.options.scaler,1024*this.options.scaler)
+                gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH24_STENCIL8,2048*this.options.scaler,2048*this.options.scaler)
             }else{
                 gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH24_STENCIL8,window.innerWidth*this.options.scaler,window.innerHeight*this.options.scaler)
             }
@@ -105,7 +117,7 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaGLBuffer<W
     public bind(){
         if(!this.options.depthMap){
             if(this.options.regularRect){
-                this.gl.viewport(0,0,1024*this.options.scaler,1024*this.options.scaler)
+                this.gl.viewport(0,0,2048*this.options.scaler,2048*this.options.scaler)
             }else{
                 this.gl.viewport(0,0,window.innerWidth*this.options.scaler,window.innerHeight*this.options.scaler)
             }
@@ -116,6 +128,11 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaGLBuffer<W
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER,this.fb)
     }
     public unbind(){
+        if(this.options.mipmap){
+            this.gl.bindTexture(this.gl.TEXTURE_2D,this.tex)
+            this.gl.generateMipmap(this.gl.TEXTURE_2D)
+            this.gl.bindTexture(this.gl.TEXTURE_2D,null)
+        }
         this.gl.viewport(0,0,window.innerWidth,window.innerHeight)
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER,null)
     }

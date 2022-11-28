@@ -6,6 +6,7 @@ export class AriaComLoadedGeometry extends AriaComGeometry{
 
     constructor(){
         super("AriaCom/LoadedGeometry")
+        this._valid = true
     }
     record(proc:()=>any, nums:number){
         this._logInfo("Recorded")
@@ -13,6 +14,7 @@ export class AriaComLoadedGeometry extends AriaComGeometry{
         this._elements = nums
     }
     public exportToShader(): void {
+        super.exportToShader()
         this._rec()
     }
     public getVertexNumber(): number {

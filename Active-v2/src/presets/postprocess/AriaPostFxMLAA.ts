@@ -40,9 +40,8 @@ export class AriaPostFxMLAA extends AriaComPostPass{
         this.pass2.addInput(this.canvas1)
         this.pass3.addInput(this.canvas2, "uBlendWeight")
     }
-    public addInputW(m: IAriaCanavs, w: string = "uSourceFrame") {
-        this._inputCanvas.push(m)
-        this._inputCanvasName.push(w)
+    public addInput(m: IAriaCanavs, w: string = "uSourceFrame") {
+        super.addInput(m,w)
         this.pass0.addInput(m)
         this.pass3.addInput(m)
         return this

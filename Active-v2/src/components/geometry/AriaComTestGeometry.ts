@@ -67,9 +67,11 @@ export class AriaComTestGeometry extends AriaComGeometry{
             eleData.push(i)
         }
         this.eleBuf.setData(eleData)
+        this._valid = true
     }
 
     public exportToShader(): void {
+        super.exportToShader()
         AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
         this.eleBuf.bind()
     }
