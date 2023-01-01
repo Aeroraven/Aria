@@ -1,7 +1,7 @@
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
 import vertex from "../shaders/material/single-color/vertex.glsl"
 import fragment from "../shaders/material/single-color/fragment.glsl"
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/AriaShaderOps";
+import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 
 export class AriaSingleColorMaterial extends AriaComShaderMaterial{
     private _r:number = 1.0

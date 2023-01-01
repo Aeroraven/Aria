@@ -90,18 +90,19 @@ This part is implemented in partially-encapsulated WebGL
 The architecture is refactored.
 
 - **Chapter 7: Draw for Liberty**
-  
+
   - Section 0: Code Refactoring
-  
   - Section 1: Morphological Anti-aliasing (MLAA)
-  
   - Section 2: Kawase Blur
-  
   - Section 3: MipMap Texture
-  
   - Section 4: Bloom Postprocessing II (Down-sample & Up-sample)
-  
-    
+  - Section 5: Omni-directional shadow mapping
+  - Section 6: Enhanced Sub-pixel Morphological Anti-aliasing (SMAA) [In Progress]
+
+- **Chapter 8: Revisiting Middle School Courses**
+
+  - Section 1: Particle Motion Simulation [In Progress]
+
   
 
 
@@ -131,12 +132,17 @@ Available stages are：
 1. `bloom`: Bloom effect using down-sample & up-sample and Gaussian blur (C7S4)
 2. `antialiasing`: Anti-aliasing postprocessing algorithms include FXAA & MLAA (C7S1)
 3. `blur`: Blurring postprocessing algorithms include Gaussian, Kawase and Mipmap (C7S2, C7S3)
+3. `skybox`: Just a plain sky box (C3S4)
+3. `pointshadow`: Shadow mapping for a point light (C7S5)
+3. `drop`: Simple simulation of a spring (C8S1)
 
 
 
 ### Main Dependencies
 
-Nodejs, Webpack, Axios, TypeScript(ts-loader)，gl-matrix-ts, webgl-gltf, ts-shader-loader
+**Current:** Nodejs, Webpack, Axios, TypeScript(ts-loader)，gl-matrix-ts, webgl-gltf, ts-shader-loader
+
+**Planning To Remove**: Axios
 
 
 
@@ -203,7 +209,7 @@ I might change the engine this repository depends on to some I listed in my pers
 
 ### License
 
-This repository is licensed under GPL-3.0 License, referenced models and textures are excluded.
+This repository is licensed under AGPL-3.0 License, referenced models and textures are excluded.
 
 Licenses for referenced models and textures coincide with the license of original repository they belong to, or the license their author determined.
 
@@ -231,6 +237,8 @@ Licenses for referenced models and textures coincide with the license of origina
 
 Basic Tutorial: https://learnopengl.com/
 
+SSAO: https://learnopengl.com/
+
 Volumetric Rendering: https://github.com/lebarba/WebGLVolumeRendering/
 
 FXAA: https://zhuanlan.zhihu.com/p/431384101
@@ -249,8 +257,13 @@ Caustics: https://madebyevan.com/webgl-water/
 
 Mipmap: https://learnopengl.com/
 
+Omni-directional Shadow Mapping: https://learnopengl.com/
+
 MLAA: https://zhuanlan.zhihu.com/p/342211163
 
 Bloom: https://zhuanlan.zhihu.com/p/525500877
 
 Kawase Blur: https://zhuanlan.zhihu.com/p/125744132
+
+SMAA: https://iryoku.com/smaa/downloads/SMAA-Enhanced-Subpixel-Morphological-Antialiasing.pdf
+

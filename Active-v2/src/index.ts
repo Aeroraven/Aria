@@ -1,6 +1,9 @@
 import { AriaStageAntialiasing } from "./examples/AriaStageAntialiasing";
 import { AriaStageBloom } from "./examples/AriaStageBloom";
 import { AriaStageBlur } from "./examples/AriaStageBlur";
+import { AriaStageDrop } from "./examples/AriaStageDrop";
+import { AriaStagePointLight } from "./examples/AriaStagePointLight";
+import { AriaStageSkyBox } from "./examples/AriaStageSkybox";
 
 function addEntry(name:string, description:string, redirect:string){
     const w = document.createElement("div")
@@ -37,7 +40,11 @@ async function main(){
     const px = [
         {name:"Antialiasing",redir:"antialiasing",cl:AriaStageAntialiasing,desc:"Implementation of postprocessing antialiasing algorithms including FXAA and MLAA"},
         {name:"Blurring",redir:"blur",cl:AriaStageBlur,desc:"Implementation of some blurring algorithms like gaussian blurs"},
-        {name:"Bloom Effect",redir:"bloom",cl:AriaStageBloom,desc:"Implementation of bloom effect based on postprocess blurring"}
+        {name:"Bloom Effect",redir:"bloom",cl:AriaStageBloom,desc:"Implementation of bloom effect based on postprocess blurring"},
+        {name:"Skybox",redir:"skybox",cl:AriaStageSkyBox,desc:"Implementation of sky box using cube map"},
+        {name:"Point Shadow",redir:"pointshadow",cl:AriaStagePointLight,desc:"Implementation of omnidirectional shadow"},
+        {name:"Dropping Ball",redir:"drop",cl:AriaStageDrop,desc:"A ball in the stage will start dropping"}
+    
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false
@@ -57,3 +64,4 @@ async function main(){
 }
 
 main()
+

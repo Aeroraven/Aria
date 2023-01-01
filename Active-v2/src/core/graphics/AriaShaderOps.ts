@@ -1,8 +1,9 @@
 import { AriaEnv } from "./AriaEnv";
-import { AriaObject } from "./base/AriaObject";
-import { IAriaGLBuffer } from "./interface/IAriaGLBuffer";
-import { IAriaShader } from "./interface/IAriaShader";
-import { IAriaTexture } from "./interface/IAriaTexture";
+import { AriaCallable } from "../base/AriaBaseDefs";
+import { AriaObject } from "../base/AriaObject";
+import { IAriaGLBuffer } from "../interface/IAriaGLBuffer";
+import { IAriaShader } from "../interface/IAriaShader";
+import { IAriaTexture } from "../interface/IAriaTexture";
 
 export enum AriaShaderUniformTp{
     ASU_MAT4 = "mat4",
@@ -10,6 +11,7 @@ export enum AriaShaderUniformTp{
     ASU_VEC4 = "vec4",
     ASU_VEC1 = "vec1",
     ASU_TEX2D = "tex2d",
+    ASU_TEXCUBE = "texcube",
     ASU_VEC1I = "int1"
 }
 
@@ -17,6 +19,7 @@ class AriaShaderManager extends AriaObject{
     private activatedShader:IAriaShader|null = null
     private extendUniformMaps: Map<string,number> = new Map<string,number>()
     private counterUniformMaps: Map<string,number> = new Map<string,number>()
+    private invariantShader:boolean = false
 
     private static instance:AriaShaderManager|null = null
     public static getInst(){
@@ -28,10 +31,19 @@ class AriaShaderManager extends AriaObject{
     constructor(){
         super("AriaShaderManager")
     }
+    public disableShaderChange(){
+        this.invariantShader = true
+    }
+    public enableShaderChange(){
+        this.invariantShader = false
+    }
     public setShader(x:IAriaShader){
-        this.activatedShader = x
+        if(this.invariantShader==false){
+            this.activatedShader = x
+        }
         this.extendUniformMaps = new Map<string,number>()
         this.counterUniformMaps = new Map<string,number>()
+        return this.invariantShader==false
     }
     public getShader(){
         if(this.activatedShader==null){
@@ -66,8 +78,16 @@ export class AriaShaderOps extends AriaObject{
         super("AriaShaderOps")
     }
 
-    public static useShader(shader:IAriaShader){
-        AriaShaderManager.getInst().setShader(shader)
+    public static useShader(shader:IAriaShader, onSuccess:AriaCallable=()=>{}){
+        if(AriaShaderManager.getInst().setShader(shader)){
+            onSuccess()
+        }
+    }
+    public static useInvariantShader(shader:IAriaShader,effRange:()=>any){
+        this.useShader(shader)
+        AriaShaderManager.getInst().disableShaderChange()
+        effRange()
+        AriaShaderManager.getInst().enableShaderChange()
     }
 
     public static defineAttribute(attName:string, value:IAriaGLBuffer, size:number = 3, type = AriaEnv.env.FLOAT){
@@ -174,6 +194,16 @@ export class AriaShaderOps extends AriaObject{
                     (new this())._logError("Invalid type")
                 }
                 break;
+            case AriaShaderUniformTp.ASU_TEXCUBE:
+                    if(isTex(value)){
+                        const v = acShader.allocateTexture()
+                        gl.activeTexture(v)
+                        gl.bindTexture(gl.TEXTURE_CUBE_MAP, value.getTex())
+                        gl.uniform1i(acShader.getUniform(attName),v-AriaEnv.env.TEXTURE0);
+                    }else{
+                        (new this())._logError("Invalid type")
+                    }
+                    break;
             default:
                 (new this())._logError("Invalid type:" + type)
                 break;

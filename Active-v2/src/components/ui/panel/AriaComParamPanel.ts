@@ -1,5 +1,5 @@
 import { AriaComponent } from "../../../core/AriaComponent";
-import { AriaEnv } from "../../../core/AriaEnv";
+import { AriaEnv } from "../../../core/graphics/AriaEnv";
 import { IAriaPair } from "../../../core/interface/IAriaPair";
 import { IAriaInteractive } from "../../base/interface/IAriaInteractive";
 

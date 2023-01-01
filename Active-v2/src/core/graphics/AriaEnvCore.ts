@@ -1,4 +1,4 @@
-import { AriaObject } from "./base/AriaObject";
+import { AriaObject } from "../base/AriaObject";
 
 export class AriaEnvCore extends AriaObject{
     public static inst:AriaEnvCore|null = null

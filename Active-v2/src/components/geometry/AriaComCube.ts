@@ -1,16 +1,38 @@
-import { AriaShaderOps } from "../../core/AriaShaderOps";
+import { AriaShaderOps } from "../../core/graphics/AriaShaderOps";
 import { AriaComEBO } from "../base/AriaComEBO";
 import { AriaComVAO } from "../base/AriaComVAO";
 import { AriaComGeometry, AriaGeometryVars } from "./AriaComGeometry";
 
-export class AriaComTestGeometry extends AriaComGeometry{
+export class AriaComCube extends AriaComGeometry{
     private posBuf: AriaComVAO
+    private normBuf: AriaComVAO
     private eleBuf: AriaComEBO
 
-    constructor(){
-        super("AriaCom/TestGeometry")
+    constructor(negateNorm=false){
+        super("AriaCom/Cube")
         this.posBuf = new AriaComVAO()
+        this.normBuf = new AriaComVAO()
         this.eleBuf = new AriaComEBO()
+
+        const nbfsf = negateNorm?-1:1
+        const nbfs = [
+            [0,0,-1],
+            [0,0,1],
+            [-1,0,0],
+            [1,0,0],
+            [0,-1,0],
+            [0,1,0]
+        ]
+        const nbfst = []
+        for(let i=0;i<6;i++){
+            for(let j=0;j<6;j++){
+                nbfst.push(nbfs[i][0]*nbfsf)
+                nbfst.push(nbfs[i][1]*nbfsf)
+                nbfst.push(nbfs[i][2]*nbfsf)
+                
+            }
+        }
+        this.normBuf.setData(nbfst)
 
         this.posBuf.setData([
            //Back
@@ -73,6 +95,7 @@ export class AriaComTestGeometry extends AriaComGeometry{
     public exportToShader(): void {
         super.exportToShader()
         AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
+        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_NORMAL,this.normBuf)
         this.eleBuf.bind()
     }
 

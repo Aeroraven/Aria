@@ -35,4 +35,7 @@ export class AriaObject{
             })
         });
     }
+    protected _rename(name:string){
+        this.name = name
+    }
 }

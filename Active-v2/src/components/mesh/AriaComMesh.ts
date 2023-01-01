@@ -1,5 +1,5 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaRenderOps } from "../../core/AriaRenderOps";
+import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { IAriaRenderable } from "../base/interface/IAriaRenderable";
 import { IAriaComponentContainer } from "../base/interface/IAriaComponentContainer";
@@ -50,6 +50,6 @@ export class AriaComMesh extends AriaComponent implements IAriaRenderable, IAria
                 el()
             })
         }
-        AriaRenderOps.renderInstanced(this._geometry.getVertexNumber())
+        AriaRenderOps.renderInstancedEntry(this._geometry.getVertexNumber())
     }
 }

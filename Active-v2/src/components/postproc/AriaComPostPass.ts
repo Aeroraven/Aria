@@ -1,6 +1,6 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaRenderOps } from "../../core/AriaRenderOps";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/AriaShaderOps";
+import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
+import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { AriaFramebufferOption } from "../base/AriaComFramebuffer";
 import { IAriaCanavs } from "../base/interface/IAriaCanvas";
@@ -8,7 +8,7 @@ import { IAriaRenderable } from "../base/interface/IAriaRenderable";
 import { AriaComCamera } from "../camera/AriaComCamera";
 import { AriaComGeometry } from "../geometry/AriaComGeometry";
 import { AriaComRectangle } from "../geometry/AriaComRectangle";
-import { AriaComTestGeometry } from "../geometry/AriaComTestGeometry";
+import { AriaComCube } from "../geometry/AriaComCube";
 import { AriaComMaterial } from "../material/AriaComMaterial";
 
 export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
@@ -18,6 +18,7 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
 
     protected _inputCanvas: IAriaCanavs[] = []
     protected _inputCanvasName: string[] = []
+    protected _inputCanvasType: Map<string,AriaShaderUniformTp> = new Map<string,AriaShaderUniformTp>()
     protected _inputCanvasMap:Map<string,IAriaCanavs> = new Map<string,IAriaCanavs>()
     private _canvasConfig: AriaFramebufferOption = new AriaFramebufferOption()
 
@@ -32,10 +33,11 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
         this._material = m
         return this
     }
-    public addInput(m:IAriaCanavs, w:string="uSourceFrame"){
+    public addInput(m:IAriaCanavs, w:string="uSourceFrame", tp:AriaShaderUniformTp = AriaShaderUniformTp.ASU_TEX2D){
         this._inputCanvas.push(m)
         this._inputCanvasName.push(w)
         this._inputCanvasMap.set(w,m)
+        this._inputCanvasType.set(w,tp)
         this._logInfo("Added input :"+w)
         return this
     }
@@ -58,6 +60,6 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
                 el()
             })
         }
-        AriaRenderOps.renderInstanced(this._geometry.getVertexNumber())
+        AriaRenderOps.renderInstancedEntry(this._geometry.getVertexNumber())
     }
 }

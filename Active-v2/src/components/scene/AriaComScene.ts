@@ -1,6 +1,6 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaEnv } from "../../core/AriaEnv";
-import { AriaRenderOps } from "../../core/AriaRenderOps";
+import { AriaEnv } from "../../core/graphics/AriaEnv";
+import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { IAriaChildContainer } from "../base/interface/IAriaChildContainer";
 import { IAriaComponentContainer } from "../base/interface/IAriaComponentContainer";
@@ -31,9 +31,10 @@ IAriaComponentContainer<IAriaShaderEmitter,AriaComScene>, IAriaRenderable, IAria
     }
 
     public render(preTriggers?:(()=>any)[], postTriggers?:(()=>any)[]): void {
-        AriaRenderOps.clearScreen()
+        AriaRenderOps.clearScreenRequest()
+        const epTriggers = new Array<(()=>any)>().concat(this._componentTriggers).concat(preTriggers?preTriggers:[])
         this._renderObjects.forEach((el)=>{
-            el.render(this._componentTriggers)
+            el.render(epTriggers)
         })
     }
     

@@ -1,5 +1,5 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/AriaShaderOps";
+import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { IAriaTexture } from "../../core/interface/IAriaTexture";
 

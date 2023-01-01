@@ -1,7 +1,7 @@
 import { AriaComponent } from "../../core/AriaComponent"
-import { AriaEnv } from "../../core/AriaEnv"
-import { AriaRenderOps } from "../../core/AriaRenderOps"
-import { AriaShaderOps } from "../../core/AriaShaderOps"
+import { AriaEnv } from "../../core/graphics/AriaEnv"
+import { AriaRenderOps } from "../../core/graphics/AriaRenderOps"
+import { AriaShaderOps } from "../../core/graphics/AriaShaderOps"
 import { IAriaShader } from "../../core/interface/IAriaShader"
 
 export class AriaComShader extends AriaComponent implements IAriaShader{
@@ -33,6 +33,9 @@ export class AriaComShader extends AriaComponent implements IAriaShader{
         this.gl = gl
         this.freeTexId = 0
     }
+    getShaderProgram(): WebGLProgram {
+        return this.shaderProgram
+    }
     public getAttribute(key:string){
         if(!this.enabled){
             this._logError("Cannot perform actions on invalid shader")
@@ -59,9 +62,10 @@ export class AriaComShader extends AriaComponent implements IAriaShader{
         if(!this.enabled){
             this._logError("Cannot perform actions on invalid shader")
         }
-        this.freeTexId = 0
-        this.gl.useProgram(this.shaderProgram)
-        AriaShaderOps.useShader(this)
+        AriaShaderOps.useShader(this,()=>{
+            this.freeTexId = 0
+            this.gl.useProgram(this.shaderProgram)
+        })
     }
     public allocateTexture(){
         this.freeTexId++

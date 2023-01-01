@@ -6,7 +6,7 @@ import { AriaComMaterial } from "../components/material/AriaComMaterial";
 import { AriaComShaderMaterial } from "../components/material/AriaComShaderMaterial";
 import { AriaComMesh } from "../components/mesh/AriaComMesh";
 import { AriaComScene } from "../components/scene/AriaComScene";
-import { AriaShaderUniformTp } from "../core/AriaShaderOps";
+import { AriaShaderUniformTp } from "../core/graphics/AriaShaderOps";
 import { AriaStage } from "./AriaStage";
 import { AriaComParamPanel } from "../components/ui/panel/AriaComParamPanel";
 import { AriaPostFxGaussianBlur } from "../presets/postprocess/AriaPostFxGaussianBlur";
@@ -15,7 +15,7 @@ import { AriaSingleColorMaterial } from "../presets/materials/AriaSingleColorMat
 import { AriaComSphere } from "../components/geometry/AriaComSphere";
 import { AriaPostFxKawaseBlur } from "../presets/postprocess/AriaPostFxKawaseBlur";
 import { AriaPostFxSimpleBloom } from "../presets/postprocess/AriaPostFxSimpleBloom";
-import { AriaComTestGeometry } from "../components/geometry/AriaComTestGeometry";
+import { AriaComCube } from "../components/geometry/AriaComCube";
 
 export class AriaStageBloom extends AriaStage{
     constructor(){
@@ -33,7 +33,7 @@ export class AriaStageBloom extends AriaStage{
 
         const meshes:AriaComMesh[] = []
         const materials: AriaComMaterial[] = []
-        const geometry = new AriaComTestGeometry()
+        const geometry = new AriaComCube()
 
         for(let i=0;i<4; i++){
             //const material = new AriaComShaderMaterial(shaderSource)

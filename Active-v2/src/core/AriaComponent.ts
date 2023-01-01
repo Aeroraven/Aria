@@ -26,7 +26,5 @@ export class AriaComponent extends AriaObject{
     protected override _logError(info:string){
         AriaLogger.getInstance().log(info,AriaLogLevel.ERROR, this.name+"[#"+this.id+"]")
     }
-    protected _rename(name:string){
-        this.name = name
-    }
+    
 }

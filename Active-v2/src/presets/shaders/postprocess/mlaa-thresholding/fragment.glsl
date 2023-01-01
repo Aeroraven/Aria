@@ -5,7 +5,7 @@ out vec4 fragmentColor;
 in vec2 vTex;
 
 void main(){
-    const float thres = 0.02;
+    const float thres = 0.04;
     ivec2 texSize = textureSize(uSourceFrame, 0);
     vec2 texOffset = 1.0 / vec2(float(texSize.x),float(texSize.y));
 

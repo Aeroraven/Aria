@@ -1,5 +1,5 @@
 import { AriaEnvCore } from "./AriaEnvCore";
-import { AriaObject } from "./base/AriaObject";
+import { AriaObject } from "../base/AriaObject";
 
 export class AriaEnv extends AriaObject{
     constructor(){
@@ -20,5 +20,13 @@ export class AriaEnv extends AriaObject{
     
     public static get doc(){
         return document
+    }
+
+    public static get width(){
+        return window.innerWidth
+    }
+
+    public static get height(){
+        return window.innerHeight
     }
 }

@@ -1,7 +1,8 @@
 import { mat3, mat4, vec3 } from "gl-matrix-ts";
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/AriaShaderOps";
+import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
+import { IAriaDynamicGeometry } from "../base/interface/IAriaDynamicGeometry";
 import { IAriaGeometry } from "../base/interface/IAriaGeometry";
 
 export enum AriaGeometryVars{
@@ -12,9 +13,12 @@ export enum AriaGeometryVars{
     AGV_NORMAL = "aNormal"
 }
 
-export class AriaComGeometry extends AriaComponent implements IAriaShaderEmitter, IAriaGeometry{
+export class AriaComGeometry extends AriaComponent implements IAriaShaderEmitter, IAriaGeometry, IAriaDynamicGeometry{
     protected _localMat = mat4.create()
     protected _valid = false
+    protected _scaleRecord = [1,1,1]
+    protected _position = [0,0,0]
+
     constructor(name:string){
         super(name)
         mat4.identity(this._localMat)
@@ -33,18 +37,46 @@ export class AriaComGeometry extends AriaComponent implements IAriaShaderEmitter
         tvec[0] = x
         tvec[1] = y
         tvec[2] = z
+
+        this._position[0] += x * this._scaleRecord[0]
+        this._position[1] += y * this._scaleRecord[1]
+        this._position[2] += z * this._scaleRecord[2]
         mat4.translate(this._localMat,this._localMat,tvec)
     }
+    public localTranslateAbsolute(x:number,y:number,z:number){
+        const tvec = vec3.create()
+        tvec[0] = x / this._scaleRecord[0]
+        tvec[1] = y / this._scaleRecord[1]
+        tvec[2] = z / this._scaleRecord[2]
+
+        this._position[0] += x 
+        this._position[1] += y 
+        this._position[2] += z 
+        mat4.translate(this._localMat,this._localMat,tvec)
+    }
+
+    public localPosition(x:number,y:number,z:number){
+        this.localTranslateAbsolute(x-this._position[0],y-this._position[1],z-this._position[2])
+    }
+
     public localScale(r:number|number[]){
         const tvec = vec3.create()
         if(typeof r == 'number'){
             tvec[0] = r
             tvec[1] = r
             tvec[2] = r
+            this._scaleRecord[0] *= r
+            this._scaleRecord[1] *= r
+            this._scaleRecord[2] *= r
+            
         }else{
             tvec[0] = r[0]
             tvec[1] = r[1]
             tvec[2] = r[2]
+            this._scaleRecord[0] *= r[0]
+            this._scaleRecord[1] *= r[1]
+            this._scaleRecord[2] *= r[2]
+            
         }
         mat4.scale(this._localMat,this._localMat,tvec)
     }

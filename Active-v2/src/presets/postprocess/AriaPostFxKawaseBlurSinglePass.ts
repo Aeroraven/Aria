@@ -3,7 +3,7 @@ import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMa
 import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
 import vertex from "../shaders/postprocess/kawase-blur-single/vertex.glsl"
 import fragment from "../shaders/postprocess/kawase-blur-single/fragment.glsl"
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/AriaShaderOps";
+import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 
 export class AriaPostFxKawaseBlurSinglePass extends AriaComPostPass{
     private _blurRange = 0

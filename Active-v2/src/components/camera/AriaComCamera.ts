@@ -1,12 +1,16 @@
 import { vec3,mat4 } from "gl-matrix-ts"
+import { AriaAuxiliaryOps } from "../../core/AriaAuxiliaryOps"
 import { AriaComponent } from "../../core/AriaComponent"
-import { AriaEnv } from "../../core/AriaEnv"
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/AriaShaderOps"
+import { AriaEnv } from "../../core/graphics/AriaEnv"
+import { AriaRenderOps } from "../../core/graphics/AriaRenderOps"
+import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps"
+import { AriaObjArray, AriaCallable } from "../../core/base/AriaBaseDefs"
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter"
 import { IAriaInteractive } from "../base/interface/IAriaInteractive"
+import { IAriaRenderable } from "../base/interface/IAriaRenderable"
+import { IAriaRenderInitiator, IAriaRenderInitiatorOptions } from "../base/interface/IAriaRenderInitiator"
 
-export class AriaComCamera extends AriaComponent implements
-IAriaShaderEmitter, IAriaInteractive{
+export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, IAriaInteractive, IAriaRenderInitiator{
     camPos:Float32Array
     camFront:Float32Array
     camUp:Float32Array
@@ -20,6 +24,8 @@ IAriaShaderEmitter, IAriaInteractive{
     winHeight:number
     roleStep:number
     winListenerEnable:boolean
+    fovAngle:number
+    aspectRatio:number
 
     constructor(){
         super("AriaCom/Camera")
@@ -50,9 +56,24 @@ IAriaShaderEmitter, IAriaInteractive{
         this.camUp[1] = 1.0
         this.camUp[2] = 0.0
 
+        this.fovAngle = 45.0
+        this.aspectRatio = window.innerWidth / window.innerHeight;
+
         vec3.add(this.camLookAtCenter,this.camFront,this.camPos)
         mat4.lookAt(this.camLookAt,this.camPos,this.camLookAtCenter,this.camUp)
     }
+    initiateRender(renderables: AriaObjArray<IAriaRenderable<void>>, options: IAriaRenderInitiatorOptions={}): void {
+        const injectRenderTriggers = [
+            ()=>{
+                this.exportToShader()
+            }
+        ]
+        AriaAuxiliaryOps.iterateObjArray(renderables,(x)=>{
+            x.render(injectRenderTriggers)
+        })
+    }
+
+
     exportToShader(): void {
         const gl = AriaEnv.env
         //Computation
@@ -79,7 +100,8 @@ IAriaShaderEmitter, IAriaInteractive{
         AriaShaderOps.defineUniform("uScrWidth", AriaShaderUniformTp.ASU_VEC1, window.innerWidth)
         AriaShaderOps.defineUniform("uScrHeight", AriaShaderUniformTp.ASU_VEC1, window.innerHeight)
 
-        
+        //Framebuffer Hooks
+        AriaRenderOps.setCameraPos(this.camPos[0],this.camPos[1],this.camPos[2])
     }
     disableInteraction(){
         this.winListenerEnable = false
@@ -95,8 +117,8 @@ IAriaShaderEmitter, IAriaInteractive{
         return proj
     }
     getPerspective(){
-        const fov = 45.0 / 180 * Math.PI;
-        const aspect = 1.0 * window.innerWidth / window.innerHeight;
+        const fov = this.fovAngle / 180 * Math.PI;
+        const aspect = 1.0 * this.aspectRatio
         const zNear = 0.01;
         const zFar = 450;
         const projectionMatrix = mat4.create()
@@ -104,7 +126,7 @@ IAriaShaderEmitter, IAriaInteractive{
         return projectionMatrix
     }
     getAspect(){
-        return window.innerWidth / window.innerHeight;
+        return this.aspectRatio
     }
     getCamPosArray(){
         return [this.camPos[0],this.camPos[1],this.camPos[2]]
@@ -126,6 +148,12 @@ IAriaShaderEmitter, IAriaInteractive{
         r[14] = 0
         r[15] = 1
         return r
+    }
+    setFov(fov:number){
+        this.fovAngle = fov
+    }
+    setAspect(aspect:number){
+        this.aspectRatio = aspect
     }
     setPos(dx:number,dy:number,dz:number){
         this.camPos[0] = dx

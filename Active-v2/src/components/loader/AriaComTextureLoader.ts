@@ -4,7 +4,7 @@ import { IAriaTexture } from "../../core/interface/IAriaTexture"
 import { IAriaComShaderSource } from "../base/interface/IAriaComShaderSource";
 import { AriaComTexture } from "../../components/base/AriaComTexture";
 import { AriaAsyncImageOp } from "../../core/network/AriaAsyncImageOp";
-import { AriaRenderOps } from "../../core/AriaRenderOps";
+import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
 
 export class AriaComTextureLoader extends AriaComponent{
     constructor(){

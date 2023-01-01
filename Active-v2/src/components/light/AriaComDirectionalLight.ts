@@ -1,5 +1,5 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/AriaShaderOps";
+import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { AriaComLight, AriaLightShaderVars } from "./AriaComLight";
 
 export class AriaComDirectionalLight extends AriaComLight{

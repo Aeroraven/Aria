@@ -6,7 +6,7 @@ import { AriaComMaterial } from "../components/material/AriaComMaterial";
 import { AriaComShaderMaterial } from "../components/material/AriaComShaderMaterial";
 import { AriaComMesh } from "../components/mesh/AriaComMesh";
 import { AriaComScene } from "../components/scene/AriaComScene";
-import { AriaShaderUniformTp } from "../core/AriaShaderOps";
+import { AriaShaderUniformTp } from "../core/graphics/AriaShaderOps";
 import { AriaStage } from "./AriaStage";
 import { AriaComParamPanel } from "../components/ui/panel/AriaComParamPanel";
 import { AriaPostFxGaussianBlur } from "../presets/postprocess/AriaPostFxGaussianBlur";

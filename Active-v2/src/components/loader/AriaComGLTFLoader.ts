@@ -1,7 +1,7 @@
 import * as gltf from 'webgl-gltf';
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaEnv } from '../../core/AriaEnv';
-import { AriaShaderOps } from '../../core/AriaShaderOps';
+import { AriaEnv } from '../../core/graphics/AriaEnv';
+import { AriaShaderOps } from '../../core/graphics/AriaShaderOps';
 import { AriaComEBO } from '../base/AriaComEBO';
 import { AriaComTexture } from '../base/AriaComTexture';
 import { AriaComVAO } from '../base/AriaComVAO';

@@ -1,5 +1,5 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaEnv } from "../../core/AriaEnv";
+import { AriaEnv } from "../../core/graphics/AriaEnv";
 import { IAriaGLBuffer } from "../../core/interface/IAriaGLBuffer";
 
 export class AriaComEBO extends AriaComponent implements IAriaGLBuffer{

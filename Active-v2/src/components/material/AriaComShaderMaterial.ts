@@ -1,7 +1,6 @@
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/AriaShaderOps";
+import { AriaShaderOps } from "../../core/graphics/AriaShaderOps";
+import { AriaCallable } from "../../core/base/AriaBaseDefs";
 import { IAriaShader } from "../../core/interface/IAriaShader";
-import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
-import { IAriaTexture } from "../../core/interface/IAriaTexture";
 import { AriaComShader } from "../base/AriaComShader";
 import { IAriaComShaderSource } from "../base/interface/IAriaComShaderSource";
 import { AriaComMaterial } from "./AriaComMaterial";
@@ -31,5 +30,17 @@ export class AriaComShaderMaterial extends AriaComMaterial{
         }
         this._shader.use()
         this.exportToShader()
+    }
+
+    public withShader(callable:AriaCallable){
+        if(this._shader==null){
+            this._logError("Cannot use empty shader")
+            return
+        }
+        this._shader.use()
+        AriaShaderOps.useInvariantShader(this._shader,()=>{
+            this.exportToShader()
+            callable()
+        })
     }
 }
