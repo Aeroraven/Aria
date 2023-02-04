@@ -2,13 +2,17 @@
 
 This repository is here for **personal purpose**. It serves as the record for the time I used to learn graphical algorithms, or you can say more materialistically, web techniques.
 
-None of third party libraries which directly encapsulate WebGL interfaces are adopted.
+None of third party libraries which directly encapsulate WebGL interfaces for drawing are adopted.
 
 None of reactive front-end frameworks, like react, vue or angular, are used.
 
+## I. Demo
+**Demo:** https://aeroraven.github.io/altina-cg-b/ (Resource loading subjects to your network conditions)
+
+**Legacy Demo:** https://aeroraven.github.io/altina-cg-a/ (Resource loading subjects to your network conditions)
 
 
-## I. All Demos
+## II. All Demos
 
 Here are all demos implemented in this repository
 
@@ -98,16 +102,19 @@ The architecture is refactored.
   - Section 4: Bloom Postprocessing II (Down-sample & Up-sample)
   - Section 5: Omni-directional shadow mapping
   - Section 6: Enhanced Sub-pixel Morphological Anti-aliasing (SMAA) [In Progress]
+  - Section 7: Voxelization (Only available in demo currently)
 
 - **Chapter 8: Revisiting Middle School Courses**
 
   - Section 1: Particle Motion Simulation [In Progress]
+  - Section 2: Cloth Simulation [In Progress] (Only available in demo currently)
+
 
   
 
 
 
-## II. Instructions/V2
+## III. Instructions/V2
 
 ### How to Run
 
@@ -140,13 +147,13 @@ Available stages are：
 
 ### Main Dependencies
 
-**Current:** Nodejs, Webpack, Axios, TypeScript(ts-loader)，gl-matrix-ts, webgl-gltf, ts-shader-loader
+**Current:** Nodejs, Webpack, Axios, TypeScript(ts-loader)，gl-matrix-ts, webgl-gltf, ts-shader-loader, webpack-obfuscator
 
 **Planning To Remove**: Axios
 
 
 
-## III. Instructions/V1 
+## IV. Instructions/V1 
 
 ### How to Run
 
@@ -199,7 +206,7 @@ Nodejs, Webpack, Axios, TypeScript(ts-loader)，gl-matrix-ts, webgl-gltf
 
 
 
-## IV. Acknowledgement & License
+## V. Acknowledgement & License
 
 ### Future Plans
 
