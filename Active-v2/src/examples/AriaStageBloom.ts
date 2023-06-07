@@ -3,19 +3,14 @@ import { AriaComCanvas } from "../components/canvas/AriaComCanvas";
 import { AriaComGLTFLoader } from "../components/loader/AriaComGLTFLoader";
 import { AriaComShaderLoader } from "../components/loader/AriaComShaderLoader";
 import { AriaComMaterial } from "../components/material/AriaComMaterial";
-import { AriaComShaderMaterial } from "../components/material/AriaComShaderMaterial";
 import { AriaComMesh } from "../components/mesh/AriaComMesh";
 import { AriaComScene } from "../components/scene/AriaComScene";
 import { AriaShaderUniformTp } from "../core/graphics/AriaShaderOps";
 import { AriaStage } from "./AriaStage";
 import { AriaComParamPanel } from "../components/ui/panel/AriaComParamPanel";
-import { AriaPostFxGaussianBlur } from "../presets/postprocess/AriaPostFxGaussianBlur";
-import { AriaPostFxGaussianBloom } from "../presets/postprocess/AriaPostFxGaussianBloom";
 import { AriaSingleColorMaterial } from "../presets/materials/AriaSingleColorMaterial";
-import { AriaComSphere } from "../components/geometry/AriaComSphere";
-import { AriaPostFxKawaseBlur } from "../presets/postprocess/AriaPostFxKawaseBlur";
 import { AriaPostFxSimpleBloom } from "../presets/postprocess/AriaPostFxSimpleBloom";
-import { AriaComCube } from "../components/geometry/AriaComCube";
+import { AriaComCube } from "../components/geometry/primary/AriaComCube";
 
 export class AriaStageBloom extends AriaStage{
     constructor(){

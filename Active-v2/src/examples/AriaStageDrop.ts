@@ -1,5 +1,5 @@
 import { AriaComCamera } from "../components/camera/AriaComCamera";
-import { AriaComSphere } from "../components/geometry/AriaComSphere";
+import { AriaComSphere } from "../components/geometry/primary/AriaComSphere";
 import { AriaComAmbientLight } from "../components/light/AriaComAmbientLight";
 import { AriaComPointLight } from "../components/light/AriaComPointLight";
 import { AriaComMesh } from "../components/mesh/AriaComMesh";

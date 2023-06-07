@@ -2,7 +2,7 @@ import { AriaComMesh } from "./AriaComMesh";
 import vertex from '../assets/shaders/skybox/vertex.glsl'
 import fragment from '../assets/shaders/skybox/fragment.glsl'
 import { AriaComShaderMaterial } from "../material/AriaComShaderMaterial";
-import { AriaComCube } from "../geometry/AriaComCube";
+import { AriaComCube } from "../geometry/primary/AriaComCube";
 import { IAriaTexture } from "../../core/interface/IAriaTexture";
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";

@@ -1,9 +1,9 @@
 import { mat3, mat4, vec3 } from "gl-matrix-ts";
-import { AriaComponent } from "../../core/AriaComponent";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
-import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
-import { IAriaDynamicGeometry } from "../base/interface/IAriaDynamicGeometry";
-import { IAriaGeometry } from "../base/interface/IAriaGeometry";
+import { AriaComponent } from "../../../core/AriaComponent";
+import { AriaShaderOps, AriaShaderUniformTp } from "../../../core/graphics/AriaShaderOps";
+import { IAriaShaderEmitter } from "../../../core/interface/IAriaShaderEmitter";
+import { IAriaDynamicGeometry } from "../../base/interface/IAriaDynamicGeometry";
+import { IAriaGeometry } from "../../base/interface/IAriaGeometry";
 
 export enum AriaGeometryVars{
     AGV_POSITION = "aPos",
@@ -22,6 +22,9 @@ export class AriaComGeometry extends AriaComponent implements IAriaShaderEmitter
     constructor(name:string){
         super(name)
         mat4.identity(this._localMat)
+    }
+    getLocalPosition(): number[] {
+        return [this._position[0],this._position[1],this._position[2]]
     }
     public localRotateX(r:number){
         mat4.rotateX(this._localMat,this._localMat,r)

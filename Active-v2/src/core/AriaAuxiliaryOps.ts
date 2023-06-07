@@ -14,4 +14,21 @@ export class AriaAuxiliaryOps extends AriaObject{
             callable(x)
         }
     }
+    public static splitArray<T=any>(x:T[],w:number):T[][]{
+        let res:T[][] = []
+        let v:T[] = []
+        let counter = 0
+        for(let i=0;i<x.length;i++){
+            v.push(x[i])
+            counter++
+            if(counter==w){
+                res.push(v)
+                v = []
+                counter=0
+            }
+        }
+        res.push(v)
+        return res
+
+    }
 }

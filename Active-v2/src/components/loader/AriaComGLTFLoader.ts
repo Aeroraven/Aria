@@ -6,13 +6,18 @@ import { AriaComEBO } from '../base/AriaComEBO';
 import { AriaComTexture } from '../base/AriaComTexture';
 import { AriaComVAO } from '../base/AriaComVAO';
 import { IAriaModelContent } from '../base/interface/IAriaModelContent';
-import { AriaGeometryVars } from '../geometry/AriaComGeometry';
-import { AriaComLoadedGeometry } from '../geometry/AriaComLoadedGeometry';
+import { AriaGeometryVars } from '../geometry/base/AriaComGeometry';
+import { AriaComLoadedGeometry } from '../geometry/primary/AriaComLoadedGeometry';
 
 interface AriaLoaderGLTFBuf{
     buffer: WebGLBuffer,
     size:number,
     type:number
+}
+
+interface AriaLoaderGLTFMeshData{
+    position:Float32Array
+    elements:Uint16Array
 }
 
 export class AriaComGLTFLoader extends AriaComponent{
@@ -28,16 +33,30 @@ export class AriaComGLTFLoader extends AriaComponent{
         const mesh = model.meshes[<number>model.nodes[0].mesh]
         this.model = model
         this.mesh = mesh
-        const ret:IAriaModelContent = {
+        const ret:IAriaModelContent<AriaLoaderGLTFMeshData> = {
             textures:[],
-            geometries: []
+            geometries: [],
+            bufData:[]
         }
         this._logInfo("Found " +this.getTotalMeshes() + " Meshes")
         for(let i=0;i<this.getTotalMeshes();i++){
             const ng = new AriaComLoadedGeometry()
 
+            
+
+            const eleBufT = this.getElementBuffer(i)
+            const eleBuf = new AriaComEBO(eleBufT,this.getElements(i))
+            const eleBufRaw = eleBuf.getRawData()
+
             const posBufT = this.getPosBuffer(i)
-            const posBuf = new AriaComVAO(posBufT.buffer)
+            const posBufMax = (()=>{
+                let idx = -1
+                for(let i=0;i<eleBufRaw.length;i++){
+                    idx = Math.max(eleBufRaw[i],idx)
+                }
+                return idx+1
+            })()
+            const posBuf = new AriaComVAO(posBufT.buffer,posBufMax)
 
             const texBufT = this.getTexBuffer(i)
             const texBuf = new AriaComVAO(texBufT.buffer)
@@ -45,8 +64,10 @@ export class AriaComGLTFLoader extends AriaComponent{
             const normBufT = this.getNormalBuffer(i)
             const normBuf = new AriaComVAO(normBufT.buffer)
 
-            const eleBufT = this.getElementBuffer(i)
-            const eleBuf = new AriaComEBO(eleBufT)
+            ret.bufData.push({
+                position:posBuf.getRawData(),
+                elements:eleBuf.getRawData()
+            })
 
             ng.record(()=>{
                 AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, posBuf, posBufT.size, posBufT.type)

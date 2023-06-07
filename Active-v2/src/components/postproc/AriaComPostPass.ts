@@ -6,9 +6,9 @@ import { AriaFramebufferOption } from "../base/AriaComFramebuffer";
 import { IAriaCanavs } from "../base/interface/IAriaCanvas";
 import { IAriaRenderable } from "../base/interface/IAriaRenderable";
 import { AriaComCamera } from "../camera/AriaComCamera";
-import { AriaComGeometry } from "../geometry/AriaComGeometry";
-import { AriaComRectangle } from "../geometry/AriaComRectangle";
-import { AriaComCube } from "../geometry/AriaComCube";
+import { AriaComGeometry } from "../geometry/base/AriaComGeometry";
+import { AriaComRectangle } from "../geometry/primary/AriaComRectangle";
+import { AriaComCube } from "../geometry/primary/AriaComCube";
 import { AriaComMaterial } from "../material/AriaComMaterial";
 
 export class AriaComPostPass extends AriaComponent implements IAriaRenderable{

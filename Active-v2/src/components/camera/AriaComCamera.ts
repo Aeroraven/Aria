@@ -149,6 +149,9 @@ export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, 
         r[15] = 1
         return r
     }
+    setRoleStep(step:number){
+        this.roleStep = step
+    }
     setFov(fov:number){
         this.fovAngle = fov
     }

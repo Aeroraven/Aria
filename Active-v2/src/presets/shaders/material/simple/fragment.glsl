@@ -31,7 +31,7 @@ void main(){
         
         if(uLightType[i]==0){
             //Directional Light
-            diffuse += uLightColor[i] * max(0.0, dot(-uModel*normalize(vec4(uLightPos[i],0.0)), normalize(vNorm.xyzw)));
+            diffuse += uLightColor[i] * max(0.0, dot(-uModel*normalize(vec4(uLightPos[i],0.0)), vec4(normalize(vNorm.xyz),0.0)));
         }else if(uLightType[i]==1){
             //Point Light
             vec4 absLightPosH = vec4(uLightPos[i],1.0);
@@ -42,7 +42,7 @@ void main(){
             vec3 modelLightPos = modelLightPosH.xyz / modelLightPosH.w;
             vec3 indirModel = vModelPos.xyz-modelLightPos;
 
-            float power = max(0.0,dot(normalize(indirModel),normalize(vNorm.xyz)));
+            float power = max(0.0,-dot(normalize(indirModel),normalize(vNorm.xyz)));
             float attn = 1.0/(length(indir)*0.5+1.0); 
             //Check shadow
             float occlusion = 1.0;
@@ -80,5 +80,6 @@ void main(){
         
     }
 
-    fragmentColor = vec4(diffuse * uPresetColor);
+    fragmentColor = vec4(diffuse*uPresetColor);
+    //fragmentColor = vec4(normalize(vNorm.xyz),1.0);
 }

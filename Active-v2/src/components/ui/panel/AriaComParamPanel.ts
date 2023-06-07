@@ -9,6 +9,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
     private _fpsTimeStamp = Date.now()
     private _fps = 0
     private _fpsCounter = 0
+    private _status = ""
 
     constructor(){
         super("Aria/ParamPanel")
@@ -91,6 +92,32 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
 
         setInterval(()=>{
             labelx.innerHTML = this._fps + ""
+        },200)
+
+        const block = AriaEnv.doc.createElement("div")
+        block.appendChild(label)
+        block.appendChild(labelx)
+        this.el.appendChild(block)
+    }
+    setStatus(x:string){
+        this._status = x
+    }
+    addStatusBar(name:string){
+        const label = AriaEnv.doc.createElement("span")
+        label.innerHTML = name
+        label.style.width = "150px"
+        label.style.display = "inline-block"
+        label.style.fontFamily = "serif"
+
+        const labelx = AriaEnv.doc.createElement("span")
+        labelx.innerHTML = "-"
+        labelx.style.width = "150px"
+        labelx.style.display = "inline-block"
+        labelx.style.fontFamily = "serif"
+        labelx.id = "parampanel-aria-identifier-loading-bar-"+this._id
+
+        setInterval(()=>{
+            labelx.innerHTML = this._status
         },200)
 
         const block = AriaEnv.doc.createElement("div")

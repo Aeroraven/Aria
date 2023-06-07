@@ -1,7 +1,9 @@
 import { AriaObject } from "../base/AriaObject";
+import { AriaArithmetic } from "./AriaArithmetic";
+import { IAriaLinearStruct } from "./IAriaLinearStruct";
 
 
-export class AriaVector extends AriaObject{
+export class AriaVector extends AriaObject implements IAriaLinearStruct{
     protected _value:number[] = []
     protected _dimen:number = 0
     constructor(n:number|number[]|undefined){
@@ -102,7 +104,7 @@ export class AriaVector extends AriaObject{
         }
         return this
     }
-
+    
     public div(x:AriaVector|number):AriaVector{
         let ret = new AriaVector(this._dimen)
         for(let i=0;i<this._dimen;i++){
@@ -181,6 +183,12 @@ export class AriaVector extends AriaObject{
             }
         }
     }
+    public dim(){
+        return this._dimen
+    }
+    public cross(x:AriaVector){
+        return new AriaVector(AriaArithmetic.cross(this._value,x._value))
+    }
 }
 
 export class AriaVec3 extends AriaVector{
@@ -196,3 +204,4 @@ export class AriaVec3 extends AriaVector{
 }
 
 export type AriaVec3C = AriaVec3 | number[]
+export type AriaVecC = AriaVector | number[]

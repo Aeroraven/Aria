@@ -16,6 +16,23 @@ export class AriaObject{
     protected _logError(info:string){
         AriaLogger.getInstance().log(info,AriaLogLevel.ERROR, this.name)
     }
+
+    protected static _logInfoS(info:string){
+        AriaLogger.getInstance().log(info,AriaLogLevel.INFO, this.name)
+    }
+    protected static _logWarnS(info:string){
+        AriaLogger.getInstance().log(info,AriaLogLevel.WARN, this.name)
+    }
+    protected static _logErrorS(info:string){
+        AriaLogger.getInstance().log(info,AriaLogLevel.ERROR, this.name)
+    }
+
+    protected _assert(cond:((...args:any[])=>boolean)|boolean,info:string){
+        let cd =  (typeof cond == "boolean")?cond : cond()
+        if(!cd){
+            AriaLogger.getInstance().log(info,AriaLogLevel.ERROR, "Assertion Error:"+this.name)
+        }
+    }
     protected _mixin(derivedCtor: any, baseCtors: any[]){{
         if(this.doneMixin==false){
             if(this instanceof derivedCtor){

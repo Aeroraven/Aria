@@ -78,6 +78,12 @@ export class AriaRenderOps extends AriaObject{
     constructor(){
         super("AriaRenderOps")
     }
+    public static readArrayBuffer(destBuffer:ArrayBuffer){
+        AriaEnv.env.getBufferSubData(AriaEnv.env.ARRAY_BUFFER,0,new Float32Array(destBuffer))
+    }
+    public static readElementBuffer(destBuffer:ArrayBuffer){
+        AriaEnv.env.getBufferSubData(AriaEnv.env.ELEMENT_ARRAY_BUFFER,0,new Uint16Array(destBuffer))
+    }
     public static getCubicLookat(face:number){
         return AriaCameraPositionManager.getInst().getCubeMapLookat(face)
     }
@@ -95,7 +101,12 @@ export class AriaRenderOps extends AriaObject{
         return AriaFramebufferManager.getInst().getFramebuffer()
     }
     public static clearScreenRequest(){
-        return AriaFramebufferManager.getInst().getFramebuffer()?.onClear()
+        let frame = AriaFramebufferManager.getInst().getFramebuffer()
+        if(frame===null){
+            this.clearScreen()
+        }else{
+            frame.onClear()
+        }
     }
     public static clearScreen(color:number[] = [0,0,0,0]){
         const gl = AriaEnv.env

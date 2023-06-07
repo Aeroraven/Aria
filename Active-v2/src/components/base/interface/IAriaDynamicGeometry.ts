@@ -5,4 +5,6 @@ export interface IAriaDynamicGeometry{
     localTranslate(x:number,y:number,z:number):void
     localTranslateAbsolute(x:number,y:number,z:number):void
     localPosition(x:number,y:number,z:number):void
+
+    getLocalPosition():number[]
 }

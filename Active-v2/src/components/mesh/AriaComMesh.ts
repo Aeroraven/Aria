@@ -3,7 +3,7 @@ import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { IAriaRenderable } from "../base/interface/IAriaRenderable";
 import { IAriaComponentContainer } from "../base/interface/IAriaComponentContainer";
-import { AriaComGeometry } from "../geometry/AriaComGeometry";
+import { AriaComGeometry } from "../geometry/base/AriaComGeometry";
 import { AriaComMaterial } from "../material/AriaComMaterial";
 import { IAriaGeometry } from "../base/interface/IAriaGeometry";
 

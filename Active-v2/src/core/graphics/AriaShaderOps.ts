@@ -90,7 +90,7 @@ export class AriaShaderOps extends AriaObject{
         AriaShaderManager.getInst().enableShaderChange()
     }
 
-    public static defineAttribute(attName:string, value:IAriaGLBuffer, size:number = 3, type = AriaEnv.env.FLOAT){
+    public static defineAttribute(attName:string, value:IAriaGLBuffer, size:number = 3, type:number = AriaEnv.env.FLOAT){
         const gl = AriaEnv.env
         const acShader = AriaShaderManager.getInst().getShader()
         gl.bindBuffer(gl.ARRAY_BUFFER, value.getGLObject())

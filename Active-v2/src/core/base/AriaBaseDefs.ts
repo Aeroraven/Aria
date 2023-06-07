@@ -2,6 +2,8 @@ export type AriaCallable<T=any> = ()=>T
 export type AriaObjArray<T> = T|T[]
 export type AriaObjArrayIterCallable<T> = (x:T)=>any
 
+export type AriaRandomCallable<T> = ()=>T
+
 export class AriaRef<T>{
     private _value:T
     constructor(x:T){

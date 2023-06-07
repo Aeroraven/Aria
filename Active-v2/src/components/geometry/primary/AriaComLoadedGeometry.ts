@@ -1,4 +1,4 @@
-import { AriaComGeometry } from "./AriaComGeometry";
+import { AriaComGeometry } from "../base/AriaComGeometry";
 
 export class AriaComLoadedGeometry extends AriaComGeometry{
     private _rec:()=>any = ()=>{}

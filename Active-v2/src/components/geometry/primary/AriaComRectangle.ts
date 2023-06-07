@@ -1,7 +1,7 @@
-import { AriaShaderOps } from "../../core/graphics/AriaShaderOps";
-import { AriaComEBO } from "../base/AriaComEBO";
-import { AriaComVAO } from "../base/AriaComVAO";
-import { AriaComGeometry, AriaGeometryVars } from "./AriaComGeometry";
+import { AriaShaderOps } from "../../../core/graphics/AriaShaderOps";
+import { AriaComEBO } from "../../base/AriaComEBO";
+import { AriaComVAO } from "../../base/AriaComVAO";
+import { AriaComGeometry, AriaGeometryVars } from "../base/AriaComGeometry";
 
 export class AriaComRectangle extends AriaComGeometry{
     private posBuf: AriaComVAO

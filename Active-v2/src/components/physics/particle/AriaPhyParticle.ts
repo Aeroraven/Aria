@@ -1,5 +1,5 @@
 import { AriaComponent } from "../../../core/AriaComponent";
-import { AriaVec3 } from "../../../core/arithmetic/AriaVector";
+import { AriaVec3, AriaVec3C } from "../../../core/arithmetic/AriaVector";
 
 export class AriaPhyParticle extends AriaComponent{
     protected _position:AriaVec3 = AriaVec3.create()
@@ -7,7 +7,7 @@ export class AriaPhyParticle extends AriaComponent{
     protected _acceleration:AriaVec3 = AriaVec3.create()
     protected _damping:number = 0.995
     protected _mass:number = 1
-    protected _forceAccum:AriaVec3 = AriaVec3.create()
+    public _forceAccum:AriaVec3 = AriaVec3.create()
 
     constructor(){
         super("AriaPhy/Particle")
@@ -15,9 +15,14 @@ export class AriaPhyParticle extends AriaComponent{
 
     public integrate(duration:number){
         this.position.addScaled_(this.velocity,duration)
+        
+
         let accu = AriaVec3.create()
         accu.fromArray(this.acceleration)
         accu.addScaled_(this._forceAccum,this.inverseMass)
+
+        this.position.addScaled_(accu,duration*duration)
+
         this.velocity.addScaled_(accu,duration)
         this.velocity.mul_(Math.pow(this.damping,duration))
         this.clearForceAccum()
@@ -46,6 +51,13 @@ export class AriaPhyParticle extends AriaComponent{
 
     public get acceleration(){
         return this._acceleration
+    }
+    public get totalAcceleration(){
+        let ret = AriaVec3.create()
+        ret.fromArray(this.acceleration)
+        ret.addScaled_(this._forceAccum,this.inverseMass)
+        return ret
+
     }
     public set acceleration(x:AriaVec3){
         this._acceleration.fromArray(x)

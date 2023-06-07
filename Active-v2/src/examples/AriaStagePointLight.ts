@@ -1,7 +1,7 @@
 import { AriaComCamera } from "../components/camera/AriaComCamera";
 import { AriaComCubicCanvas } from "../components/canvas/AriaComCubicCanvas";
-import { AriaComCube } from "../components/geometry/AriaComCube";
-import { AriaComSphere } from "../components/geometry/AriaComSphere";
+import { AriaComCube } from "../components/geometry/primary/AriaComCube";
+import { AriaComSphere } from "../components/geometry/primary/AriaComSphere";
 import { AriaComAmbientLight } from "../components/light/AriaComAmbientLight";
 import { AriaComPointLight } from "../components/light/AriaComPointLight";
 import { AriaComMesh } from "../components/mesh/AriaComMesh";
@@ -25,7 +25,7 @@ export class AriaStagePointLight extends AriaStage{
         const sphereMaterial = new AriaSimpleMaterial()
         sphereMaterial.setColor(1,0,0,1)
 
-        const geometry = new AriaComCube()
+        const geometry = new AriaComCube(true)
         geometry.localScale(10)
         const boundbox = new AriaComMesh(material,geometry)
     
@@ -37,7 +37,7 @@ export class AriaStagePointLight extends AriaStage{
         ambient.setLightColor(0.3,0.3,0.3,1)
 
         const camera = new AriaComCamera()
-        camera.setPos(0,0,0)
+        camera.setPos(0,0,3.5)
         camera.initInteraction()
 
 

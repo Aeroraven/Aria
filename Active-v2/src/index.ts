@@ -4,6 +4,11 @@ import { AriaStageBlur } from "./examples/AriaStageBlur";
 import { AriaStageDrop } from "./examples/AriaStageDrop";
 import { AriaStagePointLight } from "./examples/AriaStagePointLight";
 import { AriaStageSkyBox } from "./examples/AriaStageSkybox";
+import { AriaStageSurface } from "./examples/AriaStageSurface";
+import { AriaStageSpringMassCloth } from "./examples/AriaStageSpringMassCloth";
+import { AriaVoxel } from "./components/voxel/AriaVoxel";
+import { AriaStageVoxel } from "./examples/AriaStageVoxel";
+import { AriaStageVoxelKlee } from "./examples/AriaStageVoxelKlee";
 
 function addEntry(name:string, description:string, redirect:string){
     const w = document.createElement("div")
@@ -43,8 +48,11 @@ async function main(){
         {name:"Bloom Effect",redir:"bloom",cl:AriaStageBloom,desc:"Implementation of bloom effect based on postprocess blurring"},
         {name:"Skybox",redir:"skybox",cl:AriaStageSkyBox,desc:"Implementation of sky box using cube map"},
         {name:"Point Shadow",redir:"pointshadow",cl:AriaStagePointLight,desc:"Implementation of omnidirectional shadow"},
-        {name:"Dropping Ball",redir:"drop",cl:AriaStageDrop,desc:"A ball in the stage will start dropping"}
-    
+        //{name:"Dropping Ball",redir:"drop",cl:AriaStageDrop,desc:"A ball in the stage will start dropping"},
+        //{name:"Surface",redir:"surface",cl:AriaStageSurface,desc:"A curved surface"},
+        {name:"Mass Spring Cloth",redir:"smcloth",cl:AriaStageSpringMassCloth,desc:"Cloth simulation based on mass spring model"},
+        //{name:"Voxel Visualization",redir:"voxel",cl:AriaStageVoxel,desc:"Voxel visualization using basic geometries"},
+        {name:"Voxelization",redir:"voxklee",cl:AriaStageVoxelKlee,desc:"Turning a mesh to voxel grids"}
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false
