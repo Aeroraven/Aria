@@ -24,4 +24,27 @@ export class AriaArithmetic extends AriaObject{
         }
         return x
     }
+    public static solveQuadEquReal(a:number,b:number,c:number){
+        let delta = (b*b-4*a*c)
+        if(delta<0){
+            return [NaN,NaN]
+        }else{
+            return [(-b+Math.sqrt(delta))/(2*a),(-b-Math.sqrt(delta))/(2*a)]
+        }
+    }
+    public static len(x:number[]){
+        let s = 0
+        for(let i=0;i<x.length;i++){
+            s+=x[i]*x[i]
+        }
+        return Math.sqrt(s)
+    }
+    public static normalize(x:number[]){
+        let d=[]
+        let s=this.len(x)
+        for(let i=0;i<x.length;i++){
+            d.push(x[i]/s)
+        }
+        return d
+    }
 }

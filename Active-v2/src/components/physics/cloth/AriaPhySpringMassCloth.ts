@@ -3,7 +3,7 @@ import { AriaComExtPlaneGeometry } from "../../geometry/primary/AriaComExtPlaneG
 import { AriaPhyVirtualGeometry } from "../base/AriaPhyVirtualGeometry";
 import { AriaPhyParticleForceRegistry } from "../particle_force/AriaPhyParticleForceRegistry"
 import { AriaPhyParticleBasicSpringGenerator } from "../particle_force/AriaPhyParticleBasicSpringGenerator"
-import { AriaPhyParticle } from "../particle/AriaPhyParticle";
+import { AriaPhyParticle, AriaPhyParticleIntegrator } from "../particle/AriaPhyParticle";
 import { AriaVec3 } from "../../../core/arithmetic/AriaVector";
 import { AriaPhyParticleForceGenerator } from "../particle_force/AriaPhyParticleForceGenerator";
 
@@ -24,11 +24,13 @@ export class AriaPhySpringMassCloth extends AriaComponent{
     private _cz = 0
     public _springs: AriaPhyParticleBasicSpringGenerator[][] = []
     private _springMass = 0
+    private _integrator:AriaPhyParticleIntegrator
 
     private _enableScaler = true
     private _scaler = 1
 
-    constructor(forceReg:AriaPhyParticleForceRegistry, clothMesh:AriaComExtPlaneGeometry,springHookeCoef:number,springRestLength:number,springMass:number,particleDamping:number){
+    constructor(forceReg:AriaPhyParticleForceRegistry, clothMesh:AriaComExtPlaneGeometry,springHookeCoef:number,
+        springRestLength:number,springMass:number,particleDamping:number,integrator:AriaPhyParticleIntegrator=AriaPhyParticleIntegrator.APP_INTEGRATOR_VERLET){
         super("AriaPhy/SpringMassCloth")
         this._clothEntity = clothMesh
         this._springK = springHookeCoef
@@ -37,6 +39,7 @@ export class AriaPhySpringMassCloth extends AriaComponent{
         this._cx = clothMesh.getDensityX()
         this._cz = clothMesh.getDensityZ()
         this._springMass = springMass
+        this._integrator = integrator
         for(let i=0;i<this._cx;i++){
             for(let j=0;j<this._cz;j++){
                 let pos = clothMesh.getLoc(i,j)
@@ -45,6 +48,7 @@ export class AriaPhySpringMassCloth extends AriaComponent{
                 this._particleStore.push(store)
 
                 let p = new AriaPhyParticle()
+                p.setIntegrator(this._integrator)
                 p.position = AriaVec3.create(pos)
                 p.mass = springMass
                 p.damping = particleDamping
@@ -57,6 +61,12 @@ export class AriaPhySpringMassCloth extends AriaComponent{
         this._forceReg = forceReg
         this._buildSprings()
         this._springRest = 1
+    }
+    public getXAnchors(){
+        return this._cx
+    }
+    public getZAnchors(){
+        return this._cz
     }
     public getParticle(x:number,z:number){
         return this._particle[x*this._cz+z]
@@ -71,6 +81,21 @@ export class AriaPhySpringMassCloth extends AriaComponent{
         for(let i=0;i<this._cx;i++){
             for(let j=0;j<this._cz;j++){
                 this.getParticle(i,j).integrate(delta)
+            }
+        }
+        return
+        //Deformation Constraints
+        for(let i=0;i<this._cx-1;i++){
+            for(let j=0;j<this._cz-1;j++){
+                let idx = this._getIdx(i,j)
+                for(let k=0;k<this._springs[idx].length;k++){
+                    if(this._springs[idx][k].getOtherEnd().sub(this.getParticle(i,j).position).len()>this._springs[idx][k].getRestLength()*1.1){
+                        let dirs = this.getParticle(i,j).position.sub(this._springs[idx][k].getOtherEnd())
+                        let delta = 0.5*(dirs.len()-this._springs[idx][k].getRestLength()*1.1)
+                        this._springs[idx][k].getOtherEnd().add(dirs.mul(delta))
+                        this.getParticle(i,j).position.sub(dirs.mul(delta))
+                    }
+                }
             }
         }
     }

@@ -109,18 +109,15 @@ export class AriaQuaternion extends AriaObject{
         }
         
     }
-
-    public rdiv_(x:number){
-        for(let i=0;i<this._dimen;i++){
-            if(typeof x === 'number'){
-                this._value[i] = this._value[i] / x
-            }
-        }
-        return this
-    }
-
-    public normalize_(){
-        return this.rdiv_(this.len())
+    public toRotMatrix(){
+        let ret = new AriaMatrix(
+            [
+                [1-2*(this.y*this.y+this.z*this.z),2*(this.x*this.y+this.z*this.w),2*(this.x*this.z-this.y*this.w)],
+                [2*(this.x*this.y-this.z*this.w),1-2*(this.x*this.x+this.z*this.z),2*(this.y*this.y+this.x*this.w)],
+                [2*(this.x*this.z+this.y*this.w),2*(this.y*this.z-this.x*this.w),1-2*(this.x*this.x+this.y*this.y)]
+            ]
+        )
+        return ret
     }
 
     public fromAxisAngle(axis:AriaVec3C,angle:number){
@@ -159,16 +156,19 @@ export class AriaQuaternion extends AriaObject{
         return this.real()
     }
 
-    public toRotMatrix(){
-        let ret = new AriaMatrix(
-            [
-                [1-2*(this.y*this.y+this.z*this.z),2*(this.x*this.y+this.z*this.w),2*(this.x*this.z-this.y*this.w)],
-                [2*(this.x*this.y-this.z*this.w),1-2*(this.x*this.x+this.z*this.z),2*(this.y*this.y+this.x*this.w)],
-                [2*(this.x*this.z+this.y*this.w),2*(this.y*this.z-this.x*this.w),1-2*(this.x*this.x+this.y*this.y)]
-            ]
-        )
-        return ret
+    public rdiv_(x:number){
+        for(let i=0;i<this._dimen;i++){
+            if(typeof x === 'number'){
+                this._value[i] = this._value[i] / x
+            }
+        }
+        return this
     }
+
+    public normalize_(){
+        return this.rdiv_(this.len())
+    }
+
 
     public toRotTranslateMatrix(position:AriaVec3C,homography:boolean=true){
         position = position instanceof AriaVec3 ? position : new AriaVec3(position)

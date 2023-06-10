@@ -29,7 +29,12 @@ export class AriaPhyParticleBasicSpringGenerator extends AriaPhyParticleForceGen
         this._restLength = restLength
         this._stringConstant = stringConstant
     }
-
+    public getOtherEnd(){
+        return this._otherEndCaller()
+    }
+    public getRestLength(){
+        return this._restLength
+    }
     public updateForce(particle: AriaPhyParticle, duration: number): void {
         let springLengthVec = particle.position.sub(this._otherEndCaller())
         let springLength = springLengthVec.len()

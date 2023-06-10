@@ -14,7 +14,10 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
     constructor(){
         super("Aria/ParamPanel")
     }
-
+    allocateId(){
+        this._id++
+        return this._id
+    }
     disableInteraction(): void {
         this._logError("ParamPanel: interaction trigger cannot be detached")
     }
@@ -32,10 +35,37 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         this.el.style.backgroundColor = "#2f2f2f"
         AriaEnv.docBody.appendChild(this.el)
     }
+    addSlidebar(name:string,min_value:number,max_value:number,handler:(value:number)=>any){
+        const element = AriaEnv.doc.createElement("input")
+        element.id = "parampanel-aria-identifier-"+this.allocateId()
+        const attrType = AriaEnv.doc.createAttribute("type")
+        attrType.value = "range"
+        const attrMin = AriaEnv.doc.createAttribute("min")
+        attrMin.value = ""+min_value
+        const attrMax = AriaEnv.doc.createAttribute("max")
+        attrMax.value = ""+max_value
+        element.setAttributeNode(attrType)
+        element.setAttributeNode(attrMin)
+        element.setAttributeNode(attrMax)
+        element.addEventListener("change",(e)=>{
+            const value = parseInt((<HTMLInputElement>document.getElementById(element.id)).value)
+            handler(value)
+        })
+        const label = AriaEnv.doc.createElement("span")
+        label.innerHTML = name
+        label.style.width = "150px"
+        label.style.display = "inline-block"
+        label.style.fontFamily = "serif"
+        const block = AriaEnv.doc.createElement("div")
+        block.appendChild(label)
+        block.appendChild(element)
+        this.el.appendChild(block)
+        this._id++
+    }
 
     addSelector(name:string, options:IAriaPair<string,string>[], def:string="", handler:(respId:string)=>any){
         const selParent = AriaEnv.doc.createElement("select")
-        const selParentId = "parampanel-aria-identifier-"+this._id
+        const selParentId = "parampanel-aria-identifier-"+this.allocateId()
         selParent.id = selParentId
         selParent.addEventListener("change",(e)=>{
             const value = (<HTMLSelectElement>document.getElementById(selParentId)).value
@@ -88,7 +118,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         labelx.style.width = "150px"
         labelx.style.display = "inline-block"
         labelx.style.fontFamily = "serif"
-        labelx.id = "parampanel-aria-identifier-fps-"+this._id
+        labelx.id = "parampanel-aria-identifier-fps-"+this.allocateId()
 
         setInterval(()=>{
             labelx.innerHTML = this._fps + ""
@@ -114,7 +144,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         labelx.style.width = "150px"
         labelx.style.display = "inline-block"
         labelx.style.fontFamily = "serif"
-        labelx.id = "parampanel-aria-identifier-loading-bar-"+this._id
+        labelx.id = "parampanel-aria-identifier-loading-bar-"+this.allocateId()
 
         setInterval(()=>{
             labelx.innerHTML = this._status

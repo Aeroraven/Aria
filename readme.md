@@ -3,6 +3,7 @@
 This repository is here for **personal purpose**. It serves as the record for the time I used to learn graphical algorithms, or you can say more materialistically, web techniques.
 
 
+
 ## I. Demo
 **Demo:** https://aeroraven.github.io/altina-cg-b/ (Resource loading subjects to your network conditions)
 
@@ -14,11 +15,6 @@ Follow instructions in `stages.md`
 
 
 ## III. Acknowledgement & License
-
-### Future Plans
-
-I might change the engine this repository depends on to some I listed in my personal introduction.
-
 
 
 ### License
