@@ -1,11 +1,8 @@
 import { AriaComCamera } from "../components/camera/AriaComCamera";
-import { AriaComCube } from "../components/geometry/primary/AriaComCube";
 import { AriaComExtPlaneGeometry } from "../components/geometry/primary/AriaComExtPlaneGeometry";
-import { AriaComPlaneGeometry } from "../components/geometry/primary/AriaComPlaneGeometry";
 import { AriaComSphere } from "../components/geometry/primary/AriaComSphere";
 import { AriaComAmbientLight } from "../components/light/AriaComAmbientLight";
 import { AriaComDirectionalLight } from "../components/light/AriaComDirectionalLight";
-import { AriaComPointLight } from "../components/light/AriaComPointLight";
 import { AriaComMesh } from "../components/mesh/AriaComMesh";
 import { AriaPhyParticleForceRegistry } from "../components/physics/particle_force/AriaPhyParticleForceRegistry";
 import { AriaPhySpringMassCloth } from "../components/physics/cloth/AriaPhySpringMassCloth";

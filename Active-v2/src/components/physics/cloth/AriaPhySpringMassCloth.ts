@@ -40,6 +40,9 @@ export class AriaPhySpringMassCloth extends AriaComponent{
         this._cz = clothMesh.getDensityZ()
         this._springMass = springMass
         this._integrator = integrator
+        if(this._integrator == AriaPhyParticleIntegrator.APP_INTEGRATOR_EUCLID){
+            this._logWarn("aria.phy.spring_mass_cloth: euclidean integrator might cause unexpected deformation")
+        }
         for(let i=0;i<this._cx;i++){
             for(let j=0;j<this._cz;j++){
                 let pos = clothMesh.getLoc(i,j)

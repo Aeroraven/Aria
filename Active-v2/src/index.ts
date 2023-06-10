@@ -9,6 +9,7 @@ import { AriaStageSpringMassCloth } from "./examples/AriaStageSpringMassCloth";
 import { AriaVoxel } from "./components/voxel/AriaVoxel";
 import { AriaStageVoxel } from "./examples/AriaStageVoxel";
 import { AriaStageVoxelKlee } from "./examples/AriaStageVoxelKlee";
+import { AriaStageRigidBody } from "./examples/AriaStageRigidBody";
 
 function addEntry(name:string, description:string, redirect:string){
     const w = document.createElement("div")
@@ -49,7 +50,8 @@ async function main(){
         {name:"Skybox",redir:"skybox",cl:AriaStageSkyBox,desc:"Implementation of sky box using cube map"},
         {name:"Point Shadow",redir:"pointshadow",cl:AriaStagePointLight,desc:"Implementation of omnidirectional shadow"},
         {name:"Mass Spring Cloth",redir:"smcloth",cl:AriaStageSpringMassCloth,desc:"Cloth simulation based on mass spring model"},
-        {name:"Voxelization",redir:"voxklee",cl:AriaStageVoxelKlee,desc:"Turning a mesh to voxel grids"}
+        {name:"Voxelization",redir:"voxklee",cl:AriaStageVoxelKlee,desc:"Turning a mesh to voxel grids"},
+        {name:"Rigid Body",redir:"rigid",cl:AriaStageRigidBody,desc:"Basic motion demo of a rigid body"}
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false

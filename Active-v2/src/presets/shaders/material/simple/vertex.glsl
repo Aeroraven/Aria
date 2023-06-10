@@ -10,7 +10,7 @@ out vec4 vNorm;
 out vec4 vModelPos;
 out vec4 vLocalPos;
 void main(){
-    vNorm = uModelIT * vec4(normalize(vec3(aNormal.xyz)),0.0);
+    vNorm = uModelIT * uLocal * vec4(normalize(vec3(aNormal.xyz)),0.0);
     //vNorm /= vNorm.w;
     vLocalPos = uLocal * vec4(aPos.xyz,1.0);
     vLocalPos = vLocalPos / vLocalPos.w;

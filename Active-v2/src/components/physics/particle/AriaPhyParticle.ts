@@ -2,7 +2,7 @@ import { AriaComponent } from "../../../core/AriaComponent";
 import { AriaVec3, AriaVec3C } from "../../../core/arithmetic/AriaVector";
 
 export enum AriaPhyParticleIntegrator{
-    APP_INTEGRATOR_ECULID = "eculid",
+    APP_INTEGRATOR_EUCLID = "eculid",
     APP_INTEGRATOR_VERLET = "verlet"
 }
 
@@ -21,7 +21,7 @@ export class AriaPhyParticle extends AriaComponent{
     }
 
     public integrate(duration:number){
-        if(this._integrator==AriaPhyParticleIntegrator.APP_INTEGRATOR_ECULID){
+        if(this._integrator==AriaPhyParticleIntegrator.APP_INTEGRATOR_EUCLID){
             this._lastPosition.fromArray(this.position)
             this.position.addScaled_(this.velocity,duration)
 
