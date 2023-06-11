@@ -2,6 +2,7 @@ import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMa
 import vertex from "../shaders/material/single-color/vertex.glsl"
 import fragment from "../shaders/material/single-color/fragment.glsl"
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaSingleColorMaterial extends AriaComShaderMaterial{
     private _r:number = 1.0
@@ -22,8 +23,8 @@ export class AriaSingleColorMaterial extends AriaComShaderMaterial{
         this._b = b
         this._a = a
     }
-    public use(): void {
-        super.use()
-        AriaShaderOps.defineUniform("uPresetColor",AriaShaderUniformTp.ASU_VEC4,[this._r,this._g,this._b,this._a])
+    public use(renderer:IAriaRendererCore): void {
+        super.use(renderer)
+        renderer.defineUniform("uPresetColor",AriaShaderUniformTp.ASU_VEC4,[this._r,this._g,this._b,this._a])
     }
 }

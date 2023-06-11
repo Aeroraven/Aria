@@ -3,12 +3,13 @@ import { IAriaTexture } from "../../core/interface/IAriaTexture"
 import { AriaAsyncImageOp } from "../../core/network/AriaAsyncImageOp";
 import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
 import { AriaComCubeMap } from "../texture/AriaComCubeMap";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaComCubeMapLoader extends AriaComponent{
     constructor(){
         super("AriaCom/TextureLoader")
     }
-    public async load(path:string):Promise<IAriaTexture>{
+    public async load(renderer:IAriaRendererCore,path:string):Promise<IAriaTexture>{
         const lst = [ 
             "right.jpg",
             "left.jpg",
@@ -25,8 +26,8 @@ export class AriaComCubeMapLoader extends AriaComponent{
             imgs.push(vp)
         }
         
-        const txw = AriaRenderOps.createCubicTexture(imgs)
-        const tx = new AriaComCubeMap()
+        const txw = renderer.createCubicTexture(imgs)
+        const tx = new AriaComCubeMap(renderer)
         tx.setTex(txw)
         return tx
     }

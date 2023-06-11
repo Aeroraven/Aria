@@ -1,7 +1,9 @@
+import { IAriaRendererCore } from "./IAriaRendererCore"
+
 export interface IAriaShader{
-    getAttribute(key:string):number
+    getAttribute(renderer:IAriaRendererCore,key:string):number
     getShaderProgram():WebGLProgram
-    getUniform(key:string):WebGLUniformLocation|null
+    getUniform(renderer:IAriaRendererCore,key:string):WebGLUniformLocation|null
     allocateTexture():number
-    use():any
+    use(renderer:IAriaRendererCore):any
 }

@@ -6,6 +6,7 @@ import { IAriaRenderable } from "../base/interface/IAriaRenderable";
 import { AriaComCubicCanvas } from "../canvas/AriaComCubicCanvas";
 import { AriaDepthMaterial } from "../material/AriaDepthMaterial";
 import { AriaComLight, AriaLightShaderVars } from "./AriaComLight";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaComPointLight extends AriaComLight{
     private _lightColor = [1,1,1,1]
@@ -26,31 +27,31 @@ export class AriaComPointLight extends AriaComLight{
         this._lightPosition[1] = y
         this._lightPosition[2] = z
     }
-    public exportToShader(): void {
-        super.exportToShader()
+    public exportToShader(renderer:IAriaRendererCore): void {
+        super.exportToShader(renderer)
         const id = this._shaderId-1
-        AriaShaderOps.defineUniformExtend(AriaLightShaderVars.ALSV_TYPE, AriaShaderUniformTp.ASU_VEC1I, 1, id)
-        AriaShaderOps.defineUniformExtend(AriaLightShaderVars.ALSV_COLOR, AriaShaderUniformTp.ASU_VEC4, this._lightColor, id)
-        AriaShaderOps.defineUniformExtend(AriaLightShaderVars.ALSV_POS, AriaShaderUniformTp.ASU_VEC3, this._lightPosition, id)
+        renderer.defineUniformExtend(AriaLightShaderVars.ALSV_TYPE, AriaShaderUniformTp.ASU_VEC1I, 1, id)
+        renderer.defineUniformExtend(AriaLightShaderVars.ALSV_COLOR, AriaShaderUniformTp.ASU_VEC4, this._lightColor, id)
+        renderer.defineUniformExtend(AriaLightShaderVars.ALSV_POS, AriaShaderUniformTp.ASU_VEC3, this._lightPosition, id)
         if(this._shadowMap!==null){
-            AriaShaderOps.defineUniformExtend(AriaLightShaderVars.ALSV_SHADOW_MAP_CUBE,AriaShaderUniformTp.ASU_TEXCUBE, this._shadowMap.getTex(),id)
-            AriaShaderOps.defineUniformExtend(AriaLightShaderVars.ALSV_SHADOW_MAP_TYPE,AriaShaderUniformTp.ASU_VEC1I, 2 ,id)
+            renderer.defineUniformExtend(AriaLightShaderVars.ALSV_SHADOW_MAP_CUBE,AriaShaderUniformTp.ASU_TEXCUBE, this._shadowMap.getTex(),id)
+            renderer.defineUniformExtend(AriaLightShaderVars.ALSV_SHADOW_MAP_TYPE,AriaShaderUniformTp.ASU_VEC1I, 2 ,id)
         }
     }
-    public override renderShadowMap(renderables: AriaObjArray<IAriaRenderable<void>>): void {
+    public override renderShadowMap(renderer:IAriaRendererCore,renderables: AriaObjArray<IAriaRenderable<void>>): void {
         this._camera.setPos(this._lightPosition[0],this._lightPosition[1],this._lightPosition[2])
         this._camera.setFov(90.0)
         this._camera.setAspect(1.0)
-        this._material.withShader(()=>{
+        this._material.withShader(renderer,()=>{
             this._camera.initiateRender(renderables)
         })
     }
-    public override generateShadowMap(renderables: AriaObjArray<IAriaRenderable<void>>): IAriaCanavs {
+    public override generateShadowMap(renderer:IAriaRendererCore,renderables: AriaObjArray<IAriaRenderable<void>>): IAriaCanavs {
         if(this._shadowMap === null){
             this._shadowMap = new AriaComCubicCanvas()
         }
-        this._shadowMap.compose(()=>[
-            this.renderShadowMap(renderables)
+        this._shadowMap.compose(renderer,()=>[
+            this.renderShadowMap(renderer,renderables)
         ])
         return this._shadowMap
     }

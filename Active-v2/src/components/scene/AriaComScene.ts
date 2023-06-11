@@ -1,6 +1,7 @@
 import { AriaComponent } from "../../core/AriaComponent";
 import { AriaEnv } from "../../core/graphics/AriaEnv";
 import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { IAriaChildContainer } from "../base/interface/IAriaChildContainer";
 import { IAriaComponentContainer } from "../base/interface/IAriaComponentContainer";
@@ -11,7 +12,7 @@ IAriaComponentContainer<IAriaShaderEmitter,AriaComScene>, IAriaRenderable, IAria
     
     private _renderObjects:IAriaRenderable[] = []
     private _components: IAriaShaderEmitter[] = []
-    private _componentTriggers: (()=>any )[] = []
+    private _componentTriggers: ((renderer:IAriaRendererCore)=>any )[] = []
 
     constructor(){
         super("AriaCom/Scene")
@@ -24,17 +25,17 @@ IAriaComponentContainer<IAriaShaderEmitter,AriaComScene>, IAriaRenderable, IAria
 
     public addComponent(c: IAriaShaderEmitter): AriaComScene {
         this._components.push(c)
-        this._componentTriggers.push(()=>{
-            c.exportToShader()
+        this._componentTriggers.push((renderer:IAriaRendererCore)=>{
+            c.exportToShader(renderer)
         })
         return this
     }
 
-    public render(preTriggers?:(()=>any)[], postTriggers?:(()=>any)[]): void {
-        AriaRenderOps.clearScreenRequest()
-        const epTriggers = new Array<(()=>any)>().concat(this._componentTriggers).concat(preTriggers?preTriggers:[])
+    public render(renderer:IAriaRendererCore, preTriggers?:((_:IAriaRendererCore)=>any)[], postTriggers?:((_:IAriaRendererCore)=>any)[]): void {
+        renderer.clearScreenRequest()
+        const epTriggers = new Array<((_:IAriaRendererCore)=>any)>().concat(preTriggers?preTriggers:[]).concat(this._componentTriggers)
         this._renderObjects.forEach((el)=>{
-            el.render(epTriggers)
+            el.render(renderer,epTriggers)
         })
     }
     

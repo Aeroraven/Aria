@@ -2,6 +2,7 @@ import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMa
 import vertex from "../shaders/material/normal/vertex.glsl"
 import fragment from "../shaders/material/normal/fragment.glsl"
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaNormalMaterial extends AriaComShaderMaterial{
     private _r:number = 1.0
@@ -19,7 +20,7 @@ export class AriaNormalMaterial extends AriaComShaderMaterial{
         this._rename("AriaCom/Preset/NormalMaterial")
     }
 
-    public use(): void {
-        super.use()
+    public use(renderer:IAriaRendererCore): void {
+        super.use(renderer)
     }
 }

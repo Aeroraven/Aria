@@ -10,6 +10,7 @@ import { AriaComGeometry } from "../geometry/base/AriaComGeometry";
 import { AriaComRectangle } from "../geometry/primary/AriaComRectangle";
 import { AriaComCube } from "../geometry/primary/AriaComCube";
 import { AriaComMaterial } from "../material/AriaComMaterial";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
     private _material: AriaComMaterial|null = null
@@ -41,25 +42,25 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
         this._logInfo("Added input :"+w)
         return this
     }
-    render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
-        AriaRenderOps.clearScreen()
-        this._material!.use()
+    render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
+        renderer.clearScreen()
+        this._material!.use(renderer)
         if(this._inputCanvas.length==0){
             this._logError("Input canvas cannot be empty")
         }
         this._inputCanvasMap.forEach((value,key)=>{
-            AriaShaderOps.defineUniform(key,AriaShaderUniformTp.ASU_TEX2D,value.getTex())
+            renderer.defineUniform(key,AriaShaderUniformTp.ASU_TEX2D,value.getTex())
         })
         
-        this._geometry.exportToShader()
+        this._geometry.exportToShader(renderer)
         this._components.forEach((el)=>{
-            el.exportToShader()
+            el.exportToShader(renderer)
         })
         if(preTriggers){
             preTriggers.forEach((el)=>{
-                el()
+                el(renderer)
             })
         }
-        AriaRenderOps.renderInstancedEntry(this._geometry.getVertexNumber())
+        renderer.renderInstancedEntry(this._geometry.getVertexNumber())
     }
 }

@@ -19,15 +19,18 @@ import { AriaPostFxMLAAThresholding } from "../presets/postprocess/AriaPostFxMLA
 import { AriaPostFxSMAA } from "../presets/postprocess/AriaPostFxSMAA";
 import { AriaPostFxSMAABlendResult } from "../presets/postprocess/AriaPostFxSMAABlendResult";
 import { AriaPostFxMLAABlendResult } from "../presets/postprocess/AriaPostFxMLAABlendResult";
+import { AriaWGL2Renderer } from "../components/renderer/AriaWGL2Renderer";
 
 export class AriaStageAntialiasing extends AriaStage{
     constructor(){
         super("AriaStage/Antialiasing")
     }
     async entry(){
+        //Renderer
+        const renderer = new AriaWGL2Renderer("webgl_displayer")
         //Resources
         const shaderSource = await (new AriaComShaderLoader()).loadFolder("./shaders/01-hello-world")
-        const kleeModel = await(new AriaComGLTFLoader()).load("./models/klee2/untitled.gltf")
+        const kleeModel = await(new AriaComGLTFLoader()).load(renderer.getEngine(),"./models/klee2/untitled.gltf")
     
         //Scene
         const canvasOrg = new AriaComCanvas(1)
@@ -120,14 +123,13 @@ export class AriaStageAntialiasing extends AriaStage{
     
         //Render
         const renderCall = ()=>{
-            canvasOrg.compose(()=>{
-                camera.initiateRender(scene)
+            renderer.renderComposite(canvasOrg,()=>{
+                renderer.renderScene(camera,scene)
             })
-            canvas.compose(()=>{
-                activeAAScheme.render()
+            renderer.renderComposite(canvas,()=>{
+                renderer.renderSimple(activeAAScheme)
             })
-            postIdentity.render()
-           
+            renderer.renderSimple(postIdentity)
             panel.reqAniFrame(renderCall)
         }
         renderCall()

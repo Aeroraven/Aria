@@ -2,6 +2,7 @@ import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
 import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaPostFxKawaseBlurSinglePass } from "./AriaPostFxKawaseBlurSinglePass";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxKawaseBlur extends AriaComPostPass{
     private _srcCanvas: IAriaCanavs[] = []
@@ -35,7 +36,7 @@ export class AriaPostFxKawaseBlur extends AriaComPostPass{
         this._adjustLock--
     }
 
-    public render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
+    public render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
         if(this._adjustLock!=0){
             this._logInfo("kawase blur: reconstructing framebuffer, render postponed")
             return
@@ -43,16 +44,16 @@ export class AriaPostFxKawaseBlur extends AriaComPostPass{
         for(let i=0;i<this._passes.length;i++){
             if(i==0){
                 this._passes[0].addInput(this._srcCanvas[0])
-                this._canvases[i%2].compose(()=>{
-                    this._passes[0].render()
+                this._canvases[i%2].compose(renderer,()=>{
+                    this._passes[0].render(renderer)
                 })
             }else{
                 this._passes[i].addInput(this._canvases[(i+1)%2])
                 if(i+1==this._passes.length){
-                    this._passes[i].render()
+                    this._passes[i].render(renderer)
                 }else{
-                    this._canvases[i%2].compose(()=>{
-                        this._passes[i].render()
+                    this._canvases[i%2].compose(renderer,()=>{
+                        this._passes[i].render(renderer)
                     })
                 }
             }

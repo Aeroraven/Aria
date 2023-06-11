@@ -14,12 +14,16 @@ import { AriaPhyParticleGravityGenerator } from "../components/physics/particle_
 import { AriaPhySMCSphereBlock } from "../components/physics/cloth_helper/AriaPhySMCSphereBlock";
 import { AriaPhyParticleIntegrator } from "../components/physics/particle/AriaPhyParticle";
 import { AriaNormalMaterial } from "../presets/materials/AriaNormalMaterial";
+import { AriaWGL2Renderer } from "../components/renderer/AriaWGL2Renderer";
 
 export class AriaStageSpringMassCloth extends AriaStage{
     constructor(){
         super("AriaStage/SpringMassCloth")
     }
     public async entry(): Promise<void> {
+        //Renderer  
+        const renderer = new AriaWGL2Renderer("webgl_displayer")
+        
         const material = new AriaNormalMaterial()
         const sphereMaterial = new AriaSimpleMaterial()
         sphereMaterial.setColor(0.8,0.5,0.5,1)
@@ -93,14 +97,13 @@ export class AriaStageSpringMassCloth extends AriaStage{
                 forceReg.update(delta)
                 cloth.getParticle(0,0).clearForceAccum()
                 cloth.getParticle(anchors-1,0).clearForceAccum()
-
                 cloth.integrateParticles(delta)
                 sphereBlock.updateAll(cloth)
             }
         
             cloth.sync()
 
-            camera.initiateRender(scene)
+            renderer.renderScene(camera,scene)
             panel.reqAniFrame(renderCall)
         }
         renderCall()

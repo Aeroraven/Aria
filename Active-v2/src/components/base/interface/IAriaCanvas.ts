@@ -1,3 +1,4 @@
+import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore";
 import { IAriaFBOContainer } from "./IAriaFBOContainer";
 import { IAriaTextureAttached } from "./IAriaTextureAttached";
 
@@ -6,5 +7,5 @@ export interface IAriaCanvasComposeAttributes{
 }
 
 export interface IAriaCanavs extends IAriaFBOContainer, IAriaTextureAttached{
-    compose(proc:()=>any,attrs?:IAriaCanvasComposeAttributes):any
+    compose(renderer:IAriaRendererCore,proc:()=>any,attrs?:IAriaCanvasComposeAttributes):any
 }

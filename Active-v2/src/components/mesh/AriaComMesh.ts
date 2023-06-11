@@ -6,6 +6,7 @@ import { IAriaComponentContainer } from "../base/interface/IAriaComponentContain
 import { AriaComGeometry } from "../geometry/base/AriaComGeometry";
 import { AriaComMaterial } from "../material/AriaComMaterial";
 import { IAriaGeometry } from "../base/interface/IAriaGeometry";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaComMesh extends AriaComponent implements IAriaRenderable, IAriaComponentContainer<IAriaShaderEmitter>{
     private _material: AriaComMaterial|null
@@ -31,7 +32,7 @@ export class AriaComMesh extends AriaComponent implements IAriaRenderable, IAria
         return this
     }
 
-    public render(preTriggers?:(()=>any)[], postTriggers?:(()=>any)[]): void {
+    public render(renderer:IAriaRendererCore,preTriggers?:((_:IAriaRendererCore)=>any)[], postTriggers?:((_:IAriaRendererCore)=>any)[]): void {
         if(this._material == null){
             this._logError("Material should not be empty")
             return 
@@ -40,16 +41,16 @@ export class AriaComMesh extends AriaComponent implements IAriaRenderable, IAria
             this._logError("Geometry should not be empty")
             return
         }
-        this._material.use()
-        this._geometry.exportToShader()
+        this._material.use(renderer)
+        this._geometry.exportToShader(renderer)
         this._components.forEach((el)=>{
-            el.exportToShader()
+            el.exportToShader(renderer)
         })
         if(preTriggers){
             preTriggers.forEach((el)=>{
-                el()
+                el(renderer)
             })
         }
-        AriaRenderOps.renderInstancedEntry(this._geometry.getVertexNumber())
+        renderer.renderInstancedEntry(this._geometry.getVertexNumber())
     }
 }

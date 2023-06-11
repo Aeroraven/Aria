@@ -1,4 +1,5 @@
 import { AriaComponent } from "../../core/AriaComponent";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { IAriaCanavs } from "../base/interface/IAriaCanvas";
 import { AriaComCanvas } from "./AriaComCanvas";
 import { AriaComDefaultCanvas } from "./AriaComDefaultCanvas";
@@ -17,10 +18,10 @@ export class AriaComCanvasManager extends AriaComponent{
         super("AriaCom/CanvasManager")
         this._activeCanvas.push(new AriaComDefaultCanvas())
     }
-    public detachCanvas(){
+    public detachCanvas(renderer:IAriaRendererCore){
         this._enablePush = false
         this._activeCanvas.pop()
-        this.getCanvas().canvasUse()
+        this.getCanvas().canvasUse(renderer)
         this._enablePush = true
     }
     public setCanvas(w:IAriaCanavs|null){

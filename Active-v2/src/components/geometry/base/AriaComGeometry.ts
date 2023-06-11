@@ -4,6 +4,7 @@ import { AriaShaderOps, AriaShaderUniformTp } from "../../../core/graphics/AriaS
 import { IAriaShaderEmitter } from "../../../core/interface/IAriaShaderEmitter";
 import { IAriaDynamicGeometry } from "../../base/interface/IAriaDynamicGeometry";
 import { IAriaGeometry } from "../../base/interface/IAriaGeometry";
+import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore";
 
 export enum AriaGeometryVars{
     AGV_POSITION = "aPos",
@@ -83,12 +84,11 @@ export class AriaComGeometry extends AriaComponent implements IAriaShaderEmitter
         }
         mat4.scale(this._localMat,this._localMat,tvec)
     }
-
-    exportToShader(): void {
+    exportToShader(renderer: IAriaRendererCore): void {
         if(!this._valid){
             this._logError("exportToShader: Method not implemented")
         }
-        AriaShaderOps.defineUniform("uLocal",AriaShaderUniformTp.ASU_MAT4,this._localMat)
+        renderer.defineUniform("uLocal",AriaShaderUniformTp.ASU_MAT4,this._localMat)
     }
     getVertexNumber(): number{
         this._logError("getVertexNumber: Method not implemented")

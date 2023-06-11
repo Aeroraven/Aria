@@ -1,5 +1,6 @@
 import { AriaComponent } from "../../core/AriaComponent";
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { IAriaTexture } from "../../core/interface/IAriaTexture";
 
@@ -11,13 +12,13 @@ export class AriaComMaterial extends AriaComponent implements IAriaShaderEmitter
         super(name)
     }
 
-    public use(){
+    public use(renderer:IAriaRendererCore){
         this._logError("use: Method not implemented")
     }
 
-    public exportToShader(): void {
+    public exportToShader(renderer:IAriaRendererCore): void {
         for(let i=0;i<this._impAttNames.length;i++){
-            AriaShaderOps.defineUniform(this._impAttNames[i], this._types[i], this._values[i])
+            renderer.defineUniform(this._impAttNames[i], this._types[i], this._values[i])
         }
     }
 

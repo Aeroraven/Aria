@@ -5,6 +5,7 @@ import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { IAriaCanavs } from "../base/interface/IAriaCanvas";
 import { IAriaRenderable } from "../base/interface/IAriaRenderable";
 import { AriaComCamera } from "../camera/AriaComCamera";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export enum AriaLightShaderVars{
     ALSV_POS = "uLightPos",
@@ -23,16 +24,16 @@ export class AriaComLight extends AriaComponent implements IAriaShaderEmitter{
     constructor(name:string){
         super(name)
     }
-    exportToShader(): void {
-        this._shaderId = AriaShaderOps.defineUniformCounter("uLightCount")
+    exportToShader(renderer:IAriaRendererCore): void {
+        this._shaderId = renderer.defineUniformCounter("uLightCount")
         if(this._validLight==false){
             this._logError("light: exportToShader not implemented")
         }
     }
-    renderShadowMap(renderables:AriaObjArray<IAriaRenderable>){
+    renderShadowMap(renderer:IAriaRendererCore,renderables:AriaObjArray<IAriaRenderable>){
         this._logError("light: renderShadowMap not implemented")
     }
-    generateShadowMap(renderables:AriaObjArray<IAriaRenderable>):IAriaCanavs{
+    generateShadowMap(renderer:IAriaRendererCore,renderables:AriaObjArray<IAriaRenderable>):IAriaCanavs{
         this._logError("light: generateShadowMap not implemented")
         throw Error()
     }

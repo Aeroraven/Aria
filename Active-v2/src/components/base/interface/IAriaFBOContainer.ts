@@ -1,4 +1,6 @@
+import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore"
+
 export interface IAriaFBOContainer{
-    canvasUse():void
-    canvasDetach():void
+    canvasUse(renderer:IAriaRendererCore):void
+    canvasDetach(renderer:IAriaRendererCore):void
 }

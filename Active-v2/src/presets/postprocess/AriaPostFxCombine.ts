@@ -5,6 +5,7 @@ import vertex from "../shaders/postprocess/combine/vertex.glsl"
 import fragment from "../shaders/postprocess/combine/fragment.glsl"
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxCombine extends AriaComPostPass{
     private _ids = 0
@@ -25,10 +26,10 @@ export class AriaPostFxCombine extends AriaComPostPass{
         super.addInput(m,w+"["+this._ids+"]")
         return this
     }
-    render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
-        super.render([
+    render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
+        super.render(renderer,[
             ()=>{
-                AriaShaderOps.defineUniform("uSourceCount",AriaShaderUniformTp.ASU_VEC1I,this._ids)
+                renderer.defineUniform("uSourceCount",AriaShaderUniformTp.ASU_VEC1I,this._ids)
             }
         ])
     }

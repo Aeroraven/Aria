@@ -14,15 +14,18 @@ import { AriaPostFxGaussianBloom } from "../presets/postprocess/AriaPostFxGaussi
 import { AriaComPostPass } from "../components/postproc/AriaComPostPass";
 import { AriaPostFxKawaseBlur } from "../presets/postprocess/AriaPostFxKawaseBlur";
 import { AriaPostFxMipmapDownsample } from "../presets/postprocess/AriaPostFxMipmapDownsample";
+import { AriaWGL2Renderer } from "../components/renderer/AriaWGL2Renderer";
 
 export class AriaStageBlur extends AriaStage{
     constructor(){
         super("AriaStage/Blur")
     }
     async entry(){
+        //Renderer  
+        const renderer = new AriaWGL2Renderer("webgl_displayer")
         //Resources
         const shaderSource = await (new AriaComShaderLoader()).loadFolder("./shaders/01-hello-world")
-        const kleeModel = await(new AriaComGLTFLoader()).load("./models/klee2/untitled.gltf")
+        const kleeModel = await(new AriaComGLTFLoader()).load(renderer.getEngine(),"./models/klee2/untitled.gltf")
     
         //Scene
         const canvasOrg = new AriaComCanvas(1)
@@ -84,10 +87,10 @@ export class AriaStageBlur extends AriaStage{
     
         //Render
         const renderCall = ()=>{
-            canvasOrg.compose(()=>{
-                scene.render()
+            renderer.renderComposite(canvasOrg,()=>{
+                renderer.renderSimple(scene)
             })
-            activeBlurPass.render()
+            renderer.renderSimple(activeBlurPass)
            
             panel.reqAniFrame(renderCall)
         }

@@ -1,0 +1,615 @@
+import { IAriaRenderable } from "../../components/base/interface/IAriaRenderable";
+import { AriaGacCompiler } from "../aux-compiler/AriaGacCompiler";
+import { AriaCallable } from "../base/AriaBaseDefs";
+import { AriaObject } from "../base/AriaObject";
+import { AriaShaderUniformTp } from "../graphics/AriaShaderOps";
+import { IAriaFramebuffer } from "../interface/IAriaFramebuffer";
+import { IAriaGLBuffer } from "../interface/IAriaGLBuffer";
+import { IAriaRendererCore } from "../interface/IAriaRendererCore";
+import { IAriaShader } from "../interface/IAriaShader";
+import { IAriaTexture } from "../interface/IAriaTexture";
+import { AriaRendererCore } from "./AriaRendererCore";
+import { mat4, vec3 } from "gl-matrix-ts";
+
+class AriaWGL2RendererFramebufferManager extends AriaObject{
+    private activeFramebuffer:IAriaFramebuffer[] = []
+    constructor(){
+        super("AriaWGL2RendererFramebufferManager")
+    }
+    public setFramebuffer(buf:IAriaFramebuffer){
+        this.activeFramebuffer.push(buf)
+    }
+    public getFramebuffer(){
+        if(this.activeFramebuffer.length==0){
+            return null
+        }
+        return this.activeFramebuffer[this.activeFramebuffer.length-1]
+    }
+    public removeFramebuffer(){
+        return this.activeFramebuffer.pop()
+    }
+}
+
+class AriaWGL2RendererCameraPositionManager extends AriaObject{
+    private camPos = [0,0,0]
+    constructor(){
+        super("AriaCameraPositionManager")
+    }
+    public setCameraPosition(x:number,y:number,z:number){
+        this.camPos = [x,y,z]
+    }
+    public getCubeMapLookat(face:number){
+        const lookDirs = [
+            [1,0,0],
+            [-1,0,0],
+            [0,1,0],
+            [0,-1,0],
+            [0,0,1],
+            [0,0,-1]
+        ]
+        const upDirs = [
+            [0,-1,0],
+            [0,-1,0],
+            [0,0,1],
+            [0,0,-1],
+            [0,-1,0],
+            [0,-1,0],
+            [0,-1,0]
+        ]
+        const dpos = new Float32Array([this.camPos[0],this.camPos[1],this.camPos[2]])
+        const dfront = new Float32Array([this.camPos[0]+lookDirs[face][0],this.camPos[1]+lookDirs[face][1],this.camPos[2]+lookDirs[face][2]])
+        const dtop = new Float32Array([upDirs[face][0],upDirs[face][1],upDirs[face][2]])
+        const ret = mat4.create()
+        mat4.lookAt(ret,dpos,dfront,dtop)
+        return ret
+    }
+}
+
+class AriaWGL2ShaderManager extends AriaObject{
+    private activatedShader:IAriaShader|null = null
+    private extendUniformMaps: Map<string,number> = new Map<string,number>()
+    private counterUniformMaps: Map<string,number> = new Map<string,number>()
+    private invariantShader:boolean = false
+
+    constructor(){
+        super("AriaShaderManager")
+    }
+    public disableShaderChange(){
+        this.invariantShader = true
+    }
+    public enableShaderChange(){
+        this.invariantShader = false
+    }
+    public setShader(x:IAriaShader){
+        if(this.invariantShader==false){
+            this.activatedShader = x
+        }
+        this.extendUniformMaps = new Map<string,number>()
+        this.counterUniformMaps = new Map<string,number>()
+        return this.invariantShader==false
+    }
+    public getShader(){
+        if(this.activatedShader==null){
+            this._logError("Invalid shader operation")
+        }
+        return <IAriaShader>this.activatedShader
+    }
+    public allocNewExtendUniform(s:string){
+        const g = this.extendUniformMaps.get(s)
+        if(!g){
+            this.extendUniformMaps.set(s,1)
+            return 0;
+        }else{
+            this.extendUniformMaps.set(s,g+1)
+            return g
+        }
+    }
+    public addCounterUniform(s:string, inc:number=1, returnAfter:boolean=false){
+        const g = this.counterUniformMaps.get(s)
+        if(!g){
+            this.counterUniformMaps.set(s,inc);
+            return 0 + (returnAfter?inc:0);
+        }else{
+            this.counterUniformMaps.set(s,g+inc)
+            return g + (returnAfter?inc:0)
+        }
+    }
+}
+
+class AriaWGL2RendererRenderOps extends AriaObject{
+    env:WebGL2RenderingContext
+    parent:IAriaRendererCore
+    camManager:AriaWGL2RendererCameraPositionManager = new AriaWGL2RendererCameraPositionManager()
+    fbManager:AriaWGL2RendererFramebufferManager = new AriaWGL2RendererFramebufferManager()
+
+    constructor(parent:IAriaRendererCore, renderingContext:WebGL2RenderingContext){
+        super("AriaWGL2RendererRenderOps")
+        this.env = renderingContext
+        this.parent = parent
+    }
+
+    public readArrayBuffer(destBuffer:ArrayBuffer){
+        this.env.getBufferSubData(this.env.ARRAY_BUFFER,0,new Float32Array(destBuffer))
+    }
+    public readElementBuffer(destBuffer:ArrayBuffer){
+        this.env.getBufferSubData(this.env.ELEMENT_ARRAY_BUFFER,0,new Uint16Array(destBuffer))
+    }
+    public getCubicLookat(face:number){
+        return this.camManager.getCubeMapLookat(face)
+    }
+    public setCameraPos(x:number,y:number,z:number){
+        this.camManager.setCameraPosition(x,y,z)
+    }
+
+    public activateFramebuffer(buf:IAriaFramebuffer){
+        this.fbManager.setFramebuffer(buf)
+    }
+    public removeFramebuffer(){
+        this.fbManager.removeFramebuffer()
+    }
+    private getActiveFramebuffer(){
+        return this.fbManager.getFramebuffer()
+    }
+    public clearScreenRequest(){
+        let frame = this.fbManager.getFramebuffer()
+        if(frame===null){
+            this.clearScreen()
+        }else{
+            frame.onClear(this.parent)
+        }
+    }
+    public clearScreen(color:number[] = [0,0,0,0]){
+        const gl = this.env
+        gl.clearColor(color[0],color[1],color[2],color[3]);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+    }
+
+    public loadShader(type:number,source:string):WebGLShader|null{
+        const gl = this.env
+        const shader = <WebGLShader>gl.createShader(type);
+        gl.shaderSource(shader,source);
+        gl.compileShader(shader);
+        if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)){
+            alert("Shader error:"+gl.getShaderInfoLog(shader));
+            console.log("Cannot Compile Shader")
+            console.log(source)
+            gl.deleteShader(shader)
+            return null;
+        }
+        return shader;
+    }
+
+    public initShaderProgram(vsrc:string,fsrc:string,useAux:boolean=true):WebGLProgram|null{
+        const gl = this.env
+        const compiler = new AriaGacCompiler()
+        compiler.compile(vsrc)
+        vsrc = compiler.generateCode()
+        compiler.compile(fsrc)
+        fsrc = compiler.generateCode()
+
+        const vs = this.loadShader(gl.VERTEX_SHADER,vsrc)
+        const fs = this.loadShader(gl.FRAGMENT_SHADER,fsrc)
+        if(vs==null||fs==null){
+            return null
+        }else{
+            const vsr = <WebGLShader>vs;
+            const fsr = <WebGLShader>fs;
+            const shaderProg = <WebGLProgram>gl.createProgram()
+            gl.attachShader(shaderProg,vsr);
+            gl.attachShader(shaderProg,fsr);
+            gl.linkProgram(shaderProg)
+            if(!gl.getProgramParameter(shaderProg,gl.LINK_STATUS)){
+                alert("ShaderProg error:"+gl.getProgramInfoLog(shaderProg))
+                return null;
+            }
+            return shaderProg
+        }
+    }
+
+    public renderInstancedEntry(num:number, instances:number = 1){
+        const renderCall = ()=>{
+            this.renderInstancedImpl(num, instances)
+        }
+        const curFbo = this.getActiveFramebuffer()
+        if(curFbo===null){
+            
+            renderCall()
+        }else{
+            curFbo.onRender(this.parent,renderCall)
+        }
+    }
+    public renderInstancedImpl(num:number, instances:number = 1){
+        const gl = this.env
+        gl.drawElementsInstanced(gl.TRIANGLES, num, gl.UNSIGNED_SHORT, 0, instances)
+    }
+    public fboUnbind(){
+        const gl = this.env
+        gl.viewport(0,0,window.innerWidth,window.innerHeight)
+        gl.bindBuffer(gl.FRAMEBUFFER, null)
+    }
+    public createTexture(img:HTMLImageElement):WebGLTexture{
+        const gl = this.env
+        const tex = gl.createTexture()
+        gl.bindTexture(gl.TEXTURE_2D,tex);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.bindTexture(gl.TEXTURE_2D,null)
+        return <WebGLTexture>tex;
+    }
+    public createCubicTexture(img:HTMLImageElement[]):WebGLTexture{
+        const gl = this.env
+        const tex = gl.createTexture()
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP,tex);
+        for(let i=0;i<6;i++){
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X+i,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,img[i]);
+        }
+        
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP,null)
+        return <WebGLTexture>tex;
+    }
+    public createEmptyTexture(width:number, height:number, mipmap:boolean = false, hdr:boolean = true){
+        const gl = this.env
+        const tex = gl.createTexture()!
+        gl.bindTexture(gl.TEXTURE_2D,tex)
+        if(hdr){
+            gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,width,height,0,gl.RGBA,gl.FLOAT,null)
+        }else{
+            gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,width,height,0,gl.RGB,gl.UNSIGNED_BYTE,null)
+        
+        }
+        if(mipmap){
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        }else{
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        }
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.bindTexture(gl.TEXTURE_2D,null);
+        return tex
+    }
+    public createEmptyCubicTexture(width:number, height:number, mipmap:boolean = false, hdr:boolean = true){
+        const gl = this.env
+        const tex = gl.createTexture()!
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP,tex)
+        for(let i=0;i<6;i++){
+            if(hdr){
+                gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X+i,0,gl.RGBA16F,width,height,0,gl.RGBA,gl.FLOAT,null)
+            }else{
+                gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X+i,0,gl.RGB,width,height,0,gl.RGB,gl.UNSIGNED_BYTE,null)
+            }
+            
+        }
+        if(mipmap){
+            gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        }else{
+            gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        }
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP,null);
+        return tex
+    }
+    public createEmptyRBO(width:number,height:number){
+        const gl = this.env
+        const rbo = <WebGLRenderbuffer>gl.createRenderbuffer()
+        gl.bindRenderbuffer(gl.RENDERBUFFER, rbo)
+        gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH24_STENCIL8,width,height)
+        gl.bindRenderbuffer(gl.RENDERBUFFER,null)
+        return rbo
+    }
+    public withNoDepthMask(callable:()=>any){
+        const gl = this.env
+        gl.depthMask(false)
+        callable()
+        gl.depthMask(true)
+    }
+    public  withCubicTexture(c:IAriaTexture,callable:()=>any){
+        const gl = this.env
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP,c.getTex())
+        callable()
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP,null)
+    }
+
+    public createFramebuffer(depthComponent:WebGLBuffer,texture:WebGLTexture,postTrigger:()=>any){
+        const gl = this.env
+        const fb = gl.createFramebuffer()!
+        gl.bindFramebuffer(gl.FRAMEBUFFER,fb)
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0)
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,depthComponent)
+        
+        postTrigger()
+        gl.bindFramebuffer(gl.FRAMEBUFFER,null)
+    }
+
+}
+
+export class AriaWGL2RendererShaderOps extends AriaObject{
+    shaderManager:AriaWGL2ShaderManager = new AriaWGL2ShaderManager()
+    parent:IAriaRendererCore
+    env:WebGL2RenderingContext
+    constructor(parent:IAriaRendererCore,env:WebGL2RenderingContext){
+        super("AriaWGL2RendererShaderOps")
+        this.env = env
+        this.parent = parent
+    }
+    public useShader(shader:IAriaShader, onSuccess:AriaCallable=()=>{}){
+        if(this.shaderManager.setShader(shader)){
+            onSuccess()
+        }
+    }
+    public useInvariantShader(shader:IAriaShader,effRange:()=>any){
+        this.useShader(shader)
+        this.shaderManager.disableShaderChange()
+        effRange()
+        this.shaderManager.enableShaderChange()
+    }
+
+    public defineAttribute(attName:string, value:IAriaGLBuffer, size:number = 3, type:number = this.env.FLOAT){
+        const gl = this.env
+        const acShader = this.shaderManager.getShader()
+        gl.bindBuffer(gl.ARRAY_BUFFER, value.getGLObject())
+        gl.vertexAttribPointer(acShader.getAttribute(this.parent,attName), size, type, false, 0, 0)
+        gl.enableVertexAttribArray(acShader.getAttribute(this.parent,attName))
+    }
+    public defineUniformCounter(attName:string, increment:number=1, returnAfter:boolean=true){
+        let nVal = this.shaderManager.addCounterUniform(attName, increment, returnAfter)
+        this.defineUniform(attName,AriaShaderUniformTp.ASU_VEC1I, nVal)
+        return nVal
+    }
+    public defineUniformExtend(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture), index:number=-1){
+        let nId = index
+        if(index==-1){
+            nId = this.shaderManager.allocNewExtendUniform(attName)
+        }
+        const newAttName = attName + "[" + nId + "]"
+        this.defineUniform(newAttName, type, value)
+        return nId
+    }
+    public defineUniform(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture)){
+        const gl = this.env
+        const acShader = this.shaderManager.getShader();
+        
+        const isArrayGuard = (x:any):x is number[]=>{
+            if(x instanceof Array){
+                return true
+            }
+            return false
+        }
+        const isNumGuard = (x:any):x is number=>{
+            if (typeof x == 'number'){
+                return true
+            }
+            return false
+        }
+        const isFloat32 = (x:any):x is Float32Array=>{
+            if (x instanceof Float32Array){
+                return true
+            }
+            return false
+        }
+        const isTex = (x:any):x is IAriaTexture=>{
+            return true
+        }
+        switch (type) {
+            case AriaShaderUniformTp.ASU_MAT4:
+                if(isArrayGuard(value)){
+                    gl.uniformMatrix4fv(acShader.getUniform(this.parent,attName),false,new Float32Array(value))
+                }
+                else if(isFloat32(value)){
+                    gl.uniformMatrix4fv(acShader.getUniform(this.parent,attName),false,value)
+                }else{
+                    this._logError("Invalid type")
+                }
+                break;
+            
+            case AriaShaderUniformTp.ASU_VEC3:
+                if(isArrayGuard(value)){
+                    gl.uniform3fv(acShader.getUniform(this.parent,attName),new Float32Array(value))
+                }
+                else if(isFloat32(value)){
+                    gl.uniform3fv(acShader.getUniform(this.parent,attName),value)
+                }else{
+                    this._logError("Invalid type")
+                }
+                break;
+            
+            case AriaShaderUniformTp.ASU_VEC4:
+                if(isArrayGuard(value)){
+                    gl.uniform4fv(acShader.getUniform(this.parent,attName),new Float32Array(value))
+                }
+                else if(isFloat32(value)){
+                    gl.uniform4fv(acShader.getUniform(this.parent,attName),value)
+                }else{
+                    this._logError("Invalid type")
+                }
+                break;
+            
+            case AriaShaderUniformTp.ASU_VEC1:
+                if(isNumGuard(value)){
+                    gl.uniform1f(acShader.getUniform(this.parent,attName),value)
+                }else{
+                    this._logError("Invalid type")
+                }
+                break;
+            case AriaShaderUniformTp.ASU_VEC1I:
+                if(isNumGuard(value)){
+                    gl.uniform1i(acShader.getUniform(this.parent,attName),value)
+                }else{
+                    this._logError("Invalid type")
+                }
+                break;
+            case AriaShaderUniformTp.ASU_TEX2D:
+                if(isTex(value)){
+                    const v = acShader.allocateTexture()
+                    gl.activeTexture(v)
+                    gl.bindTexture(gl.TEXTURE_2D, value.getTex())
+                    gl.uniform1i(acShader.getUniform(this.parent,attName),v-this.env.TEXTURE0);
+                }else{
+                    this._logError("Invalid type")
+                }
+                break;
+            case AriaShaderUniformTp.ASU_TEXCUBE:
+                    if(isTex(value)){
+                        const v = acShader.allocateTexture()
+                        gl.activeTexture(v)
+                        gl.bindTexture(gl.TEXTURE_CUBE_MAP, value.getTex())
+                        gl.uniform1i(acShader.getUniform(this.parent,attName),v-this.env.TEXTURE0);
+                    }else{
+                        this._logError("Invalid type")
+                    }
+                    break;
+            default:
+                this._logError("Invalid type:" + type)
+                break;
+        }
+    }
+}
+
+export class AriaWGL2RendererCore extends AriaRendererCore{
+
+    private env:WebGL2RenderingContext|null = null
+    private canvas:HTMLCanvasElement|null = null
+    private renderOps:AriaWGL2RendererRenderOps
+    private shaderOps:AriaWGL2RendererShaderOps
+
+    constructor(containerId:string){
+        super()
+        this._rename("AriaWGL2Renderer")
+        this.createRuntime(containerId)
+        this.renderOps = new AriaWGL2RendererRenderOps(this,this.env!)
+        this.shaderOps = new AriaWGL2RendererShaderOps(this,this.env!)
+    }
+
+    private createRuntime(containerId:string=this.defaultDisplayId){
+        const canvas = <HTMLCanvasElement>(document.getElementById(containerId));
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+
+        this.env = canvas.getContext("webgl2", { stencil: true })
+        || (()=>{
+            this._logError("WebGL2 is not supported. Update your browser to view the content")
+            return null
+        })();
+        if(this.env!=null){
+            this._logInfo("Initialized WebGL2 context")
+        }
+
+        this.canvas = canvas
+        const gl = this.env!
+        gl.viewport(0,0,window.innerWidth,window.innerHeight)
+        gl.disable(gl.CULL_FACE)
+
+        if(gl.getExtension('EXT_color_buffer_float')==null){
+            this._logError("Cannot enable extension `EXT_color_buffer_float`. Please upgrade your browser!")
+        }else{
+            this._logInfo("Enabled extension `EXT_color_buffer_float`")
+        }
+    }
+
+    public getCanvas(): HTMLCanvasElement{
+        if(this.canvas==undefined||this.canvas==null){
+            this._logError("Canvas is not defined")
+        }
+        return <HTMLCanvasElement>this.canvas
+    }
+
+    public getEnv(): WebGL2RenderingContext{
+        if(this.env==null){
+            this._logError("WebGL2 context is not valid")
+        }
+        return <WebGL2RenderingContext>this.env
+    }
+    public defineUniform(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture)){
+        return this.shaderOps.defineUniform(attName,type,value)
+    }
+    public setCameraPos(x:number,y:number,z:number){
+        return this.renderOps.setCameraPos(x,y,z)
+    }
+    public  defineAttribute(attName:string, value:IAriaGLBuffer, size?:number, type?:number){
+        size = (size === undefined)? 3 : size
+        type = (type === undefined)? this.env?.FLOAT : size
+        return this.shaderOps.defineAttribute(attName,value,size,type)
+    }
+
+    public createFramebuffer(depthComponent:WebGLBuffer,texture:WebGLTexture,postTrigger:()=>any):any{
+        return this.createFramebuffer(depthComponent,texture,postTrigger)
+    }
+    public clearScreen(): void {
+        return this.renderOps.clearScreen()
+    }
+    public activateFramebuffer(buf:IAriaFramebuffer){
+        return this.renderOps.activateFramebuffer(buf)
+    }
+    public removeFramebuffer(){
+        return this.renderOps.removeFramebuffer()
+    }
+    public createEmptyRBO(width:number,height:number):WebGLBuffer{
+        return this.renderOps.createEmptyRBO(width,height)
+    }
+    public createEmptyTexture(width:number, height:number, mipmap?:boolean, hdr?:boolean){
+        mipmap = (mipmap === undefined)?false:mipmap
+        hdr = (hdr === undefined)?true:hdr
+        return this.renderOps.createEmptyTexture(width,height,mipmap,hdr)
+    }
+    public  createEmptyCubicTexture(width:number, height:number, mipmap?:boolean, hdr?:boolean){
+        mipmap = (mipmap === undefined)?false:mipmap
+        hdr = (hdr === undefined)?true:hdr
+        return this.renderOps.createEmptyCubicTexture(width,height,mipmap,hdr)
+    }
+    public getCubicLookat(x:number){
+        return this.renderOps.getCubicLookat(x)
+    }
+    public readElementBuffer(destBuffer:ArrayBuffer){
+        return this.renderOps.readElementBuffer(destBuffer)
+    }
+    public initShaderProgram(vsrc:string,fsrc:string):WebGLProgram|null{
+        return this.renderOps.initShaderProgram(vsrc,fsrc,true)
+    }
+    public useShader(shader:IAriaShader, onSuccess?:AriaCallable){
+        onSuccess = (onSuccess===undefined)?(()=>{}):onSuccess
+        return this.shaderOps.useShader(shader,onSuccess)
+    }
+    public createTexture(img:HTMLImageElement):WebGLTexture{
+        return this.renderOps.createTexture(img)
+    }
+    public readArrayBuffer(destBuffer:ArrayBuffer){
+        return this.renderOps.readArrayBuffer(destBuffer)
+    }
+    public defineUniformCounter(attName:string, increment?:number, returnAfter?:boolean){
+        increment = (increment === undefined)?1:increment
+        returnAfter = (returnAfter === undefined)?true:returnAfter
+        return this.shaderOps.defineUniformCounter(attName,increment,returnAfter)
+    }
+    public defineUniformExtend(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture), index:number){
+        return this.shaderOps.defineUniformExtend(attName,type,value,index)
+    }
+    public createCubicTexture(img:HTMLImageElement[]):WebGLTexture{
+        return this.renderOps.createCubicTexture(img)
+    }
+    public useInvariantShader(shader:IAriaShader,effRange:()=>any){
+        return this.shaderOps.useInvariantShader(shader,effRange)
+    }
+    public renderInstancedEntry(num:number, instances?:number){
+        instances = (instances == undefined)?1:instances
+        return this.renderOps.renderInstancedEntry(num,instances)
+    }
+    public clearScreenRequest(){
+        return this.renderOps.clearScreenRequest()
+    }
+    public withCubicTexture(c:IAriaTexture,callable:()=>any){
+        return this.renderOps.withCubicTexture(c,callable)
+    }
+    public withNoDepthMask(callable:()=>any){
+        return this.renderOps.withNoDepthMask(callable)
+    }
+}

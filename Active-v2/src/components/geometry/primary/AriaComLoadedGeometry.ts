@@ -1,3 +1,4 @@
+import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore";
 import { AriaComGeometry } from "../base/AriaComGeometry";
 
 export class AriaComLoadedGeometry extends AriaComGeometry{
@@ -13,8 +14,8 @@ export class AriaComLoadedGeometry extends AriaComGeometry{
         this._rec = proc
         this._elements = nums
     }
-    public exportToShader(): void {
-        super.exportToShader()
+    public exportToShader(renderer: IAriaRendererCore): void {
+        super.exportToShader(renderer)
         this._rec()
     }
     public getVertexNumber(): number {

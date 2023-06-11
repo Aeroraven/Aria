@@ -3,6 +3,7 @@ import { AriaShaderOps } from "../../../core/graphics/AriaShaderOps";
 import { AriaComEBO } from "../../base/AriaComEBO";
 import { AriaComVAO } from "../../base/AriaComVAO";
 import { AriaComGeometry, AriaGeometryVars } from "../base/AriaComGeometry";
+import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore";
 
 export class AriaComSphere extends AriaComGeometry{
     private posBuf: AriaComVAO
@@ -119,11 +120,10 @@ export class AriaComSphere extends AriaComGeometry{
         this.normBuf.setData(this.norv)
         this.eleBuf.setData(this.elv)
     }
-
-    public exportToShader(): void {
-        super.exportToShader()
-        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
-        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_NORMAL, this.normBuf)
+    public exportToShader(renderer: IAriaRendererCore): void {
+        super.exportToShader(renderer)
+        renderer.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
+        renderer.defineAttribute(AriaGeometryVars.AGV_NORMAL, this.normBuf)
         this.eleBuf.bind()
     }
 

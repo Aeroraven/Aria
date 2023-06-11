@@ -4,6 +4,7 @@ import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
 import vertex from "../shaders/postprocess/gaussian-blur-horizontal/vertex.glsl"
 import fragment from "../shaders/postprocess/gaussian-blur-horizontal/fragment.glsl"
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxGaussianBlurHorizontal extends AriaComPostPass{
     private _sigma = 5
@@ -31,13 +32,13 @@ export class AriaPostFxGaussianBlurHorizontal extends AriaComPostPass{
         }
         this._kernelWid = Math.floor(3*this._sigma)
     }
-    render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
-        super.render([()=>{
-            AriaShaderOps.defineUniform("uSigma",AriaShaderUniformTp.ASU_VEC1, this._sigma)
+    render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
+        super.render(renderer,[()=>{
+            renderer.defineUniform("uSigma",AriaShaderUniformTp.ASU_VEC1, this._sigma)
             for(let i=0;i<2*(this._kernelWid)+1;i++){
-                AriaShaderOps.defineUniformExtend("kernel",AriaShaderUniformTp.ASU_VEC1,this._kernel[i],i);
+                renderer.defineUniformExtend("kernel",AriaShaderUniformTp.ASU_VEC1,this._kernel[i],i);
             }
-            AriaShaderOps.defineUniform("sum",AriaShaderUniformTp.ASU_VEC1,this._kernelSum)
+            renderer.defineUniform("sum",AriaShaderUniformTp.ASU_VEC1,this._kernelSum)
         }])
     }
 }

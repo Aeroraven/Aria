@@ -2,6 +2,7 @@ import { AriaComponent } from "../../core/AriaComponent";
 import { AriaEnv } from "../../core/graphics/AriaEnv";
 import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
 import { IAriaGLBuffer } from "../../core/interface/IAriaGLBuffer";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaComEBO extends AriaComponent implements IAriaGLBuffer{
     private _buf:WebGLBuffer
@@ -40,13 +41,13 @@ export class AriaComEBO extends AriaComponent implements IAriaGLBuffer{
         this._buf = v
     }
 
-    public getRawData(){
+    public getRawData(renderer:IAriaRendererCore){
         if(this._bufLen == -1){
             this._logError("Buffer length is not specified")
         }
         let arb = new ArrayBuffer(this._bufLen * Uint16Array.BYTES_PER_ELEMENT)
         this.bind()
-        AriaRenderOps.readElementBuffer(arb)
+        renderer.readElementBuffer(arb)
         this.unbind()
         return new Uint16Array(arb)
 

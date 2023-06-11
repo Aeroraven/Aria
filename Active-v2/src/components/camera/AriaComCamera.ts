@@ -9,6 +9,7 @@ import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter"
 import { IAriaInteractive } from "../base/interface/IAriaInteractive"
 import { IAriaRenderable } from "../base/interface/IAriaRenderable"
 import { IAriaRenderInitiator, IAriaRenderInitiatorOptions } from "../base/interface/IAriaRenderInitiator"
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore"
 
 export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, IAriaInteractive, IAriaRenderInitiator{
     camPos:Float32Array
@@ -63,18 +64,16 @@ export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, 
         mat4.lookAt(this.camLookAt,this.camPos,this.camLookAtCenter,this.camUp)
     }
     initiateRender(renderables: AriaObjArray<IAriaRenderable<void>>, options: IAriaRenderInitiatorOptions={}): void {
+        this._logError("aria_com_camera: function deprecated")
         const injectRenderTriggers = [
             ()=>{
-                this.exportToShader()
+                //this.exportToShader()
             }
         ]
-        AriaAuxiliaryOps.iterateObjArray(renderables,(x)=>{
-            x.render(injectRenderTriggers)
-        })
     }
 
-
-    exportToShader(): void {
+    
+    exportToShader(renderer:IAriaRendererCore): void {
         const gl = AriaEnv.env
         //Computation
         const modelview = this.getLookAt()
@@ -88,20 +87,20 @@ export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, 
         mat4.transpose(modelIT,modelIT2)
 
         //Emitter
-        AriaShaderOps.defineUniform("uModel", AriaShaderUniformTp.ASU_MAT4, modelview)
-        AriaShaderOps.defineUniform("uModel3", AriaShaderUniformTp.ASU_MAT4, model3)
-        AriaShaderOps.defineUniform("uProj", AriaShaderUniformTp.ASU_MAT4, projectionMatrix)
-        AriaShaderOps.defineUniform("uViewOrtho", AriaShaderUniformTp.ASU_MAT4, viewportOrtho)
-        AriaShaderOps.defineUniform("uShadowOrtho", AriaShaderUniformTp.ASU_MAT4, shadowOrtho)
-        AriaShaderOps.defineUniform("uModelIT", AriaShaderUniformTp.ASU_MAT4, modelIT)
-        AriaShaderOps.defineUniform("uCamPos", AriaShaderUniformTp.ASU_VEC3, this.getCamPosArray())
-        AriaShaderOps.defineUniform("uCamFront", AriaShaderUniformTp.ASU_VEC3, this.getCamFrontArray())
-        AriaShaderOps.defineUniform("uCamAspect", AriaShaderUniformTp.ASU_VEC1, this.getAspect())
-        AriaShaderOps.defineUniform("uScrWidth", AriaShaderUniformTp.ASU_VEC1, window.innerWidth)
-        AriaShaderOps.defineUniform("uScrHeight", AriaShaderUniformTp.ASU_VEC1, window.innerHeight)
+        renderer.defineUniform("uModel", AriaShaderUniformTp.ASU_MAT4, modelview)
+        renderer.defineUniform("uModel3", AriaShaderUniformTp.ASU_MAT4, model3)
+        renderer.defineUniform("uProj", AriaShaderUniformTp.ASU_MAT4, projectionMatrix)
+        renderer.defineUniform("uViewOrtho", AriaShaderUniformTp.ASU_MAT4, viewportOrtho)
+        renderer.defineUniform("uShadowOrtho", AriaShaderUniformTp.ASU_MAT4, shadowOrtho)
+        renderer.defineUniform("uModelIT", AriaShaderUniformTp.ASU_MAT4, modelIT)
+        renderer.defineUniform("uCamPos", AriaShaderUniformTp.ASU_VEC3, this.getCamPosArray())
+        renderer.defineUniform("uCamFront", AriaShaderUniformTp.ASU_VEC3, this.getCamFrontArray())
+        renderer.defineUniform("uCamAspect", AriaShaderUniformTp.ASU_VEC1, this.getAspect())
+        renderer.defineUniform("uScrWidth", AriaShaderUniformTp.ASU_VEC1, window.innerWidth)
+        renderer.defineUniform("uScrHeight", AriaShaderUniformTp.ASU_VEC1, window.innerHeight)
 
         //Framebuffer Hooks
-        AriaRenderOps.setCameraPos(this.camPos[0],this.camPos[1],this.camPos[2])
+        renderer.setCameraPos(this.camPos[0],this.camPos[1],this.camPos[2])
     }
     disableInteraction(){
         this.winListenerEnable = false

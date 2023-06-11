@@ -1,4 +1,5 @@
 import { AriaShaderOps } from "../../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore";
 import { AriaComEBO } from "../../base/AriaComEBO";
 import { AriaComVAO } from "../../base/AriaComVAO";
 import { AriaComGeometry, AriaGeometryVars } from "../base/AriaComGeometry";
@@ -43,11 +44,10 @@ export class AriaComRectangle extends AriaComGeometry{
         }
         this.eleBuf.setData(eleData)
     }
-
-    public exportToShader(): void {
-        super.exportToShader()
-        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
-        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_TEXTURE_POSITION, this.texBuf, 2)
+    public exportToShader(renderer: IAriaRendererCore): void {
+        super.exportToShader(renderer)
+        renderer.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
+        renderer.defineAttribute(AriaGeometryVars.AGV_TEXTURE_POSITION, this.texBuf, 2)
         this.eleBuf.bind()
     }
 

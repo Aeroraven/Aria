@@ -7,6 +7,7 @@ import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { AriaPostFxIdentity } from "./AriaPostFxIdentity";
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxMipmapDownsample extends AriaComPostPass{
     private _canvas:IAriaCanavs = new AriaComCanvas(1,true,true)
@@ -31,13 +32,13 @@ export class AriaPostFxMipmapDownsample extends AriaComPostPass{
         this._lod = v
     }
     
-    render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
-        this._canvas.compose(()=>{
-            this._genMipPass.render()
+    render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
+        this._canvas.compose(renderer,()=>{
+            this._genMipPass.render(renderer)
         })
-        super.render([
+        super.render(renderer,[
             ()=>{
-                AriaShaderOps.defineUniform("uLOD",AriaShaderUniformTp.ASU_VEC1,this._lod)
+                renderer.defineUniform("uLOD",AriaShaderUniformTp.ASU_VEC1,this._lod)
             }
         ])
     }

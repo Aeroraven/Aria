@@ -13,12 +13,16 @@ import { AriaSimpleMaterial } from "../presets/materials/AriaSimpleMaterial";
 import { AriaSingleColorMaterial } from "../presets/materials/AriaSingleColorMaterial";
 import { AriaPostFxIdentity } from "../presets/postprocess/AriaPostFxIdentity";
 import { AriaStage } from "./AriaStage";
+import { AriaWGL2Renderer } from "../components/renderer/AriaWGL2Renderer";
 
 export class AriaStagePointLight extends AriaStage{
     constructor(){
         super("AriaStage/PointLight")
     }
     public async entry(): Promise<void> {
+        //Renderer  
+        const renderer = new AriaWGL2Renderer("webgl_displayer")
+        
         const material = new AriaSimpleMaterial()
         material.setColor(1,1,0,1)
 
@@ -61,9 +65,8 @@ export class AriaStagePointLight extends AriaStage{
         panel.initInteraction()
 
         const drawCall = ()=>{
-            
-            light.generateShadowMap(scene)
-            camera.initiateRender(scene)
+            light.generateShadowMap(renderer.getEngine(),scene)
+            renderer.renderScene(camera,scene)
             panel.reqAniFrame(drawCall)
         }
         drawCall()

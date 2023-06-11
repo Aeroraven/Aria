@@ -1,3 +1,5 @@
+import { IAriaRendererCore } from "./IAriaRendererCore";
+
 export interface IAriaShaderEmitter{
-    exportToShader():void
+    exportToShader(renderer:IAriaRendererCore):void
 }

@@ -9,6 +9,7 @@ import { AriaPostFxMLAAMixing } from "./AriaPostFxMLAAMixing";
 import { AriaPostFxGrayscale } from "./AriaPostFxGrayscale";
 import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxMLAA extends AriaComPostPass{
     pass0: AriaComPostPass
@@ -47,16 +48,16 @@ export class AriaPostFxMLAA extends AriaComPostPass{
         return this
     }
 
-    public render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
-        this.canvas0.compose(()=>{
-            this.pass0.render()
+    public render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
+        this.canvas0.compose(renderer,()=>{
+            this.pass0.render(renderer)
         })
-        this.canvas1.compose(()=>{
-            this.pass1.render()
+        this.canvas1.compose(renderer,()=>{
+            this.pass1.render(renderer)
         })
-        this.canvas2.compose(()=>{
-            this.pass2.render()
+        this.canvas2.compose(renderer,()=>{
+            this.pass2.render(renderer)
         })
-        this.pass3.render()
+        this.pass3.render(renderer)
     }
 }

@@ -1,4 +1,5 @@
 import { AriaShaderOps } from "../../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore";
 import { AriaComEBO } from "../../base/AriaComEBO";
 import { AriaComVAO } from "../../base/AriaComVAO";
 import { AriaVoxel } from "../../voxel/AriaVoxel";
@@ -107,11 +108,10 @@ export class AriaComVoxelCubeVisualizer extends AriaComGeometry{
         this.normBuf.setData(nbfst)
         this._valid = true
     }
-
-    public exportToShader(): void {
-        super.exportToShader()
-        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
-        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_NORMAL,this.normBuf)
+    public exportToShader(renderer: IAriaRendererCore): void {
+        super.exportToShader(renderer)
+        renderer.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
+        renderer.defineAttribute(AriaGeometryVars.AGV_NORMAL,this.normBuf)
         this.eleBuf.bind()
     }
 

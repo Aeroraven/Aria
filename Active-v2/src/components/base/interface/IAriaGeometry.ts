@@ -1,4 +1,5 @@
-export interface IAriaGeometry{
-    exportToShader():void
+import { IAriaShaderEmitter } from "../../../core/interface/IAriaShaderEmitter";
+
+export interface IAriaGeometry extends IAriaShaderEmitter{
     getVertexNumber():number
 }

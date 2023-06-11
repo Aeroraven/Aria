@@ -11,15 +11,18 @@ import { AriaComParamPanel } from "../components/ui/panel/AriaComParamPanel";
 import { AriaSingleColorMaterial } from "../presets/materials/AriaSingleColorMaterial";
 import { AriaPostFxSimpleBloom } from "../presets/postprocess/AriaPostFxSimpleBloom";
 import { AriaComCube } from "../components/geometry/primary/AriaComCube";
+import { AriaWGL2Renderer } from "../components/renderer/AriaWGL2Renderer";
 
 export class AriaStageBloom extends AriaStage{
     constructor(){
         super("AriaStage/Bloom")
     }
     async entry(){
+        //Renderer  
+        const renderer = new AriaWGL2Renderer("webgl_displayer")
         //Resources
         const shaderSource = await (new AriaComShaderLoader()).loadFolder("./shaders/01-hello-world")
-        const kleeModel = await(new AriaComGLTFLoader()).load("./models/klee2/untitled.gltf")
+        const kleeModel = await(new AriaComGLTFLoader()).load(renderer.getEngine(),"./models/klee2/untitled.gltf")
     
         //Scene
         const canvasOrg = new AriaComCanvas(1)
@@ -62,11 +65,10 @@ export class AriaStageBloom extends AriaStage{
     
         //Render
         const renderCall = ()=>{
-            canvasOrg.compose(()=>{
-                scene.render()
+            renderer.renderComposite(canvasOrg,()=>{
+                renderer.renderSimple(scene)
             })
-            postBlurA.render()
-           
+            renderer.renderSimple(postBlurA)
             panel.reqAniFrame(renderCall)
         }
         renderCall()

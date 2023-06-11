@@ -4,6 +4,7 @@ import { AriaRenderOps } from "../../core/graphics/AriaRenderOps"
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps"
 import { IAriaFramebuffer } from "../../core/interface/IAriaFramebuffer"
 import { IAriaGLBuffer } from "../../core/interface/IAriaGLBuffer"
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore"
 import { AriaComTexture } from "./AriaComTexture"
 import { IAriaTextureAttached } from "./interface/IAriaTextureAttached"
 
@@ -60,11 +61,14 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
     protected tex:WebGLTexture
     protected rbos:WebGLRenderbuffer[]
     protected options:AriaFramebufferOption
-    protected texWrapper: AriaComTexture = new AriaComTexture()
+    protected texWrapper: AriaComTexture
+    protected renderer:IAriaRendererCore
     
-    constructor(options: AriaFramebufferOption | null){
+    constructor(renderer:IAriaRendererCore,options: AriaFramebufferOption | null){
         super("AriaCom/Framebuffer")
+        this.renderer = renderer
         this.options = options ? options : new AriaFramebufferOption();
+        this.texWrapper  = new AriaComTexture(renderer)
         this.gl = AriaEnv.env
         const gl = this.gl
         
@@ -76,22 +80,22 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         gl.bindFramebuffer(gl.FRAMEBUFFER,this.fb)
         
         if(!this.options.cubic){
-            this.tex = AriaRenderOps.createEmptyTexture(wid,height,this.options.mipmap,this.options.enableHdr)
+            this.tex = renderer.createEmptyTexture(wid,height,this.options.mipmap,this.options.enableHdr)
             gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.tex,0)
         }else{
-            this.tex = AriaRenderOps.createEmptyCubicTexture(wid,height,this.options.mipmap,this.options.enableHdr)
+            this.tex = renderer.createEmptyCubicTexture(wid,height,this.options.mipmap,this.options.enableHdr)
             gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_CUBE_MAP_POSITIVE_X,this.tex,0)
         }
 
         this.rbos = []
         if(this.options.cubic){
             for(let i=0;i<6;i++){
-                this.rbos.push(AriaRenderOps.createEmptyRBO(wid,height))
+                this.rbos.push(renderer.createEmptyRBO(wid,height))
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[i])
             }
             gl.bindFramebuffer(gl.FRAMEBUFFER,null)
         }else{
-            this.rbos.push(AriaRenderOps.createEmptyRBO(wid,height))
+            this.rbos.push(renderer.createEmptyRBO(wid,height))
             gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[0])
             gl.bindFramebuffer(gl.FRAMEBUFFER,null)
         }
@@ -100,25 +104,25 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         this.texWrapper.setTex(this.tex)
         
     }
-    onClear(){
+    onClear(renderer:IAriaRendererCore){
         
         const gl = this.gl
         if(this.options.cubic){
             for(let i=0;i<6;i++){
                 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.tex, 0);
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[i])
-                AriaRenderOps.clearScreen()
+                renderer.clearScreen()
             }
         }else{
-            AriaRenderOps.clearScreen()
+            renderer.clearScreen()
         }
     }
     
-    onRender(renderCall: () => any): void {
+    onRender(renderer:IAriaRendererCore,renderCall: () => any): void {
         if(this.options.cubic){
             const gl = this.gl
             for(let i=0;i<6;i++){
-                AriaShaderOps.defineUniform("uModel",AriaShaderUniformTp.ASU_MAT4,AriaRenderOps.getCubicLookat(i)) 
+                renderer.defineUniform("uModel",AriaShaderUniformTp.ASU_MAT4,renderer.getCubicLookat(i)) 
                 gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.tex, 0);
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[i])
                 renderCall()
@@ -147,7 +151,7 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
             this.gl.viewport(0,0,1024,1024)
         }
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER,this.fb)
-        AriaRenderOps.activateFramebuffer(this)
+        this.renderer.activateFramebuffer(this)
     }
     public unbind(){
         if(this.options.mipmap){
@@ -157,6 +161,6 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         }
         this.gl.viewport(0,0,window.innerWidth,window.innerHeight)
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER,null)
-        AriaRenderOps.removeFramebuffer()
+        this.renderer.removeFramebuffer()
     }
 }

@@ -4,6 +4,7 @@ import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
 import vertex from "../shaders/postprocess/kawase-blur-single/vertex.glsl"
 import fragment from "../shaders/postprocess/kawase-blur-single/fragment.glsl"
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxKawaseBlurSinglePass extends AriaComPostPass{
     private _blurRange = 0
@@ -21,9 +22,9 @@ export class AriaPostFxKawaseBlurSinglePass extends AriaComPostPass{
     setBlurRange(v:number){
         this._blurRange = v
     }
-    render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
-        super.render([()=>{
-            AriaShaderOps.defineUniform("uBlurRange",AriaShaderUniformTp.ASU_VEC1, this._blurRange)
+    render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
+        super.render(renderer,[()=>{
+            renderer.defineUniform("uBlurRange",AriaShaderUniformTp.ASU_VEC1, this._blurRange)
         }])
     }
 }

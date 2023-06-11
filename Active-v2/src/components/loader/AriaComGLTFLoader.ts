@@ -8,6 +8,7 @@ import { AriaComVAO } from '../base/AriaComVAO';
 import { IAriaModelContent } from '../base/interface/IAriaModelContent';
 import { AriaGeometryVars } from '../geometry/base/AriaComGeometry';
 import { AriaComLoadedGeometry } from '../geometry/primary/AriaComLoadedGeometry';
+import { IAriaRendererCore } from '../../core/interface/IAriaRendererCore';
 
 interface AriaLoaderGLTFBuf{
     buffer: WebGLBuffer,
@@ -27,8 +28,8 @@ export class AriaComGLTFLoader extends AriaComponent{
     constructor(){
         super("AriaCom/GLTFLoader")
     }
-    public async load(path:string){
-        const gl = AriaEnv.env
+    public async load(renderer:IAriaRendererCore, path:string){
+        const gl = renderer.getEnv()
         const model =  await gltf.loadModel(gl,path)
         const mesh = model.meshes[<number>model.nodes[0].mesh]
         this.model = model
@@ -46,7 +47,7 @@ export class AriaComGLTFLoader extends AriaComponent{
 
             const eleBufT = this.getElementBuffer(i)
             const eleBuf = new AriaComEBO(eleBufT,this.getElements(i))
-            const eleBufRaw = eleBuf.getRawData()
+            const eleBufRaw = eleBuf.getRawData(renderer)
 
             const posBufT = this.getPosBuffer(i)
             const posBufMax = (()=>{
@@ -65,19 +66,19 @@ export class AriaComGLTFLoader extends AriaComponent{
             const normBuf = new AriaComVAO(normBufT.buffer)
 
             ret.bufData.push({
-                position:posBuf.getRawData(),
-                elements:eleBuf.getRawData()
+                position:posBuf.getRawData(renderer),
+                elements:eleBuf.getRawData(renderer)
             })
 
             ng.record(()=>{
-                AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, posBuf, posBufT.size, posBufT.type)
-                AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_TEXTURE_POSITION, texBuf, texBufT.size, texBufT.type)
-                AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_NORMAL, normBuf, normBufT.size, normBufT.type)
+                renderer.defineAttribute(AriaGeometryVars.AGV_POSITION, posBuf, posBufT.size, posBufT.type)
+                renderer.defineAttribute(AriaGeometryVars.AGV_TEXTURE_POSITION, texBuf, texBufT.size, texBufT.type)
+                renderer.defineAttribute(AriaGeometryVars.AGV_NORMAL, normBuf, normBufT.size, normBufT.type)
                 eleBuf.bind()
             },this.getElements(i))
             ret.geometries.push(ng)
 
-            const tx = new AriaComTexture()
+            const tx = new AriaComTexture(renderer)
             tx.setTex(this.getBaseMaterialTexture(i))
             ret.textures.push(tx)
         }

@@ -6,6 +6,7 @@ import { AriaComCube } from "../geometry/primary/AriaComCube";
 import { IAriaTexture } from "../../core/interface/IAriaTexture";
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaComSkyBox extends AriaComMesh{
     private _cubeMap:IAriaTexture|null = null
@@ -23,14 +24,14 @@ export class AriaComSkyBox extends AriaComMesh{
     public setTexture(c:IAriaTexture){
         this._cubeMap = c
     }
-    public render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
+    public render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
         const pt = (preTriggers)?preTriggers:[]
         if(this._cubeMap!=null){
-            AriaRenderOps.withCubicTexture(this._cubeMap,()=>{
-                AriaRenderOps.withNoDepthMask(()=>{
-                    super.render(pt.concat([
+            renderer.withCubicTexture(this._cubeMap,()=>{
+                renderer.withNoDepthMask(()=>{
+                    super.render(renderer,pt.concat([
                         ()=>{
-                            AriaShaderOps.defineUniform("uSkybox",AriaShaderUniformTp.ASU_TEXCUBE,this._cubeMap!)
+                            renderer.defineUniform("uSkybox",AriaShaderUniformTp.ASU_TEXCUBE,this._cubeMap!)
                         }
                     ]))
                 })

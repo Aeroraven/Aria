@@ -4,10 +4,11 @@ import { IAriaShader } from "../../core/interface/IAriaShader";
 import { AriaComShader } from "../base/AriaComShader";
 import { IAriaComShaderSource } from "../base/interface/IAriaComShaderSource";
 import { AriaComMaterial } from "./AriaComMaterial";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaComShaderMaterial extends AriaComMaterial{
     private _shader: IAriaShader|null = null
-    
+
     constructor(m:IAriaComShaderSource|null = null){
         super("AriaCom/ShaderMaterial")
         if(m==null){
@@ -23,23 +24,23 @@ export class AriaComShaderMaterial extends AriaComMaterial{
         return this
     }
     
-    public use(): void {
+    public use(renderer:IAriaRendererCore): void {
         if(this._shader==null){
             this._logError("Cannot use empty shader")
             return
         }
-        this._shader.use()
-        this.exportToShader()
+        this._shader.use(renderer)
+        this.exportToShader(renderer)
     }
 
-    public withShader(callable:AriaCallable){
+    public withShader(renderer:IAriaRendererCore,callable:AriaCallable){
         if(this._shader==null){
             this._logError("Cannot use empty shader")
             return
         }
-        this._shader.use()
-        AriaShaderOps.useInvariantShader(this._shader,()=>{
-            this.exportToShader()
+        this._shader.use(renderer)
+        renderer.useInvariantShader(this._shader,()=>{
+            this.exportToShader(renderer)
             callable()
         })
     }

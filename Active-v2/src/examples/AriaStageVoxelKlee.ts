@@ -24,12 +24,17 @@ import { AriaComShaderMaterial } from "../components/material/AriaComShaderMater
 import { AriaShaderUniformTp } from "../core/graphics/AriaShaderOps";
 import { AriaComVoxelizer } from "../components/voxel/voxelization/AriaComVoxelizer";
 import { AriaAuxiliaryOps } from "../core/AriaAuxiliaryOps";
+import { AriaWGL2Renderer } from "../components/renderer/AriaWGL2Renderer";
 
 export class AriaStageVoxelKlee extends AriaStage{
     constructor(){
         super("AriaStage/VoxelKlee")
     }
     public async entry(): Promise<void> {
+        //Renderer  
+        const renderer = new AriaWGL2Renderer("webgl_displayer")
+        
+        
         const panel = new AriaComParamPanel()
         panel.addTitle("Voxelization (Non-optimized)")
         panel.addFPSMeter("FPS")
@@ -38,7 +43,7 @@ export class AriaStageVoxelKlee extends AriaStage{
 
         //Resources
         panel.setStatus("Loading model")
-        const kleeModel = await(new AriaComGLTFLoader()).load("./models/klee2/untitled.gltf")
+        const kleeModel = await(new AriaComGLTFLoader()).load(renderer.getEngine(),"./models/klee2/untitled.gltf")
 
         const toTrivialTriangles = (ind:Uint16Array,faces:Float32Array)=>{
             this._logInfo("Converting voxels")
@@ -94,7 +99,7 @@ export class AriaStageVoxelKlee extends AriaStage{
 
         
         const renderCall = ()=>{
-            camera.initiateRender(scene)
+            renderer.renderScene(camera,scene)
             panel.reqAniFrame(renderCall)
         }
         renderCall()

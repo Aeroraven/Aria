@@ -1,5 +1,6 @@
 import { AriaComponent } from "../../core/AriaComponent";
 import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { AriaComLight, AriaLightShaderVars } from "./AriaComLight";
 
 export class AriaComAmbientLight extends AriaComLight{
@@ -20,11 +21,11 @@ export class AriaComAmbientLight extends AriaComLight{
         this._lightPosition[1] = y
         this._lightPosition[2] = z
     }
-    public exportToShader(): void {
-        super.exportToShader()
+    public exportToShader(renderer:IAriaRendererCore): void {
+        super.exportToShader(renderer)
         const id = this._shaderId-1
-        AriaShaderOps.defineUniformExtend(AriaLightShaderVars.ALSV_TYPE, AriaShaderUniformTp.ASU_VEC1I, 2, id)
-        AriaShaderOps.defineUniformExtend(AriaLightShaderVars.ALSV_COLOR, AriaShaderUniformTp.ASU_VEC4, this._lightColor, id)
-        AriaShaderOps.defineUniformExtend(AriaLightShaderVars.ALSV_POS, AriaShaderUniformTp.ASU_VEC3, this._lightPosition, id)
+        renderer.defineUniformExtend(AriaLightShaderVars.ALSV_TYPE, AriaShaderUniformTp.ASU_VEC1I, 2, id)
+        renderer.defineUniformExtend(AriaLightShaderVars.ALSV_COLOR, AriaShaderUniformTp.ASU_VEC4, this._lightColor, id)
+        renderer.defineUniformExtend(AriaLightShaderVars.ALSV_POS, AriaShaderUniformTp.ASU_VEC3, this._lightPosition, id)
     }
 }

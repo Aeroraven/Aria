@@ -6,6 +6,7 @@ import { AriaPostFxGaussianBlurHorizontal } from "./AriaPostFxGaussianBlurHorizo
 import { AriaPostFxCombine } from "./AriaPostFxCombine";
 import { AriaPostFxIdentity } from "./AriaPostFxIdentity";
 import { AriaPostFxGaussianBlur } from "./AriaPostFxGaussianBlur";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxGaussianBloom extends AriaComPostPass{
     private _sigma:number[] = []
@@ -59,22 +60,22 @@ export class AriaPostFxGaussianBloom extends AriaComPostPass{
         }
     }
 
-    public render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
+    public render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
         if(this._sigma.length==0){
-            this._passIdentity.render()
+            this._passIdentity.render(renderer)
         }else{
-            this._canvasIdentity.compose(()=>{
-                this._passIdentity.render()
+            this._canvasIdentity.compose(renderer,()=>{
+                this._passIdentity.render(renderer)
             })
             for(let i=0;i<this._sigma.length;i++){
-                this._canvases[i*2].compose(()=>{
-                    this._pass0[i].render()
+                this._canvases[i*2].compose(renderer,()=>{
+                    this._pass0[i].render(renderer)
                 })
                 if(i+1==this._sigma.length){
-                    this._pass1[i].render()
+                    this._pass1[i].render(renderer)
                 }else{
-                    this._canvases[i*2+1].compose(()=>{
-                        this._pass1[i].render()
+                    this._canvases[i*2+1].compose(renderer,()=>{
+                        this._pass1[i].render(renderer)
                     })
                 }
                 

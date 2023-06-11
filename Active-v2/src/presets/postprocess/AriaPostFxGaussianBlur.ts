@@ -3,6 +3,7 @@ import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaPostFxGaussianBlurVertical } from "./AriaPostFxGaussianBlurVertical";
 import { AriaPostFxGaussianBlurHorizontal } from "./AriaPostFxGaussianBlurHorizontal";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxGaussianBlur extends AriaComPostPass{
     private pass0: AriaPostFxGaussianBlurVertical
@@ -33,10 +34,10 @@ export class AriaPostFxGaussianBlur extends AriaComPostPass{
         this.pass1.setSigma(v)
     }
 
-    public render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
-        this.canvas0.compose(()=>{
-            this.pass0.render()
+    public render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
+        this.canvas0.compose(renderer,()=>{
+            this.pass0.render(renderer)
         })
-        this.pass1.render()
+        this.pass1.render(renderer)
     }
 }

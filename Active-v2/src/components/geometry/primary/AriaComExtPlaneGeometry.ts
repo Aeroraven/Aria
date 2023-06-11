@@ -1,5 +1,6 @@
 import { AriaArithmetic } from "../../../core/arithmetic/AriaArithmetic";
 import { AriaShaderOps } from "../../../core/graphics/AriaShaderOps";
+import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore";
 import { AriaComEBO } from "../../base/AriaComEBO";
 import { AriaComVAO } from "../../base/AriaComVAO";
 import { AriaComGeometry, AriaGeometryVars } from "../base/AriaComGeometry";
@@ -121,14 +122,14 @@ export class AriaComExtPlaneGeometry extends AriaComGeometry{
     public getVertexNumber(): number {
         return (this.cx-1)*(this.cz-1)*6
     }
-    public exportToShader(): void {
-        super.exportToShader()
+    public exportToShader(renderer: IAriaRendererCore): void {
+        super.exportToShader(renderer)
         if(this.compiledStat==false){
             this.compile()
             this.compiledStat=true
         }
-        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
-        AriaShaderOps.defineAttribute(AriaGeometryVars.AGV_NORMAL, this.normBuf)
+        renderer.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
+        renderer.defineAttribute(AriaGeometryVars.AGV_NORMAL, this.normBuf)
         this.eleBuf.bind()
     }
 }

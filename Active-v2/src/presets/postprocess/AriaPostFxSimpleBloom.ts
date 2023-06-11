@@ -7,6 +7,7 @@ import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { AriaPostFxSimpleBloomUpsample } from "./AriaPostFxSimpleBloomUpsample";
 import { AriaPostFxMipmapDownsample } from "./AriaPostFxMipmapDownsample";
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxSimpleBloom extends AriaComPostPass{
     private _upsampleCanvases:IAriaCanavs[] = []
@@ -56,22 +57,22 @@ export class AriaPostFxSimpleBloom extends AriaComPostPass{
         }
     }
     
-    render(preTriggers?: (() => any)[] | undefined, postTriggers?: (() => any)[] | undefined): void {
+    render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
         //Downsample
         this._downsamplePasses[0].addInput(this._ipCanvas)
         for(let i=0;i<this._downsamplePasses.length;i++){
-            this._downsampleCanvases[i].compose(()=>{
-                this._downsamplePasses[i].render()
+            this._downsampleCanvases[i].compose(renderer,()=>{
+                this._downsamplePasses[i].render(renderer)
             })
         }
         //Upsample
         for(let i=0;i<this._upsampleCanvases.length-1;i++){
-            this._upsampleCanvases[i].compose(()=>{
-                this._upsamplePasses[i].render()
+            this._upsampleCanvases[i].compose(renderer,()=>{
+                this._upsamplePasses[i].render(renderer)
             })
         }
         const i = this._upsampleCanvases.length-1
-        this._upsamplePasses[i].render()
+        this._upsamplePasses[i].render(renderer)
         //this._downsamplePasses[5].render()
 
     }

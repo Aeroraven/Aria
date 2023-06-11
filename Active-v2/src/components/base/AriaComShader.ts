@@ -2,24 +2,34 @@ import { AriaComponent } from "../../core/AriaComponent"
 import { AriaEnv } from "../../core/graphics/AriaEnv"
 import { AriaRenderOps } from "../../core/graphics/AriaRenderOps"
 import { AriaShaderOps } from "../../core/graphics/AriaShaderOps"
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore"
 import { IAriaShader } from "../../core/interface/IAriaShader"
 
 export class AriaComShader extends AriaComponent implements IAriaShader{
-    shaderProgram:WebGLProgram
-    gl:WebGL2RenderingContext
+    shaderProgram:WebGLProgram|null = null
     enabled:boolean
     freeTexId: number
     warnMaps: Map<string,boolean>
 
+    vertexSource:string
+    fragmentSource:string
+
     constructor(vertexSource:string,fragmentSource:string){
         super("AriaCom/Shader")
-        const gl = AriaEnv.env
+        
         this.enabled = false
-        if(vertexSource==""||fragmentSource==""){
+        this.vertexSource=vertexSource
+        this.fragmentSource=fragmentSource
+        this.warnMaps = new Map<string,boolean>
+        this.freeTexId = 0
+    }
+    public compileShader(renderer:IAriaRendererCore){
+        const gl = renderer.getEnv()
+        if(this.vertexSource==""||this.fragmentSource==""){
             this.shaderProgram = <WebGLProgram>gl.createProgram()
             this._logError("Failed to create shader")
         }else{
-            let px = AriaRenderOps.initShaderProgram(vertexSource,fragmentSource)
+            let px = renderer.initShaderProgram(this.vertexSource,this.fragmentSource)
             if(px!=null){
                 this.enabled = true
                 this.shaderProgram = <WebGLProgram>px
@@ -29,46 +39,48 @@ export class AriaComShader extends AriaComponent implements IAriaShader{
                 this._logError("Failed to create shader")
             }
         }
-        this.warnMaps = new Map<string,boolean>
-        this.gl = gl
-        this.freeTexId = 0
+
+        
     }
     getShaderProgram(): WebGLProgram {
-        return this.shaderProgram
+        return this.shaderProgram!
     }
-    public getAttribute(key:string){
+    public getAttribute(renderer:IAriaRendererCore,key:string){
         if(!this.enabled){
             this._logError("Cannot perform actions on invalid shader")
         }
-        const w = this.gl.getAttribLocation(this.shaderProgram,key)
+        const w = renderer.getEnv().getAttribLocation(this.shaderProgram!,key)
         if(w==-1&&!this.warnMaps.has(key)){
             this._logWarn("Shader does not provide attribute: "+key)
             this.warnMaps.set(key,true)
         }
         return w
     }
-    public getUniform(key:string){
+    public getUniform(renderer:IAriaRendererCore,key:string){
         if(!this.enabled){
             this._logError("Cannot perform actions on invalid shader")
         }
-        const w = this.gl.getUniformLocation(this.shaderProgram,key)
+        const w = renderer.getEnv().getUniformLocation(this.shaderProgram!,key)
         if(w==null&&!this.warnMaps.has(key)){
             this._logWarn("Shader does not provide uniform: "+key)
             this.warnMaps.set(key,true)
         }
         return w
     }
-    public use(){
+    public use(renderer:IAriaRendererCore){
+        if(!this.enabled){
+            this.compileShader(renderer)
+        }
         if(!this.enabled){
             this._logError("Cannot perform actions on invalid shader")
         }
-        AriaShaderOps.useShader(this,()=>{
+        renderer.useShader(this,()=>{
             this.freeTexId = 0
-            this.gl.useProgram(this.shaderProgram)
+            renderer.getEnv().useProgram(this.shaderProgram)
         })
     }
     public allocateTexture(){
         this.freeTexId++
-        return this.freeTexId-1 + AriaEnv.env.TEXTURE0
+        return this.freeTexId-1 + 33984
     }
 }

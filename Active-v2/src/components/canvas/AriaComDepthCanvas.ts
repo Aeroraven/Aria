@@ -1,3 +1,4 @@
+import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { AriaComCanvas } from "./AriaComCanvas";
 
 export class AriaComDepthCanvas extends AriaComCanvas{
