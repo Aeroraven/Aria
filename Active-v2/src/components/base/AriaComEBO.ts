@@ -19,6 +19,7 @@ export class AriaComEBO extends AriaComponent implements IAriaGLBuffer{
             this._buf = bf
             this._bufLen = length
             this._valid = true
+            this._dataUpdated = true
         }
     }
 
