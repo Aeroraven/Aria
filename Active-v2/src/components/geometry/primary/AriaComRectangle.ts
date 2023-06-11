@@ -48,7 +48,7 @@ export class AriaComRectangle extends AriaComGeometry{
         super.exportToShader(renderer)
         renderer.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
         renderer.defineAttribute(AriaGeometryVars.AGV_TEXTURE_POSITION, this.texBuf, 2)
-        this.eleBuf.bind()
+        this.eleBuf.bind(renderer)
     }
 
     public  getVertexNumber(): number{

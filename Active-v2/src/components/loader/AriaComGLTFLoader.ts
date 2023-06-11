@@ -24,12 +24,14 @@ interface AriaLoaderGLTFMeshData{
 export class AriaComGLTFLoader extends AriaComponent{
     model: gltf.Model | null = null
     mesh:gltf.Mesh | null = null
+    renderer:IAriaRendererCore|null = null
 
     constructor(){
         super("AriaCom/GLTFLoader")
     }
     public async load(renderer:IAriaRendererCore, path:string){
         const gl = renderer.getEnv()
+        this.renderer = renderer
         const model =  await gltf.loadModel(gl,path)
         const mesh = model.meshes[<number>model.nodes[0].mesh]
         this.model = model
@@ -42,8 +44,6 @@ export class AriaComGLTFLoader extends AriaComponent{
         this._logInfo("Found " +this.getTotalMeshes() + " Meshes")
         for(let i=0;i<this.getTotalMeshes();i++){
             const ng = new AriaComLoadedGeometry()
-
-            
 
             const eleBufT = this.getElementBuffer(i)
             const eleBuf = new AriaComEBO(eleBufT,this.getElements(i))
@@ -70,11 +70,11 @@ export class AriaComGLTFLoader extends AriaComponent{
                 elements:eleBuf.getRawData(renderer)
             })
 
-            ng.record(()=>{
+            ng.record((renderer:IAriaRendererCore)=>{
                 renderer.defineAttribute(AriaGeometryVars.AGV_POSITION, posBuf, posBufT.size, posBufT.type)
                 renderer.defineAttribute(AriaGeometryVars.AGV_TEXTURE_POSITION, texBuf, texBufT.size, texBufT.type)
                 renderer.defineAttribute(AriaGeometryVars.AGV_NORMAL, normBuf, normBufT.size, normBufT.type)
-                eleBuf.bind()
+                eleBuf.bind(renderer)
             },this.getElements(i))
             ret.geometries.push(ng)
 
@@ -103,7 +103,7 @@ export class AriaComGLTFLoader extends AriaComponent{
         }
     }
     private getNormalBuffer(id:number):AriaLoaderGLTFBuf{
-        const gl = AriaEnv.env
+        const gl = this.renderer?.getEnv()!
         if(this.model?.meshes[id].normals?.buffer instanceof WebGLBuffer){
             
             return {
@@ -116,7 +116,7 @@ export class AriaComGLTFLoader extends AriaComponent{
         }
     }
     private getTexBuffer(id:number):AriaLoaderGLTFBuf{
-        const gl = AriaEnv.env
+        const gl = this.renderer?.getEnv()!
         if(this.model?.meshes[id].texCoord?.buffer instanceof WebGLBuffer){
             //console.log(this.model?.meshes[id].texCoord?.size, this.model?.meshes[id].texCoord?.type)
             //console.log(gl.FLOAT,gl.INT,gl.UNSIGNED_INT)
@@ -130,6 +130,7 @@ export class AriaComGLTFLoader extends AriaComponent{
         }
     }
     private getBaseMaterialTexture(id:number){
+        //console.log(this.model?.materials)
         const w = <WebGLTexture> this.model?.materials[this.model?.meshes[id].material].baseColorTexture
         //console.log(w)
         return w

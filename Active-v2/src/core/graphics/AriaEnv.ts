@@ -7,6 +7,7 @@ export class AriaEnv extends AriaObject{
     }
     
     public static get env() {
+        this._logErrorS("aria_env: invalid operation")
         return AriaEnvCore.getInstance().getEnv()
     }
 

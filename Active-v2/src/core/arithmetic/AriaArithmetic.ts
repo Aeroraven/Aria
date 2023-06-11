@@ -47,4 +47,11 @@ export class AriaArithmetic extends AriaObject{
         }
         return d
     }
+    public static dot(x:number[],y:number[]){
+        let s=0;
+        for(let i=0;i<x.length;i++){
+            return x[i]*y[i]
+        }
+        return s
+    }
 }

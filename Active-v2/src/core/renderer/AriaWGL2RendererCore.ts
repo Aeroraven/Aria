@@ -357,7 +357,8 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
     public defineAttribute(attName:string, value:IAriaGLBuffer, size:number = 3, type:number = this.env.FLOAT){
         const gl = this.env
         const acShader = this.shaderManager.getShader()
-        gl.bindBuffer(gl.ARRAY_BUFFER, value.getGLObject())
+        //gl.bindBuffer(gl.ARRAY_BUFFER, value.getGLObject())
+        value.bind(this.parent)
         gl.vertexAttribPointer(acShader.getAttribute(this.parent,attName), size, type, false, 0, 0)
         gl.enableVertexAttribArray(acShader.getAttribute(this.parent,attName))
     }
@@ -537,7 +538,7 @@ export class AriaWGL2RendererCore extends AriaRendererCore{
     }
     public  defineAttribute(attName:string, value:IAriaGLBuffer, size?:number, type?:number){
         size = (size === undefined)? 3 : size
-        type = (type === undefined)? this.env?.FLOAT : size
+        type = (type === undefined)? this.env?.FLOAT : type
         return this.shaderOps.defineAttribute(attName,value,size,type)
     }
 

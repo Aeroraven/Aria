@@ -10,6 +10,7 @@ import { AriaVoxel } from "./components/voxel/AriaVoxel";
 import { AriaStageVoxel } from "./examples/AriaStageVoxel";
 import { AriaStageVoxelKlee } from "./examples/AriaStageVoxelKlee";
 import { AriaStageRigidBody } from "./examples/AriaStageRigidBody";
+import { AriaStageNoiseTest } from "./examples/AriaStageNoiseTest";
 
 function addEntry(name:string, description:string, redirect:string){
     const w = document.createElement("div")
@@ -27,8 +28,8 @@ function addEntry(name:string, description:string, redirect:string){
 }
 
 function addTitle(){
-    const title = document.createElement("h1")
-    title.innerHTML = "List of Available Demo <small style='font-size:14px'>Aria v2</small>"
+    const title = document.createElement("h2")
+    title.innerHTML = "List of Available Demo <small style='font-size:12px'>Aria v2</small>"
     title.style.borderBottom = "1px solid black"
     document.body.appendChild(title)
 }
@@ -51,7 +52,8 @@ async function main(){
         {name:"Point Shadow",redir:"pointshadow",cl:AriaStagePointLight,desc:"Implementation of omnidirectional shadow"},
         {name:"Mass Spring Cloth",redir:"smcloth",cl:AriaStageSpringMassCloth,desc:"Cloth simulation based on mass spring model"},
         {name:"Voxelization",redir:"voxklee",cl:AriaStageVoxelKlee,desc:"Turning a mesh to voxel grids"},
-        {name:"Rigid Body",redir:"rigid",cl:AriaStageRigidBody,desc:"Basic motion demo of a rigid body"}
+        {name:"Rigid Body",redir:"rigid",cl:AriaStageRigidBody,desc:"Basic motion demo of a rigid body"},
+        {name:"Noise Test",redir:"impnoise",cl:AriaStageNoiseTest,desc:"Basic motion demo of a rigid body"}
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false

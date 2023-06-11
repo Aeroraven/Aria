@@ -74,7 +74,6 @@ export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, 
 
     
     exportToShader(renderer:IAriaRendererCore): void {
-        const gl = AriaEnv.env
         //Computation
         const modelview = this.getLookAt()
         const projectionMatrix = this.getPerspective()

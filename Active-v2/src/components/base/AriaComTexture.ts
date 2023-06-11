@@ -9,11 +9,13 @@ export class AriaComTexture extends AriaComponent implements IAriaTexture{
     protected renderer:IAriaRendererCore
     constructor(renderer:IAriaRendererCore){
         super("AriaCom/Texture")
-        const gl = AriaEnv.env
         this.renderer = renderer
     }
     setTex(o:WebGLTexture){
         this.tex = o
+        if(o==null&&this.id!=32){
+            this._logError("Invalid Operation")
+        }
     }
     getTex(){
         if(this.tex==null){

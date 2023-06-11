@@ -41,7 +41,7 @@ export class AriaStageAntialiasing extends AriaStage{
         const meshes:AriaComMesh[] = []
         const materials: AriaComMaterial[] = []
     
-        for(let i=0;i<kleeModel.geometries.length; i++){
+        for(let i=0;i<kleeModel.geometries.length-1; i++){
             const material = new AriaComShaderMaterial(shaderSource)
             material.addParam("uBackground",AriaShaderUniformTp.ASU_TEX2D, kleeModel.textures[i])
             const mesh = new AriaComMesh(material, kleeModel.geometries[i])
@@ -123,13 +123,15 @@ export class AriaStageAntialiasing extends AriaStage{
     
         //Render
         const renderCall = ()=>{
+            renderer.renderScene(camera,scene)
+            /*
             renderer.renderComposite(canvasOrg,()=>{
                 renderer.renderScene(camera,scene)
             })
             renderer.renderComposite(canvas,()=>{
                 renderer.renderSimple(activeAAScheme)
             })
-            renderer.renderSimple(postIdentity)
+            renderer.renderSimple(postIdentity)*/
             panel.reqAniFrame(renderCall)
         }
         renderCall()

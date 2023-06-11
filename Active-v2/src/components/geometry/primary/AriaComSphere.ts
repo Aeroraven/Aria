@@ -124,7 +124,7 @@ export class AriaComSphere extends AriaComGeometry{
         super.exportToShader(renderer)
         renderer.defineAttribute(AriaGeometryVars.AGV_POSITION, this.posBuf)
         renderer.defineAttribute(AriaGeometryVars.AGV_NORMAL, this.normBuf)
-        this.eleBuf.bind()
+        this.eleBuf.bind(renderer)
     }
 
     public  getVertexNumber(): number{

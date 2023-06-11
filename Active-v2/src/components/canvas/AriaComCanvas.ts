@@ -44,12 +44,13 @@ export class AriaComCanvas extends AriaComponent implements IAriaCanavs{
     canvasUse(renderer:IAriaRendererCore): void {
         if(this.init==false){
             this.createFBO(renderer,this.scale,this.enableHdr,this.enableMipMap)
+            this.init=true
         }
         if(!this.fbo){
             this._logError("Empty framebuffer")
             throw Error()
         }
-        this.fbo.bind()
+        this.fbo.bind(renderer)
         AriaComCanvasManager.getInstance().setCanvas(this)
     }
     canvasDetach(renderer:IAriaRendererCore): void {
@@ -57,7 +58,7 @@ export class AriaComCanvas extends AriaComponent implements IAriaCanavs{
             this._logError("Empty framebuffer")
             throw Error()
         }
-        this.fbo.unbind()
+        this.fbo.unbind(renderer)
         AriaComCanvasManager.getInstance().detachCanvas(renderer)
     }
 }
