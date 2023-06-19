@@ -1,4 +1,6 @@
+import { IAriaRendererCore } from "./IAriaRendererCore"
+
 export interface IAriaTexture{
-    getTex():WebGLTexture
+    getTex(renderer:IAriaRendererCore):WebGLTexture
     setTex(c:WebGLTexture):void
 }

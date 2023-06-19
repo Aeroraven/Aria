@@ -31,4 +31,5 @@ export interface IAriaRendererCore{
     clearScreenRequest():void;
     withCubicTexture(c:IAriaTexture,callable:()=>any):void;
     withNoDepthMask(callable:()=>any):void;
+    clearScreenInternal():void;
 }

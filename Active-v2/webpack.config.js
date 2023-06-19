@@ -26,7 +26,7 @@ module.exports={
                 }
                 
             },{
-                test: /\.(glsl|vs|fs)$/,
+                test: /\.(glsl|vs|fs|vert|frag)$/,
                 loader: 'ts-shader-loader'
             }
         ],

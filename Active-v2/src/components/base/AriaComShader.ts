@@ -5,16 +5,21 @@ import { AriaShaderOps } from "../../core/graphics/AriaShaderOps"
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore"
 import { IAriaShader } from "../../core/interface/IAriaShader"
 
+export enum AriaComShaderRenderSide{
+    ACSRS_FRONT = 'front',
+    ACSRS_BACK = 'back'
+}
+
 export class AriaComShader extends AriaComponent implements IAriaShader{
     shaderProgram:WebGLProgram|null = null
     enabled:boolean
     freeTexId: number
     warnMaps: Map<string,boolean>
-
     vertexSource:string
     fragmentSource:string
+    renderSide:AriaComShaderRenderSide = AriaComShaderRenderSide.ACSRS_FRONT
 
-    constructor(vertexSource:string,fragmentSource:string){
+    constructor(vertexSource:string,fragmentSource:string,side:string=AriaComShaderRenderSide.ACSRS_FRONT){
         super("AriaCom/Shader")
         
         this.enabled = false
@@ -22,6 +27,10 @@ export class AriaComShader extends AriaComponent implements IAriaShader{
         this.fragmentSource=fragmentSource
         this.warnMaps = new Map<string,boolean>
         this.freeTexId = 0
+        if(side!='front' && side!='back'){
+            this._logError("invalid side setting")
+        }
+        this.renderSide = <AriaComShaderRenderSide>side
     }
     public compileShader(renderer:IAriaRendererCore){
         const gl = renderer.getEnv()
@@ -78,6 +87,12 @@ export class AriaComShader extends AriaComponent implements IAriaShader{
             this.freeTexId = 0
             renderer.getEnv().useProgram(this.shaderProgram)
         })
+    }
+    public setSide(x:AriaComShaderRenderSide){
+        this.renderSide = x
+    }
+    public getSide(): string {
+        return this.renderSide
     }
     public allocateTexture(){
         this.freeTexId++

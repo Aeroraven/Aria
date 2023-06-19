@@ -12,7 +12,7 @@ uniform mat4 uModelIT;
 
 void main(){
     gl_Position = uProj * uModel * aVert;
-    gl_Position.z = -gl_Position.z;
+    gl_Position.z = gl_Position.z;
     vec3 tNorm = (uModel * vec4(aNorm,0.0)).xyz;
     vLocalPos = ((aVert.xyz + 0.5) );
     vLocalPos.z = -vLocalPos.z;

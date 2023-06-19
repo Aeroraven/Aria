@@ -68,7 +68,7 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         super("AriaCom/Framebuffer")
         this.renderer = renderer
         this.options = options ? options : new AriaFramebufferOption();
-        this.texWrapper  = new AriaComTexture(renderer)
+        this.texWrapper  = new AriaComTexture()
         this.gl = this.renderer?.getEnv()!
         const gl = this.gl
         

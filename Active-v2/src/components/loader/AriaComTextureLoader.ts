@@ -16,7 +16,7 @@ export class AriaComTextureLoader extends AriaComponent{
         const vp = await AriaAsyncImageOp.loadImage(path)
         this._logInfo("Loaded texture:"+path)
         const txw = renderer.createTexture(vp)
-        const tx = new AriaComTexture(renderer)
+        const tx = new AriaComTexture()
         tx.setTex(txw)
         return tx
     }

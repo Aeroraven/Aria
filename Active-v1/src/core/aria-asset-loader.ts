@@ -51,7 +51,7 @@ export class AriaAssetLoader{
         const gl = this.gl
         const loadAssert = (x:boolean)=>{
             if(!x){
-                window.alert("Error occurred during loading procedure")
+                //window.alert("Error occurred during loading procedure")
             }
         }
         

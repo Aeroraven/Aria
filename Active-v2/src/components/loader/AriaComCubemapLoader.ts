@@ -27,7 +27,7 @@ export class AriaComCubeMapLoader extends AriaComponent{
         }
         
         const txw = renderer.createCubicTexture(imgs)
-        const tx = new AriaComCubeMap(renderer)
+        const tx = new AriaComCubeMap()
         tx.setTex(txw)
         return tx
     }

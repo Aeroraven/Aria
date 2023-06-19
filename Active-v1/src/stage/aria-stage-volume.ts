@@ -69,9 +69,10 @@ export class AriaStageVolume extends AriaStage{
         fpScene.addObject(bboxMesh)
         
         function clearScene(gl:WebGL2RenderingContext){ 
-            gl.clearColor(0,0,0,1);
+            gl.clearColor(1,1,1,1);
             gl.enable(gl.DEPTH_TEST);
-            gl.depthFunc(gl.LEQUAL);
+            gl.clearDepth(0);
+            gl.depthFunc(gl.GEQUAL);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
         } 
 
@@ -124,14 +125,14 @@ export class AriaStageVolume extends AriaStage{
             camera.movePos(0,0,0)
 
             //First Pass Render
-            fpFramebuffer.bind()
+            //fpFramebuffer.bind()
             clearScene(gl)
             fpScene.render()
-            fpFramebuffer.unbind()
+            //fpFramebuffer.unbind()
 
             //Second Pass Render
-            clearScene(gl)
-            spScene.render()
+            //clearScene(gl)
+            //spScene.render()
         }
 
         this.renderEnt = renderFunc

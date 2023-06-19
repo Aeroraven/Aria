@@ -101,4 +101,7 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     public  withNoDepthMask(callable:()=>any){
         
     }
+    public clearScreenInternal(){
+        
+    }
 }

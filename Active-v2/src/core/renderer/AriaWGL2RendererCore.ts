@@ -74,6 +74,13 @@ class AriaWGL2ShaderManager extends AriaObject{
     constructor(){
         super("AriaShaderManager")
     }
+    public getRenderSide(){
+        if(this.activatedShader==null){
+            return 'front'
+        }else{
+            return this.activatedShader.getSide()
+        }
+    }
     public disableShaderChange(){
         this.invariantShader = true
     }
@@ -153,12 +160,12 @@ class AriaWGL2RendererRenderOps extends AriaObject{
     public clearScreenRequest(){
         let frame = this.fbManager.getFramebuffer()
         if(frame===null){
-            this.clearScreen()
+            this.parent.clearScreen()
         }else{
             frame.onClear(this.parent)
         }
     }
-    public clearScreen(color:number[] = [0,0,0,0]){
+    public clearScreenDeprecated(color:number[] = [0,0,0,0]){
         const gl = this.env
         gl.clearColor(color[0],color[1],color[2],color[3]);
         gl.enable(gl.DEPTH_TEST);
@@ -315,7 +322,7 @@ class AriaWGL2RendererRenderOps extends AriaObject{
     }
     public  withCubicTexture(c:IAriaTexture,callable:()=>any){
         const gl = this.env
-        gl.bindTexture(gl.TEXTURE_CUBE_MAP,c.getTex())
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP,c.getTex(this.parent))
         callable()
         gl.bindTexture(gl.TEXTURE_CUBE_MAP,null)
     }
@@ -342,6 +349,23 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
         this.env = env
         this.parent = parent
     }
+    public clearScreenByShader(color:number[] = [0,0,0,0]){
+        const gl = this.env
+        gl.clearColor(color[0],color[1],color[2],color[3]);
+        gl.enable(gl.DEPTH_TEST);
+        let side = this.shaderManager.getRenderSide()
+        if(side=='front'){
+            gl.depthFunc(gl.LEQUAL);
+            gl.clearDepth(1)
+        }else if(side=='back'){
+            gl.depthFunc(gl.GEQUAL);
+            gl.clearDepth(0);
+        }else{
+            this._logError("unsupported clear side")
+        }
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+    }
+    
     public useShader(shader:IAriaShader, onSuccess:AriaCallable=()=>{}){
         if(this.shaderManager.setShader(shader)){
             onSuccess()
@@ -453,7 +477,7 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
                 if(isTex(value)){
                     const v = acShader.allocateTexture()
                     gl.activeTexture(v)
-                    gl.bindTexture(gl.TEXTURE_2D, value.getTex())
+                    gl.bindTexture(gl.TEXTURE_2D, value.getTex(this.parent))
                     gl.uniform1i(acShader.getUniform(this.parent,attName),v-this.env.TEXTURE0);
                 }else{
                     this._logError("Invalid type")
@@ -463,7 +487,7 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
                     if(isTex(value)){
                         const v = acShader.allocateTexture()
                         gl.activeTexture(v)
-                        gl.bindTexture(gl.TEXTURE_CUBE_MAP, value.getTex())
+                        gl.bindTexture(gl.TEXTURE_CUBE_MAP, value.getTex(this.parent))
                         gl.uniform1i(acShader.getUniform(this.parent,attName),v-this.env.TEXTURE0);
                     }else{
                         this._logError("Invalid type")
@@ -546,7 +570,7 @@ export class AriaWGL2RendererCore extends AriaRendererCore{
         return this.createFramebuffer(depthComponent,texture,postTrigger)
     }
     public clearScreen(): void {
-        return this.renderOps.clearScreen()
+        return this.shaderOps.clearScreenByShader()
     }
     public activateFramebuffer(buf:IAriaFramebuffer){
         return this.renderOps.activateFramebuffer(buf)
@@ -603,6 +627,9 @@ export class AriaWGL2RendererCore extends AriaRendererCore{
     public renderInstancedEntry(num:number, instances?:number){
         instances = (instances == undefined)?1:instances
         return this.renderOps.renderInstancedEntry(num,instances)
+    }
+    public clearScreenInternal(){
+        return this.shaderOps.clearScreenByShader()
     }
     public clearScreenRequest(){
         return this.renderOps.clearScreenRequest()

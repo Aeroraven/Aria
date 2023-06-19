@@ -7,14 +7,15 @@ import { AriaComMaterial } from "./AriaComMaterial";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaComShaderMaterial extends AriaComMaterial{
-    private _shader: IAriaShader|null = null
+    protected _shader: IAriaShader|null = null
 
     constructor(m:IAriaComShaderSource|null = null){
         super("AriaCom/ShaderMaterial")
         if(m==null){
             this._shader=null
         }else{
-            this._shader = new AriaComShader(m!.vertex,m!.fragment)
+            let side = (m.side==undefined)?'front':m.side!
+            this._shader = new AriaComShader(m!.vertex,m!.fragment,side)
         }
         
     }

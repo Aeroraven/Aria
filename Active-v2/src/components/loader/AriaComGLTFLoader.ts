@@ -78,7 +78,7 @@ export class AriaComGLTFLoader extends AriaComponent{
             },this.getElements(i))
             ret.geometries.push(ng)
 
-            const tx = new AriaComTexture(renderer)
+            const tx = new AriaComTexture()
             tx.setTex(this.getBaseMaterialTexture(i))
             ret.textures.push(tx)
         }
