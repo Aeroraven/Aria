@@ -169,6 +169,13 @@ export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, 
         vec3.add(this.camLookAtCenter,this.camFront,this.camPos)
         mat4.lookAt(this.camLookAt,this.camPos,this.camLookAtCenter,this.camUp)
     }
+    setLookatCenter(dx:number,dy:number,dz:number){
+        this.camLookAtCenter[0] = dx;
+        this.camLookAtCenter[1] = dy;
+        this.camLookAtCenter[2] = dz;
+        vec3.sub(this.camFront,this.camLookAtCenter,this.camPos)
+        mat4.lookAt(this.camLookAt,this.camPos,this.camLookAtCenter,this.camUp)
+    }
     initInteraction(){
         window.addEventListener("mousemove",(e:MouseEvent)=>{
             if(this.winListenerEnable){

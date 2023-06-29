@@ -12,6 +12,7 @@ export enum AriaShaderUniformTp{
     ASU_VEC1 = "vec1",
     ASU_TEX2D = "tex2d",
     ASU_TEXCUBE = "texcube",
+    ASU_TEX3D = "tex3d",
     ASU_VEC1I = "int1"
 }
 

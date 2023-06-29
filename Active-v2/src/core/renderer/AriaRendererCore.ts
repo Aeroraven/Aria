@@ -104,4 +104,8 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     public clearScreenInternal(){
         
     }
+    public createTexture3D(img:any,w:number,h:number,d:number):WebGLTexture{
+        this._logError("aria_render_core: createTexture3D not implemented")
+        throw Error()
+    }
 }

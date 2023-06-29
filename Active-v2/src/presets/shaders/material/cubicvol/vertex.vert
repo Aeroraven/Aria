@@ -4,11 +4,14 @@ uniform highp mat4 uModel;
 uniform mat4 uModelIT;
 uniform mat4 uProj;
 uniform mat4 uLocal;
+uniform vec3 uCamPos;
 in vec4 aPos;
 in vec4 aNormal;
 out vec4 vNorm;
 out vec4 vModelPos;
 out vec4 vLocalPos;
+
+
 void main(){
     vNorm = uModelIT * vec4(normalize(vec3(aNormal.xyz)),0.0);
     vLocalPos = uLocal * vec4(aPos.xyz,1.0);

@@ -32,4 +32,5 @@ export interface IAriaRendererCore{
     withCubicTexture(c:IAriaTexture,callable:()=>any):void;
     withNoDepthMask(callable:()=>any):void;
     clearScreenInternal():void;
+    createTexture3D(img:any,w:number,h:number,d:number):WebGLTexture;
 }

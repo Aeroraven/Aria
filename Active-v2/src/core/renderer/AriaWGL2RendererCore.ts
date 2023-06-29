@@ -245,6 +245,15 @@ class AriaWGL2RendererRenderOps extends AriaObject{
         gl.bindTexture(gl.TEXTURE_2D,null)
         return <WebGLTexture>tex;
     }
+    public createTexture3D(img:any,w:number,h:number,d:number):WebGLTexture{
+        const gl = this.env
+        const tex = gl.createTexture()
+        gl.bindTexture(gl.TEXTURE_3D,tex);
+        gl.texImage3D(gl.TEXTURE_3D,0,gl.R8,w,h,d,0,gl.RED,gl.UNSIGNED_BYTE,img);
+        gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.bindTexture(gl.TEXTURE_3D,null)
+        return <WebGLTexture>tex;
+    }
     public createCubicTexture(img:HTMLImageElement[]):WebGLTexture{
         const gl = this.env
         const tex = gl.createTexture()
@@ -483,6 +492,16 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
                     this._logError("Invalid type")
                 }
                 break;
+            case AriaShaderUniformTp.ASU_TEX3D:
+                if(isTex(value)){
+                    const v = acShader.allocateTexture()
+                    gl.activeTexture(v)
+                    gl.bindTexture(gl.TEXTURE_3D, value.getTex(this.parent))
+                    gl.uniform1i(acShader.getUniform(this.parent,attName),v-this.env.TEXTURE0);
+                }else{
+                    this._logError("Invalid type")
+                }
+                break;
             case AriaShaderUniformTp.ASU_TEXCUBE:
                     if(isTex(value)){
                         const v = acShader.allocateTexture()
@@ -639,5 +658,8 @@ export class AriaWGL2RendererCore extends AriaRendererCore{
     }
     public withNoDepthMask(callable:()=>any){
         return this.renderOps.withNoDepthMask(callable)
+    }
+    public createTexture3D(img:any,w:number,h:number,d:number):WebGLTexture{
+        return this.renderOps.createTexture3D(img,w,h,d)
     }
 }

@@ -5,13 +5,6 @@ import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShad
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaNormalMaterial extends AriaComShaderMaterial{
-    private _r:number = 1.0
-    private _g:number = 1.0
-    private _b:number = 1.0
-    private _a:number = 1.0
-    
-    private _enableLight:number = 1.0
-
     constructor(){
         super({
             vertex:vertex,

@@ -52,8 +52,7 @@ async function main(){
         {name:"Point Shadow",redir:"pointshadow",cl:AriaStagePointLight,desc:"Implementation of omnidirectional shadow"},
         {name:"Mass Spring Cloth",redir:"smcloth",cl:AriaStageSpringMassCloth,desc:"Cloth simulation based on mass spring model"},
         {name:"Voxelization",redir:"voxklee",cl:AriaStageVoxelKlee,desc:"Turning a mesh to voxel grids"},
-        {name:"Volumetric Cloud",redir:"volcloud",cl:AriaStageVolumetricCloud,desc:"Basic motion demo of a rigid body"},
-        {name:"Noise Test",redir:"impnoise",cl:AriaStageNoiseTest,desc:"Basic motion demo of a rigid body"}
+        {name:"Ray Marching II",redir:"volcloud",cl:AriaStageVolumetricCloud,desc:"Single-pass volumetric rendering of 3D perlin noise"},
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false
