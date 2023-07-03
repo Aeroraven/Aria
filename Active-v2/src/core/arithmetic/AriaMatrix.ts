@@ -57,6 +57,12 @@ export class AriaMatrix extends AriaObject implements IAriaLinearStruct{
             }
         }
     }
+    public getRows(){
+        return this._rows
+    }
+    public getCols(){
+        return this._cols
+    }
     protected _sameShape(x:AriaMatrix){
         return this._cols == x._cols && this._rows == x._rows
     }

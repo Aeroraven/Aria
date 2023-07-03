@@ -7,6 +7,7 @@ import { AriaComCubicCanvas } from "../canvas/AriaComCubicCanvas";
 import { AriaDepthMaterial } from "../material/AriaDepthMaterial";
 import { AriaComLight, AriaLightShaderVars } from "./AriaComLight";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
+import { AriaAuxiliaryOps } from "../../core/AriaAuxiliaryOps";
 
 export class AriaComPointLight extends AriaComLight{
     private _lightColor = [1,1,1,1]
@@ -43,7 +44,10 @@ export class AriaComPointLight extends AriaComLight{
         this._camera.setFov(90.0)
         this._camera.setAspect(1.0)
         this._material.withShader(renderer,()=>{
-            this._camera.initiateRender(renderables)
+            this._camera.exportToShader(renderer)
+            AriaAuxiliaryOps.iterateObjArray(renderables,(x)=>{
+                x.render(renderer)
+            })
         })
     }
     public override generateShadowMap(renderer:IAriaRendererCore,renderables: AriaObjArray<IAriaRenderable<void>>): IAriaCanavs {

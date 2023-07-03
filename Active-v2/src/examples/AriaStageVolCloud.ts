@@ -21,7 +21,7 @@ export class AriaStageVolumetricCloud extends AriaStage{
         //Renderer  
         const renderer = new AriaWGL2Renderer("webgl_displayer")
         const TL = 100
-        const SCL = 0.01
+        const SCL = 0.29
         
         const cubeMatrial = new AriaCubicVolumeMaterial()
 
@@ -61,7 +61,8 @@ export class AriaStageVolumetricCloud extends AriaStage{
         const renderCall = ()=>{
             camera.setPos(2*Math.sin(t),0,2*Math.cos(t))
             camera.setLookatCenter(0,0,0)
-            t+= 0.001
+            //t= 3.14/2
+            t+=0.001
             renderer.renderScene(camera,scene)
             panel.reqAniFrame(renderCall)
         }

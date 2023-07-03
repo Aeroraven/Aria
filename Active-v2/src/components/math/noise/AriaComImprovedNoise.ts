@@ -45,7 +45,7 @@ export class AriaComImprovedNoise extends AriaComponent implements IAriaNoiseGen
         return s+this.fade(value)*(t-s)
     }
     private grad(ix:number,iy:number,iz:number){
-        let ind = ix+iy+iz+ix*iy+iy*iz+iz*ix
+        let ind = ix+iy+iz+ix*iy+iy*iz+iz*ix+iz
         if(this.hashMap.has(ind)==false){
             let pa = Math.random()*(Math.PI*2)
             let pb = Math.random()*(Math.PI*2)

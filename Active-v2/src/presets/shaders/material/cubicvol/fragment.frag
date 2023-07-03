@@ -49,7 +49,7 @@ void main(){
         vec3 cPos = startPos + r*ndir;
         float cPosR = max((1.0 - length(cPos)),1e-6);
         vec3 rmcPos = cPos*0.5 + vec3(0.5);
-        accColor += texture(uVTexture,rmcPos).r * STEP_ALPHA * pow(cPosR,1.0);
+        accColor += texture(uVTexture,rmcPos).r * STEP_ALPHA * pow(cPosR,2.0);
     }
     fragmentColor = vec4(vec3(accColor),1.0);
 }

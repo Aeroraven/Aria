@@ -6,12 +6,12 @@ import { IAriaLinearStruct } from "./IAriaLinearStruct";
 export class AriaVector extends AriaObject implements IAriaLinearStruct{
     protected _value:number[] = []
     protected _dimen:number = 0
-    constructor(n:number|number[]|undefined){
+    constructor(n:number|number[]|undefined,v:number=0){
         super("AriaVector")
         if(typeof n === "number"){
             this._dimen = n
             for(let i=0;i<n;i++){
-                this._value.push(0)
+                this._value.push(v)
             }
         }else if(n===undefined){
             this._logError("dimension not specified")
@@ -24,11 +24,14 @@ export class AriaVector extends AriaObject implements IAriaLinearStruct{
         
     }
 
-    public static create(n?:number|number[]|undefined){
-        return new this(n)
+    public static create(n?:number|number[]|undefined,v:number=1){
+        return new this(n,v)
     }
     public at(x:number){
         return this._value[x]
+    }
+    public setVal(x:number,v:number){
+        this._value[x] = v
     }
     public log(){
         console.log(this._value)
@@ -203,5 +206,18 @@ export class AriaVec3 extends AriaVector{
     }
 }
 
+export class AriaVec2 extends AriaVector{
+    constructor(n:number[]|number|undefined){
+        super(n===undefined?2:n)
+        if(this._dimen!=2){
+            this._logError("dimension should be 2")
+        }
+    }
+    public static create(n?:number|number[]|undefined){
+        return new this(n)
+    }
+}
+
+export type AriaVec2C = AriaVec2 | number[]
 export type AriaVec3C = AriaVec3 | number[]
 export type AriaVecC = AriaVector | number[]

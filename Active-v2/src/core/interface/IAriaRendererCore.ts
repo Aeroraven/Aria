@@ -33,4 +33,5 @@ export interface IAriaRendererCore{
     withNoDepthMask(callable:()=>any):void;
     clearScreenInternal():void;
     createTexture3D(img:any,w:number,h:number,d:number):WebGLTexture;
+    createTextureData2D(img:any,w:number,h:number):WebGLTexture;
 }

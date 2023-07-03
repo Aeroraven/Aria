@@ -15,6 +15,9 @@ export class AriaFramebufferOption{
     regularRect:boolean
     mipmap:boolean
     cubic:boolean
+    useGivenWH:boolean
+    wid:number = -1
+    height:number = -1
     constructor(){
         this.mipmap = false
         this.regularRect = true
@@ -22,12 +25,19 @@ export class AriaFramebufferOption{
         this.depthMap = false
         this.scaler = 1
         this.cubic = false
+        this.useGivenWH = false
     }
     static create(){
         return new AriaFramebufferOption()
     }
     setRectangleText(x:boolean){
         this.regularRect = x
+        return this
+    }
+    setWH(wid:number,height:number){
+        this.wid = wid
+        this.height = height
+        this.useGivenWH = true
         return this
     }
     setHdr(x:boolean){
@@ -72,8 +82,13 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         this.gl = this.renderer?.getEnv()!
         const gl = this.gl
         
-        const wid = (this.options.regularRect)?2048*this.options.scaler:AriaEnv.width*this.options.scaler
-        const height = (this.options.regularRect)?2048*this.options.scaler:AriaEnv.height*this.options.scaler
+        let wid = (this.options.regularRect)?2048*this.options.scaler:AriaEnv.width*this.options.scaler
+        let height = (this.options.regularRect)?2048*this.options.scaler:AriaEnv.height*this.options.scaler
+
+        if(this.options.useGivenWH){
+            wid = this.options.wid
+            height = this.options.height
+        }
 
         this.fb = gl.createFramebuffer()!
 

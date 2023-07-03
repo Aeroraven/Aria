@@ -20,6 +20,7 @@ export class AriaComData3DTexture extends AriaComTexture{
         }
     }
     setItem(x:number,y:number,z:number,v:number){
+        this.texLoaded = false
         this.data[x*this.width*this.height+y*this.height+z] = v
     }
 }

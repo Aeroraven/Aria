@@ -12,6 +12,9 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     constructor(){
         super("AriaRenderer")
     }
+    public createTextureData2D(img: any, w: number, h: number): WebGLTexture {
+        throw new Error("Method not implemented.");
+    }
     public setCameraPos(x: number, y: number, z: number): void {
         this._logError("aria_renderer_core: setCameraPos not implemented")
     }

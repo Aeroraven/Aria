@@ -123,15 +123,15 @@ export class AriaStageAntialiasing extends AriaStage{
     
         //Render
         const renderCall = ()=>{
-            renderer.renderScene(camera,scene)
-            /*
+            //renderer.renderScene(camera,scene)
+            
             renderer.renderComposite(canvasOrg,()=>{
                 renderer.renderScene(camera,scene)
             })
             renderer.renderComposite(canvas,()=>{
                 renderer.renderSimple(activeAAScheme)
             })
-            renderer.renderSimple(postIdentity)*/
+            renderer.renderSimple(postIdentity)
             panel.reqAniFrame(renderCall)
         }
         renderCall()

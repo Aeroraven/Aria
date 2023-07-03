@@ -11,6 +11,7 @@ import { AriaComRectangle } from "../geometry/primary/AriaComRectangle";
 import { AriaComCube } from "../geometry/primary/AriaComCube";
 import { AriaComMaterial } from "../material/AriaComMaterial";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
+import { IAriaTexture } from "../../core/interface/IAriaTexture";
 
 export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
     private _material: AriaComMaterial|null = null
@@ -21,7 +22,16 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
     protected _inputCanvasName: string[] = []
     protected _inputCanvasType: Map<string,AriaShaderUniformTp> = new Map<string,AriaShaderUniformTp>()
     protected _inputCanvasMap:Map<string,IAriaCanavs> = new Map<string,IAriaCanavs>()
+
+    protected _inputTex: IAriaTexture[] = []
+    protected _inputTexName: string[] = []
+    protected _inputTexType: Map<string,AriaShaderUniformTp> = new Map<string,AriaShaderUniformTp>()
+    protected _inputTexMap:Map<string,IAriaTexture> = new Map<string,IAriaTexture>()
+
+
+
     private _canvasConfig: AriaFramebufferOption = new AriaFramebufferOption()
+    protected _allowEmptyInput:boolean = false
 
     constructor(){
         super("AriaCom/PostPass")
@@ -42,14 +52,25 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
         this._logInfo("Added input :"+w)
         return this
     }
+    public addInputTexture(m:IAriaTexture, w:string, tp:AriaShaderUniformTp = AriaShaderUniformTp.ASU_TEX2D){
+        this._inputTex.push(m)
+        this._inputTexName.push(w)
+        this._inputTexMap.set(w,m)
+        this._inputTexType.set(w,tp)
+        this._logInfo("Added input :"+w)
+        return this
+    }
     render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
         renderer.clearScreen()
         this._material!.use(renderer)
-        if(this._inputCanvas.length==0){
+        if(this._inputCanvas.length+this._inputTex.length==0 && !this._allowEmptyInput){
             this._logError("Input canvas cannot be empty")
         }
         this._inputCanvasMap.forEach((value,key)=>{
             renderer.defineUniform(key,AriaShaderUniformTp.ASU_TEX2D,value.getTex())
+        })
+        this._inputTexMap.forEach((value,key)=>{
+            renderer.defineUniform(key,AriaShaderUniformTp.ASU_TEX2D,value)
         })
         
         this._geometry.exportToShader(renderer)

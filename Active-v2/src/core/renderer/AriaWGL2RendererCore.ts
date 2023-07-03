@@ -254,6 +254,15 @@ class AriaWGL2RendererRenderOps extends AriaObject{
         gl.bindTexture(gl.TEXTURE_3D,null)
         return <WebGLTexture>tex;
     }
+    public createTextureData2D(img:any,w:number,h:number):WebGLTexture{
+        const gl = this.env
+        const tex = gl.createTexture()
+        gl.bindTexture(gl.TEXTURE_2D,tex);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,w,h,0,gl.RED,gl.UNSIGNED_BYTE,img);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.bindTexture(gl.TEXTURE_2D,null)
+        return <WebGLTexture>tex;
+    }
     public createCubicTexture(img:HTMLImageElement[]):WebGLTexture{
         const gl = this.env
         const tex = gl.createTexture()
@@ -661,5 +670,8 @@ export class AriaWGL2RendererCore extends AriaRendererCore{
     }
     public createTexture3D(img:any,w:number,h:number,d:number):WebGLTexture{
         return this.renderOps.createTexture3D(img,w,h,d)
+    }
+    public createTextureData2D(img:any,w:number,h:number):WebGLTexture{
+        return this.renderOps.createTextureData2D(img,w,h)
     }
 }

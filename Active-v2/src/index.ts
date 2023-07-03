@@ -11,6 +11,7 @@ import { AriaStageVoxel } from "./examples/AriaStageVoxel";
 import { AriaStageVoxelKlee } from "./examples/AriaStageVoxelKlee";
 import { AriaStageVolumetricCloud } from "./examples/AriaStageVolCloud";
 import { AriaStageNoiseTest } from "./examples/AriaStageNoiseTest";
+import { AriaStageFLSim } from "./examples/AriaStageFLSim";
 
 function addEntry(name:string, description:string, redirect:string){
     const w = document.createElement("div")
@@ -53,6 +54,7 @@ async function main(){
         {name:"Mass Spring Cloth",redir:"smcloth",cl:AriaStageSpringMassCloth,desc:"Cloth simulation based on mass spring model"},
         {name:"Voxelization",redir:"voxklee",cl:AriaStageVoxelKlee,desc:"Turning a mesh to voxel grids"},
         {name:"Ray Marching II",redir:"volcloud",cl:AriaStageVolumetricCloud,desc:"Single-pass volumetric rendering of 3D perlin noise"},
+        {name:"Fluid Simulation",redir:"flsim",cl:AriaStageFLSim,desc:"flsim"},
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false
