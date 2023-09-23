@@ -6,6 +6,7 @@ import { AriaPhyParticleBasicSpringGenerator } from "../particle_force/AriaPhyPa
 import { AriaPhyParticle, AriaPhyParticleIntegrator } from "../particle/AriaPhyParticle";
 import { AriaVec3 } from "../../../core/arithmetic/AriaVector";
 import { AriaPhyParticleForceGenerator } from "../particle_force/AriaPhyParticleForceGenerator";
+import { AriaSpatialHashTable } from "../../base/algo/hash/AriaSpatialHashTable";
 
 interface AriaPhySpringMassClothSpringPair {
     s:AriaPhyParticleBasicSpringGenerator
@@ -25,12 +26,15 @@ export class AriaPhySpringMassCloth extends AriaComponent{
     public _springs: AriaPhyParticleBasicSpringGenerator[][] = []
     private _springMass = 0
     private _integrator:AriaPhyParticleIntegrator
+    private _spatialHashTable:AriaSpatialHashTable<number> 
 
     private _enableScaler = true
     private _scaler = 1
 
     constructor(forceReg:AriaPhyParticleForceRegistry, clothMesh:AriaComExtPlaneGeometry,springHookeCoef:number,
-        springRestLength:number,springMass:number,particleDamping:number,integrator:AriaPhyParticleIntegrator=AriaPhyParticleIntegrator.APP_INTEGRATOR_VERLET){
+        springRestLength:number,springMass:number,particleDamping:number,
+        integrator:AriaPhyParticleIntegrator=AriaPhyParticleIntegrator.APP_INTEGRATOR_VERLET,
+        hashTableSize:number=100){
         super("AriaPhy/SpringMassCloth")
         this._clothEntity = clothMesh
         this._springK = springHookeCoef
@@ -40,6 +44,7 @@ export class AriaPhySpringMassCloth extends AriaComponent{
         this._cz = clothMesh.getDensityZ()
         this._springMass = springMass
         this._integrator = integrator
+        this._spatialHashTable = new AriaSpatialHashTable<number>(hashTableSize)
         if(this._integrator == AriaPhyParticleIntegrator.APP_INTEGRATOR_EUCLID){
             this._logWarn("aria.phy.spring_mass_cloth: euclidean integrator might cause unexpected deformation")
         }
@@ -86,7 +91,7 @@ export class AriaPhySpringMassCloth extends AriaComponent{
                 this.getParticle(i,j).integrate(delta)
             }
         }
-        return
+
         //Deformation Constraints
         for(let i=0;i<this._cx-1;i++){
             for(let j=0;j<this._cz-1;j++){

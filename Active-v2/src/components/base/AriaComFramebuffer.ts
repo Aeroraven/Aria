@@ -20,7 +20,7 @@ export class AriaFramebufferOption{
     height:number = -1
     constructor(){
         this.mipmap = false
-        this.regularRect = true
+        this.regularRect = false
         this.enableHdr = true
         this.depthMap = false
         this.scaler = 1
@@ -88,6 +88,7 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         if(this.options.useGivenWH){
             wid = this.options.wid
             height = this.options.height
+            //this._logInfo("Using given width and height"+wid+" "+height)
         }
 
         this.fb = gl.createFramebuffer()!
@@ -155,11 +156,18 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         return this.fb
     }
     public bind(){
+        //this._logError(""+this.options.regularRect)
         if(!this.options.depthMap){
             if(this.options.regularRect){
                 this.gl.viewport(0,0,2048*this.options.scaler,2048*this.options.scaler)
             }else{
-                this.gl.viewport(0,0,window.innerWidth*this.options.scaler,window.innerHeight*this.options.scaler)
+                if(this.options.useGivenWH){
+                    this.gl.viewport(0,0,this.options.wid,this.options.height)
+                    //this._logInfo("bind:Using given width and height"+this.options.wid+" "+this.options.height)
+                }else{
+                    this.gl.viewport(0,0,window.innerWidth*this.options.scaler,window.innerHeight*this.options.scaler)
+                    //this._logInfo("bind: not used")
+                }
             }
 
         }else{

@@ -39,7 +39,7 @@ export class AriaComPointLight extends AriaComLight{
             renderer.defineUniformExtend(AriaLightShaderVars.ALSV_SHADOW_MAP_TYPE,AriaShaderUniformTp.ASU_VEC1I, 2 ,id)
         }
     }
-    public override renderShadowMap(renderer:IAriaRendererCore,renderables: AriaObjArray<IAriaRenderable<void>>): void {
+    public override renderShadowMap(renderer:IAriaRendererCore,renderables: AriaObjArray<IAriaRenderable<void>>,quality:number=1): void {
         this._camera.setPos(this._lightPosition[0],this._lightPosition[1],this._lightPosition[2])
         this._camera.setFov(90.0)
         this._camera.setAspect(1.0)
@@ -50,12 +50,12 @@ export class AriaComPointLight extends AriaComLight{
             })
         })
     }
-    public override generateShadowMap(renderer:IAriaRendererCore,renderables: AriaObjArray<IAriaRenderable<void>>): IAriaCanavs {
+    public override generateShadowMap(renderer:IAriaRendererCore,renderables: AriaObjArray<IAriaRenderable<void>>,quality:number=1): IAriaCanavs {
         if(this._shadowMap === null){
-            this._shadowMap = new AriaComCubicCanvas()
+            this._shadowMap = new AriaComCubicCanvas(quality)
         }
         this._shadowMap.compose(renderer,()=>[
-            this.renderShadowMap(renderer,renderables)
+            this.renderShadowMap(renderer,renderables,1)
         ])
         return this._shadowMap
     }

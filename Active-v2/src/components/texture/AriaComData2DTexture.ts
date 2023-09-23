@@ -12,7 +12,6 @@ export class AriaComData2DTexture extends AriaComTexture{
         this.width=width
         this.height=1
         this.data=new Array<number>(length*width)
-
         this.texLoadProcedure = (renderer)=>{
             const dataArray = new Uint8Array(this.data)
             const txw = renderer.createTextureData2D(dataArray,this.width,this.length)

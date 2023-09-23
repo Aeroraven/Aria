@@ -18,18 +18,24 @@ export class AriaSpatialHashTable<T> extends AriaComponent{
     public getItem(x:number,y:number,z:number){
         let c = this.hashFunction(x,y,z)
         let w = this._buckets[c]
+        let retlist:T[] = []
         for(let i=0;i<w.length;i++){
             let dc = this._bucketsCoords[c][i]
             if(dc[0]==x&&dc[1]==y&&dc[2]==z){
-                return w[i]
+                retlist.push(w[i])
             }
         }
-        return null
+        return retlist
     }
     public setItem(x:number,y:number,z:number,v:T){
         let c = this.hashFunction(x,y,z)
         this._buckets[c].push(v)
         this._bucketsCoords[c].push([x,y,z])
     }
-
+    public reset(){
+        for(let i=0;i<this._buckets.length;i++){
+            this._buckets[i] = []
+            this._bucketsCoords[i] = []
+        }
+    }
 }

@@ -15,6 +15,7 @@ export class AriaEnvCore extends AriaObject{
 
     constructor(){
         super("AriaEnvCore")
+        this._logError("aria.deprecated: envcore is deprecated")
         const canvas = <HTMLCanvasElement>(document.getElementById(this.defaultContainer));
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight

@@ -258,6 +258,7 @@ class AriaWGL2RendererRenderOps extends AriaObject{
         const gl = this.env
         const tex = gl.createTexture()
         gl.bindTexture(gl.TEXTURE_2D,tex);
+        console.log(img,w,h)
         gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,w,h,0,gl.RED,gl.UNSIGNED_BYTE,img);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.bindTexture(gl.TEXTURE_2D,null)

@@ -28,8 +28,6 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
     protected _inputTexType: Map<string,AriaShaderUniformTp> = new Map<string,AriaShaderUniformTp>()
     protected _inputTexMap:Map<string,IAriaTexture> = new Map<string,IAriaTexture>()
 
-
-
     private _canvasConfig: AriaFramebufferOption = new AriaFramebufferOption()
     protected _allowEmptyInput:boolean = false
 
@@ -39,6 +37,10 @@ export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
         const cam = new AriaComCamera()
         //cam.initInteraction()
         this._components.push(cam)
+    }
+    public unsafeAllowEmptyInput(){
+        this._allowEmptyInput = true
+        return this
     }
     public setMaterial(m:AriaComMaterial){
         this._material = m

@@ -15,6 +15,7 @@ import { AriaPhySMCSphereBlock } from "../components/physics/cloth_helper/AriaPh
 import { AriaPhyParticleIntegrator } from "../components/physics/particle/AriaPhyParticle";
 import { AriaNormalMaterial } from "../presets/materials/AriaNormalMaterial";
 import { AriaWGL2Renderer } from "../components/renderer/AriaWGL2Renderer";
+import { AriaSingleColorMaterial } from "../presets/materials/AriaSingleColorMaterial";
 
 export class AriaStageSpringMassCloth extends AriaStage{
     constructor(){
@@ -46,11 +47,11 @@ export class AriaStageSpringMassCloth extends AriaStage{
 
         const light = new AriaComDirectionalLight()
         light.setLightColor(1,1,1,1)
-        light.setLightPosition(0,1,0)
+        light.setLightPosition(1,-1,0)
 
         const light2 = new AriaComDirectionalLight()
         light2.setLightColor(1,1,1,1)
-        light2.setLightPosition(-1,-1,0)
+        light2.setLightPosition(-1,1,0)
 
         const ambient = new AriaComAmbientLight()
         ambient.setLightColor(0.35,0.35,0.35,1)
@@ -60,13 +61,14 @@ export class AriaStageSpringMassCloth extends AriaStage{
 
         //Controllers
         const camera = new AriaComCamera()
-        camera.setPos(0,-0.5,2.5)
+        camera.setPos(0,-0.2,2.5)
         camera.initInteraction()
         camera.disableInteraction()
 
         const scene = new AriaComScene()
         scene.addChild(mesh)
         scene.addChild(blockMesh)
+
         scene.addComponent(light)
         scene.addComponent(ambient)
 
@@ -75,7 +77,7 @@ export class AriaStageSpringMassCloth extends AriaStage{
 
         //Physics
         const forceReg = new AriaPhyParticleForceRegistry()
-        const cloth = new AriaPhySpringMassCloth(forceReg,geometry,800.0, 1/anchors*scales,
+        const cloth = new AriaPhySpringMassCloth(forceReg,geometry,600, 1/anchors*scales,
             1,0.05,AriaPhyParticleIntegrator.APP_INTEGRATOR_VERLET)
         const delta = 0.02
         const deltaSteps = 4
@@ -88,7 +90,7 @@ export class AriaStageSpringMassCloth extends AriaStage{
 
 
         const panel = new AriaComParamPanel()
-        panel.addTitle("Mass Spring Cloth")
+        panel.addTitle("Cloth")
         panel.addFPSMeter("FPS")
         panel.initInteraction()
         
@@ -97,12 +99,18 @@ export class AriaStageSpringMassCloth extends AriaStage{
                 forceReg.update(delta)
                 cloth.getParticle(0,0).clearForceAccum()
                 cloth.getParticle(anchors-1,0).clearForceAccum()
+                //for(let i=0;i<anchors;i++){
+                //    cloth.getParticle(0,i).clearForceAccum()
+                //    cloth.getParticle(anchors-1,i).clearForceAccum()
+                //    cloth.getParticle(i,anchors-1).clearForceAccum()
+                //    cloth.getParticle(i,0).clearForceAccum()
+                //}
                 cloth.integrateParticles(delta)
                 sphereBlock.updateAll(cloth)
             }
         
             cloth.sync()
-
+            //light.generateShadowMap(renderer.getEngine(),scene)
             renderer.renderScene(camera,scene)
             panel.reqAniFrame(renderCall)
         }

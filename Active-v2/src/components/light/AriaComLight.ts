@@ -30,10 +30,10 @@ export class AriaComLight extends AriaComponent implements IAriaShaderEmitter{
             this._logError("light: exportToShader not implemented")
         }
     }
-    renderShadowMap(renderer:IAriaRendererCore,renderables:AriaObjArray<IAriaRenderable>){
+    renderShadowMap(renderer:IAriaRendererCore,renderables:AriaObjArray<IAriaRenderable>,quality:number=1){
         this._logError("light: renderShadowMap not implemented")
     }
-    generateShadowMap(renderer:IAriaRendererCore,renderables:AriaObjArray<IAriaRenderable>):IAriaCanavs{
+    generateShadowMap(renderer:IAriaRendererCore,renderables:AriaObjArray<IAriaRenderable>,quality:number=1):IAriaCanavs{
         this._logError("light: generateShadowMap not implemented")
         throw Error()
     }

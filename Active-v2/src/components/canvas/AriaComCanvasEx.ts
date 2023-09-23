@@ -2,7 +2,7 @@ import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { AriaComFramebuffer, AriaFramebufferOption } from "../base/AriaComFramebuffer";
 import { AriaComCanvas } from "./AriaComCanvas";
 
-export class AriaComCubicCanvasEx extends AriaComCanvas{
+export class AriaComCanvasEx extends AriaComCanvas{
     w:number
     h:number
     constructor(w:number,h:number,enableHdr:boolean=true,enableMipMap:boolean=false){
