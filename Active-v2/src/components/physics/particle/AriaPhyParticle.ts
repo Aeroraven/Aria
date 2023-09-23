@@ -28,10 +28,7 @@ export class AriaPhyParticle extends AriaComponent{
             let accu = AriaVec3.create()
             accu.fromArray(this.acceleration)
             accu.addScaled_(this._forceAccum,this.inverseMass)
-
-            
             this.position.addScaled_(accu,duration*duration)
-
             this.velocity.addScaled_(accu,duration)
             this.velocity.mul_(Math.pow((1-this.damping),duration))
             this.clearForceAccum()
@@ -52,7 +49,6 @@ export class AriaPhyParticle extends AriaComponent{
         }else{
             this._logError("aria.phy.particle: integrator not supported yet")
         }
-        
     }
 
     public addForce(force:AriaVec3){

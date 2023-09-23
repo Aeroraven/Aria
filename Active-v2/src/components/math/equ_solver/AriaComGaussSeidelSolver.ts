@@ -22,9 +22,7 @@ export class AriaComGaussSeidelSolver extends AriaComponent{
                 }
                 x[o^1].setVal(i,sorCoef*(b.at(i)-s)/a.at(i,i)+(1-sorCoef)*(x[o].at(i)))
             }
-            //this._logInfo(x[o^1].toArray()+"_")
         }
-        //this._logError("X")
         return x[o^1]
     }
 }

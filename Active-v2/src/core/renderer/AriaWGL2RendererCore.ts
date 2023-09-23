@@ -359,7 +359,7 @@ class AriaWGL2RendererRenderOps extends AriaObject{
     }
     public  withCubicTexture(c:IAriaTexture,callable:()=>any){
         const gl = this.env
-        gl.bindTexture(gl.TEXTURE_CUBE_MAP,c.getTex(this.parent))
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP,c.getTex(this.parent).data)
         callable()
         gl.bindTexture(gl.TEXTURE_CUBE_MAP,null)
     }

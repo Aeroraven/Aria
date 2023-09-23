@@ -39,6 +39,13 @@ export class AriaArithmetic extends AriaObject{
         }
         return Math.sqrt(s)
     }
+    public static len2(x:number[],y:number[]){
+        let s = 0
+        for(let i=0;i<x.length;i++){
+            s+=(x[i]-y[i])*(x[i]-y[i]);
+        }
+        return Math.sqrt(s)
+    }
     public static normalize(x:number[]){
         let d=[]
         let s=this.len(x)

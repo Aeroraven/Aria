@@ -5,7 +5,7 @@ import { AriaStageDrop } from "./examples/AriaStageDrop";
 import { AriaStagePointLight } from "./examples/AriaStagePointLight";
 import { AriaStageSkyBox } from "./examples/AriaStageSkybox";
 import { AriaStageSurface } from "./examples/AriaStageSurface";
-import { AriaStageSpringMassCloth } from "./examples/AriaStageSpringMassCloth";
+import { AriaStageSpringMassCloth as AriaStageMassSpringCloth } from "./examples/AriaStageSpringMassCloth";
 import { AriaVoxel } from "./components/voxel/AriaVoxel";
 import { AriaStageVoxel } from "./examples/AriaStageVoxel";
 import { AriaStageVoxelKlee } from "./examples/AriaStageVoxelKlee";
@@ -32,7 +32,7 @@ function addEntry(name:string, description:string, redirect:string){
 
 function addTitle(){
     const title = document.createElement("h2")
-    title.innerHTML = "List of Available Demo <small style='font-size:12px'>Aria v2</small>"
+    title.innerHTML = "List of Available Scenes <small style='font-size:12px'>Aria v2</small>"
     title.style.borderBottom = "1px solid black"
     document.body.appendChild(title)
 }
@@ -48,16 +48,16 @@ function helperPageReady(){
 
 async function main(){
     const px = [
+        {name:"Mass Spring Cloth",redir:"smcloth",cl:AriaStageMassSpringCloth,desc:"Cloth simulation based on mass spring model"},
         {name:"Antialiasing",redir:"antialiasing",cl:AriaStageAntialiasing,desc:"Implementation of postprocessing antialiasing algorithms including FXAA and MLAA"},
         {name:"Blurring",redir:"blur",cl:AriaStageBlur,desc:"Implementation of some blurring algorithms like gaussian blurs"},
-        {name:"Bloom Effect",redir:"bloom",cl:AriaStageBloom,desc:"Implementation of bloom effect based on postprocess blurring"},
+        {name:"Bloom Effect II",redir:"bloom",cl:AriaStageBloom,desc:"Implementation of bloom effect based on postprocess blurring"},
         {name:"Skybox",redir:"skybox",cl:AriaStageSkyBox,desc:"Implementation of sky box using cube map"},
         {name:"Point Shadow",redir:"pointshadow",cl:AriaStagePointLight,desc:"Implementation of omnidirectional shadow"},
-        {name:"Mass Spring Cloth",redir:"smcloth",cl:AriaStageSpringMassCloth,desc:"Cloth simulation based on mass spring model"},
-        {name:"Voxelization",redir:"voxklee",cl:AriaStageVoxelKlee,desc:"Turning a mesh to voxel grids"},
+        //{name:"Voxelization",redir:"voxklee",cl:AriaStageVoxelKlee,desc:"Turning a mesh to voxel grids"},
         {name:"Ray Marching II",redir:"volcloud",cl:AriaStageVolumetricCloud,desc:"Single-pass volumetric rendering of 3D perlin noise"},
-        {name:"Pending",redir:"flsim",cl:AriaStageFLSim,desc:"flsim"},
-        {name:"Pending",redir:"matmul",cl:AriaStageMatrixMul,desc:"matmul"},
+        //{name:"Pending",redir:"flsim",cl:AriaStageFLSim,desc:"flsim"},
+        //{name:"Pending",redir:"matmul",cl:AriaStageMatrixMul,desc:"matmul"},
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false
