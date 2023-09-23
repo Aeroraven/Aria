@@ -1,7 +1,7 @@
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
 import vertex from "../shaders/material/cubicvol/vertex.vert"
 import fragment from "../shaders/material/cubicvol/fragment.frag"
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { IAriaTexture } from "../../core/interface/IAriaTexture";
 

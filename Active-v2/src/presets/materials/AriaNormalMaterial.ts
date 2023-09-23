@@ -1,7 +1,6 @@
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
 import vertex from "../shaders/material/normal/vertex.glsl"
 import fragment from "../shaders/material/normal/fragment.glsl"
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaNormalMaterial extends AriaComShaderMaterial{

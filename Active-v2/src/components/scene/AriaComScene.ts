@@ -1,6 +1,4 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaEnv } from "../../core/graphics/AriaEnv";
-import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { IAriaChildContainer } from "../base/interface/IAriaChildContainer";

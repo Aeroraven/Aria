@@ -10,7 +10,6 @@ import { AriaShaderUniformTp } from "../core/graphics/AriaShaderOps";
 import { AriaStage } from "./AriaStage";
 import { AriaComParamPanel } from "../components/ui/panel/AriaComParamPanel";
 import { AriaPostFxGaussianBlur } from "../presets/postprocess/AriaPostFxGaussianBlur";
-import { AriaPostFxGaussianBloom } from "../presets/postprocess/AriaPostFxGaussianBloom";
 import { AriaComPostPass } from "../components/postproc/AriaComPostPass";
 import { AriaPostFxKawaseBlur } from "../presets/postprocess/AriaPostFxKawaseBlur";
 import { AriaPostFxMipmapDownsample } from "../presets/postprocess/AriaPostFxMipmapDownsample";

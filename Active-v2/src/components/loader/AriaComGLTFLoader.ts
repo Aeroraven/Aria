@@ -1,7 +1,5 @@
 import * as gltf from 'webgl-gltf';
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaEnv } from '../../core/graphics/AriaEnv';
-import { AriaShaderOps } from '../../core/graphics/AriaShaderOps';
 import { AriaComEBO } from '../base/AriaComEBO';
 import { AriaComTexture } from '../base/AriaComTexture';
 import { AriaComVAO } from '../base/AriaComVAO';
@@ -9,6 +7,7 @@ import { IAriaModelContent } from '../base/interface/IAriaModelContent';
 import { AriaGeometryVars } from '../geometry/base/AriaComGeometry';
 import { AriaComLoadedGeometry } from '../geometry/primary/AriaComLoadedGeometry';
 import { IAriaRendererCore } from '../../core/interface/IAriaRendererCore';
+import { AriaRendererCompatUtils } from '../../core/base/AriaRendererCompatDef';
 
 interface AriaLoaderGLTFBuf{
     buffer: WebGLBuffer,
@@ -32,7 +31,7 @@ export class AriaComGLTFLoader extends AriaComponent{
     public async load(renderer:IAriaRendererCore, path:string){
         const gl = renderer.getEnv()
         this.renderer = renderer
-        const model =  await gltf.loadModel(gl,path)
+        const model =  await gltf.loadModel(gl.data,path)
         const mesh = model.meshes[<number>model.nodes[0].mesh]
         this.model = model
         this.mesh = mesh
@@ -45,7 +44,7 @@ export class AriaComGLTFLoader extends AriaComponent{
         for(let i=0;i<this.getTotalMeshes();i++){
             const ng = new AriaComLoadedGeometry()
 
-            const eleBufT = this.getElementBuffer(i)
+            const eleBufT = AriaRendererCompatUtils.createBuffer(this.getElementBuffer(i))
             const eleBuf = new AriaComEBO(eleBufT,this.getElements(i))
             const eleBufRaw = eleBuf.getRawData(renderer)
 
@@ -57,13 +56,13 @@ export class AriaComGLTFLoader extends AriaComponent{
                 }
                 return idx+1
             })()
-            const posBuf = new AriaComVAO(posBufT.buffer,posBufMax)
+            const posBuf = new AriaComVAO(AriaRendererCompatUtils.createBuffer(posBufT.buffer),posBufMax)
 
             const texBufT = this.getTexBuffer(i)
-            const texBuf = new AriaComVAO(texBufT.buffer)
+            const texBuf = new AriaComVAO(AriaRendererCompatUtils.createBuffer(texBufT.buffer))
 
             const normBufT = this.getNormalBuffer(i)
-            const normBuf = new AriaComVAO(normBufT.buffer)
+            const normBuf = new AriaComVAO(AriaRendererCompatUtils.createBuffer(normBufT.buffer))
 
             ret.bufData.push({
                 position:posBuf.getRawData(renderer),
@@ -79,7 +78,7 @@ export class AriaComGLTFLoader extends AriaComponent{
             ret.geometries.push(ng)
 
             const tx = new AriaComTexture()
-            tx.setTex(this.getBaseMaterialTexture(i))
+            tx.setTex(AriaRendererCompatUtils.createTexture(this.getBaseMaterialTexture(i)))
             ret.textures.push(tx)
         }
         return ret
@@ -109,7 +108,7 @@ export class AriaComGLTFLoader extends AriaComponent{
             return {
                 buffer: <WebGLBuffer>this.model?.meshes[id].normals?.buffer,
                 size: this.model?.meshes[id].normals?.size || 3,
-                type: this.model?.meshes[id].normals?.type || gl.FLOAT
+                type: this.model?.meshes[id].normals?.type || 5126
             } 
         }else{
             throw new Error("Not invalid buffer")
@@ -123,7 +122,7 @@ export class AriaComGLTFLoader extends AriaComponent{
             return {
                 buffer: <WebGLBuffer>this.model?.meshes[id].texCoord?.buffer,
                 size: this.model?.meshes[id].texCoord?.size || 2,
-                type: this.model?.meshes[id].texCoord?.type || gl.FLOAT
+                type: this.model?.meshes[id].texCoord?.type || 5126
             } 
         }else{
             throw new Error("Not invalid buffer")

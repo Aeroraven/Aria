@@ -1,6 +1,4 @@
-import { AriaComManager } from "../../core/AriaComManager";
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { AriaComTexture } from "../base/AriaComTexture";
 import { IAriaCanavs } from "../base/interface/IAriaCanvas";

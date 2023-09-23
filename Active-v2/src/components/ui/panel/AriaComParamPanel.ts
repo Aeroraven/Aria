@@ -1,15 +1,16 @@
 import { AriaComponent } from "../../../core/AriaComponent";
-import { AriaEnv } from "../../../core/graphics/AriaEnv";
 import { IAriaPair } from "../../../core/interface/IAriaPair";
 import { IAriaInteractive } from "../../base/interface/IAriaInteractive";
 
 export class AriaComParamPanel extends AriaComponent implements IAriaInteractive{
-    private el = AriaEnv.doc.createElement("div")
     private _id = 0
     private _fpsTimeStamp = Date.now()
     private _fps = 0
     private _fpsCounter = 0
     private _status = ""
+    private _docBody = document
+    private el = this._docBody.createElement("div")
+    
 
     constructor(){
         super("Aria/ParamPanel")
@@ -33,16 +34,16 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         this.el.style.paddingTop = "10px"
         this.el.style.paddingBottom = "10px"
         this.el.style.backgroundColor = "#2f2f2f"
-        AriaEnv.docBody.appendChild(this.el)
+        this._docBody.body.appendChild(this.el)
     }
     addSlidebar(name:string,min_value:number,max_value:number,handler:(value:number)=>any){
-        const element = AriaEnv.doc.createElement("input")
+        const element = this._docBody.createElement("input")
         element.id = "parampanel-aria-identifier-"+this.allocateId()
-        const attrType = AriaEnv.doc.createAttribute("type")
+        const attrType = this._docBody.createAttribute("type")
         attrType.value = "range"
-        const attrMin = AriaEnv.doc.createAttribute("min")
+        const attrMin = this._docBody.createAttribute("min")
         attrMin.value = ""+min_value
-        const attrMax = AriaEnv.doc.createAttribute("max")
+        const attrMax = this._docBody.createAttribute("max")
         attrMax.value = ""+max_value
         element.setAttributeNode(attrType)
         element.setAttributeNode(attrMin)
@@ -51,12 +52,12 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
             const value = parseInt((<HTMLInputElement>document.getElementById(element.id)).value)
             handler(value)
         })
-        const label = AriaEnv.doc.createElement("span")
+        const label = this._docBody.createElement("span")
         label.innerHTML = name
         label.style.width = "150px"
         label.style.display = "inline-block"
         label.style.fontFamily = "serif"
-        const block = AriaEnv.doc.createElement("div")
+        const block = this._docBody.createElement("div")
         block.appendChild(label)
         block.appendChild(element)
         this.el.appendChild(block)
@@ -64,7 +65,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
     }
 
     addSelector(name:string, options:IAriaPair<string,string>[], def:string="", handler:(respId:string)=>any){
-        const selParent = AriaEnv.doc.createElement("select")
+        const selParent = this._docBody.createElement("select")
         const selParentId = "parampanel-aria-identifier-"+this.allocateId()
         selParent.id = selParentId
         selParent.addEventListener("change",(e)=>{
@@ -72,7 +73,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
             handler(value)
         })
         options.forEach((x)=>{
-            const childEl = AriaEnv.doc.createElement("option")
+            const childEl = this._docBody.createElement("option")
             childEl.value = x.key
             childEl.text = x.value
             if(x.key==def){
@@ -80,12 +81,12 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
             }
             selParent.appendChild(childEl)
         })
-        const label = AriaEnv.doc.createElement("span")
+        const label = this._docBody.createElement("span")
         label.innerHTML = name
         label.style.width = "150px"
         label.style.display = "inline-block"
         label.style.fontFamily = "serif"
-        const block = AriaEnv.doc.createElement("div")
+        const block = this._docBody.createElement("div")
         block.appendChild(label)
         block.appendChild(selParent)
         this.el.appendChild(block)
@@ -93,7 +94,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
     }
 
     addTitle(name:string){
-        const label = AriaEnv.doc.createElement("span")
+        const label = this._docBody.createElement("span")
         label.innerHTML = name
         label.style.marginRight = "20px"
         label.style.display = "inline-block"
@@ -101,19 +102,19 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         label.style.fontWeight = "bold"
         label.style.fontSize = "20px"
         label.style.marginBottom = "10px"
-        const block = AriaEnv.doc.createElement("div")
+        const block = this._docBody.createElement("div")
         block.appendChild(label)
         this.el.appendChild(block)
     }
 
     addFPSMeter(name:string){
-        const label = AriaEnv.doc.createElement("span")
+        const label = this._docBody.createElement("span")
         label.innerHTML = name
         label.style.width = "150px"
         label.style.display = "inline-block"
         label.style.fontFamily = "serif"
 
-        const labelx = AriaEnv.doc.createElement("span")
+        const labelx = this._docBody.createElement("span")
         labelx.innerHTML = "-"
         labelx.style.width = "150px"
         labelx.style.display = "inline-block"
@@ -124,7 +125,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
             labelx.innerHTML = this._fps + ""
         },200)
 
-        const block = AriaEnv.doc.createElement("div")
+        const block = this._docBody.createElement("div")
         block.appendChild(label)
         block.appendChild(labelx)
         this.el.appendChild(block)
@@ -133,13 +134,13 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         this._status = x
     }
     addStatusBar(name:string){
-        const label = AriaEnv.doc.createElement("span")
+        const label = this._docBody.createElement("span")
         label.innerHTML = name
         label.style.width = "150px"
         label.style.display = "inline-block"
         label.style.fontFamily = "serif"
 
-        const labelx = AriaEnv.doc.createElement("span")
+        const labelx = this._docBody.createElement("span")
         labelx.innerHTML = "-"
         labelx.style.width = "150px"
         labelx.style.display = "inline-block"
@@ -150,7 +151,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
             labelx.innerHTML = this._status
         },200)
 
-        const block = AriaEnv.doc.createElement("div")
+        const block = this._docBody.createElement("div")
         block.appendChild(label)
         block.appendChild(labelx)
         this.el.appendChild(block)

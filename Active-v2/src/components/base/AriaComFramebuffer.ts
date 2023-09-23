@@ -1,12 +1,9 @@
 import { AriaComponent } from "../../core/AriaComponent"
-import { AriaEnv } from "../../core/graphics/AriaEnv"
-import { AriaRenderOps } from "../../core/graphics/AriaRenderOps"
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps"
+import { IAriaCoreBuffer, IAriaCoreTexture } from "../../core/base/AriaRendererCompatDef"
+import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps"
 import { IAriaFramebuffer } from "../../core/interface/IAriaFramebuffer"
-import { IAriaGLBuffer } from "../../core/interface/IAriaGLBuffer"
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore"
 import { AriaComTexture } from "./AriaComTexture"
-import { IAriaTextureAttached } from "./interface/IAriaTextureAttached"
 
 export class AriaFramebufferOption{
     enableHdr:boolean
@@ -18,6 +15,8 @@ export class AriaFramebufferOption{
     useGivenWH:boolean
     wid:number = -1
     height:number = -1
+    baseW:number = window.innerWidth
+    baseH:number = window.innerHeight
     constructor(){
         this.mipmap = false
         this.regularRect = false
@@ -68,8 +67,8 @@ export class AriaFramebufferOption{
 export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffer{
     protected gl:WebGL2RenderingContext
     protected fb:WebGLFramebuffer
-    protected tex:WebGLTexture
-    protected rbos:WebGLRenderbuffer[]
+    protected tex:IAriaCoreTexture
+    protected rbos:IAriaCoreBuffer[]
     protected options:AriaFramebufferOption
     protected texWrapper: AriaComTexture
     protected renderer:IAriaRendererCore
@@ -79,11 +78,11 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         this.renderer = renderer
         this.options = options ? options : new AriaFramebufferOption();
         this.texWrapper  = new AriaComTexture()
-        this.gl = this.renderer?.getEnv()!
+        this.gl = this.renderer?.getEnv()!.data
         const gl = this.gl
         
-        let wid = (this.options.regularRect)?2048*this.options.scaler:AriaEnv.width*this.options.scaler
-        let height = (this.options.regularRect)?2048*this.options.scaler:AriaEnv.height*this.options.scaler
+        let wid = (this.options.regularRect)?2048*this.options.scaler:this.options.baseW*this.options.scaler
+        let height = (this.options.regularRect)?2048*this.options.scaler:this.options.baseH*this.options.scaler
 
         if(this.options.useGivenWH){
             wid = this.options.wid
@@ -97,26 +96,24 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         
         if(!this.options.cubic){
             this.tex = renderer.createEmptyTexture(wid,height,this.options.mipmap,this.options.enableHdr)
-            gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.tex,0)
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,this.tex.data,0)
         }else{
             this.tex = renderer.createEmptyCubicTexture(wid,height,this.options.mipmap,this.options.enableHdr)
-            gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_CUBE_MAP_POSITIVE_X,this.tex,0)
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_CUBE_MAP_POSITIVE_X,this.tex.data,0)
         }
 
         this.rbos = []
         if(this.options.cubic){
             for(let i=0;i<6;i++){
                 this.rbos.push(renderer.createEmptyRBO(wid,height))
-                gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[i])
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[i].data)
             }
             gl.bindFramebuffer(gl.FRAMEBUFFER,null)
         }else{
             this.rbos.push(renderer.createEmptyRBO(wid,height))
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[0])
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[0].data)
             gl.bindFramebuffer(gl.FRAMEBUFFER,null)
         }
-        
-
         this.texWrapper.setTex(this.tex)
         
     }
@@ -125,8 +122,8 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         const gl = this.gl
         if(this.options.cubic){
             for(let i=0;i<6;i++){
-                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.tex, 0);
-                gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[i])
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.tex.data, 0);
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[i].data)
                 renderer.clearScreen()
             }
         }else{
@@ -139,8 +136,8 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
             const gl = this.gl
             for(let i=0;i<6;i++){
                 renderer.defineUniform("uModel",AriaShaderUniformTp.ASU_MAT4,renderer.getCubicLookat(i)) 
-                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.tex, 0);
-                gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[i])
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+i, this.tex.data, 0);
+                gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,this.rbos[i].data)
                 renderCall()
             }
             
@@ -156,7 +153,6 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
         return this.fb
     }
     public bind(){
-        //this._logError(""+this.options.regularRect)
         if(!this.options.depthMap){
             if(this.options.regularRect){
                 this.gl.viewport(0,0,2048*this.options.scaler,2048*this.options.scaler)
@@ -178,7 +174,7 @@ export class AriaComFramebuffer extends AriaComponent implements IAriaFramebuffe
     }
     public unbind(){
         if(this.options.mipmap){
-            this.gl.bindTexture(this.gl.TEXTURE_2D,this.tex)
+            this.gl.bindTexture(this.gl.TEXTURE_2D,this.tex.data)
             this.gl.generateMipmap(this.gl.TEXTURE_2D)
             this.gl.bindTexture(this.gl.TEXTURE_2D,null)
         }

@@ -1,5 +1,4 @@
-import { AriaComponent } from "../../core/AriaComponent";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { AriaComLight, AriaLightShaderVars } from "./AriaComLight";
 

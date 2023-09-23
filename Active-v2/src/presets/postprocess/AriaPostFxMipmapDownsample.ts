@@ -6,7 +6,7 @@ import fragment from "../shaders/postprocess/mipmap-downsample/fragment.glsl"
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { AriaPostFxIdentity } from "./AriaPostFxIdentity";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxMipmapDownsample extends AriaComPostPass{

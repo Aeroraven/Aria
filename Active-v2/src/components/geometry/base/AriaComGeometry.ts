@@ -1,6 +1,6 @@
-import { mat3, mat4, vec3 } from "gl-matrix-ts";
+import { mat4, vec3 } from "gl-matrix-ts";
 import { AriaComponent } from "../../../core/AriaComponent";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../../core/graphics/AriaShaderOps";
+import { AriaShaderUniformTp } from "../../../core/graphics/AriaShaderOps";
 import { IAriaShaderEmitter } from "../../../core/interface/IAriaShaderEmitter";
 import { IAriaDynamicGeometry } from "../../base/interface/IAriaDynamicGeometry";
 import { IAriaGeometry } from "../../base/interface/IAriaGeometry";

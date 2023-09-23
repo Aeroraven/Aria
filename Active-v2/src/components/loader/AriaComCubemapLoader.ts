@@ -1,7 +1,6 @@
 import { AriaComponent } from "../../core/AriaComponent";
 import { IAriaTexture } from "../../core/interface/IAriaTexture"
 import { AriaAsyncImageOp } from "../../core/network/AriaAsyncImageOp";
-import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
 import { AriaComCubeMap } from "../texture/AriaComCubeMap";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 

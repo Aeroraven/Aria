@@ -1,4 +1,5 @@
 import { AriaCallable } from "../base/AriaBaseDefs";
+import { IAriaCoreBuffer, IAriaCoreData, IAriaCoreRenderingContext, IAriaCoreShaderProgram, IAriaCoreTexture } from "../base/AriaRendererCompatDef";
 import { AriaShaderUniformTp } from "../graphics/AriaShaderOps";
 import { IAriaFramebuffer } from "./IAriaFramebuffer";
 import { IAriaGLBuffer } from "./IAriaGLBuffer";
@@ -9,30 +10,41 @@ export interface IAriaRendererCore{
     defineUniform(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture)):void;
     setCameraPos(x:number,y:number,z:number):void;
     defineAttribute(attName:string, value:IAriaGLBuffer, size?:number, type?:number):void;
-    createFramebuffer(depthComponent:WebGLBuffer,texture:WebGLTexture,postTrigger:()=>any):any;
+    createFramebuffer(depthComponent:IAriaCoreBuffer,texture:IAriaCoreTexture,postTrigger:()=>any):any;
     clearScreen():void;
     activateFramebuffer(buf:IAriaFramebuffer):void;
     removeFramebuffer():void;
-    createEmptyRBO(width:number,height:number):WebGLBuffer;
-    createEmptyTexture(width:number, height:number, mipmap?:boolean, hdr?:boolean):WebGLTexture;
-    createEmptyCubicTexture(width:number, height:number, mipmap?:boolean, hdr?:boolean):WebGLTexture;
+    createEmptyRBO(width:number,height:number):IAriaCoreBuffer;
+    createEmptyTexture(width:number, height:number, mipmap?:boolean, hdr?:boolean):IAriaCoreTexture;
+    createEmptyCubicTexture(width:number, height:number, mipmap?:boolean, hdr?:boolean):IAriaCoreTexture;
     getCubicLookat(x:number):Float32Array;
     readElementBuffer(destBuffer:ArrayBuffer):void;
-    initShaderProgram(vsrc:string,fsrc:string):WebGLProgram|null;
+    initShaderProgram(vsrc:string,fsrc:string):IAriaCoreShaderProgram|null;
     useShader(shader:IAriaShader, onSuccess?:AriaCallable):void;
-    createTexture(img:HTMLImageElement):WebGLTexture;
+    createTexture(img:HTMLImageElement):IAriaCoreTexture;
     readArrayBuffer(destBuffer:ArrayBuffer):void;
-    getTextureBufferData(id:WebGLTexture,dataType:number,format:number,w:number,h:number):unknown
+    getTextureBufferData(id:IAriaCoreTexture,dataType:number,format:number,w:number,h:number):unknown
     defineUniformCounter(attName:string, increment?:number, returnAfter?:boolean):number;
     defineUniformExtend(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture), index:number):number;
-    createCubicTexture(img:HTMLImageElement[]):WebGLTexture;
-    getEnv(): WebGL2RenderingContext
+    createCubicTexture(img:HTMLImageElement[]):IAriaCoreTexture;
+    getEnv(): IAriaCoreRenderingContext
     useInvariantShader(shader:IAriaShader,effRange:()=>any):void
     renderInstancedEntry(num:number, instances?:number):void
     clearScreenRequest():void;
     withCubicTexture(c:IAriaTexture,callable:()=>any):void;
     withNoDepthMask(callable:()=>any):void;
     clearScreenInternal():void;
-    createTexture3D(img:any,w:number,h:number,d:number):WebGLTexture;
-    createTextureData2D(img:any,w:number,h:number):WebGLTexture;
+    createTexture3D(img:any,w:number,h:number,d:number):IAriaCoreTexture;
+    createTextureData2D(img:any,w:number,h:number):IAriaCoreTexture;
+
+    getUniformLocation(shader:IAriaCoreShaderProgram,name:string):IAriaCoreData
+    getAttribLocation(shader:IAriaCoreShaderProgram,name:string):number
+
+    createArrayBuffer():IAriaCoreBuffer
+    useArrayBuffer(buffer:IAriaCoreBuffer):any
+    setArrayBufferData(buffer:IAriaCoreBuffer,data:any):any
+
+    createElementBuffer():IAriaCoreBuffer
+    useElementBuffer(buffer:IAriaCoreBuffer):any
+    setElementBufferData(buffer:IAriaCoreBuffer,data:any):any
 }

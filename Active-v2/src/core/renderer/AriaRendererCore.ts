@@ -1,5 +1,6 @@
 import { AriaCallable } from "../base/AriaBaseDefs";
 import { AriaObject } from "../base/AriaObject";
+import { AriaRendererCompatUtils, IAriaCoreBuffer, IAriaCoreData, IAriaCoreRenderingContext, IAriaCoreShaderProgram, IAriaCoreTexture } from "../base/AriaRendererCompatDef";
 import { AriaShaderUniformTp } from "../graphics/AriaShaderOps";
 import { IAriaFramebuffer } from "../interface/IAriaFramebuffer";
 import { IAriaGLBuffer } from "../interface/IAriaGLBuffer";
@@ -12,10 +13,34 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     constructor(){
         super("AriaRenderer")
     }
-    public getTextureBufferData(id: WebGLTexture, dataType: number, format: number, w: number, h: number): unknown {
+    createElementBuffer(): IAriaCoreBuffer<any> {
         throw new Error("Method not implemented.");
     }
-    public createTextureData2D(img: any, w: number, h: number): WebGLTexture {
+    useElementBuffer(buffer: IAriaCoreBuffer<any>) {
+        throw new Error("Method not implemented.");
+    }
+    setElementBufferData(buffer: IAriaCoreBuffer<any>, data: any) {
+        throw new Error("Method not implemented.");
+    }
+    useArrayBuffer(buffer: IAriaCoreBuffer<any>) {
+        throw new Error("Method not implemented.");
+    }
+    setArrayBufferData(buffer: IAriaCoreBuffer<any>, data: any) {
+        throw new Error("Method not implemented.");
+    }
+    createArrayBuffer(): IAriaCoreBuffer<any> {
+        throw new Error("Method not implemented.");
+    }
+    getUniformLocation(shader: IAriaCoreShaderProgram<any>, name: string): IAriaCoreData {
+        throw new Error("Method not implemented.");
+    }
+    getAttribLocation(shader: IAriaCoreShaderProgram<any>, name: string): number {
+        throw new Error("Method not implemented.");
+    }
+    public getTextureBufferData(id: IAriaCoreTexture, dataType: number, format: number, w: number, h: number): unknown {
+        throw new Error("Method not implemented.");
+    }
+    public createTextureData2D(img: any, w: number, h: number): IAriaCoreTexture {
         throw new Error("Method not implemented.");
     }
     public setCameraPos(x: number, y: number, z: number): void {
@@ -27,7 +52,7 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     public defineAttribute(attName:string, value:IAriaGLBuffer, size?:number, type?:number){
         this._logError("aria_renderer_core: defineAttribute not implemented")
     }
-    public  createFramebuffer(depthComponent:WebGLBuffer,texture:WebGLTexture,postTrigger:()=>any):any{
+    public  createFramebuffer(depthComponent:IAriaCoreBuffer,texture:IAriaCoreTexture,postTrigger:()=>any):any{
         this._logError("aria_renderer_core: createFramebuffer not implemented")
     }
     public clearScreen(){
@@ -41,15 +66,15 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     }
     public createEmptyRBO(width:number,height:number){
         this._logError("aria_renderer_core: createEmptyRBO not implemented")
-        return <WebGLBuffer>(0);
+        return AriaRendererCompatUtils.createBufferPlaceholder()
     }
     public createEmptyTexture(width:number, height:number, mipmap?:boolean, hdr?:boolean){
         this._logError("aria_renderer_core: createEmptyTexture not implemented")
-        return <WebGLTexture>(0);
+        return AriaRendererCompatUtils.createTexturePlaceholder()
     }
     public createEmptyCubicTexture(width:number, height:number, mipmap?:boolean, hdr?:boolean){
         this._logError("aria_renderer_core: createEmptyCubicTexture not implemented")
-        return <WebGLTexture>(0);
+        return AriaRendererCompatUtils.createTexturePlaceholder()
     }
     public getCubicLookat(x:number){
         this._logError("aria_renderer_core: getCubicLookat not implemented")
@@ -59,16 +84,16 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
         this._logError("aria_renderer_core: readElementBuffer not implemented")
         
     }
-    public initShaderProgram(vsrc:string,fsrc:string):WebGLProgram|null{
+    public initShaderProgram(vsrc:string,fsrc:string):IAriaCoreShaderProgram|null{
         this._logError("aria_renderer_core: initShaderProgram not implemented")
         return null
     }
     public useShader(shader:IAriaShader, onSuccess?:AriaCallable){
         this._logError("aria_renderer_core: useShader not implemented")
     }
-    public createTexture(img:HTMLImageElement):WebGLTexture{
+    public createTexture(img:HTMLImageElement):IAriaCoreTexture{
         this._logError("aria_renderer_core: createTexture not implemented")
-        return <WebGLTexture>(0);
+        return AriaRendererCompatUtils.createTexturePlaceholder()
     }
     public readArrayBuffer(destBuffer:ArrayBuffer){
         this._logError("aria_renderer_core: readArrayBuffer not implemented")
@@ -81,15 +106,15 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
         this._logError("aria_renderer_core: defineUniformExtend not implemented")
         return 0
     }
-    public createCubicTexture(img:HTMLImageElement[]):WebGLTexture{
+    public createCubicTexture(img:HTMLImageElement[]):IAriaCoreTexture{
         this._logError("aria_renderer_core: createCubicTexture not implemented")
         
-        return <WebGLTexture>0
+        return AriaRendererCompatUtils.createTexturePlaceholder()
     }
-    public getEnv(): WebGL2RenderingContext{
+    public getEnv(): IAriaCoreRenderingContext{
         this._logError("aria_renderer_core: getEnv not implemented")
         
-        return <WebGL2RenderingContext><unknown>0;
+        return <IAriaCoreRenderingContext><unknown>0;
     }
     public useInvariantShader(shader:IAriaShader,effRange:()=>any){
         this._logError("aria_renderer_core: useInvariantShader not implemented")
@@ -110,7 +135,7 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     public clearScreenInternal(){
         
     }
-    public createTexture3D(img:any,w:number,h:number,d:number):WebGLTexture{
+    public createTexture3D(img:any,w:number,h:number,d:number):IAriaCoreTexture{
         this._logError("aria_render_core: createTexture3D not implemented")
         throw Error()
     }

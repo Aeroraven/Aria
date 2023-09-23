@@ -1,10 +1,7 @@
-import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
-import { IAriaTexture } from "../../core/interface/IAriaTexture";
 import { AriaWGL2RendererCore } from "../../core/renderer/AriaWGL2RendererCore";
 import { IAriaRenderable } from "../base/interface/IAriaRenderable";
 import { AriaComCamera } from "../camera/AriaComCamera";
 import { AriaComCanvas } from "../canvas/AriaComCanvas";
-import { AriaComPostPass } from "../postproc/AriaComPostPass";
 import { AriaComScene } from "../scene/AriaComScene";
 import { AriaRendererWrapper } from "./AriaRendererWrapper";
 

@@ -1,6 +1,5 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaShaderEmitter } from "../../core/interface/IAriaShaderEmitter";
 import { AriaFramebufferOption } from "../base/AriaComFramebuffer";
 import { IAriaCanavs } from "../base/interface/IAriaCanvas";
@@ -8,7 +7,6 @@ import { IAriaRenderable } from "../base/interface/IAriaRenderable";
 import { AriaComCamera } from "../camera/AriaComCamera";
 import { AriaComGeometry } from "../geometry/base/AriaComGeometry";
 import { AriaComRectangle } from "../geometry/primary/AriaComRectangle";
-import { AriaComCube } from "../geometry/primary/AriaComCube";
 import { AriaComMaterial } from "../material/AriaComMaterial";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { IAriaTexture } from "../../core/interface/IAriaTexture";

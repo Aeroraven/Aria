@@ -1,4 +1,3 @@
-import { AriaShaderOps } from "../../core/graphics/AriaShaderOps";
 import { AriaCallable } from "../../core/base/AriaBaseDefs";
 import { IAriaShader } from "../../core/interface/IAriaShader";
 import { AriaComShader } from "../base/AriaComShader";

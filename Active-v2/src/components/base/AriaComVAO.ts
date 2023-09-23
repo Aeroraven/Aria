@@ -1,21 +1,20 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaEnv } from "../../core/graphics/AriaEnv";
-import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
+import { IAriaCoreBuffer } from "../../core/base/AriaRendererCompatDef";
 import { IAriaBufferReader } from "../../core/interface/IAriaBufferReader";
 import { IAriaGLBuffer } from "../../core/interface/IAriaGLBuffer";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaComVAO extends AriaComponent implements IAriaGLBuffer,IAriaBufferReader<Float32Array>{
-    private _buf:WebGLBuffer
+    private _buf:IAriaCoreBuffer
     private _bufLen:number = -1
     private _data:number[] = []
     private _dataUpdated = false
     private _valid = false
 
-    constructor(bf:WebGLBuffer|null = null, length:number = -1){
+    constructor(bf:IAriaCoreBuffer|null = null, length:number = -1){
         super("AriaCom/VAO")
         if(bf==null){
-            this._buf = <WebGLBuffer>0
+            this._buf = <IAriaCoreBuffer>{data:0}
         }else{
             this._buf = bf
             this._bufLen = length
@@ -33,18 +32,18 @@ export class AriaComVAO extends AriaComponent implements IAriaGLBuffer,IAriaBuff
 
     public bind(renderer:IAriaRendererCore){
         if(this._valid==false){
-            this._buf = renderer.getEnv().createBuffer()!
+            this._buf = renderer.createArrayBuffer()
             this._valid = true
         }
-        renderer.getEnv().bindBuffer(renderer.getEnv().ARRAY_BUFFER, this._buf)
+        renderer.useArrayBuffer(this._buf)
         if(this._dataUpdated==false){
-            renderer.getEnv().bufferData(renderer.getEnv().ARRAY_BUFFER, new Float32Array(this._data), renderer.getEnv().STATIC_DRAW)
+            renderer.setArrayBufferData(this._buf, new Float32Array(this._data))
             this._dataUpdated=true
         }
     }
 
     public unbind(renderer:IAriaRendererCore){
-        renderer.getEnv().bindBuffer(renderer.getEnv().ARRAY_BUFFER, null)
+        //renderer.getEnv().bindBuffer(renderer.getEnv().ARRAY_BUFFER, null)
     }
 
     public setData(v:number[],length:number = -1){
@@ -52,7 +51,7 @@ export class AriaComVAO extends AriaComponent implements IAriaGLBuffer,IAriaBuff
         this._bufLen = length
         this._dataUpdated=false
     }
-    public setDataA(v:WebGLBuffer){
+    public setDataA(v:IAriaCoreBuffer){
         this._buf = v
     }
 

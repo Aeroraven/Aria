@@ -4,7 +4,7 @@ import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
 import vertex from "../shaders/postprocess/combine/vertex.glsl"
 import fragment from "../shaders/postprocess/combine/fragment.glsl"
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxCombine extends AriaComPostPass{

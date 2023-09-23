@@ -3,7 +3,7 @@ import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMa
 import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
 import vertex from "../shaders/postprocess/gaussian-blur-vertical/vertex.glsl"
 import fragment from "../shaders/postprocess/gaussian-blur-vertical/fragment.glsl"
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
 export class AriaPostFxGaussianBlurVertical extends AriaComPostPass{

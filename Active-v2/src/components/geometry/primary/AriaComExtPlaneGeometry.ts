@@ -1,5 +1,4 @@
 import { AriaArithmetic } from "../../../core/arithmetic/AriaArithmetic";
-import { AriaShaderOps } from "../../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore";
 import { AriaComEBO } from "../../base/AriaComEBO";
 import { AriaComVAO } from "../../base/AriaComVAO";

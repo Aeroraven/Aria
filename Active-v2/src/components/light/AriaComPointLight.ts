@@ -1,5 +1,4 @@
-import { AriaComponent } from "../../core/AriaComponent";
-import { AriaShaderOps, AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
+import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { AriaObjArray } from "../../core/base/AriaBaseDefs";
 import { IAriaCanavs } from "../base/interface/IAriaCanvas";
 import { IAriaRenderable } from "../base/interface/IAriaRenderable";

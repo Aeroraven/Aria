@@ -9,7 +9,6 @@ import { AriaComScene } from "../components/scene/AriaComScene";
 import { AriaShaderUniformTp } from "../core/graphics/AriaShaderOps";
 import { AriaPostFxFXAA } from "../presets/postprocess/AriaPostFxFXAA";
 import { AriaPostFxMLAA } from "../presets/postprocess/AriaPostFxMLAA";
-import { AriaPostFxInvertColor } from "../presets/postprocess/AriaPostFxInvertColor";
 import { AriaStage } from "./AriaStage";
 import { AriaPostFxIdentity } from "../presets/postprocess/AriaPostFxIdentity";
 import { IAriaRenderable } from "../components/base/interface/IAriaRenderable";

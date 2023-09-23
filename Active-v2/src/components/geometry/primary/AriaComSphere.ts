@@ -1,5 +1,4 @@
 import { mat4 } from "gl-matrix-ts";
-import { AriaShaderOps } from "../../../core/graphics/AriaShaderOps";
 import { AriaComEBO } from "../../base/AriaComEBO";
 import { AriaComVAO } from "../../base/AriaComVAO";
 import { AriaComGeometry, AriaGeometryVars } from "../base/AriaComGeometry";
