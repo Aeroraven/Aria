@@ -5,7 +5,7 @@ import { AriaObject } from "../base/AriaObject";
 import { AriaRendererCompatUtils, IAriaCoreBuffer, IAriaCoreData, IAriaCoreRenderingContext, IAriaCoreShaderProgram, IAriaCoreTexture } from "../base/AriaRendererCompatDef";
 import { AriaShaderUniformTp } from "../graphics/AriaShaderOps";
 import { IAriaFramebuffer } from "../interface/IAriaFramebuffer";
-import { IAriaGLBuffer } from "../interface/IAriaGLBuffer";
+import { IAriaGeneralBuffer } from "../interface/IAriaGeneralBuffer";
 import { IAriaRendererCore } from "../interface/IAriaRendererCore";
 import { IAriaShader } from "../interface/IAriaShader";
 import { IAriaTexture } from "../interface/IAriaTexture";
@@ -277,7 +277,6 @@ class AriaWGL2RendererRenderOps extends AriaObject{
         const gl = this.env
         const tex = gl.createTexture()
         gl.bindTexture(gl.TEXTURE_2D,tex);
-        console.log(img,w,h)
         gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,w,h,0,gl.RED,gl.UNSIGNED_BYTE,img);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.bindTexture(gl.TEXTURE_2D,null)
@@ -365,14 +364,9 @@ class AriaWGL2RendererRenderOps extends AriaObject{
         gl.bindTexture(gl.TEXTURE_CUBE_MAP,null)
     }
 
-    public createFramebuffer(depthComponent:IAriaCoreBuffer,texture:WebGLTexture,postTrigger:()=>any){
+    public createFramebuffer(){
         const gl = this.env
         const fb = gl.createFramebuffer()!
-        gl.bindFramebuffer(gl.FRAMEBUFFER,fb)
-        gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture,0)
-        gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,AriaRendererCompatUtils.castBufferUnsafe<WebGLRenderbuffer>(depthComponent.data))
-        postTrigger()
-        gl.bindFramebuffer(gl.FRAMEBUFFER,null)
         return AriaRendererCompatUtils.createBuffer(fb)
     }
     public createArrayBuffer(): IAriaCoreBuffer<any> {
@@ -395,6 +389,31 @@ class AriaWGL2RendererRenderOps extends AriaObject{
     setElementBufferData(buffer: IAriaCoreBuffer<any>, data: any) {
         this.env.bindBuffer(this.env.ELEMENT_ARRAY_BUFFER,buffer.data)
         this.env.bufferData(this.env.ELEMENT_ARRAY_BUFFER,data,this.env.STATIC_DRAW)
+    }
+    public setViewport(w: number, h: number) {
+        this.env.viewport(0,0,w,h)
+    }
+    public generateMipmap2D(tex: IAriaCoreTexture<any>) {
+        this.env.bindTexture(this.env.TEXTURE_2D,tex.data)
+        this.env.generateMipmap(this.env.TEXTURE_2D)
+        this.env.bindTexture(this.env.TEXTURE_2D,null)
+    }
+    public switchFramebufferAttachmentsForCubemap(renderBuffer: IAriaCoreBuffer<any>, texture: IAriaCoreTexture<any>,order:number) {
+        const gl = this.env
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X+order, texture.data, 0);
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,renderBuffer.data)
+    }
+    public setFramebufferRenderBuffer(renderbuffer: IAriaCoreBuffer<any>) {
+        const gl = this.env
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_STENCIL_ATTACHMENT,gl.RENDERBUFFER,renderbuffer.data)
+    }
+    setFramebufferTexture(texture: IAriaCoreTexture<any>) {
+        const gl = this.env
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,texture.data,0)
+    }
+    setFramebufferTextureCubic(texture: IAriaCoreTexture<any>) {
+        const gl = this.env
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_CUBE_MAP_POSITIVE_X,texture.data,0)
     }
 }
 
@@ -429,7 +448,7 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
     public useShader(shader:IAriaShader, onSuccess:AriaCallable=()=>{}){
         if(this.shaderManager.setShader(shader)){
             const gl = this.env
-            gl.useProgram(shader.getShaderProgram())
+            gl.useProgram(shader.getShaderProgram().data)
             onSuccess()
         }
     }
@@ -440,7 +459,7 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
         this.shaderManager.enableShaderChange()
     }
 
-    public defineAttribute(attName:string, value:IAriaGLBuffer, size:number = 3, type:number = this.env.FLOAT){
+    public defineAttribute(attName:string, value:IAriaGeneralBuffer, size:number = 3, type:number = this.env.FLOAT){
         const gl = this.env
         const acShader = this.shaderManager.getShader()
         //gl.bindBuffer(gl.ARRAY_BUFFER, value.getGLObject())
@@ -466,7 +485,7 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
         return AriaRendererCompatUtils.createData(this.env.getUniformLocation(shader.data,name)!)
     }
     public getAttribLocation(shader: IAriaCoreShaderProgram<any>, name: string): number {
-        return this.env.getAttribLocation(shader,name)
+        return this.env.getAttribLocation(shader.data,name)
     }
     public defineUniform(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture)){
         const gl = this.env
@@ -493,13 +512,14 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
         const isTex = (x:any):x is IAriaTexture=>{
             return true
         }
+        const uniformLoc = acShader.getUniform(this.parent,attName)?.data
         switch (type) {
             case AriaShaderUniformTp.ASU_MAT4:
                 if(isArrayGuard(value)){
-                    gl.uniformMatrix4fv(acShader.getUniform(this.parent,attName),false,new Float32Array(value))
+                    gl.uniformMatrix4fv(uniformLoc,false,new Float32Array(value))
                 }
                 else if(isFloat32(value)){
-                    gl.uniformMatrix4fv(acShader.getUniform(this.parent,attName),false,value)
+                    gl.uniformMatrix4fv(uniformLoc,false,value)
                 }else{
                     this._logError("Invalid type")
                 }
@@ -507,10 +527,10 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
             
             case AriaShaderUniformTp.ASU_VEC3:
                 if(isArrayGuard(value)){
-                    gl.uniform3fv(acShader.getUniform(this.parent,attName),new Float32Array(value))
+                    gl.uniform3fv(uniformLoc,new Float32Array(value))
                 }
                 else if(isFloat32(value)){
-                    gl.uniform3fv(acShader.getUniform(this.parent,attName),value)
+                    gl.uniform3fv(uniformLoc,value)
                 }else{
                     this._logError("Invalid type")
                 }
@@ -518,10 +538,10 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
             
             case AriaShaderUniformTp.ASU_VEC4:
                 if(isArrayGuard(value)){
-                    gl.uniform4fv(acShader.getUniform(this.parent,attName),new Float32Array(value))
+                    gl.uniform4fv(uniformLoc,new Float32Array(value))
                 }
                 else if(isFloat32(value)){
-                    gl.uniform4fv(acShader.getUniform(this.parent,attName),value)
+                    gl.uniform4fv(uniformLoc,value)
                 }else{
                     this._logError("Invalid type")
                 }
@@ -529,14 +549,14 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
             
             case AriaShaderUniformTp.ASU_VEC1:
                 if(isNumGuard(value)){
-                    gl.uniform1f(acShader.getUniform(this.parent,attName),value)
+                    gl.uniform1f(uniformLoc,value)
                 }else{
                     this._logError("Invalid type")
                 }
                 break;
             case AriaShaderUniformTp.ASU_VEC1I:
                 if(isNumGuard(value)){
-                    gl.uniform1i(acShader.getUniform(this.parent,attName),value)
+                    gl.uniform1i(uniformLoc,value)
                 }else{
                     this._logError("Invalid type")
                 }
@@ -545,8 +565,8 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
                 if(isTex(value)){
                     const v = acShader.allocateTexture()
                     gl.activeTexture(v)
-                    gl.bindTexture(gl.TEXTURE_2D, value.getTex(this.parent))
-                    gl.uniform1i(acShader.getUniform(this.parent,attName),v-this.env.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_2D, value.getTex(this.parent).data)
+                    gl.uniform1i(uniformLoc,v-this.env.TEXTURE0);
                 }else{
                     this._logError("Invalid type")
                 }
@@ -555,8 +575,8 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
                 if(isTex(value)){
                     const v = acShader.allocateTexture()
                     gl.activeTexture(v)
-                    gl.bindTexture(gl.TEXTURE_3D, value.getTex(this.parent))
-                    gl.uniform1i(acShader.getUniform(this.parent,attName),v-this.env.TEXTURE0);
+                    gl.bindTexture(gl.TEXTURE_3D, value.getTex(this.parent).data)
+                    gl.uniform1i(uniformLoc,v-this.env.TEXTURE0);
                 }else{
                     this._logError("Invalid type")
                 }
@@ -565,8 +585,8 @@ export class AriaWGL2RendererShaderOps extends AriaObject{
                     if(isTex(value)){
                         const v = acShader.allocateTexture()
                         gl.activeTexture(v)
-                        gl.bindTexture(gl.TEXTURE_CUBE_MAP, value.getTex(this.parent))
-                        gl.uniform1i(acShader.getUniform(this.parent,attName),v-this.env.TEXTURE0);
+                        gl.bindTexture(gl.TEXTURE_CUBE_MAP, value.getTex(this.parent).data)
+                        gl.uniform1i(uniformLoc,v-this.env.TEXTURE0);
                     }else{
                         this._logError("Invalid type")
                     }
@@ -638,22 +658,24 @@ export class AriaWGL2RendererCore extends AriaRendererCore{
     public setCameraPos(x:number,y:number,z:number){
         return this.renderOps.setCameraPos(x,y,z)
     }
-    public  defineAttribute(attName:string, value:IAriaGLBuffer, size?:number, type?:number){
+    public  defineAttribute(attName:string, value:IAriaGeneralBuffer, size?:number, type?:number){
         size = (size === undefined)? 3 : size
         type = (type === undefined)? this.env?.FLOAT : type
         return this.shaderOps.defineAttribute(attName,value,size,type)
     }
 
-    public createFramebuffer(depthComponent:IAriaCoreBuffer,texture:WebGLTexture,postTrigger:()=>any):any{
-        return this.renderOps.createFramebuffer(depthComponent,texture,postTrigger)
+    public createFramebuffer():IAriaCoreBuffer{
+        return this.renderOps.createFramebuffer()
     }
     public clearScreen(): void {
         return this.shaderOps.clearScreenByShader()
     }
     public activateFramebuffer(buf:IAriaFramebuffer){
+        this.env?.bindFramebuffer(this.env!.FRAMEBUFFER,buf.getGeneralBufferObject().data)
         return this.renderOps.activateFramebuffer(buf)
     }
     public removeFramebuffer(){
+        this.env?.bindFramebuffer(this.env!.FRAMEBUFFER,null)
         return this.renderOps.removeFramebuffer()
     }
     public createEmptyRBO(width:number,height:number):IAriaCoreBuffer{
@@ -751,5 +773,23 @@ export class AriaWGL2RendererCore extends AriaRendererCore{
     }
     setElementBufferData(buffer: IAriaCoreBuffer<any>, data: any) {
         return this.renderOps.setElementBufferData(buffer,data)
+    }
+    setViewport(w: number, h: number) {
+        return this.renderOps.setViewport(w,h)
+    }
+    public generateMipmap2D(tex: IAriaCoreTexture<any>) {
+        return this.renderOps.generateMipmap2D(tex)
+    }
+    switchFramebufferAttachmentsForCubemap(renderBuffer: IAriaCoreBuffer<any>, texture: IAriaCoreTexture<any>,order:number) {
+        return this.renderOps.switchFramebufferAttachmentsForCubemap(renderBuffer,texture,order)
+    }
+    setFramebufferRenderBuffer(renderbuffer: IAriaCoreBuffer<any>) {
+        return this.renderOps.setFramebufferRenderBuffer(renderbuffer)
+    }
+    setFramebufferTexture(texture: IAriaCoreTexture<any>) {
+        return this.renderOps.setFramebufferTexture(texture)
+    }
+    setFramebufferTextureCubic(texture: IAriaCoreTexture<any>) {
+        return this.renderOps.setFramebufferTextureCubic(texture)
     }
 }

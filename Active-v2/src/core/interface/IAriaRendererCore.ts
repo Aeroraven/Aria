@@ -2,15 +2,15 @@ import { AriaCallable } from "../base/AriaBaseDefs";
 import { IAriaCoreBuffer, IAriaCoreData, IAriaCoreRenderingContext, IAriaCoreShaderProgram, IAriaCoreTexture } from "../base/AriaRendererCompatDef";
 import { AriaShaderUniformTp } from "../graphics/AriaShaderOps";
 import { IAriaFramebuffer } from "./IAriaFramebuffer";
-import { IAriaGLBuffer } from "./IAriaGLBuffer";
+import { IAriaGeneralBuffer } from "./IAriaGeneralBuffer";
 import { IAriaShader } from "./IAriaShader";
 import { IAriaTexture } from "./IAriaTexture";
 
 export interface IAriaRendererCore{
     defineUniform(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture)):void;
     setCameraPos(x:number,y:number,z:number):void;
-    defineAttribute(attName:string, value:IAriaGLBuffer, size?:number, type?:number):void;
-    createFramebuffer(depthComponent:IAriaCoreBuffer,texture:IAriaCoreTexture,postTrigger:()=>any):any;
+    defineAttribute(attName:string, value:IAriaGeneralBuffer, size?:number, type?:number):void;
+    createFramebuffer():IAriaCoreBuffer;
     clearScreen():void;
     activateFramebuffer(buf:IAriaFramebuffer):void;
     removeFramebuffer():void;
@@ -47,4 +47,12 @@ export interface IAriaRendererCore{
     createElementBuffer():IAriaCoreBuffer
     useElementBuffer(buffer:IAriaCoreBuffer):any
     setElementBufferData(buffer:IAriaCoreBuffer,data:any):any
+
+    setViewport(w:number,h:number):any
+
+    generateMipmap2D(tex:IAriaCoreTexture):any
+    switchFramebufferAttachmentsForCubemap(renderBuffer:IAriaCoreBuffer,texture:IAriaCoreTexture,order:number):any
+    setFramebufferRenderBuffer(renderbuffer:IAriaCoreBuffer):any
+    setFramebufferTexture(texture:IAriaCoreTexture):any
+    setFramebufferTextureCubic(texture:IAriaCoreTexture):any
 }

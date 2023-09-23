@@ -1,10 +1,10 @@
 import { AriaComponent } from "../../core/AriaComponent";
 import { IAriaCoreBuffer } from "../../core/base/AriaRendererCompatDef";
 import { IAriaBufferReader } from "../../core/interface/IAriaBufferReader";
-import { IAriaGLBuffer } from "../../core/interface/IAriaGLBuffer";
+import { IAriaGeneralBuffer } from "../../core/interface/IAriaGeneralBuffer";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaComVAO extends AriaComponent implements IAriaGLBuffer,IAriaBufferReader<Float32Array>{
+export class AriaComVAO extends AriaComponent implements IAriaGeneralBuffer,IAriaBufferReader<Float32Array>{
     private _buf:IAriaCoreBuffer
     private _bufLen:number = -1
     private _data:number[] = []
@@ -23,7 +23,7 @@ export class AriaComVAO extends AriaComponent implements IAriaGLBuffer,IAriaBuff
         }
         
     }
-    public getGLObject(): WebGLBuffer {
+    public getGeneralBufferObject(): IAriaCoreBuffer {
         if(this._valid==false){
             this._logError("ariacom.vao: not initialized")
         }

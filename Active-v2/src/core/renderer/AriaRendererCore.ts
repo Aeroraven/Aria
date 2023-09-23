@@ -3,7 +3,7 @@ import { AriaObject } from "../base/AriaObject";
 import { AriaRendererCompatUtils, IAriaCoreBuffer, IAriaCoreData, IAriaCoreRenderingContext, IAriaCoreShaderProgram, IAriaCoreTexture } from "../base/AriaRendererCompatDef";
 import { AriaShaderUniformTp } from "../graphics/AriaShaderOps";
 import { IAriaFramebuffer } from "../interface/IAriaFramebuffer";
-import { IAriaGLBuffer } from "../interface/IAriaGLBuffer";
+import { IAriaGeneralBuffer } from "../interface/IAriaGeneralBuffer";
 import { IAriaRendererCore } from "../interface/IAriaRendererCore";
 import { IAriaShader } from "../interface/IAriaShader";
 import { IAriaTexture } from "../interface/IAriaTexture";
@@ -12,6 +12,24 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     defaultDisplayId:string = "webgl_displayer"
     constructor(){
         super("AriaRenderer")
+    }
+    setFramebufferTexture(texture: IAriaCoreTexture<any>) {
+        throw new Error("Method not implemented.");
+    }
+    setFramebufferTextureCubic(texture: IAriaCoreTexture<any>) {
+        throw new Error("Method not implemented.");
+    }
+    setFramebufferRenderBuffer(renderbuffer: IAriaCoreBuffer<any>) {
+        throw new Error("Method not implemented.");
+    }
+    switchFramebufferAttachmentsForCubemap(renderBuffer: IAriaCoreBuffer<any>, texture: IAriaCoreTexture<any>,order:number) {
+        throw new Error("Method not implemented.");
+    }
+    generateMipmap2D(tex: IAriaCoreTexture<any>) {
+        throw new Error("Method not implemented.");
+    }
+    setViewport(w: number, h: number) {
+        throw new Error("Method not implemented.");
     }
     createElementBuffer(): IAriaCoreBuffer<any> {
         throw new Error("Method not implemented.");
@@ -49,10 +67,10 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     public defineUniform(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture)){
         this._logError("aria_renderer_core: defineUniform not implemented")
     }
-    public defineAttribute(attName:string, value:IAriaGLBuffer, size?:number, type?:number){
+    public defineAttribute(attName:string, value:IAriaGeneralBuffer, size?:number, type?:number){
         this._logError("aria_renderer_core: defineAttribute not implemented")
     }
-    public  createFramebuffer(depthComponent:IAriaCoreBuffer,texture:IAriaCoreTexture,postTrigger:()=>any):any{
+    public  createFramebuffer():any{
         this._logError("aria_renderer_core: createFramebuffer not implemented")
     }
     public clearScreen(){

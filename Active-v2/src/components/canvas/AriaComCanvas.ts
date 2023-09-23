@@ -1,6 +1,6 @@
 import { AriaComponent } from "../../core/AriaComponent";
 import { IAriaFramebuffer } from "../../core/interface/IAriaFramebuffer";
-import { IAriaGLBuffer } from "../../core/interface/IAriaGLBuffer";
+import { IAriaGeneralBuffer } from "../../core/interface/IAriaGeneralBuffer";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { AriaComFramebuffer, AriaFramebufferOption } from "../base/AriaComFramebuffer";
 import { AriaComTexture } from "../base/AriaComTexture";
