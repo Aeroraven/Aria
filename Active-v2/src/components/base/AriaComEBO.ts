@@ -1,10 +1,11 @@
 import { AriaComponent } from "../../core/AriaComponent";
 import { AriaEnv } from "../../core/graphics/AriaEnv";
 import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
+import { IAriaBufferReader } from "../../core/interface/IAriaBufferReader";
 import { IAriaGLBuffer } from "../../core/interface/IAriaGLBuffer";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaComEBO extends AriaComponent implements IAriaGLBuffer{
+export class AriaComEBO extends AriaComponent implements IAriaGLBuffer,IAriaBufferReader<Uint16Array>{
     private _buf:WebGLBuffer
     private _bufLen:number = -1
     private _data:number[] = []

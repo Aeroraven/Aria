@@ -134,6 +134,24 @@ class AriaWGL2RendererRenderOps extends AriaObject{
         this.env = renderingContext
         this.parent = parent
     }
+    public getTextureBufferData(id: WebGLTexture, dataType: number, format: number, w: number, h: number): unknown {
+        let gl = this.env
+        let fb = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, id, 0);
+        let pixels:ArrayBufferView|undefined = undefined
+        if(format == gl.R8){
+            pixels = new Uint8Array(w * h * 4);
+        }else{
+            this._logError("aria.wgl2renderer.renderops.gettexbufferdata: unsupported type")
+            throw Error()
+            
+        }
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE) {
+            gl.readPixels(0, 0, w, h, format, dataType, pixels);
+        }
+        return pixels
+    }
 
     public readArrayBuffer(destBuffer:ArrayBuffer){
         this.env.getBufferSubData(this.env.ARRAY_BUFFER,0,new Float32Array(destBuffer))
@@ -674,5 +692,8 @@ export class AriaWGL2RendererCore extends AriaRendererCore{
     }
     public createTextureData2D(img:any,w:number,h:number):WebGLTexture{
         return this.renderOps.createTextureData2D(img,w,h)
+    }
+    public getTextureBufferData(id: WebGLTexture, dataType: number, format: number, w: number, h: number): unknown {
+        return this.renderOps.getTextureBufferData(id,dataType,format,w,h)
     }
 }

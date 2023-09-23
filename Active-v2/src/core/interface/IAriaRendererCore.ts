@@ -22,6 +22,7 @@ export interface IAriaRendererCore{
     useShader(shader:IAriaShader, onSuccess?:AriaCallable):void;
     createTexture(img:HTMLImageElement):WebGLTexture;
     readArrayBuffer(destBuffer:ArrayBuffer):void;
+    getTextureBufferData(id:WebGLTexture,dataType:number,format:number,w:number,h:number):unknown
     defineUniformCounter(attName:string, increment?:number, returnAfter?:boolean):number;
     defineUniformExtend(attName:string, type:AriaShaderUniformTp, value:(number[]|number|Float32Array|IAriaTexture), index:number):number;
     createCubicTexture(img:HTMLImageElement[]):WebGLTexture;

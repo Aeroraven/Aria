@@ -1,10 +1,11 @@
 import { AriaComponent } from "../../core/AriaComponent";
 import { AriaEnv } from "../../core/graphics/AriaEnv";
 import { AriaRenderOps } from "../../core/graphics/AriaRenderOps";
+import { IAriaBufferReader } from "../../core/interface/IAriaBufferReader";
 import { IAriaGLBuffer } from "../../core/interface/IAriaGLBuffer";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaComVAO extends AriaComponent implements IAriaGLBuffer{
+export class AriaComVAO extends AriaComponent implements IAriaGLBuffer,IAriaBufferReader<Float32Array>{
     private _buf:WebGLBuffer
     private _bufLen:number = -1
     private _data:number[] = []
@@ -64,7 +65,6 @@ export class AriaComVAO extends AriaComponent implements IAriaGLBuffer{
         renderer.readArrayBuffer(arb)
         this.unbind(renderer)
         return new Float32Array(arb)
-
     }
 
 }

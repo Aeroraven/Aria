@@ -12,6 +12,9 @@ export class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     constructor(){
         super("AriaRenderer")
     }
+    public getTextureBufferData(id: WebGLTexture, dataType: number, format: number, w: number, h: number): unknown {
+        throw new Error("Method not implemented.");
+    }
     public createTextureData2D(img: any, w: number, h: number): WebGLTexture {
         throw new Error("Method not implemented.");
     }
