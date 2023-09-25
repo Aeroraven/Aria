@@ -11,7 +11,7 @@ import { AriaComMaterial } from "../material/AriaComMaterial";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 import { IAriaTexture } from "../../core/interface/IAriaTexture";
 
-export class AriaComPostPass extends AriaComponent implements IAriaRenderable{
+export class AriaComRenderPass extends AriaComponent implements IAriaRenderable{
     private _material: AriaComMaterial|null = null
     private _geometry: AriaComGeometry
     private _components:  IAriaShaderEmitter[] = []

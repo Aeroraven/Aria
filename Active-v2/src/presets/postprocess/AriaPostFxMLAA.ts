@@ -1,6 +1,6 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/mlaa-blending/vertex.glsl"
 import fragment from "../shaders/postprocess/mlaa-blending//fragment.glsl"
 import { AriaPostFxMLAAThresholding } from "./AriaPostFxMLAAThresholding";
@@ -11,11 +11,11 @@ import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaPostFxMLAA extends AriaComPostPass{
-    pass0: AriaComPostPass
-    pass1: AriaComPostPass
-    pass2: AriaComPostPass
-    pass3: AriaComPostPass
+export class AriaPostFxMLAA extends AriaComRenderPass{
+    pass0: AriaComRenderPass
+    pass1: AriaComRenderPass
+    pass2: AriaComRenderPass
+    pass3: AriaComRenderPass
 
     canvas0: AriaComCanvas
     canvas1: AriaComCanvas

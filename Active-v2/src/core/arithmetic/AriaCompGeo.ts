@@ -76,10 +76,6 @@ export class AriaCompGeo extends AriaObject{
     static segmentIntersectsSphere(cirCenter:number[],cirRadius:number,startPoint:number[],endPoint:number[]){
         let shiftedSp = [startPoint[0]-cirCenter[0],startPoint[1]-cirCenter[1],startPoint[2]-cirCenter[2]]
         let shiftedEp = [endPoint[0]-cirCenter[0],endPoint[1]-cirCenter[1],endPoint[2]-startPoint[2]]
-        //Solves (a+dt)^2+(b+et)^2+(c+ft)^2=r^2 where (d,e,f)=dir
-        //=>Solves (a^2+2adt+d^2t^2)+(b^2+2bet+e^2t^2)+(c^2+2cft+f^2t^2)-r^2=0
-        //=>Solves (d^2+e^2+f^2)t^2+(2ad+2be+2cf)t+(a^2+b^2+c^2-r^2)=0
-        //=>Solves t^2+(2ad+2be+2cf)t+(a^2+b^2+c^2-r^2)=0
         let dir=[shiftedEp[0]-shiftedSp[0],shiftedEp[1]-shiftedSp[1],shiftedEp[2]-shiftedSp[2]]
         let ndir = AriaArithmetic.normalize(dir)
 

@@ -1,12 +1,12 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/gaussian-blur-vertical/vertex.glsl"
 import fragment from "../shaders/postprocess/gaussian-blur-vertical/fragment.glsl"
 import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaPostFxGaussianBlurVertical extends AriaComPostPass{
+export class AriaPostFxGaussianBlurVertical extends AriaComRenderPass{
     private _sigma = 5
     private _kernel :number[] = []
     private _kernelSum = 0

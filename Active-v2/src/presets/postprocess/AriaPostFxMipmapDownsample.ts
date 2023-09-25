@@ -1,6 +1,6 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/mipmap-downsample/vertex.glsl"
 import fragment from "../shaders/postprocess/mipmap-downsample/fragment.glsl"
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
@@ -9,7 +9,7 @@ import { AriaPostFxIdentity } from "./AriaPostFxIdentity";
 import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaPostFxMipmapDownsample extends AriaComPostPass{
+export class AriaPostFxMipmapDownsample extends AriaComRenderPass{
     private _canvas:IAriaCanavs = new AriaComCanvas(1,true,true)
     private _genMipPass = new AriaPostFxIdentity()
     private _lod = 2.0

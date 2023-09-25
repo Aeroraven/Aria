@@ -1,13 +1,13 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/combine/vertex.glsl"
 import fragment from "../shaders/postprocess/combine/fragment.glsl"
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaPostFxCombine extends AriaComPostPass{
+export class AriaPostFxCombine extends AriaComRenderPass{
     private _ids = 0
     constructor(){
         super()

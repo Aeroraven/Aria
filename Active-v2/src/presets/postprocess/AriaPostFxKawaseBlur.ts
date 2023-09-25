@@ -1,10 +1,10 @@
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaPostFxKawaseBlurSinglePass } from "./AriaPostFxKawaseBlurSinglePass";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaPostFxKawaseBlur extends AriaComPostPass{
+export class AriaPostFxKawaseBlur extends AriaComRenderPass{
     private _srcCanvas: IAriaCanavs[] = []
     private _passes:AriaPostFxKawaseBlurSinglePass[] = []
     private _canvases: AriaComCanvas[] = []

@@ -6,7 +6,7 @@ import { AriaStage } from "./AriaStage"
 
 import vertex from "../presets/shaders/postprocess/matmul/vertex.glsl"
 import fragment from "../presets/shaders/postprocess/matmul/fragment.glsl"
-import { AriaComPostPass } from "../components/postproc/AriaComPostPass"
+import { AriaComRenderPass } from "../components/renderpass/AriaComRenderPass"
 import { AriaComMaterial } from "../components/material/AriaComMaterial"
 import { AriaComShaderMaterial } from "../components/material/AriaComShaderMaterial"
 import { AriaPostFxIdentity } from "../presets/postprocess/AriaPostFxIdentity"
@@ -33,7 +33,7 @@ export class AriaStageMatrixMul extends AriaStage{
             fragment:fragment
         })
 
-        const postproc = new AriaComPostPass()
+        const postproc = new AriaComRenderPass()
         postproc.unsafeAllowEmptyInput()
         postproc.setMaterial(material)
         postproc.addInputTexture(tex_1,"uTex1")

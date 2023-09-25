@@ -1,10 +1,10 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/mlaa-mixing/vertex.glsl"
 import fragment from "../shaders/postprocess/mlaa-mixing//fragment.glsl"
 
-export class AriaPostFxMLAAMixing extends AriaComPostPass{
+export class AriaPostFxMLAAMixing extends AriaComRenderPass{
     constructor(){
         super()
         this._rename("AriaCom/Preset/PostFxMLAAMixing")

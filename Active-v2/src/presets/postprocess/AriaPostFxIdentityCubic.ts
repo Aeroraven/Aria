@@ -1,12 +1,12 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/identity-cubic/vertex.glsl"
 import fragment from "../shaders/postprocess/identity-cubic/fragment.glsl"
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 
-export class AriaPostFxIdentityCubic extends AriaComPostPass{
+export class AriaPostFxIdentityCubic extends AriaComRenderPass{
     constructor(){
         super()
         this._rename("AriaCom/Preset/PostFxIdentityCubic")

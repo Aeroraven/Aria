@@ -1,10 +1,10 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/testing-pass/vertex.glsl"
 import fragment from "../shaders/postprocess/testing-pass/fragment.glsl"
 
-export class AriaPostFxTesting extends AriaComPostPass{
+export class AriaPostFxTesting extends AriaComRenderPass{
     constructor(){
         super()
         this._rename("AriaCom/Preset/TestingPass")

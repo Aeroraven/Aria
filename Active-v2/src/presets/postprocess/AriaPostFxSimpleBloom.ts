@@ -1,6 +1,6 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/mipmap-blur-sequential/vertex.glsl"
 import fragment from "../shaders/postprocess/mipmap-blur-sequential/fragment.glsl"
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
@@ -9,7 +9,7 @@ import { AriaPostFxSimpleBloomUpsample } from "./AriaPostFxSimpleBloomUpsample";
 import { AriaPostFxMipmapDownsample } from "./AriaPostFxMipmapDownsample";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaPostFxSimpleBloom extends AriaComPostPass{
+export class AriaPostFxSimpleBloom extends AriaComRenderPass{
     private _upsampleCanvases:IAriaCanavs[] = []
     private _upsamplePasses:AriaPostFxSimpleBloomUpsample[] = []
     private _upLods:number[] = []

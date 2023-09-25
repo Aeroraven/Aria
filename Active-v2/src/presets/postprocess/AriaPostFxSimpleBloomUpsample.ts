@@ -1,10 +1,10 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/mip-bloom-upsample/vertex.glsl"
 import fragment from "../shaders/postprocess/mip-bloom-upsample//fragment.glsl"
 
-export class AriaPostFxSimpleBloomUpsample extends AriaComPostPass{
+export class AriaPostFxSimpleBloomUpsample extends AriaComRenderPass{
     constructor(){
         super()
         this._rename("AriaCom/Preset/SimpleBloomUpsample")

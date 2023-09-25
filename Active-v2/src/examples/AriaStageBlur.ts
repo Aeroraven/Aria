@@ -10,7 +10,7 @@ import { AriaShaderUniformTp } from "../core/graphics/AriaShaderOps";
 import { AriaStage } from "./AriaStage";
 import { AriaComParamPanel } from "../components/ui/panel/AriaComParamPanel";
 import { AriaPostFxGaussianBlur } from "../presets/postprocess/AriaPostFxGaussianBlur";
-import { AriaComPostPass } from "../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../components/renderpass/AriaComRenderPass";
 import { AriaPostFxKawaseBlur } from "../presets/postprocess/AriaPostFxKawaseBlur";
 import { AriaPostFxMipmapDownsample } from "../presets/postprocess/AriaPostFxMipmapDownsample";
 import { AriaWGL2Renderer } from "../components/renderer/AriaWGL2Renderer";
@@ -57,7 +57,7 @@ export class AriaStageBlur extends AriaStage{
         postBlurMipdown.addInput(canvasOrg)
 
         //Active Blur
-        let activeBlurPass:AriaComPostPass = postBlurA
+        let activeBlurPass:AriaComRenderPass = postBlurA
 
         
         //Activate Components

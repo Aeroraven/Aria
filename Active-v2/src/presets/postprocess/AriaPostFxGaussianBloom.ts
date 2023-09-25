@@ -1,4 +1,4 @@
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaPostFxGaussianBlurVertical } from "./AriaPostFxGaussianBlurVertical";
@@ -8,7 +8,7 @@ import { AriaPostFxIdentity } from "./AriaPostFxIdentity";
 import { AriaPostFxGaussianBlur } from "./AriaPostFxGaussianBlur";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaPostFxGaussianBloom extends AriaComPostPass{
+export class AriaPostFxGaussianBloom extends AriaComRenderPass{
     private _sigma:number[] = []
     private _canvasIdentity = new AriaComCanvas()
     private _passIdentity = new AriaPostFxIdentity()

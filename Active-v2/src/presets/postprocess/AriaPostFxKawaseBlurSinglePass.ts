@@ -1,12 +1,12 @@
 import { IAriaComShaderSource } from "../../components/base/interface/IAriaComShaderSource";
 import { AriaComShaderMaterial } from "../../components/material/AriaComShaderMaterial";
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import vertex from "../shaders/postprocess/kawase-blur-single/vertex.glsl"
 import fragment from "../shaders/postprocess/kawase-blur-single/fragment.glsl"
 import { AriaShaderUniformTp } from "../../core/graphics/AriaShaderOps";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaPostFxKawaseBlurSinglePass extends AriaComPostPass{
+export class AriaPostFxKawaseBlurSinglePass extends AriaComRenderPass{
     private _blurRange = 0
 
     constructor(){

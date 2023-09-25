@@ -1,11 +1,11 @@
-import { AriaComPostPass } from "../../components/postproc/AriaComPostPass";
+import { AriaComRenderPass } from "../../components/renderpass/AriaComRenderPass";
 import { AriaComCanvas } from "../../components/canvas/AriaComCanvas";
 import { IAriaCanavs } from "../../components/base/interface/IAriaCanvas";
 import { AriaPostFxGaussianBlurVertical } from "./AriaPostFxGaussianBlurVertical";
 import { AriaPostFxGaussianBlurHorizontal } from "./AriaPostFxGaussianBlurHorizontal";
 import { IAriaRendererCore } from "../../core/interface/IAriaRendererCore";
 
-export class AriaPostFxGaussianBlur extends AriaComPostPass{
+export class AriaPostFxGaussianBlur extends AriaComRenderPass{
     private pass0: AriaPostFxGaussianBlurVertical
     private pass1: AriaPostFxGaussianBlurHorizontal
 
