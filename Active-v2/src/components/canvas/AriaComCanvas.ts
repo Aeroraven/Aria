@@ -26,6 +26,12 @@ export class AriaComCanvas extends AriaComponent implements IAriaCanavs{
         const fboOpt = AriaFramebufferOption.create().setScaler(scale).setHdr(enableHdr).setMipMap(enableMipMap)
         this.fbo = new AriaComFramebuffer(renderer,fboOpt)
     }
+    forceInit(renderer:IAriaRendererCore){
+        if(this.init==false){
+            this.createFBO(renderer,this.scale,this.enableHdr,this.enableMipMap)
+            this.init=true
+        }
+    }
     compose(renderer:IAriaRendererCore,proc: () => any,attrs:IAriaCanvasComposeAttributes={preserve:false}) {
         this.canvasUse(renderer)
         if(attrs.preserve==false){

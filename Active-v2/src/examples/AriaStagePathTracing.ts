@@ -8,6 +8,8 @@ import { IAriaComRTAbstractMaterial } from "../components/pathtracing/material/I
 import { AriaComRTFragShaderProcessor } from "../components/pathtracing/AriaComRTFragShaderProcessor";
 import { AriaComRTLambertianMaterial } from "../components/pathtracing/material/AriaComRTLambertianMaterial";
 import { AriaComRTPlane } from "../components/pathtracing/geometry/AriaComRTPlane";
+import { AriaComCanvas } from "../components/canvas/AriaComCanvas";
+import { AriaComRTPingPongTexturePass } from "../components/pathtracing/AriaComRTPingPongTexturePass";
 
 export class AriaStagePathTracing extends AriaStage{
     constructor(){
@@ -18,15 +20,19 @@ export class AriaStagePathTracing extends AriaStage{
         const renderer = new AriaWGL2Renderer("webgl_displayer")
         
         const material = new AriaComRTLambertianMaterial()
-        const ball = new AriaComRTSphere("ball",AriaVec3.create([0,0,12]),1,material)
+        const ball = new AriaComRTSphere("ball",AriaVec3.create([0,0,12]),4,material)
         const plane = new AriaComRTPlane("plane",AriaVec3.create([0,-2,0]),AriaVec3.create([0,1,0]),material)
         const processor = new AriaComRTFragShaderProcessor()
-        
         processor.add(ball)
         processor.add(plane)
-        const result = processor.generateCodes()
-        console.log(result)
-        const tracer = new AriaComRTRenderPass(processor,45,45,1,window.innerWidth/window.innerHeight)        
+        const tracer = new AriaComRTRenderPass(processor,45,45,1,window.innerWidth/window.innerHeight)
+        
+        const canvas1 = new AriaComCanvas()
+        const canvas2 = new AriaComCanvas()
+        canvas1.forceInit(renderer.getEngine())
+        canvas2.forceInit(renderer.getEngine())
+
+        const pingpong = new AriaComRTPingPongTexturePass(canvas1,canvas2,tracer)
 
         const panel = new AriaComParamPanel()
         panel.addTitle("Demo")
@@ -35,7 +41,7 @@ export class AriaStagePathTracing extends AriaStage{
         panel.initInteraction()
 
         const drawCall = ()=>{
-            renderer.renderSimple(tracer)
+            renderer.renderSimple(pingpong)
             panel.reqAniFrame(drawCall)
         }
         drawCall()

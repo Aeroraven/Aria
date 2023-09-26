@@ -45,8 +45,8 @@ export class AriaComRenderPass extends AriaComponent implements IAriaRenderable{
         return this
     }
     public addInput(m:IAriaCanavs, w:string="uSourceFrame", tp:AriaShaderUniformTp = AriaShaderUniformTp.ASU_TEX2D){
-        this._inputCanvas.push(m)
-        this._inputCanvasName.push(w)
+        //this._inputCanvas.push(m)
+        //this._inputCanvasName.push(w)
         this._inputCanvasMap.set(w,m)
         this._inputCanvasType.set(w,tp)
         this._logInfo("Added input :"+w)
@@ -63,7 +63,7 @@ export class AriaComRenderPass extends AriaComponent implements IAriaRenderable{
     render(renderer:IAriaRendererCore,preTriggers?: ((_:IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_:IAriaRendererCore) => any)[] | undefined): void {
         renderer.clearScreen()
         this._material!.use(renderer)
-        if(this._inputCanvas.length+this._inputTex.length==0 && !this._allowEmptyInput){
+        if(this._inputCanvasMap.size+this._inputTex.length==0 && !this._allowEmptyInput){
             this._logError("Input canvas cannot be empty")
         }
         this._inputCanvasMap.forEach((value,key)=>{

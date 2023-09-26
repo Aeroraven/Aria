@@ -13,6 +13,7 @@ in vec2 aTex;
 
 out vec2 vRayDirection;
 out vec3 vOriginPos;
+out vec2 vTex;
 
 void main(){
     vec2 dirMapped = 2.0*(aTex-0.5);
@@ -21,5 +22,6 @@ void main(){
     dirMapped *= vec2(fovSpanX,fovSpanY);
     vRayDirection = dirMapped;
     vOriginPos = vec3(dirMapped,udist);
+    vTex = aTex;
     gl_Position = uViewOrtho  * aPos;
 }
