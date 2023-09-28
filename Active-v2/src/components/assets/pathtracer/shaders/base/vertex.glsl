@@ -7,6 +7,7 @@ uniform float ufovx;
 uniform float ufovy;
 uniform float udist;
 uniform float uaspect;
+uniform vec3 uorigin;
 
 in vec4 aPos;
 in vec2 aTex;
@@ -21,7 +22,7 @@ void main(){
     float fovSpanY = tan(ufovy/2.0)/uaspect;
     dirMapped *= vec2(fovSpanX,fovSpanY);
     vRayDirection = dirMapped;
-    vOriginPos = vec3(dirMapped,udist);
+    vOriginPos = vec3(dirMapped,udist)+vec3(uorigin);
     vTex = aTex;
     gl_Position = uViewOrtho  * aPos;
 }

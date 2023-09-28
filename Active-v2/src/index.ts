@@ -50,14 +50,14 @@ function helperPageReady(){
 async function main(){
     const px = [
         {name:"Mass Spring Cloth",redir:"smcloth",cl:AriaStageMassSpringCloth,desc:"Cloth simulation based on mass spring model"},
-        {name:"Antialiasing",redir:"antialiasing",cl:AriaStageAntialiasing,desc:"Implementation of postprocessing antialiasing algorithms including FXAA and MLAA"},
+        {name:"Antialiasing",redir:"antialiasing",cl:AriaStageAntialiasing,desc:"Implementation of postprocessing antialiasing algorithms"},
         {name:"Blurring",redir:"blur",cl:AriaStageBlur,desc:"Implementation of some blurring algorithms like gaussian blurs"},
         {name:"Bloom Effect II",redir:"bloom",cl:AriaStageBloom,desc:"Implementation of bloom effect based on postprocess blurring"},
         {name:"Skybox",redir:"skybox",cl:AriaStageSkyBox,desc:"Implementation of sky box using cube map"},
         {name:"Point Shadow",redir:"pointshadow",cl:AriaStagePointLight,desc:"Implementation of omnidirectional shadow"},
         //{name:"Voxelization",redir:"voxklee",cl:AriaStageVoxelKlee,desc:"Turning a mesh to voxel grids"},
         {name:"Ray Marching II",redir:"volcloud",cl:AriaStageVolumetricCloud,desc:"Single-pass volumetric rendering of 3D perlin noise"},
-        {name:"Pending",redir:"pathtracing",cl:AriaStagePathTracing,desc:"nothing"},
+        {name:"Rectified Path Tracer",redir:"pathtracing",cl:AriaStagePathTracing,desc:"Some thing done as my course project seems to be wrong. Here I made it right."}, 
         //{name:"Pending",redir:"flsim",cl:AriaStageFLSim,desc:"flsim"},
         //{name:"Pending",redir:"matmul",cl:AriaStageMatrixMul,desc:"matmul"},
     ]

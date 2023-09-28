@@ -21,15 +21,15 @@ void rtf_SphereRayIntersection(rts_Ray r,rts_Sphere sp,inout float sol,inout vec
         sols1 = (-polyB-sqrt(delta))/(2.0*polyA);
         sols2 = (-polyB+sqrt(delta))/(2.0*polyA);
     }
-    if(sols1<0.0){
-        if(sols2<0.0){
+    if(sols1<epsf){
+        if(sols2<epsf){
             sol = -1.0;
             return;
         }else{
             sol = sols2;
         }
     }else{
-        if(sols2<0.0){
+        if(sols2<epsf){
             sol = sols1;
         }else{
             sol = min(sols1,sols2);

@@ -206,6 +206,18 @@ export class AriaVec3 extends AriaVector{
     }
 }
 
+export class AriaVec4 extends AriaVector{
+    constructor(n:number[]|number|undefined){
+        super(n===undefined?4:n)
+        if(this._dimen!=4){
+            this._logError("dimension should be 4")
+        }
+    }
+    public static create(n?:number|number[]|undefined){
+        return new this(n)
+    }
+}
+
 export class AriaVec2 extends AriaVector{
     constructor(n:number[]|number|undefined){
         super(n===undefined?2:n)
@@ -220,4 +232,5 @@ export class AriaVec2 extends AriaVector{
 
 export type AriaVec2C = AriaVec2 | number[]
 export type AriaVec3C = AriaVec3 | number[]
+export type AriaVec4C = AriaVec4 | number[]
 export type AriaVecC = AriaVector | number[]

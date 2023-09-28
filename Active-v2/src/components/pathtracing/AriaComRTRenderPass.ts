@@ -16,6 +16,7 @@ export class AriaComRTRenderPass extends AriaComRenderPass{
     private aspect:number
     private renderedFrames:number = 0
     private renderedResult:IAriaCanavs|null = null
+    private origin:number[] = [0,0,0]
     constructor(fragProcessor:AriaComRTFragShaderProcessor,fovx:number,fovy:number,dist:number,aspect:number){
         super()
         this._rename("AriaCom/PathTracing/RenderPass")
@@ -26,10 +27,14 @@ export class AriaComRTRenderPass extends AriaComRenderPass{
         const material = new AriaComShaderMaterial(shaderSource)
         this.setMaterial(material)
         this._allowEmptyInput = true
-        this.fovx = fovx
-        this.fovy = fovy
+        this.fovx = fovx / 180 * Math.PI
+        this.fovy = fovy / 180 * Math.PI
         this.dist = dist
         this.aspect = aspect
+        this.origin = this.origin
+    }
+    setOrigin(x:number[]){
+        this.origin = x
     }
     setRenderFrame(x:IAriaCanavs){
         this.renderedResult = x
@@ -44,6 +49,7 @@ export class AriaComRTRenderPass extends AriaComRenderPass{
             renderer.defineUniform("udist",AriaShaderUniformTp.ASU_VEC1, this.dist)
             renderer.defineUniform("uaspect",AriaShaderUniformTp.ASU_VEC1, this.aspect)
             renderer.defineUniform("uTime",AriaShaderUniformTp.ASU_VEC1, Math.random())
+            renderer.defineUniform("uorigin",AriaShaderUniformTp.ASU_VEC3,this.origin)
             if(this.renderedResult!=null){
                 renderer.defineUniform("uframes",AriaShaderUniformTp.ASU_VEC1, this.renderedFrames)
                 renderer.defineUniform("uSrcFrame",AriaShaderUniformTp.ASU_TEX2D, this.renderedResult.getTex())

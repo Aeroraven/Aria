@@ -2,19 +2,20 @@
 
 This repository is here for **personal purpose**. It serves as the record for the time I used to learn graphical algorithms, or you can say more materialistically, web techniques.
 
+## I. Running Instruction
+Install node dependencies before running this project.
+```bash
+cd Active-v2
+npm install --force
+```
+Then run the project.
+```bash
+cd Active-v2
+npm run deploy
+```
 
 
-## I. Demo
-**Demo:** https://aeroraven.github.io/altina-cg-b/ (Resource loading subjects to your network conditions)
-
-**Legacy Demo:** https://aeroraven.github.io/altina-cg-a/ (Resource loading subjects to your network conditions)
-
-
-## II. Running Instruction
-Follow instructions in `stages.md`
-
-
-## III. Acknowledgement & License
+## II. Acknowledgement & License
 
 
 ### License
@@ -43,7 +44,11 @@ Licenses for referenced models and textures coincide with the license of origina
 
 ### Tutorials Referenced / Acknowledgements
 
-**V1 And Before**
+**Rectification**
+
+This repository might rectify my original implementation of path tracer (https://github.com/Aeroraven/Ray-tracing), which contains fatal mistakes to do with implementation.
+
+**Reference**
 
 Basic Tutorial: https://learnopengl.com/
 
@@ -63,8 +68,6 @@ Fluid Simulation: https://blog.csdn.net/zju_fish1996/article/details/52293782
 
 Caustics: https://madebyevan.com/webgl-water/
 
-**V2**
-
 Mipmap: https://learnopengl.com/
 
 Omni-directional Shadow Mapping: https://learnopengl.com/
@@ -77,3 +80,4 @@ Kawase Blur: https://zhuanlan.zhihu.com/p/125744132
 
 SMAA: https://iryoku.com/smaa/downloads/SMAA-Enhanced-Subpixel-Morphological-Antialiasing.pdf
 
+Path Tracing: https://raytracing.github.io/books/RayTracingInOneWeekend.html

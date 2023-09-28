@@ -21,7 +21,6 @@ export class AriaComRTPingPongTexturePass extends AriaComponent implements IAria
         this.renderpass = renderpass
     }
     render(renderer: IAriaRendererCore, preTriggers?: ((_: IAriaRendererCore) => any)[] | undefined, postTriggers?: ((_: IAriaRendererCore) => any)[] | undefined): void {
-        this._logWarn("Begin Render")
         this.renderpass.setRenderFrame(this.canvas[this.iter^1])
         this.canvas[this.iter%2].compose(renderer,()=>{
             this.renderpass.render(renderer)

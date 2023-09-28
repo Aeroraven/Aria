@@ -1,5 +1,6 @@
 import { AriaComponent } from "../../core/AriaComponent";
-import { AriaVec3 } from "../../core/arithmetic/AriaVector";
+import { AriaVec3, AriaVec4 } from "../../core/arithmetic/AriaVector";
+import { AriaComRTAbstractMaterial } from "./material/AriaComRTAbstractMaterial";
 
 enum AriaComRTFragShaderInjectorVariables{
     ACRTS_OPTIMAL_DISTANCE = "bestT",
@@ -8,6 +9,8 @@ enum AriaComRTFragShaderInjectorVariables{
     ACRTS_PI = "pi",
     ACRTS_OPTIMAL_MATERIAL = "bestMaterial",
     ACRTS_OPTIMAL_NORMAL = "bestNorm",
+    ACRTS_UPDATE_MATERIAL_COLOR = "rfMaterialColor",
+    ACRTS_UPDATE_EMISSION_COLOR = "rfEmissionColor"
 }
 
 export abstract class AriaComRTFragShaderInjector extends AriaComponent{
@@ -37,11 +40,12 @@ export abstract class AriaComRTFragShaderInjector extends AriaComponent{
     protected getArgs(){
         return AriaComRTFragShaderInjectorVariables
     }
-    protected emitUpdateShortestDistance(distanceVar:string,materialVar:string,normalVar:string){
-        return "if("+distanceVar+"<"+AriaComRTFragShaderInjectorVariables.ACRTS_OPTIMAL_DISTANCE+"&&"+distanceVar+">0.0){\n"
+    protected emitUpdateShortestDistance(distanceVar:string,materialVar:string,normalVar:string,materialData:AriaComRTAbstractMaterial){
+        return "if("+distanceVar+"<"+AriaComRTFragShaderInjectorVariables.ACRTS_OPTIMAL_DISTANCE+"&&"+distanceVar+">epsf){\n"
             +AriaComRTFragShaderInjectorVariables.ACRTS_OPTIMAL_DISTANCE+"="+distanceVar+";\n"
             +AriaComRTFragShaderInjectorVariables.ACRTS_OPTIMAL_MATERIAL+"="+materialVar+";\n"
             +AriaComRTFragShaderInjectorVariables.ACRTS_OPTIMAL_NORMAL+"="+normalVar+";\n"
+            +materialData.injectMaterialUpdates()
         +"}\n"
     }
     protected emitScope(callable:()=>string){
@@ -56,5 +60,8 @@ export abstract class AriaComRTFragShaderInjector extends AriaComponent{
     }
     protected emitVec3(vec3:AriaVec3){
         return "vec3("+vec3.at(0).toFixed(6)+","+vec3.at(1).toFixed(6)+","+vec3.at(2).toFixed(6)+")";
+    }
+    protected emitVec4(vec3:AriaVec4){
+        return "vec4("+vec3.at(0).toFixed(6)+","+vec3.at(1).toFixed(6)+","+vec3.at(2).toFixed(6)+","+vec3.at(3).toFixed(6)+")";
     }
 }

@@ -31,7 +31,7 @@ export class AriaComRTSphere extends AriaComRTAbstractGeometry{
             ret += "float tc;\n"
             ret += "vec3 tnorm;\n"
             ret += "rtf_SphereRayIntersection("+ this.getArgs().ACRTS_CURRENT_RAY+","+this.fname+",tc,tnorm);\n";
-            ret += this.emitUpdateShortestDistance("tc",this.material.getIdentifier(),"tnorm");
+            ret += this.emitUpdateShortestDistance("tc",this.material.getIdentifier(),"tnorm",this.material);
             return ret;
         })
     }
