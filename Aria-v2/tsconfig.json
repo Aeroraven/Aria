@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "module": "ES2015",
+        "target": "ES2015",
+        "strict": true,
+        "moduleResolution": "Node",
+        "skipLibCheck": true, 
+        "types": ["@webgpu/types"]
+    }
+}

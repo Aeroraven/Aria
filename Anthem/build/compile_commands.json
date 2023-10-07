@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/funkybirds/Aria/Anthem/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/main.cpp.o -c /home/funkybirds/Aria/Anthem/main.cpp",
+  "file": "/home/funkybirds/Aria/Anthem/main.cpp"
+}
+]

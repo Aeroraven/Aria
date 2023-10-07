@@ -1,0 +1,1 @@
+emcc -O3 -sMODULARIZE -sEXPORTED_RUNTIME_METHODS=ccall --bind -o ./src/library/lib/AlwEntry.js ./src/library/AlwEntry.cpp 
