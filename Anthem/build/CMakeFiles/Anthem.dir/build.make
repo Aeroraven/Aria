@@ -73,27 +73,61 @@ CMakeFiles/Anthem.dir/main.cpp.o: CMakeFiles/Anthem.dir/flags.make
 CMakeFiles/Anthem.dir/main.cpp.o: /home/funkybirds/Aria/Anthem/main.cpp
 CMakeFiles/Anthem.dir/main.cpp.o: CMakeFiles/Anthem.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/funkybirds/Aria/Anthem/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/Anthem.dir/main.cpp.o"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Anthem.dir/main.cpp.o -MF CMakeFiles/Anthem.dir/main.cpp.o.d -o CMakeFiles/Anthem.dir/main.cpp.o -c /home/funkybirds/Aria/Anthem/main.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Anthem.dir/main.cpp.o -MF CMakeFiles/Anthem.dir/main.cpp.o.d -o CMakeFiles/Anthem.dir/main.cpp.o -c /home/funkybirds/Aria/Anthem/main.cpp
 
 CMakeFiles/Anthem.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Anthem.dir/main.cpp.i"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/funkybirds/Aria/Anthem/main.cpp > CMakeFiles/Anthem.dir/main.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/funkybirds/Aria/Anthem/main.cpp > CMakeFiles/Anthem.dir/main.cpp.i
 
 CMakeFiles/Anthem.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Anthem.dir/main.cpp.s"
-	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/funkybirds/Aria/Anthem/main.cpp -o CMakeFiles/Anthem.dir/main.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/funkybirds/Aria/Anthem/main.cpp -o CMakeFiles/Anthem.dir/main.cpp.s
+
+CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o: CMakeFiles/Anthem.dir/flags.make
+CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o: /home/funkybirds/Aria/Anthem/src/core/AnthemConfig.cpp
+CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o: CMakeFiles/Anthem.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/funkybirds/Aria/Anthem/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o -MF CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o.d -o CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemConfig.cpp
+
+CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/funkybirds/Aria/Anthem/src/core/AnthemConfig.cpp > CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.i
+
+CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/funkybirds/Aria/Anthem/src/core/AnthemConfig.cpp -o CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.s
+
+CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o: CMakeFiles/Anthem.dir/flags.make
+CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o: /home/funkybirds/Aria/Anthem/src/core/AnthemEnvImpl.cpp
+CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o: CMakeFiles/Anthem.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/funkybirds/Aria/Anthem/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o -MF CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o.d -o CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemEnvImpl.cpp
+
+CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/funkybirds/Aria/Anthem/src/core/AnthemEnvImpl.cpp > CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.i
+
+CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/funkybirds/Aria/Anthem/src/core/AnthemEnvImpl.cpp -o CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.s
 
 # Object files for target Anthem
 Anthem_OBJECTS = \
-"CMakeFiles/Anthem.dir/main.cpp.o"
+"CMakeFiles/Anthem.dir/main.cpp.o" \
+"CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o" \
+"CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o"
 
 # External object files for target Anthem
 Anthem_EXTERNAL_OBJECTS =
 
 Anthem: CMakeFiles/Anthem.dir/main.cpp.o
+Anthem: CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o
+Anthem: CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o
 Anthem: CMakeFiles/Anthem.dir/build.make
+Anthem: /usr/lib/x86_64-linux-gnu/libvulkan.so
+Anthem: /usr/lib/x86_64-linux-gnu/libglfw.so.3.3
 Anthem: CMakeFiles/Anthem.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/funkybirds/Aria/Anthem/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable Anthem"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/funkybirds/Aria/Anthem/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable Anthem"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Anthem.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -1,0 +1,1 @@
+LIBGL_ALWAYS_INDIRECT=0 ./build/Anthem

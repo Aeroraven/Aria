@@ -3,6 +3,10 @@ file(REMOVE_RECURSE
   "Anthem.pdb"
   "CMakeFiles/Anthem.dir/main.cpp.o"
   "CMakeFiles/Anthem.dir/main.cpp.o.d"
+  "CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o"
+  "CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o.d"
+  "CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o"
+  "CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o.d"
 )
 
 # Per-language clean rules from dependency scanning.

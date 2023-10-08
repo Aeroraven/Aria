@@ -153,6 +153,54 @@ main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Anthem.dir/build.make CMakeFiles/Anthem.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+src/core/AnthemConfig.o: src/core/AnthemConfig.cpp.o
+.PHONY : src/core/AnthemConfig.o
+
+# target to build an object file
+src/core/AnthemConfig.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Anthem.dir/build.make CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o
+.PHONY : src/core/AnthemConfig.cpp.o
+
+src/core/AnthemConfig.i: src/core/AnthemConfig.cpp.i
+.PHONY : src/core/AnthemConfig.i
+
+# target to preprocess a source file
+src/core/AnthemConfig.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Anthem.dir/build.make CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.i
+.PHONY : src/core/AnthemConfig.cpp.i
+
+src/core/AnthemConfig.s: src/core/AnthemConfig.cpp.s
+.PHONY : src/core/AnthemConfig.s
+
+# target to generate assembly for a file
+src/core/AnthemConfig.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Anthem.dir/build.make CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.s
+.PHONY : src/core/AnthemConfig.cpp.s
+
+src/core/AnthemEnvImpl.o: src/core/AnthemEnvImpl.cpp.o
+.PHONY : src/core/AnthemEnvImpl.o
+
+# target to build an object file
+src/core/AnthemEnvImpl.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Anthem.dir/build.make CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o
+.PHONY : src/core/AnthemEnvImpl.cpp.o
+
+src/core/AnthemEnvImpl.i: src/core/AnthemEnvImpl.cpp.i
+.PHONY : src/core/AnthemEnvImpl.i
+
+# target to preprocess a source file
+src/core/AnthemEnvImpl.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Anthem.dir/build.make CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.i
+.PHONY : src/core/AnthemEnvImpl.cpp.i
+
+src/core/AnthemEnvImpl.s: src/core/AnthemEnvImpl.cpp.s
+.PHONY : src/core/AnthemEnvImpl.s
+
+# target to generate assembly for a file
+src/core/AnthemEnvImpl.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Anthem.dir/build.make CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.s
+.PHONY : src/core/AnthemEnvImpl.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -165,6 +213,12 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... src/core/AnthemConfig.o"
+	@echo "... src/core/AnthemConfig.i"
+	@echo "... src/core/AnthemConfig.s"
+	@echo "... src/core/AnthemEnvImpl.o"
+	@echo "... src/core/AnthemEnvImpl.i"
+	@echo "... src/core/AnthemEnvImpl.s"
 .PHONY : help
 
 

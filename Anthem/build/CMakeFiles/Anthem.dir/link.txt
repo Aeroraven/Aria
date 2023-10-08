@@ -1,1 +1,1 @@
-/usr/bin/g++ -g CMakeFiles/Anthem.dir/main.cpp.o -o Anthem 
+/usr/bin/c++ CMakeFiles/Anthem.dir/main.cpp.o CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o -o Anthem  /usr/lib/x86_64-linux-gnu/libvulkan.so /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 

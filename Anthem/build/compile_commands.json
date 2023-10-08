@@ -3,5 +3,20 @@
   "directory": "/home/funkybirds/Aria/Anthem/build",
   "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/main.cpp.o -c /home/funkybirds/Aria/Anthem/main.cpp",
   "file": "/home/funkybirds/Aria/Anthem/main.cpp"
+},
+{
+  "directory": "/home/funkybirds/Aria/Anthem/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemConfig.cpp",
+  "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemConfig.cpp"
+},
+{
+  "directory": "/home/funkybirds/Aria/Anthem/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemEnvImpl.cpp",
+  "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemEnvImpl.cpp"
+},
+{
+  "directory": "/home/funkybirds/Aria/Anthem/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemLogger.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemLogger.cpp",
+  "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemLogger.cpp"
 }
 ]

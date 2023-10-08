@@ -55,6 +55,24 @@ build CMakeFiles/Anthem.dir/main.cpp.o: CXX_COMPILER__Anthem_Debug /home/funkybi
   OBJECT_DIR = CMakeFiles/Anthem.dir
   OBJECT_FILE_DIR = CMakeFiles/Anthem.dir
 
+build CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o: CXX_COMPILER__Anthem_Debug /home/funkybirds/Aria/Anthem/src/core/AnthemConfig.cpp || cmake_object_order_depends_target_Anthem
+  DEP_FILE = CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o.d
+  FLAGS = -g -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Anthem.dir
+  OBJECT_FILE_DIR = CMakeFiles/Anthem.dir/src/core
+
+build CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o: CXX_COMPILER__Anthem_Debug /home/funkybirds/Aria/Anthem/src/core/AnthemEnvImpl.cpp || cmake_object_order_depends_target_Anthem
+  DEP_FILE = CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o.d
+  FLAGS = -g -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Anthem.dir
+  OBJECT_FILE_DIR = CMakeFiles/Anthem.dir/src/core
+
+build CMakeFiles/Anthem.dir/src/core/AnthemLogger.cpp.o: CXX_COMPILER__Anthem_Debug /home/funkybirds/Aria/Anthem/src/core/AnthemLogger.cpp || cmake_object_order_depends_target_Anthem
+  DEP_FILE = CMakeFiles/Anthem.dir/src/core/AnthemLogger.cpp.o.d
+  FLAGS = -g -std=gnu++17
+  OBJECT_DIR = CMakeFiles/Anthem.dir
+  OBJECT_FILE_DIR = CMakeFiles/Anthem.dir/src/core
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target Anthem
@@ -63,7 +81,7 @@ build CMakeFiles/Anthem.dir/main.cpp.o: CXX_COMPILER__Anthem_Debug /home/funkybi
 #############################################
 # Link the executable Anthem
 
-build Anthem: CXX_EXECUTABLE_LINKER__Anthem_Debug CMakeFiles/Anthem.dir/main.cpp.o | /usr/lib/x86_64-linux-gnu/libvulkan.so /usr/lib/x86_64-linux-gnu/libglfw.so.3.3
+build Anthem: CXX_EXECUTABLE_LINKER__Anthem_Debug CMakeFiles/Anthem.dir/main.cpp.o CMakeFiles/Anthem.dir/src/core/AnthemConfig.cpp.o CMakeFiles/Anthem.dir/src/core/AnthemEnvImpl.cpp.o CMakeFiles/Anthem.dir/src/core/AnthemLogger.cpp.o | /usr/lib/x86_64-linux-gnu/libvulkan.so /usr/lib/x86_64-linux-gnu/libglfw.so.3.3
   FLAGS = -g
   LINK_LIBRARIES = /usr/lib/x86_64-linux-gnu/libvulkan.so  /usr/lib/x86_64-linux-gnu/libglfw.so.3.3
   OBJECT_DIR = CMakeFiles/Anthem.dir
