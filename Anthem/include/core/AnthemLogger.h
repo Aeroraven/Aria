@@ -33,6 +33,13 @@ namespace Anthem{
                 (std::cout <<  ... << args) << std::endl;
             }
 
+            template<typename... Args>
+            void loge(Args... args){
+                this->log_prefix("ERROR");
+                (std::cout <<  ... << args) << std::endl;
+                exit(1);
+            }
+
             template<typename Tt, typename Tf>
             void logiif(bool condition, Tt trueMsg, Tf falseMsg){
                 this->log_prefix("INFO");
@@ -52,12 +59,13 @@ namespace Anthem{
                 }
             }
             template<typename T, typename... Args>
-            void assert_fallback(bool condition, T (*p)() , Args... args){
+            std::optional<T> assert_fallback(bool condition, T (*p)() , Args... args){
                 if(!condition){
                     this->log_prefix("ASSERT");
                     (std::cout << ... << args) << std::endl;
-                    (*p)();
+                    return (*p)();
                 }
+                return std::nullopt;
             }
         };
     }

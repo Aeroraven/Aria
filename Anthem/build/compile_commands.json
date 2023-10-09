@@ -18,5 +18,25 @@
   "directory": "/home/funkybirds/Aria/Anthem/build",
   "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemLogger.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemLogger.cpp",
   "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemLogger.cpp"
+},
+{
+  "directory": "/home/funkybirds/Aria/Anthem/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemLogicalDeviceSelector.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemLogicalDeviceSelector.cpp",
+  "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemLogicalDeviceSelector.cpp"
+},
+{
+  "directory": "/home/funkybirds/Aria/Anthem/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemPhyDeviceSelector.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemPhyDeviceSelector.cpp",
+  "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemPhyDeviceSelector.cpp"
+},
+{
+  "directory": "/home/funkybirds/Aria/Anthem/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemValLayer.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemValLayer.cpp",
+  "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemValLayer.cpp"
+},
+{
+  "directory": "/home/funkybirds/Aria/Anthem/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemWindowSurface.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemWindowSurface.cpp",
+  "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemWindowSurface.cpp"
 }
 ]

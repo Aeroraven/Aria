@@ -8,6 +8,7 @@ namespace Anthem{
             void virtual createInstance() = 0;
             void virtual destroyEnv() = 0;
             void virtual run() = 0;
+            void virtual init() = 0;
         };
     }
 }

@@ -3,9 +3,10 @@
 #include "AnthemDefs.h"
 #include "AnthemConfig.h"
 #include "AnthemLogger.h"
-#include <GLFW/glfw3.h>
-#include <vulkan/vulkan.h>
-#include <memory>
+#include "AnthemValLayer.h"
+#include "AnthemPhyDeviceSelector.h"
+#include "AnthemLogicalDeviceSelector.h"
+#include "AnthemWindowSurface.h"
 
 namespace Anthem{
     namespace Core{
@@ -14,11 +15,13 @@ namespace Anthem{
             GLFWwindow* window;
             VkApplicationInfo appInfo = {};
             VkInstanceCreateInfo createInfo = {};
-            VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
             VkInstance instance;
-            VkDebugUtilsMessengerEXT debugMessenger;
-            VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+            
             ANTH_SHARED_PTR(AnthemConfig) cfg;
+            ANTH_SHARED_PTR(AnthemValLayer) valLayer;
+            ANTH_SHARED_PTR(AnthemPhyDeviceSelector) phyDeviceSelector;
+            ANTH_SHARED_PTR(AnthemLogicalDeviceSelector) logicalDeviceSelector;
+            ANTH_SHARED_PTR(AnthemWindowSurface) windowSurface;
 
         public: //Member Functions
             AnthemEnvImpl(ANTH_SHARED_PTR(AnthemConfig) cfg);
@@ -27,22 +30,10 @@ namespace Anthem{
             void virtual createInstance() override;
             void virtual destroyEnv() override;
             void virtual run() override; 
+            void virtual init() override;
             
-            bool virtual checkValidLayerSupport();
             std::vector<const char*> virtual getRequiredExtensions();
-            bool virtual createDebugMsgLayerInfo();
-            bool virtual createDebugMsgLayer();
-            bool virtual selectPhyDevice();
 
-        public: //Static
-            static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-                VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                VkDebugUtilsMessageTypeFlagsEXT messageType,
-                const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                void* pUserData){
-                    ANTH_LOGW("Validation Layer: ",pCallbackData->pMessage);
-                    return VK_FALSE;
-            }
         };
     }
 }

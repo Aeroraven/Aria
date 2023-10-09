@@ -60,9 +60,13 @@
 			"sourceIndexes" : 
 			[
 				0,
-				6,
-				7,
-				8
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16
 			]
 		}
 	],
@@ -106,9 +110,13 @@
 			"sourceIndexes" : 
 			[
 				0,
-				6,
-				7,
-				8
+				10,
+				11,
+				12,
+				13,
+				14,
+				15,
+				16
 			]
 		},
 		{
@@ -119,7 +127,11 @@
 				2,
 				3,
 				4,
-				5
+				5,
+				6,
+				7,
+				8,
+				9
 			]
 		}
 	],
@@ -158,6 +170,26 @@
 		},
 		{
 			"backtrace" : 1,
+			"path" : "include/core/AnthemLogicalDeviceSelector.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/core/AnthemPhyDeviceSelector.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/core/AnthemValLayer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/core/AnthemWindowSurface.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "src/core/AnthemConfig.cpp",
 			"sourceGroupIndex" : 0
@@ -172,6 +204,30 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "src/core/AnthemLogger.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/core/AnthemLogicalDeviceSelector.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/core/AnthemPhyDeviceSelector.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/core/AnthemValLayer.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/core/AnthemWindowSurface.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],
