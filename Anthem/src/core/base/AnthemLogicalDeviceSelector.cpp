@@ -1,4 +1,4 @@
-#include "../../include/core/AnthemLogicalDeviceSelector.h"
+#include "../../../include/core/base/AnthemLogicalDeviceSelector.h"
 
 namespace Anthem::Core{
     AnthemLogicalDeviceSelector::AnthemLogicalDeviceSelector(AnthemPhyDevice* phyDevice){

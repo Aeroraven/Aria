@@ -1,4 +1,4 @@
-#include "../../include/core/AnthemSwapChain.h"
+#include "../../../include/core/base/AnthemSwapChain.h"
 
 namespace Anthem::Core{
     AnthemSwapChain::AnthemSwapChain(ANTH_SHARED_PTR(AnthemWindowSurface) windowSurface){

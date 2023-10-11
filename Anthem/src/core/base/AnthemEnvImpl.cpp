@@ -1,7 +1,5 @@
-#include "../../include/core/base/AnthemEnvImpl.h"
-#include "../../include/core/base/AnthemConfig.h"
-#include "../../include/core/base/AnthemLogger.h"
-#include "../../include/core/base/AnthemDefs.h"
+#include "../../../include/core/base/AnthemEnvImpl.h"
+
 #include <iostream>
 #include <cstdlib>
 #include <cstring>

@@ -1,4 +1,4 @@
-#include "../../include/core/AnthemConfig.h"
+#include "../../../include/core/base/AnthemConfig.h"
 
 
 namespace Anthem{

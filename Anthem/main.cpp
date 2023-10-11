@@ -1,6 +1,6 @@
 #include <iostream>
 #include <memory>
-#include "include/core/AnthemEnvImpl.h"
+#include "include/core/base/AnthemEnvImpl.h"
 
 int main(){
     ANTH_LOGI("Hello World!","Fucking");
@@ -9,6 +9,5 @@ int main(){
     auto x = ANTH_MAKE_SHARED(Anthem::Core::AnthemEnvImpl)(cfg);
     x->run();
     std::cout << "Hello World!" << std::endl;
-    std::cout << std::boolalpha << (std::string("a")==std::string("a"));
     return 0;
 }

@@ -1,4 +1,4 @@
-#include "../../include/core/AnthemLogicalDevice.h"
+#include "../../../include/core/base/AnthemLogicalDevice.h"
 
 namespace Anthem::Core{
     AnthemLogicalDevice::AnthemLogicalDevice(){
