@@ -18,8 +18,8 @@ namespace Anthem::Core{
         }
         return supportedReqExts == this->requiredDeviceSupportedExtension.size();
     }
-    ANTH_SHARED_PTR(AnthemPhyQueueFamilyIdx) AnthemPhyDeviceSelector::findQueueFamilies(VkPhysicalDevice device,ANTH_SHARED_PTR(AnthemWindowSurface) surface){
-        auto indices = ANTH_MAKE_SHARED(AnthemPhyQueueFamilyIdx)();
+    ANTH_UNSAFE_PTR(AnthemPhyQueueFamilyIdx) AnthemPhyDeviceSelector::findQueueFamilies(VkPhysicalDevice device,ANTH_SHARED_PTR(AnthemWindowSurface) surface){
+        auto indices = ANTH_MAKE_UNSAFE(AnthemPhyQueueFamilyIdx)();
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
         if(queueFamilyCount==0){
@@ -48,11 +48,9 @@ namespace Anthem::Core{
         }
         return indices;
     }
-    VkPhysicalDevice AnthemPhyDeviceSelector::getPhyDevice(){
-        return this->physicalDevice;
-    }
-    ANTH_SHARED_PTR(AnthemPhyQueueFamilyIdx) AnthemPhyDeviceSelector::getPhyDeviceQueueFamilyInfo(){
-        return this->physicalDeviceQueueFamily;
+    bool AnthemPhyDeviceSelector::getPhyDevice(AnthemPhyDevice* phyDevice){
+        phyDevice->specifyDevice(this->physicalDevice,this->physicalDeviceQueueFamily);
+        return true;
     }
     bool AnthemPhyDeviceSelector::selectPhyDevice(VkInstance* instance, ANTH_SHARED_PTR(AnthemWindowSurface) surface){
         uint32_t deviceCount = 0;
@@ -93,7 +91,7 @@ namespace Anthem::Core{
             return std::make_tuple(availFlag, rating, famQueueIdx);
         };
 
-        std::vector<std::tuple<int, VkPhysicalDevice, ANTH_SHARED_PTR(AnthemPhyQueueFamilyIdx)>> availableDevices;
+        std::vector<std::tuple<int, VkPhysicalDevice, ANTH_UNSAFE_PTR(AnthemPhyQueueFamilyIdx)>> availableDevices;
         for(const auto& device : devices){
             VkPhysicalDeviceProperties deviceProperties;
             vkGetPhysicalDeviceProperties(device, &deviceProperties);

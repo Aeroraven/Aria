@@ -25,6 +25,8 @@ namespace Anthem{
             ANTH_SHARED_PTR(AnthemWindowSurface) windowSurface;
 
             ANTH_SHARED_PTR(AnthemSwapChain) swapChain;
+            ANTH_SHARED_PTR(AnthemPhyDevice) phyDevice;
+            ANTH_SHARED_PTR(AnthemLogicalDevice) logicalDevice;
 
         public: //Member Functions
             AnthemEnvImpl(ANTH_SHARED_PTR(AnthemConfig) cfg);

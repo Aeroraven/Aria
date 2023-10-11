@@ -1,7 +1,7 @@
-#include "../../include/core/AnthemEnvImpl.h"
-#include "../../include/core/AnthemConfig.h"
-#include "../../include/core/AnthemLogger.h"
-#include "../../include/core/AnthemDefs.h"
+#include "../../include/core/base/AnthemEnvImpl.h"
+#include "../../include/core/base/AnthemConfig.h"
+#include "../../include/core/base/AnthemLogger.h"
+#include "../../include/core/base/AnthemDefs.h"
 #include <iostream>
 #include <cstdlib>
 #include <cstring>
@@ -74,25 +74,48 @@ namespace Anthem{
         }
         void AnthemEnvImpl::destroyEnv(){
             ANTH_LOGI("Destroying environment");
-            logicalDeviceSelector->destroyLogicalDevice();
+            //Destroy Swap Chain Stuffs
+            swapChain->destroySwapChainImageViews(this->logicalDevice.get());
+            swapChain->destroySwapChain(this->logicalDevice.get());
+
+            //Destroy Device & Layers
+            logicalDevice->destroyLogicalDevice(&instance);
             valLayer->destroyDebugMsgLayer(&instance);
             windowSurface->destroyWindowSurface(&instance);
+
+            //Destroy Instance
             vkDestroyInstance(this->instance, nullptr);
             glfwDestroyWindow(this->window);
             glfwTerminate();
         }
         void AnthemEnvImpl::init(){
+            ANTH_LOGI(__PRETTY_FUNCTION__);
             //Startup
             this->createWindow(cfg->APP_RESLOUTION_W,cfg->APP_RESLOUTION_H);
             this->initSwapChain();
-            //Init
             valLayer->createDebugMsgLayerInfo();
             this->createInstance();
+
             valLayer->createDebugMsgLayer(&instance);
             windowSurface->createWindowSurface(&instance);
+
+            //Selecting Physical Device
+            phyDeviceSelector = ANTH_MAKE_SHARED(AnthemPhyDeviceSelector)(windowSurface,swapChain);
             phyDeviceSelector->selectPhyDevice(&instance,this->windowSurface);
-            ANTH_LOGI("Selected device");
+            phyDevice = ANTH_MAKE_SHARED(AnthemPhyDevice)();
+            phyDeviceSelector->getPhyDevice(this->phyDevice.get());
+
+            //Creating Logical Device
+            logicalDeviceSelector = ANTH_MAKE_SHARED(AnthemLogicalDeviceSelector)(this->phyDevice.get());
             logicalDeviceSelector->createLogicalDevice();
+            logicalDevice = ANTH_MAKE_SHARED(AnthemLogicalDevice)();
+            logicalDeviceSelector->getLogicalDevice(logicalDevice.get());
+
+            //Prepare Swap Chain
+            swapChain->specifySwapChainDetails(this->phyDevice.get(),this->window);
+            swapChain->createSwapChain(this->logicalDevice.get(),this->phyDevice.get());
+            swapChain->retrieveSwapChainImages(this->logicalDevice.get());
+            swapChain->createSwapChainImageViews(this->logicalDevice.get());
         }
         void AnthemEnvImpl::run(){
             this->init();
@@ -111,8 +134,7 @@ namespace Anthem{
         }   
         void AnthemEnvImpl::initSwapChain(){
             this->swapChain = ANTH_MAKE_SHARED(AnthemSwapChain)(this->windowSurface);
-            this->phyDeviceSelector = ANTH_MAKE_SHARED(AnthemPhyDeviceSelector)(this->windowSurface,this->swapChain);
-            this->logicalDeviceSelector = ANTH_MAKE_SHARED(AnthemLogicalDeviceSelector)(phyDeviceSelector);
+            
         }
     }
 }

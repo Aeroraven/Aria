@@ -1,21 +1,21 @@
 #include "../../include/core/AnthemLogicalDeviceSelector.h"
 
 namespace Anthem::Core{
-    AnthemLogicalDeviceSelector::AnthemLogicalDeviceSelector(ANTH_SHARED_PTR(AnthemPhyDeviceSelector) phyDeviceSelector){
-        this->phyDeviceSelector = phyDeviceSelector;
+    AnthemLogicalDeviceSelector::AnthemLogicalDeviceSelector(AnthemPhyDevice* phyDevice){
+        this->phyDevice = phyDevice;
     }
     bool AnthemLogicalDeviceSelector::createLogicalDevice(){
         //Create Queue
         ANTH_LOGI("Registering Queues");
-        registerQueueCreateInfo(phyDeviceSelector->getPhyDeviceQueueFamilyInfo()->graphicsFamily.value());
-        registerQueueCreateInfo(phyDeviceSelector->getPhyDeviceQueueFamilyInfo()->presentFamily.value());
+        registerQueueCreateInfo(phyDevice->getPhyQueueGraphicsFamilyIndice().value());
+        registerQueueCreateInfo(phyDevice->getPhyQueuePresentFamilyIndice().value());
         
 
         //Get Device Extension
-        const auto deviceSupportExtensions = this->phyDeviceSelector->getRequiredDevSupportedExts();
+        const auto deviceSupportExtensions = phyDevice->getRequiredDevSupportedExts();
 
         //Get Device Features
-        this->phyDeviceSelector->getDeviceFeature(this->creatingFeats);
+        this->creatingFeats = phyDevice->getDeviceFeatures();
 
         //Create Device
         ANTH_LOGI("Creating Queue");
@@ -27,7 +27,7 @@ namespace Anthem::Core{
         createInfo.enabledLayerCount = 0;
         createInfo.pEnabledFeatures = &(this->creatingFeats);
 
-        if(vkCreateDevice(phyDeviceSelector->getPhyDevice(), &createInfo, nullptr, &logicalDevice)!=VK_SUCCESS){
+        if(vkCreateDevice(phyDevice->getPhysicalDevice(), &createInfo, nullptr, &logicalDevice)!=VK_SUCCESS){
             ANTH_LOGI("Failed to create logical device");
             return false;
         }
@@ -37,13 +37,14 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemLogicalDeviceSelector::destroyLogicalDevice(){
+        ANTH_DEPRECATED_MSG;
         ANTH_LOGI("Destroying logical device");
         vkDestroyDevice(logicalDevice, nullptr);
         return true;
     }
     bool AnthemLogicalDeviceSelector::retrieveQueues(){
-        vkGetDeviceQueue(logicalDevice, phyDeviceSelector->getPhyDeviceQueueFamilyInfo()->graphicsFamily.value(), 0, &graphicsQueue);
-        vkGetDeviceQueue(logicalDevice, phyDeviceSelector->getPhyDeviceQueueFamilyInfo()->presentFamily.value(), 0, &presentationQueue);
+        vkGetDeviceQueue(logicalDevice, phyDevice->getPhyQueueGraphicsFamilyIndice().value(), 0, &graphicsQueue);
+        vkGetDeviceQueue(logicalDevice, phyDevice->getPhyQueuePresentFamilyIndice().value(), 0, &presentationQueue);
         return true;
     }
     bool AnthemLogicalDeviceSelector::registerQueueCreateInfo(std::optional<uint32_t> familyIdx,float priority){
@@ -65,5 +66,11 @@ namespace Anthem::Core{
         queueExistingId.insert(familyIdx.value());
         return true;
     }
-    
+    VkDevice AnthemLogicalDeviceSelector::getLogicalDevice(){
+        return this->logicalDevice;
+    }
+    bool AnthemLogicalDeviceSelector::getLogicalDevice(AnthemLogicalDevice* logicalDevice){
+        logicalDevice->specifyDevice(this->logicalDevice);
+        return true;
+    }
 }   

@@ -1,3 +1,0 @@
-/home/funkybirds/Aria/Anthem/build/CMakeFiles/Anthem.dir
-/home/funkybirds/Aria/Anthem/build/CMakeFiles/edit_cache.dir
-/home/funkybirds/Aria/Anthem/build/CMakeFiles/rebuild_cache.dir

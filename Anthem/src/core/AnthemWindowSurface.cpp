@@ -1,4 +1,4 @@
-#include "../../include/core/AnthemWindowSurface.h"
+#include "../../include/core/base/AnthemWindowSurface.h"
 
 namespace Anthem::Core{
     bool AnthemWindowSurface::createWindowSurface(VkInstance* instance){
@@ -21,4 +21,6 @@ namespace Anthem::Core{
     VkSurfaceKHR AnthemWindowSurface::getWindowSurface(){
         return this->windowSurface;
     }
+
+    
 }
