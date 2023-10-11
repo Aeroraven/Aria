@@ -1,7 +1,24 @@
 #include "../../include/core/AnthemPhyDeviceSelector.h"
 
 namespace Anthem::Core{
-    ANTH_SHARED_PTR(AnthemPhyQueueFamilyIdx) AnthemPhyDeviceSelector::findQueueFamilies(VkPhysicalDevice device){
+    bool AnthemPhyDeviceSelector::checkDeviceExtensionSupport(VkPhysicalDevice device){
+        uint32_t extensionCounts;
+        vkEnumerateDeviceExtensionProperties(device,nullptr,&extensionCounts,nullptr);
+
+        std::vector<VkExtensionProperties> extensionProps(extensionCounts);
+        vkEnumerateDeviceExtensionProperties(device,nullptr,&extensionCounts,extensionProps.data());
+
+        auto supportedReqExts = 0;
+        for(const auto& p:extensionProps){
+            for(const auto& q:this->requiredDeviceSupportedExtension){
+                if(std::string(p.extensionName) == std::string(q)){
+                    supportedReqExts += 1;
+                }
+            }
+        }
+        return supportedReqExts == this->requiredDeviceSupportedExtension.size();
+    }
+    ANTH_SHARED_PTR(AnthemPhyQueueFamilyIdx) AnthemPhyDeviceSelector::findQueueFamilies(VkPhysicalDevice device,ANTH_SHARED_PTR(AnthemWindowSurface) surface){
         auto indices = ANTH_MAKE_SHARED(AnthemPhyQueueFamilyIdx)();
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
@@ -14,10 +31,17 @@ namespace Anthem::Core{
         int i = 0;
         for(const auto& queueFamily : queueFamilies){
             ANTH_LOGI("Queue Family ",i,":",queueFamily.queueFlags);
+            
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface->getWindowSurface(), &presentSupport);
+
+            if(presentSupport){
+                indices->presentFamily = i;
+            }
             if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT){
                 indices->graphicsFamily = i;
             }
-            if(indices->graphicsFamily.has_value()){
+            if(indices->graphicsFamily.has_value() && presentSupport){
                 break;
             }
             i++;
@@ -30,36 +54,42 @@ namespace Anthem::Core{
     ANTH_SHARED_PTR(AnthemPhyQueueFamilyIdx) AnthemPhyDeviceSelector::getPhyDeviceQueueFamilyInfo(){
         return this->physicalDeviceQueueFamily;
     }
-    bool AnthemPhyDeviceSelector::selectPhyDevice(VkInstance* instance){
+    bool AnthemPhyDeviceSelector::selectPhyDevice(VkInstance* instance, ANTH_SHARED_PTR(AnthemWindowSurface) surface){
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(*instance, &deviceCount, nullptr);
         ANTH_ASSERT(deviceCount!=0,"Failed to find support");
         std::vector<VkPhysicalDevice> devices(deviceCount);
         vkEnumeratePhysicalDevices(*instance, &deviceCount, devices.data());
 
-        const auto checkDeviceSuitable = [this](VkPhysicalDevice device){
+        const auto checkDeviceSuitable = [this,&surface](VkPhysicalDevice device){
             bool availFlag = false;
             int rating = 0;
 
             VkPhysicalDeviceProperties deviceProperties;
             VkPhysicalDeviceFeatures deviceFeatures;
             VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
+            AnthemSwapChainDetails scDetails;
 
             vkGetPhysicalDeviceProperties(device, &deviceProperties);
             vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
             vkGetPhysicalDeviceMemoryProperties(device, &deviceMemoryProperties);
-            auto famQueueIdx = this->findQueueFamilies(device);
+            this->swapChain->prepareSwapChainInfo(device,scDetails);
 
-            ANTH_LOGI("Geometry:",deviceFeatures.geometryShader);
+            auto extSupportAssert = checkDeviceExtensionSupport(device);
+            auto famQueueIdx = this->findQueueFamilies(device,surface);
+            auto swapChainSupportAssert = !scDetails.formats.empty() && !scDetails.presentModes.empty();
+
             for(auto i=0;i<deviceMemoryProperties.memoryHeapCount;i++){
                 rating += 1;
                 ANTH_LOGI("Heap ",i,":",deviceMemoryProperties.memoryHeaps[i].size,",",deviceMemoryProperties.memoryHeaps[i].flags);
             }
-            ANTH_LOGI("Max Image D2D:",deviceProperties.limits.maxImageDimension2D);
-
+            ANTH_LOGI("Extension Support:",extSupportAssert);
+ 
             availFlag = (deviceProperties.deviceType==VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) && 
                  famQueueIdx->graphicsFamily.has_value() &&
-                 deviceFeatures.geometryShader;
+                 deviceFeatures.geometryShader &&
+                 extSupportAssert &&
+                 swapChainSupportAssert;
             return std::make_tuple(availFlag, rating, famQueueIdx);
         };
 
@@ -80,5 +110,15 @@ namespace Anthem::Core{
         this->physicalDevice = std::get<1>(chosenDevice);
         this->physicalDeviceQueueFamily = std::get<2>(chosenDevice);
         return true;
+    }
+    const std::vector<const char*>* const AnthemPhyDeviceSelector::getRequiredDevSupportedExts() const{
+        return &(this->requiredDeviceSupportedExtension);
+    }
+    AnthemPhyDeviceSelector::AnthemPhyDeviceSelector(ANTH_SHARED_PTR(AnthemWindowSurface) surface,ANTH_SHARED_PTR(AnthemSwapChain) swapChain){
+        this->surface = surface;
+        this->swapChain = swapChain;
+    }
+    void AnthemPhyDeviceSelector::getDeviceFeature(VkPhysicalDeviceFeatures& outFeatures){
+        vkGetPhysicalDeviceFeatures(this->physicalDevice,&outFeatures);
     }
 }

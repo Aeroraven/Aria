@@ -7,6 +7,7 @@
 #include "AnthemPhyDeviceSelector.h"
 #include "AnthemLogicalDeviceSelector.h"
 #include "AnthemWindowSurface.h"
+#include "AnthemSwapChain.h"
 
 namespace Anthem{
     namespace Core{
@@ -23,6 +24,8 @@ namespace Anthem{
             ANTH_SHARED_PTR(AnthemLogicalDeviceSelector) logicalDeviceSelector;
             ANTH_SHARED_PTR(AnthemWindowSurface) windowSurface;
 
+            ANTH_SHARED_PTR(AnthemSwapChain) swapChain;
+
         public: //Member Functions
             AnthemEnvImpl(ANTH_SHARED_PTR(AnthemConfig) cfg);
             bool virtual createWindow(int w,int h) override;
@@ -31,7 +34,8 @@ namespace Anthem{
             void virtual destroyEnv() override;
             void virtual run() override; 
             void virtual init() override;
-            
+
+            void virtual initSwapChain();
             std::vector<const char*> virtual getRequiredExtensions();
 
         };

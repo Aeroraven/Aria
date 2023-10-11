@@ -11,5 +11,6 @@ namespace Anthem::Core{
         AnthemWindowSurface(GLFWwindow* window);
         bool virtual createWindowSurface(VkInstance* instance);
         bool virtual destroyWindowSurface(VkInstance* instance);
+        VkSurfaceKHR virtual getWindowSurface();
     };
 }

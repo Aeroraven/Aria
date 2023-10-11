@@ -31,6 +31,11 @@
 },
 {
   "directory": "/home/funkybirds/Aria/Anthem/build",
+  "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemSwapChain.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemSwapChain.cpp",
+  "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemSwapChain.cpp"
+},
+{
+  "directory": "/home/funkybirds/Aria/Anthem/build",
   "command": "/usr/bin/g++ -g -std=gnu++17 -o CMakeFiles/Anthem.dir/src/core/AnthemValLayer.cpp.o -c /home/funkybirds/Aria/Anthem/src/core/AnthemValLayer.cpp",
   "file": "/home/funkybirds/Aria/Anthem/src/core/AnthemValLayer.cpp"
 },

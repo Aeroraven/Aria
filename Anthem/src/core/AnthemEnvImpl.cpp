@@ -11,8 +11,6 @@ namespace Anthem{
         AnthemEnvImpl::AnthemEnvImpl(ANTH_SHARED_PTR(AnthemConfig) cfg){
             this->cfg = cfg;
             this->valLayer = ANTH_MAKE_SHARED(AnthemValLayer)(cfg);
-            this->phyDeviceSelector = ANTH_MAKE_SHARED(AnthemPhyDeviceSelector)();
-            this->logicalDeviceSelector = ANTH_MAKE_SHARED(AnthemLogicalDeviceSelector)(phyDeviceSelector);
         }
         bool AnthemEnvImpl::createWindow(int w,int h){
             ANTH_LOGI("Creating window with width ",w," and height ",h);
@@ -86,12 +84,14 @@ namespace Anthem{
         void AnthemEnvImpl::init(){
             //Startup
             this->createWindow(cfg->APP_RESLOUTION_W,cfg->APP_RESLOUTION_H);
+            this->initSwapChain();
             //Init
             valLayer->createDebugMsgLayerInfo();
             this->createInstance();
             valLayer->createDebugMsgLayer(&instance);
             windowSurface->createWindowSurface(&instance);
-            phyDeviceSelector->selectPhyDevice(&instance);
+            phyDeviceSelector->selectPhyDevice(&instance,this->windowSurface);
+            ANTH_LOGI("Selected device");
             logicalDeviceSelector->createLogicalDevice();
         }
         void AnthemEnvImpl::run(){
@@ -109,6 +109,11 @@ namespace Anthem{
             }
             return extensions;
         }   
+        void AnthemEnvImpl::initSwapChain(){
+            this->swapChain = ANTH_MAKE_SHARED(AnthemSwapChain)(this->windowSurface);
+            this->phyDeviceSelector = ANTH_MAKE_SHARED(AnthemPhyDeviceSelector)(this->windowSurface,this->swapChain);
+            this->logicalDeviceSelector = ANTH_MAKE_SHARED(AnthemLogicalDeviceSelector)(phyDeviceSelector);
+        }
     }
 }
 

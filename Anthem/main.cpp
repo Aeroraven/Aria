@@ -7,5 +7,6 @@ int main(){
     auto x = ANTH_MAKE_SHARED(Anthem::Core::AnthemEnvImpl)(cfg);
     x->run();
     std::cout << "Hello World!" << std::endl;
+    std::cout << std::boolalpha << (std::string("a")==std::string("a"));
     return 0;
 }

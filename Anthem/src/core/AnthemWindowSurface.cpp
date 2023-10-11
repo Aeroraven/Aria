@@ -18,4 +18,7 @@ namespace Anthem::Core{
         vkDestroySurfaceKHR(*instance, windowSurface, nullptr);
         return true;
     }
+    VkSurfaceKHR AnthemWindowSurface::getWindowSurface(){
+        return this->windowSurface;
+    }
 }

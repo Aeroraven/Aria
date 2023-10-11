@@ -49,6 +49,7 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "cstring": "cpp",
-        "ctime": "cpp"
+        "ctime": "cpp",
+        "set": "cpp"
     }
 }

@@ -8,6 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <optional>
+#include <set>
 
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>
 #define ANTH_UNIQUE_PTR(T) std::unique_ptr<T>
