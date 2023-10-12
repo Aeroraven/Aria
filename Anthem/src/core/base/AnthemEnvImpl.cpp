@@ -72,6 +72,17 @@ namespace Anthem{
         }
         void AnthemEnvImpl::destroyEnv(){
             ANTH_LOGI("Destroying environment");
+            //Destroy Framebuffer
+            framebufferList->destroyFramebuffers();
+
+            //Destroy Graphics Pipeline
+            graphicsPipeline->destroyPipeline();
+            graphicsPipeline->destroyPipelineLayout();
+            shader->destroyShaderModules(this->logicalDevice.get());
+
+            //Destroy Render Pawss
+            renderPass->destroyRenderPass();
+
             //Destroy Swap Chain Stuffs
             swapChain->destroySwapChainImageViews(this->logicalDevice.get());
             swapChain->destroySwapChain(this->logicalDevice.get());
@@ -114,6 +125,16 @@ namespace Anthem{
             swapChain->createSwapChain(this->logicalDevice.get(),this->phyDevice.get());
             swapChain->retrieveSwapChainImages(this->logicalDevice.get());
             swapChain->createSwapChainImageViews(this->logicalDevice.get());
+
+            //Create Render Pass
+            this->initRenderPass();
+
+            //Create Graphics Pipeline
+            this->loadShader();
+            this->initGraphicsPipeline();
+
+            //Create Framebuffer
+            this->initFramebuffer();
         }
         void AnthemEnvImpl::run(){
             this->init();
@@ -132,7 +153,43 @@ namespace Anthem{
         }   
         void AnthemEnvImpl::initSwapChain(){
             this->swapChain = ANTH_MAKE_SHARED(AnthemSwapChain)(this->windowSurface);
-            
+        }
+        void AnthemEnvImpl::loadShader(){
+            this->shader = ANTH_MAKE_SHARED(AnthemShaderModule)();
+            AnthemShaderFilePaths shaderPath = {
+                .vertexShader = "/home/funkybirds/Aria/Anthem/shader/default/shader.vert.spv",
+                .fragmentShader = "/home/funkybirds/Aria/Anthem/shader/default/shader.frag.spv"
+            };
+            this->shader->createShaderModules(this->logicalDevice.get(),&shaderPath);
+        }
+        void AnthemEnvImpl::initGraphicsPipeline(){
+            //Setup Viewport
+            this->viewport = ANTH_MAKE_SHARED(AnthemViewport)();
+            this->viewport->specifyLogicalDevice(this->logicalDevice.get());
+            this->viewport->specifySwapChain(this->swapChain.get());
+            this->viewport->prepareViewportState();
+
+            //Prepare Graphics Pipeline
+            this->graphicsPipeline = ANTH_MAKE_SHARED(AnthemGraphicsPipeline)();
+            this->graphicsPipeline->specifyLogicalDevice(this->logicalDevice.get());
+            this->graphicsPipeline->specifyViewport(this->viewport.get());
+            this->graphicsPipeline->specifyRenderPass(this->renderPass.get());
+            this->graphicsPipeline->specifyShaderModule(this->shader.get());
+
+            this->graphicsPipeline->preparePreqPipelineCreateInfo();
+            this->graphicsPipeline->createPipelineLayout();
+            this->graphicsPipeline->createPipeline();
+        }
+        void AnthemEnvImpl::initRenderPass(){
+            this->renderPass = ANTH_MAKE_SHARED(AnthemRenderPass)();
+            this->renderPass->specifyLogicalDevice(this->logicalDevice.get());
+            this->renderPass->specifySwapChain(this->swapChain.get());
+            this->renderPass->createDemoRenderPass();
+        }
+        void AnthemEnvImpl::initFramebuffer(){
+            this->framebufferList = ANTH_MAKE_SHARED(AnthemFramebufferList)();
+            this->framebufferList->specifyLogicalDevice(this->logicalDevice.get());
+            this->framebufferList->createFramebuffersFromSwapChain(this->swapChain.get(),this->renderPass.get());
         }
     }
 }

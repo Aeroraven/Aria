@@ -9,8 +9,20 @@ namespace Anthem::Core{
         this->viewport = viewport;
         return true;
     }
+    bool AnthemGraphicsPipeline::specifyRenderPass(const AnthemRenderPass* renderPass){
+        this->renderPass = renderPass;
+        return true;
+    }
+    bool AnthemGraphicsPipeline::specifyShaderModule(const AnthemShaderModule* shaderModule){
+        this->shaderModule = shaderModule;
+        return true;
+    }
     bool AnthemGraphicsPipeline::preparePreqPipelineCreateInfo(){
-        
+        ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
+        ANTH_ASSERT(this->viewport != nullptr,"Viewport not specified");
+        ANTH_ASSERT(this->renderPass != nullptr,"Render pass not specified");
+
+
         //Specify Dynamic States
         this->dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         this->dynamicStateCreateInfo.pNext = nullptr;
@@ -97,6 +109,48 @@ namespace Anthem::Core{
     bool AnthemGraphicsPipeline::destroyPipelineLayout(){
         ANTH_LOGI("Destroying pipeline layout");
         vkDestroyPipelineLayout(this->logicalDevice->getLogicalDevice(),this->pipelineLayout,nullptr);
+        return true;
+    }
+    bool AnthemGraphicsPipeline::createPipeline(){
+        ANTH_ASSERT(this->prerequisiteInfoSpecified,"Prerequisite info not specified");
+
+        //Prepare Shader Stage Info
+        this->shaderModule->specifyShaderStageCreateInfo(&shaderStageCreateInfo);
+
+        //Specify Pipeline Creation Info
+        this->pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        this->pipelineCreateInfo.pNext = nullptr;
+        this->pipelineCreateInfo.flags = 0;
+        this->pipelineCreateInfo.stageCount = shaderStageCreateInfo.size();
+        this->pipelineCreateInfo.pStages = shaderStageCreateInfo.data();
+        this->pipelineCreateInfo.pVertexInputState = &(this->vertexInputStateCreateInfo);
+        this->pipelineCreateInfo.pInputAssemblyState = &(this->inputAssemblyStateCreateInfo);
+        this->pipelineCreateInfo.pTessellationState = nullptr;
+        this->pipelineCreateInfo.pViewportState = &(this->viewportStateCreateInfo);
+        this->pipelineCreateInfo.pRasterizationState = &(this->rasterizerStateCreateInfo);
+        this->pipelineCreateInfo.pMultisampleState = &(this->multisampleStateCreateInfo);
+        this->pipelineCreateInfo.pDepthStencilState = nullptr;
+        this->pipelineCreateInfo.pColorBlendState = &(this->colorBlendStateCreateInfo);
+        this->pipelineCreateInfo.pDynamicState = &(this->dynamicStateCreateInfo);
+        this->pipelineCreateInfo.layout = this->pipelineLayout;
+        this->pipelineCreateInfo.renderPass = *(this->renderPass->getRenderPass());
+        this->pipelineCreateInfo.subpass = 0;
+        this->pipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
+        this->pipelineCreateInfo.basePipelineIndex = -1;
+
+        //Create Pipeline
+        auto result = vkCreateGraphicsPipelines(this->logicalDevice->getLogicalDevice(),VK_NULL_HANDLE,1,&(this->pipelineCreateInfo),nullptr,&(this->pipeline));
+        if(result != VK_SUCCESS){
+            ANTH_LOGE("Failed to create graphics pipeline",result);
+            return false;
+        }
+        ANTH_LOGI("Graphics pipeline created");
+        return true;
+    }
+
+    bool AnthemGraphicsPipeline::destroyPipeline(){
+        ANTH_LOGI("Destroying graphics pipeline");
+        vkDestroyPipeline(this->logicalDevice->getLogicalDevice(),this->pipeline,nullptr);
         return true;
     }
 }

@@ -160,4 +160,10 @@ namespace Anthem::Core{
     const VkExtent2D* AnthemSwapChain::getSwapChainExtent() const{
         return &(this->scExtent);
     }
+    const VkSurfaceFormatKHR* AnthemSwapChain::getSwapChainSurfaceFormat() const{
+        return &(this->specifiedSurfaceFormat);
+    }
+    const std::vector<VkImageView>* AnthemSwapChain::getSwapChainImageViews() const{
+        return &(this->swapChainImageViews);
+    }
 }

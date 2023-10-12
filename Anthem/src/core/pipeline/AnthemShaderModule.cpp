@@ -3,6 +3,7 @@
 namespace Anthem::Core{
     bool AnthemShaderModule::createShaderModules(AnthemLogicalDevice* device,const AnthemShaderFilePaths* filename){
         //Load Shader Code
+        ANTH_LOGI("Loading Shader Code");
         auto vertexShaderCode = new std::vector<char>();
         auto fragShaderCode = new std::vector<char>();
         ANTH_ASSERT(filename->vertexShader.has_value(),"Vertex shader file path not specified");
@@ -10,12 +11,15 @@ namespace Anthem::Core{
         this->readFile(filename->vertexShader.value(),vertexShaderCode);
         this->readFile(filename->fragmentShader.value(),fragShaderCode);
 
-        //Specify Shader Module
+        //Specify Shader Module]
+        ANTH_LOGI("Creating Shader Module");
         this->createSingleShaderModule(device,vertexShaderCode,&(this->shaderModules->vertexShaderModule));
         this->createSingleShaderModule(device,fragShaderCode,&(this->shaderModules->fragmentShaderModule));
         this->shaderModules->vertexShaderModuleCreated = true;
+        return true;
     }
     bool AnthemShaderModule::createSingleShaderModule(AnthemLogicalDevice* device,std::vector<char>* shaderCode,std::optional<VkShaderModule>* shaderModule){
+        ANTH_ASSERT(shaderModule->has_value() > 0,"Invalid Shader Module");
         VkShaderModuleCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         createInfo.codeSize = shaderCode->size();
@@ -31,7 +35,7 @@ namespace Anthem::Core{
         vkDestroyShaderModule(device->getLogicalDevice(),this->shaderModules->fragmentShaderModule.value(),nullptr);
         return true;
     }
-    bool AnthemShaderModule::specifyShaderStageCreateInfo(std::vector<VkPipelineShaderStageCreateInfo>* shaderStageCreateInfo){
+    bool AnthemShaderModule::specifyShaderStageCreateInfo(std::vector<VkPipelineShaderStageCreateInfo>* shaderStageCreateInfo) const{
         ANTH_ASSERT(this->shaderModules->vertexShaderModuleCreated,"Shader module not created");
 
         VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = {};

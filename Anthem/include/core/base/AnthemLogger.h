@@ -63,6 +63,14 @@ namespace Anthem{
                 this->log_wrapper(func,"ERROR",f,args);
                 exit(1);
             }
+            template<typename... _Args>
+            void log_assert2(const char* func, bool cond, std::tuple<_Args...> args){
+                if(!cond){
+                    std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
+                    this->log_wrapper(func,"ASSERT",f,args);
+                    exit(1);
+                }
+            }
 
             template<typename Tt, typename Tf>
             void logiif(bool condition, Tt trueMsg, Tf falseMsg){

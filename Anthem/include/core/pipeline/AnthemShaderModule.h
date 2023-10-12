@@ -1,3 +1,4 @@
+#pragma once
 #include "../base/AnthemBaseImports.h"
 #include "../utils/AnthemUtlFileReaderBase.h"
 #include "../base/AnthemLogicalDevice.h"
@@ -11,8 +12,8 @@ namespace Anthem::Core{
 
     struct AnthemShaderModulesGroup{
         bool vertexShaderModuleCreated = false;
-        std::optional<VkShaderModule> vertexShaderModule;
-        std::optional<VkShaderModule> fragmentShaderModule;
+        std::optional<VkShaderModule> vertexShaderModule = std::make_optional<VkShaderModule>();
+        std::optional<VkShaderModule> fragmentShaderModule =  std::make_optional<VkShaderModule>();
     };
 
     class AnthemShaderModule: private Util::AnthemUtlFileReaderBase{
@@ -22,6 +23,6 @@ namespace Anthem::Core{
         bool createShaderModules(AnthemLogicalDevice* device,const AnthemShaderFilePaths* filename); 
         bool createSingleShaderModule(AnthemLogicalDevice* device,std::vector<char>* shaderCode,std::optional<VkShaderModule>* shaderModule);
         bool destroyShaderModules(AnthemLogicalDevice* device);
-        bool specifyShaderStageCreateInfo(std::vector<VkPipelineShaderStageCreateInfo>* shaderStageCreateInfo);
+        bool specifyShaderStageCreateInfo(std::vector<VkPipelineShaderStageCreateInfo>* shaderStageCreateInfo) const;
     };
 }

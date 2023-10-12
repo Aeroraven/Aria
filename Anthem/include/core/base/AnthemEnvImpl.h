@@ -8,6 +8,10 @@
 #include "AnthemLogicalDeviceSelector.h"
 #include "AnthemWindowSurface.h"
 #include "AnthemSwapChain.h"
+#include "../pipeline/AnthemShaderModule.h"
+#include "../pipeline/AnthemGraphicsPipeline.h"
+#include "../pipeline/AnthemRenderPass.h"
+#include "../drawing/AnthemFramebufferList.h"
 
 namespace Anthem{
     namespace Core{
@@ -28,6 +32,13 @@ namespace Anthem{
             ANTH_SHARED_PTR(AnthemPhyDevice) phyDevice;
             ANTH_SHARED_PTR(AnthemLogicalDevice) logicalDevice;
 
+            ANTH_SHARED_PTR(AnthemShaderModule) shader;
+            ANTH_SHARED_PTR(AnthemGraphicsPipeline) graphicsPipeline;
+            ANTH_SHARED_PTR(AnthemViewport) viewport;
+            ANTH_SHARED_PTR(AnthemRenderPass) renderPass;
+
+            ANTH_SHARED_PTR(AnthemFramebufferList) framebufferList;
+
         public: //Member Functions
             AnthemEnvImpl(ANTH_SHARED_PTR(AnthemConfig) cfg);
             bool virtual createWindow(int w,int h) override;
@@ -39,7 +50,10 @@ namespace Anthem{
 
             void virtual initSwapChain();
             std::vector<const char*> virtual getRequiredExtensions();
-
+            void virtual loadShader();
+            void virtual initGraphicsPipeline();
+            void virtual initRenderPass();
+            void virtual initFramebuffer();
         };
     }
 }

@@ -33,7 +33,7 @@
     #define ANTH_LOGW(...) Anthem::Core::AnthemLogger::getInstance().logw2(ANTH_CLASSNAME,std::make_tuple(__VA_ARGS__))
     #define ANTH_LOGE(...) Anthem::Core::AnthemLogger::getInstance().loge2(ANTH_CLASSNAME,std::make_tuple(__VA_ARGS__))
     #define ANTH_DEPRECATED_MSG ANTH_LOGE("This function is deprecated")
-    #define ANTH_ASSERT Anthem::Core::AnthemLogger::getInstance().assert
+    #define ANTH_ASSERT(x,...) Anthem::Core::AnthemLogger::getInstance().log_assert2(ANTH_CLASSNAME,x,std::make_tuple(__VA_ARGS__))
     #define ANTH_ASSERT_FALLBACK Anthem::Core::AnthemLogger::getInstance().assert_fallback
     #define ANTH_LOGI_IF Anthem::Core::AnthemLogger::getInstance().logiif
 
@@ -43,7 +43,7 @@
     #define ANTH_LOGW(...)
     #define ANTH_LOGE(...)
     #define ANTH_DEPRECATED_MSG
-    #define ANTH_ASSERT Anthem::Core::AnthemLogger::getInstance().assert
+    #define ANTH_ASSERT(x,...) Anthem::Core::AnthemLogger::getInstance().log_assert2(ANTH_CLASSNAME,x,std::make_tuple(__VA_ARGS__))
     #define ANTH_ASSERT_FALLBACK Anthem::Core::AnthemLogger::getInstance().assert_fallback
     #define ANTH_LOGI_IF(...)
 
