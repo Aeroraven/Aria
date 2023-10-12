@@ -42,6 +42,9 @@ namespace Anthem::Entry{
         ANTH_SHARED_PTR(AnthemCommandManager) commandManager;
         ANTH_SHARED_PTR(AnthemMainLoopSyncer) mainLoopSyncer;
 
+        int currentFrame = 0;
+        bool resizeStatusFlag = false;
+
     public: //Member Functions
         AnthemEnvImpl(ANTH_SHARED_PTR(AnthemConfig) cfg);
         bool virtual createWindow() override;
@@ -52,7 +55,6 @@ namespace Anthem::Entry{
         void virtual init() override;
 
         void virtual initSwapChain();
-        std::vector<const char*> virtual getRequiredExtensions();
         void virtual loadShader();
         void virtual initGraphicsPipeline();
         void virtual initRenderPass();
@@ -61,6 +63,9 @@ namespace Anthem::Entry{
         void virtual initCommandManager();
         void virtual initSyncObjects();
         void virtual drawFrame();
+
+        void virtual destroySwapChain();
+        void virtual recreateSwapChain();
     };
 }
 

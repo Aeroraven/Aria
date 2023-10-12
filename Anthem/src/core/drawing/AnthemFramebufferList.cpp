@@ -24,7 +24,7 @@ namespace Anthem::Core{
                 ANTH_LOGE("Failed to create framebuffer");
                 return false;
             }
-            ANTH_LOGI("Framebuffer created, idx=",i);
+            ANTH_LOGI("Framebuffer created, idx=",i, "Width=",framebufferInfo.width," Height=",framebufferInfo.height);
         }
         return true;
     }

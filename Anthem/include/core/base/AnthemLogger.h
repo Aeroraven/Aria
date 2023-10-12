@@ -13,6 +13,7 @@ namespace Anthem{
     namespace Core{
         class AnthemLogger {
         private:
+            const int logLevel = 1;
             AnthemLogger();
         public:
             static auto getInstance(){
@@ -51,7 +52,12 @@ namespace Anthem{
             void log_content(std::tuple<_Args...> args){
                 std::apply([](auto&&... args) {((std::cout << args << " "), ...)<<std::endl;}, args);
             }
-
+            template<typename... _Args>
+            void logv2(const char* func, std::tuple<_Args...> args){
+                if(this->logLevel>=1) return;
+                std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
+                this->log_wrapper(func,"DEBUG",f,args);
+            }
             template<typename... _Args>
             void logi2(const char* func, std::tuple<_Args...> args){
                 std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);

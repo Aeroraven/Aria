@@ -3,6 +3,7 @@
 #include "../utils/AnthemUtlLogicalDeviceReqBase.h"
 #include "../utils/AnthemUtlPhyDeviceReqBase.h"
 #include "../utils/AnthemUtlSwapChainReqBase.h"
+#include "../utils/AnthemUtlAppConfigReqBase.h"
 #include "../pipeline/AnthemRenderPass.h"
 #include "../drawing/AnthemFramebufferList.h"
 #include "../pipeline/AnthemGraphicsPipeline.h"
@@ -18,11 +19,13 @@ namespace Anthem::Core{
     };
 
     class AnthemCommandManager: public Util::AnthemUtlLogicalDeviceReqBase, 
-        public Util::AnthemUtlPhyDeviceReqBase, public Util::AnthemUtlSwapChainReqBase{
+        public Util::AnthemUtlPhyDeviceReqBase, public Util::AnthemUtlSwapChainReqBase,
+        public Util::AnthemUtlConfigReqBase{
     private:
         VkCommandPoolCreateInfo poolCreateInfo = {};
         VkCommandPool commandPool;
-        VkCommandBuffer commandBuffer;
+
+        std::vector<VkCommandBuffer> commandBuffer;
 
         bool commandPoolCreated = false;
         bool commandBufferStarted = false;
@@ -33,15 +36,15 @@ namespace Anthem::Core{
 
         bool virtual createCommandBuffer();
         bool virtual destroyCommandBuffer();
-        bool virtual resetCommandBuffer();
+        bool virtual resetCommandBuffer(uint32_t frameIdx);
 
-        bool virtual startCommandRecording();
-        bool virtual endCommandRecording();
+        bool virtual startCommandRecording(uint32_t frameIdx);
+        bool virtual endCommandRecording(uint32_t frameIdx);
 
-        bool virtual startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo);
-        bool virtual demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport);
-        bool virtual endRenderPass();
+        bool virtual startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx);
+        bool virtual demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,uint32_t frameIdx);
+        bool virtual endRenderPass(uint32_t frameIdx);
 
-        const VkCommandBuffer* getCommandBuffer() const;
+        const VkCommandBuffer* getCommandBuffer(uint32_t frameIdx) const;
     };
 }

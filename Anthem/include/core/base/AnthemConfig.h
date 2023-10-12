@@ -5,11 +5,11 @@ namespace Anthem{
     namespace Core{
         class AnthemConfig {
         public:
-            const char* APP_NAME;
-            const char* ENGINE_NAME;
+            const char* APP_NAME = "Anthem";
+            const char* ENGINE_NAME = "No Engine?";
             
-            int APP_RESLOUTION_W;
-            int APP_RESLOUTION_H;
+            int APP_RESLOUTION_W = 1024;
+            int APP_RESLOUTION_H = 768;
 
             std::vector<const char*> VKCFG_VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
             bool VKCFG_ENABLE_VALIDATION_LAYERS = true;
