@@ -151,4 +151,13 @@ namespace Anthem::Core{
         }
         return true;
     }
+    uint32_t AnthemSwapChain::getSwapChainExtentHeight() const{
+        return this->scExtent.height;
+    }
+    uint32_t AnthemSwapChain::getSwapChainExtentWidth() const{
+        return this->scExtent.width;
+    }
+    const VkExtent2D* AnthemSwapChain::getSwapChainExtent() const{
+        return &(this->scExtent);
+    }
 }

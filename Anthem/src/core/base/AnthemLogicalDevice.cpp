@@ -8,7 +8,7 @@ namespace Anthem::Core{
         this->logicalDevice = device;
         return true;
     }
-    VkDevice AnthemLogicalDevice::getLogicalDevice(){
+    VkDevice AnthemLogicalDevice::getLogicalDevice() const{
         ANTH_ASSERT(this->logicalDevice != VK_NULL_HANDLE,"Logical device not specified");
         return this->logicalDevice;
     }

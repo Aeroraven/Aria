@@ -19,6 +19,7 @@ namespace Anthem::Core{
         VkPresentModeKHR specifiedPresentMode;
         VkSurfaceFormatKHR specifiedSurfaceFormat;
         VkExtent2D scExtent;
+        
         VkSwapchainKHR swapChain;
 
         bool reqInfoSpecified = false;
@@ -36,5 +37,9 @@ namespace Anthem::Core{
         bool virtual retrieveSwapChainImages(AnthemLogicalDevice* device);
         bool virtual createSwapChainImageViews(AnthemLogicalDevice* device);
         bool virtual destroySwapChainImageViews(AnthemLogicalDevice* device);
+
+        uint32_t virtual getSwapChainExtentWidth() const;
+        uint32_t virtual getSwapChainExtentHeight() const;
+        const VkExtent2D* getSwapChainExtent() const;
     };
 }

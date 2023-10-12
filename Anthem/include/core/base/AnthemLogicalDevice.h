@@ -10,7 +10,7 @@ namespace Anthem::Core{
     public:
         AnthemLogicalDevice();
         bool virtual specifyDevice(VkDevice device);
-        VkDevice virtual getLogicalDevice();
+        VkDevice virtual getLogicalDevice() const;
         bool virtual destroyLogicalDevice(VkInstance* instance);
     };
 
