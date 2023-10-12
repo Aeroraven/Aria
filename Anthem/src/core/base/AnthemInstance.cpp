@@ -1,6 +1,23 @@
 #include "../../../include/core/base/AnthemInstance.h"
 
 namespace Anthem::Core{
+    bool AnthemInstance::callResizeHandler(int w,int h){
+        this->resizeHandler(w,h);\
+        return true;
+    }
+    bool AnthemInstance::specifyResizeHandler(std::function<void(int,int)> handler){
+        this->resizeHandler = handler;
+        return true;
+    }
+    bool AnthemInstance::waitForFramebufferReady(){
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(window, &width, &height);
+        while (width == 0 || height == 0) {
+            glfwGetFramebufferSize(window, &width, &height);
+            glfwWaitEvents();
+        }
+        return true;
+    }
     bool AnthemInstance::createWindow(){
         ANTH_ASSERT(config != nullptr, "Config not specified");
         auto w = config->APP_RESLOUTION_W;
@@ -13,11 +30,20 @@ namespace Anthem::Core{
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         this->window = glfwCreateWindow(w, h, config->APP_NAME, NULL, NULL);
-    
+
         if(window==nullptr){
             ANTH_LOGI("Failed to create window");
             return false;
         }
+
+        //Setup Resize Handler
+        auto fbResizeCallback = [](GLFWwindow* window, int width, int height){
+            auto app = reinterpret_cast<AnthemInstance*>(glfwGetWindowUserPointer(window));
+            app->callResizeHandler(width,height);
+        };
+        glfwSetWindowUserPointer(window,this);
+        glfwSetFramebufferSizeCallback(this->window,fbResizeCallback);
+        
         return true;
     }
     bool AnthemInstance::destroyWindow(){

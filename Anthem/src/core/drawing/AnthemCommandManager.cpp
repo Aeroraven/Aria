@@ -27,60 +27,62 @@ namespace Anthem::Core{
     }
     bool AnthemCommandManager::createCommandBuffer(){
         ANTH_ASSERT(this->commandPoolCreated,"Command pool not created");
+        ANTH_ASSERT(this->config != nullptr,"Config not specified");
+        this->commandBuffer.resize(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
 
         VkCommandBufferAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = this->commandPool;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = 1;
+        allocInfo.commandBufferCount = this->commandBuffer.size();
 
-        if(vkAllocateCommandBuffers(this->logicalDevice->getLogicalDevice(),&allocInfo,&commandBuffer)!=VK_SUCCESS){
+        if(vkAllocateCommandBuffers(this->logicalDevice->getLogicalDevice(),&allocInfo,commandBuffer.data())!=VK_SUCCESS){
             ANTH_LOGE("Failed to allocate command buffer");
             return false;
         }
-        ANTH_LOGI("Command buffer allocated");
+        ANTH_LOGV("Command buffer allocated");
         return true;
     }
     bool AnthemCommandManager::destroyCommandBuffer(){
-        ANTH_LOGI("Destroying command buffer");
-        vkFreeCommandBuffers(this->logicalDevice->getLogicalDevice(),this->commandPool,1,&commandBuffer);
+        //ANTH_LOGI("Destroying command buffer");
+        //vkFreeCommandBuffers(this->logicalDevice->getLogicalDevice(),this->commandPool,1,&commandBuffer);
         return true;
     }
-    bool AnthemCommandManager::resetCommandBuffer(){
+    bool AnthemCommandManager::resetCommandBuffer(uint32_t frameIdx){
         ANTH_ASSERT(this->commandPoolCreated,"Command pool not created");
-        if(vkResetCommandBuffer(commandBuffer,0)!=VK_SUCCESS){
-            ANTH_LOGE("Failed to reset command buffer");
+        if(vkResetCommandBuffer(commandBuffer[frameIdx],0)!=VK_SUCCESS){
+            ANTH_LOGE("Failed to reset command buffer, Id=", frameIdx);
             return false;
         }
-        ANTH_LOGI("Command buffer reset");
+        ANTH_LOGV("Command buffer reset");
         return true;
     }
-    bool AnthemCommandManager::startCommandRecording(){
-        ANTH_LOGI("Starting command recording");
+    bool AnthemCommandManager::startCommandRecording(uint32_t frameIdx){
+        ANTH_LOGV("Starting command recording");
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = 0;
         beginInfo.pInheritanceInfo = nullptr;
 
-        if(vkBeginCommandBuffer(commandBuffer,&beginInfo)!=VK_SUCCESS){
+        if(vkBeginCommandBuffer(commandBuffer[frameIdx],&beginInfo)!=VK_SUCCESS){
             ANTH_LOGE("Failed to begin command buffer recording");
             return false;
         }
-        ANTH_LOGI("Command recording started");
+        ANTH_LOGV("Command recording started");
         this->commandBufferStarted = true;
         return true;
     }
-    bool AnthemCommandManager::endCommandRecording(){
-        ANTH_LOGI("Ending command recording");
-        if(vkEndCommandBuffer(commandBuffer)!=VK_SUCCESS){
+    bool AnthemCommandManager::endCommandRecording(uint32_t frameIdx){
+        ANTH_LOGV("Ending command recording");
+        if(vkEndCommandBuffer(commandBuffer[frameIdx])!=VK_SUCCESS){
             ANTH_LOGE("Failed to end command buffer recording");
             return false;
         }
-        ANTH_LOGI("Command recording ended");
+        ANTH_LOGV("Command recording ended");
         this->commandBufferStarted = false;
         return true;
     }
-    bool AnthemCommandManager::startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo){
+    bool AnthemCommandManager::startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx){
         ANTH_ASSERT(this->commandBufferStarted,"Command buffer not started");
         ANTH_ASSERT(swapChain != nullptr,"Swap chain not specified");
 
@@ -93,30 +95,30 @@ namespace Anthem::Core{
         renderPassBeginInfo.clearValueCount = 1;
         renderPassBeginInfo.pClearValues = &(startInfo->clearValue);
 
-        ANTH_LOGI("Starting render pass");
-        vkCmdBeginRenderPass(commandBuffer,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
-        ANTH_LOGI("Render pass started");
+        ANTH_LOGV("Starting render pass");
+        vkCmdBeginRenderPass(commandBuffer[frameIdx],&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        ANTH_LOGV("Render pass started");
         return true;
     }
 
-    bool AnthemCommandManager::endRenderPass(){
+    bool AnthemCommandManager::endRenderPass(uint32_t frameIdx){
         ANTH_ASSERT(this->commandBufferStarted,"Command buffer not started");
-        vkCmdEndRenderPass(commandBuffer);
+        vkCmdEndRenderPass(commandBuffer[frameIdx]);
         return true;
     }
-    bool AnthemCommandManager::demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport){
+    bool AnthemCommandManager::demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,uint32_t frameIdx){
         ANTH_ASSERT(this->commandBufferStarted,"Command buffer not started");
         ANTH_ASSERT(pipeline != nullptr,"Pipeline not specified");
         ANTH_ASSERT(viewport != nullptr,"Viewport not specified");
 
-        vkCmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,*(pipeline->getPipeline()));
-        vkCmdSetViewport(commandBuffer,0,1,viewport->getViewport());
-        vkCmdSetScissor(commandBuffer,0,1,viewport->getScissor());
-        vkCmdDraw(commandBuffer,3,1,0,0);
+        vkCmdBindPipeline(commandBuffer[frameIdx],VK_PIPELINE_BIND_POINT_GRAPHICS,*(pipeline->getPipeline()));
+        vkCmdSetViewport(commandBuffer[frameIdx],0,1,viewport->getViewport());
+        vkCmdSetScissor(commandBuffer[frameIdx],0,1,viewport->getScissor());
+        vkCmdDraw(commandBuffer[frameIdx],3,1,0,0);
         return true;
     }
-    const VkCommandBuffer* AnthemCommandManager::getCommandBuffer() const{
-        return &(this->commandBuffer);
+    const VkCommandBuffer* AnthemCommandManager::getCommandBuffer(uint32_t frameIdx) const{
+        return &(this->commandBuffer[frameIdx]);
     }
     
 }

@@ -61,7 +61,9 @@ namespace Anthem::Core{
             actualExtent.height = std::max(this->specifiedSwapChainDetails->capabilities.minImageExtent.height,std::min(this->specifiedSwapChainDetails->capabilities.maxImageExtent.height,actualExtent.height));
             this->scExtent = actualExtent;
         }
-
+        ANTH_LOGI("Extent Width:",scExtent.width);
+        ANTH_LOGI("Extent Height:",scExtent.height);
+        
         //Set Status Flag
         this->reqInfoSpecified = true;
         return true;

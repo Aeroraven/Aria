@@ -9,6 +9,8 @@ namespace Anthem::Core{
         VkApplicationInfo appInfo = {};
         VkInstanceCreateInfo createInfo = {};
         VkInstance instance;
+
+        std::function<void(int,int)> resizeHandler = [](int,int){};
     public:
         bool virtual createWindow();
         bool virtual destroyWindow();
@@ -21,7 +23,12 @@ namespace Anthem::Core{
         const VkInstanceCreateInfo* getCreateInfo() const;
         const void** getCreateInfoPNext();
         const GLFWwindow* getWindow() const;
+
+        bool virtual specifyResizeHandler(std::function<void(int,int)> handler);
+        bool virtual callResizeHandler(int w,int h);
+        bool virtual waitForFramebufferReady();
     private:
         std::vector<const char*> getRequiredExtensions();
+        
     };
 }

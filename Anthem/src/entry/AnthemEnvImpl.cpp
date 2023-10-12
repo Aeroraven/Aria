@@ -23,18 +23,43 @@ namespace Anthem::Entry{
             auto w = this->instance->getCreateInfo()->pNext;
             valLayer->fillingPointerData(this->instance->getCreateInfoPNext());
         }
+        this->instance->specifyResizeHandler([&](int w,int h){
+            ANTH_LOGI("Window resized, w=",w," h=",h);
+            this->resizeStatusFlag = true;
+        });
+    }
+    void AnthemEnvImpl::destroySwapChain(){
+         //Destroy Framebuffer
+        framebufferList->destroyFramebuffers();
+
+        //Destroy Swap Chain Stuffs
+        swapChain->destroySwapChainImageViews(this->logicalDevice.get());
+        swapChain->destroySwapChain(this->logicalDevice.get());
+    }
+    void AnthemEnvImpl::recreateSwapChain(){
+        ANTH_LOGW("Recreating Swapchain");
+        this->instance->waitForFramebufferReady();
+        this->logicalDevice->waitForIdle();
+
+        this->destroySwapChain();
+        this->swapChain->specifySwapChainDetails(this->phyDevice.get(),this->instance->getWindow());
+        this->swapChain->createSwapChain(this->logicalDevice.get(),this->phyDevice.get());
+        this->swapChain->retrieveSwapChainImages(this->logicalDevice.get());
+        this->swapChain->createSwapChainImageViews(this->logicalDevice.get());
+        this->viewport->prepareViewportState();
+        this->initFramebuffer();
     }
     void AnthemEnvImpl::destroyEnv(){
         ANTH_LOGI("Destroying environment");
+        
+        this->destroySwapChain();
+
         //Destroy Sync Objects
         mainLoopSyncer->destroySyncObjects();
 
         //Destroy Command Objects
         commandManager->destroyCommandPool();
-
-        //Destroy Framebuffer
-        framebufferList->destroyFramebuffers();
-
+       
         //Destroy Graphics Pipeline
         graphicsPipeline->destroyPipeline();
         graphicsPipeline->destroyPipelineLayout();
@@ -42,10 +67,6 @@ namespace Anthem::Entry{
 
         //Destroy Render Pawss
         renderPass->destroyRenderPass();
-
-        //Destroy Swap Chain Stuffs
-        swapChain->destroySwapChainImageViews(this->logicalDevice.get());
-        swapChain->destroySwapChain(this->logicalDevice.get());
 
         //Destroy Device & Layers
         logicalDevice->destroyLogicalDevice(this->instance->getInstance());
@@ -102,17 +123,7 @@ namespace Anthem::Entry{
         this->init();
         this->drawLoop();
         this->destroyEnv();
-    }
-    std::vector<const char*> AnthemEnvImpl::getRequiredExtensions(){
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-        std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-        if(cfg->VKCFG_ENABLE_VALIDATION_LAYERS){
-            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        }
-        return extensions;
-    }   
+    } 
     void AnthemEnvImpl::initSwapChain(){
         this->swapChain = ANTH_MAKE_SHARED(AnthemSwapChain)(this->windowSurface);
     }
@@ -156,6 +167,7 @@ namespace Anthem::Entry{
     void AnthemEnvImpl::initCommandManager(){
         this->commandManager = ANTH_MAKE_SHARED(AnthemCommandManager)();
         this->commandManager->specifyLogicalDevice(this->logicalDevice.get());
+        this->commandManager->specifyConfig(this->cfg.get());
         this->commandManager->specifyPhyDevice(this->phyDevice.get());
         this->commandManager->specifySwapChain(this->swapChain.get());
         this->commandManager->createCommandPool();
@@ -164,31 +176,53 @@ namespace Anthem::Entry{
     void AnthemEnvImpl::initSyncObjects(){
         this->mainLoopSyncer = ANTH_MAKE_SHARED(AnthemMainLoopSyncer)();
         this->mainLoopSyncer->specifyLogicalDevice(this->logicalDevice.get());
+        this->mainLoopSyncer->specifyConfig(this->cfg.get());
         this->mainLoopSyncer->specifySwapChain(this->swapChain.get());
         this->mainLoopSyncer->createSyncObjects();
     }
     void AnthemEnvImpl::drawFrame(){
-        ANTH_LOGI("Start Drawing");
-        this->mainLoopSyncer->waitForPrevFrame();
-        auto imageIdx = this->mainLoopSyncer->acquireNextFrame();
-        ANTH_LOGI("Acquired Image Idx=",imageIdx);
-        this->commandManager->resetCommandBuffer();
+        ANTH_LOGV("Start Drawing");
+        this->mainLoopSyncer->waitForPrevFrame(currentFrame);
+        auto imageIdx = this->mainLoopSyncer->acquireNextFrame(currentFrame,[&](){
+            this->recreateSwapChain();
+            this->resizeStatusFlag = false;
+        });
+        if(imageIdx == UINT32_MAX){
+            ANTH_LOGW("Suboptimal Swap Chain, drawFrame interrupted");
+            return;
+        }
 
-        ANTH_LOGI("Wait For Command");
+        ANTH_LOGV("Acquired Image Idx=",imageIdx);
+        this->commandManager->resetCommandBuffer(currentFrame);
+
+        ANTH_LOGV("Wait For Command");
         AnthemCommandManagerRenderPassStartInfo beginInfo = {
             .renderPass = this->renderPass.get(),
             .framebufferList = this->framebufferList.get(),
             .framebufferIdx = imageIdx,
             .clearValue = {{{0.0f,0.0f,0.0f,1.0f}}},
         };
-        this->commandManager->startCommandRecording();
-        this->commandManager->startRenderPass(&beginInfo);
-        this->commandManager->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get());
-        this->commandManager->endRenderPass();
-        this->commandManager->endCommandRecording();
+        this->commandManager->startCommandRecording(currentFrame);
+        this->commandManager->startRenderPass(&beginInfo,currentFrame);
+        this->commandManager->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get(),currentFrame);
+        this->commandManager->endRenderPass(currentFrame);
+        this->commandManager->endCommandRecording(currentFrame);
 
-        this->mainLoopSyncer->submitCommandBuffer(this->commandManager->getCommandBuffer());
-        this->mainLoopSyncer->presentFrame(imageIdx);
+        this->mainLoopSyncer->submitCommandBuffer(this->commandManager->getCommandBuffer(currentFrame),currentFrame);
+        
+        //Presentation
+        auto presentRes = this->mainLoopSyncer->presentFrame(imageIdx,currentFrame,[&](){
+            this->recreateSwapChain();
+            this->resizeStatusFlag = false;
+        });
+        if(this->resizeStatusFlag){
+            this->recreateSwapChain();
+            this->resizeStatusFlag = false;
+        }
+        if(!presentRes){
+            ANTH_LOGW("Suboptimal Swap Chain, drawFrame interrupted");
+        }
+        currentFrame = (currentFrame+1)%this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;
     }
     
 }
