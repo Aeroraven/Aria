@@ -35,4 +35,8 @@ namespace Anthem::Core{
         }
         return true;
     }
+    const VkFramebuffer* AnthemFramebufferList::getFramebuffer(uint32_t index) const{
+        ANTH_ASSERT(index < this->framebuffers.size(),"Invalid index");
+        return &(this->framebuffers[index]);
+    }
 }

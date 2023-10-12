@@ -12,6 +12,8 @@
 #include "../pipeline/AnthemGraphicsPipeline.h"
 #include "../pipeline/AnthemRenderPass.h"
 #include "../drawing/AnthemFramebufferList.h"
+#include "../drawing/AnthemCommandManager.h"
+#include "../drawing/AnthemMainLoopSyncer.h"
 
 namespace Anthem{
     namespace Core{
@@ -38,6 +40,8 @@ namespace Anthem{
             ANTH_SHARED_PTR(AnthemRenderPass) renderPass;
 
             ANTH_SHARED_PTR(AnthemFramebufferList) framebufferList;
+            ANTH_SHARED_PTR(AnthemCommandManager) commandManager;
+            ANTH_SHARED_PTR(AnthemMainLoopSyncer) mainLoopSyncer;
 
         public: //Member Functions
             AnthemEnvImpl(ANTH_SHARED_PTR(AnthemConfig) cfg);
@@ -53,7 +57,11 @@ namespace Anthem{
             void virtual loadShader();
             void virtual initGraphicsPipeline();
             void virtual initRenderPass();
+
             void virtual initFramebuffer();
+            void virtual initCommandManager();
+            void virtual initSyncObjects();
+            void virtual drawFrame();
         };
     }
 }

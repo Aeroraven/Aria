@@ -166,4 +166,7 @@ namespace Anthem::Core{
     const std::vector<VkImageView>* AnthemSwapChain::getSwapChainImageViews() const{
         return &(this->swapChainImageViews);
     }
+    const VkSwapchainKHR* AnthemSwapChain::getSwapChain() const{
+        return &(this->swapChain);
+    }
 }

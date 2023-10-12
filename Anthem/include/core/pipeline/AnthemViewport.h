@@ -15,8 +15,8 @@ namespace Anthem::Core{
         bool specifySwapChain(const AnthemSwapChain* swapChain);
         bool prepareViewportState();
         
-        const VkViewport* getViewport();
-        const VkRect2D* getScissor();
+        const VkViewport* getViewport() const;
+        const VkRect2D* getScissor() const;
         bool getViewportStateCreateInfo(VkPipelineViewportStateCreateInfo* outCreateInfo) const;
     };
 

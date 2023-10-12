@@ -41,4 +41,12 @@ namespace Anthem::Core{
         outCreateInfo->pScissors = &(this->scissor);
         return true;
     }
+    const VkViewport* AnthemViewport::getViewport() const{
+        ANTH_ASSERT(this->viewportPrepared,"Viewport not prepared");
+        return &(this->viewport);
+    }
+    const VkRect2D* AnthemViewport::getScissor() const{
+        ANTH_ASSERT(this->viewportPrepared,"Viewport not prepared");
+        return &(this->scissor);
+    }
 }

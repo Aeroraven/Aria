@@ -44,5 +44,6 @@ namespace Anthem::Core{
         const VkSurfaceFormatKHR* getSwapChainSurfaceFormat() const;
 
         const std::vector<VkImageView>* getSwapChainImageViews() const;
+        const VkSwapchainKHR* getSwapChain() const;
     };
 }

@@ -25,8 +25,8 @@ namespace Anthem::Core{
         VkPhysicalDevice virtual getPhysicalDevice();
         VkPhysicalDeviceFeatures virtual getDeviceFeatures();
         VkPhysicalDeviceProperties virtual getDeviceProperties();
-        std::optional<uint32_t> virtual getPhyQueueGraphicsFamilyIndice();
-        std::optional<uint32_t> virtual getPhyQueuePresentFamilyIndice();
+        std::optional<uint32_t> virtual getPhyQueueGraphicsFamilyIndice() const;
+        std::optional<uint32_t> virtual getPhyQueuePresentFamilyIndice() const;
         const std::vector<const char*>* const getRequiredDevSupportedExts() const;
         bool virtual destroyPhyDevice(VkInstance* instance);
     };

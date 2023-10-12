@@ -29,9 +29,10 @@ namespace Anthem{
         }
         void AnthemEnvImpl::drawLoop(){
             while(!glfwWindowShouldClose(this->window)){
-                glfwSwapBuffers(this->window);
                 glfwPollEvents();
+                this->drawFrame();
             }
+            this->logicalDevice->waitForIdle();
         }
         void AnthemEnvImpl::createInstance(){
             //Checking for layer support
@@ -72,6 +73,12 @@ namespace Anthem{
         }
         void AnthemEnvImpl::destroyEnv(){
             ANTH_LOGI("Destroying environment");
+            //Destroy Sync Objects
+            mainLoopSyncer->destroySyncObjects();
+            
+            //Destroy Command Objects
+            commandManager->destroyCommandPool();
+
             //Destroy Framebuffer
             framebufferList->destroyFramebuffers();
 
@@ -98,7 +105,6 @@ namespace Anthem{
             glfwTerminate();
         }
         void AnthemEnvImpl::init(){
-            ANTH_LOGI(__PRETTY_FUNCTION__);
             //Startup
             this->createWindow(cfg->APP_RESLOUTION_W,cfg->APP_RESLOUTION_H);
             this->initSwapChain();
@@ -133,8 +139,12 @@ namespace Anthem{
             this->loadShader();
             this->initGraphicsPipeline();
 
-            //Create Framebuffer
+            //Create Drawing Objects
             this->initFramebuffer();
+            this->initCommandManager();
+            this->initSyncObjects();
+
+            ANTH_LOGI("Environment initialized");
         }
         void AnthemEnvImpl::run(){
             this->init();
@@ -190,6 +200,43 @@ namespace Anthem{
             this->framebufferList = ANTH_MAKE_SHARED(AnthemFramebufferList)();
             this->framebufferList->specifyLogicalDevice(this->logicalDevice.get());
             this->framebufferList->createFramebuffersFromSwapChain(this->swapChain.get(),this->renderPass.get());
+        }
+        void AnthemEnvImpl::initCommandManager(){
+            this->commandManager = ANTH_MAKE_SHARED(AnthemCommandManager)();
+            this->commandManager->specifyLogicalDevice(this->logicalDevice.get());
+            this->commandManager->specifyPhyDevice(this->phyDevice.get());
+            this->commandManager->specifySwapChain(this->swapChain.get());
+            this->commandManager->createCommandPool();
+            this->commandManager->createCommandBuffer();
+        }
+        void AnthemEnvImpl::initSyncObjects(){
+            this->mainLoopSyncer = ANTH_MAKE_SHARED(AnthemMainLoopSyncer)();
+            this->mainLoopSyncer->specifyLogicalDevice(this->logicalDevice.get());
+            this->mainLoopSyncer->specifySwapChain(this->swapChain.get());
+            this->mainLoopSyncer->createSyncObjects();
+        }
+        void AnthemEnvImpl::drawFrame(){
+            ANTH_LOGI("Start Drawing");
+            this->mainLoopSyncer->waitForPrevFrame();
+            auto imageIdx = this->mainLoopSyncer->acquireNextFrame();
+            ANTH_LOGI("Acquired Image Idx=",imageIdx);
+            this->commandManager->resetCommandBuffer();
+
+            ANTH_LOGI("Wait For Command");
+            AnthemCommandManagerRenderPassStartInfo beginInfo = {
+                .renderPass = this->renderPass.get(),
+                .framebufferList = this->framebufferList.get(),
+                .framebufferIdx = imageIdx,
+                .clearValue = {{{0.0f,0.0f,0.0f,1.0f}}},
+            };
+            this->commandManager->startCommandRecording();
+            this->commandManager->startRenderPass(&beginInfo);
+            this->commandManager->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get());
+            this->commandManager->endRenderPass();
+            this->commandManager->endCommandRecording();
+
+            this->mainLoopSyncer->submitCommandBuffer(this->commandManager->getCommandBuffer());
+            this->mainLoopSyncer->presentFrame(imageIdx);
         }
     }
 }

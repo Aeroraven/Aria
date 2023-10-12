@@ -31,7 +31,7 @@ namespace Anthem::Core{
         colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         this->colorAttachments.push_back(colorAttachment);
 
         //Create Attachment Reference
@@ -46,6 +46,15 @@ namespace Anthem::Core{
         subpass.colorAttachmentCount = this->colorAttachmentReferences.size();
         subpass.pColorAttachments = this->colorAttachmentReferences.data();
 
+        //Create Subpass Dependencies
+        VkSubpassDependency subpassDependency = {};
+        subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpassDependency.dstSubpass = 0;
+        subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependency.srcAccessMask = 0;
+        subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
         //Create Render Pass
         VkRenderPassCreateInfo renderPassCreateInfo = {};
         renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -53,6 +62,8 @@ namespace Anthem::Core{
         renderPassCreateInfo.pAttachments = this->colorAttachments.data();
         renderPassCreateInfo.subpassCount = 1;
         renderPassCreateInfo.pSubpasses = &subpass;
+        renderPassCreateInfo.dependencyCount = 1;
+        renderPassCreateInfo.pDependencies = &subpassDependency;
 
         auto result = vkCreateRenderPass(this->logicalDevice->getLogicalDevice(),&renderPassCreateInfo,nullptr,&(this->renderPass));
         if(result != VK_SUCCESS){

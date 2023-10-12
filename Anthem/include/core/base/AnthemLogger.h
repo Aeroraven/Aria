@@ -4,6 +4,11 @@
 #include <ctime>
 #include <cstring>
 
+#define ANTH_LOGGER_RED     "\033[31m"     
+#define ANTH_LOGGER_GREEN   "\033[32m"     
+#define ANTH_LOGGER_YELLOW  "\033[33m"     
+#define ANTH_LOGGER_RESET   "\033[0m"
+#define ANTH_LOGGER_CYAN    "\033[36m"      
 namespace Anthem{
     namespace Core{
         class AnthemLogger {
@@ -16,7 +21,7 @@ namespace Anthem{
             }
 
             inline std::string className(const std::string& prettyFunction){
-                //https://stackoverflow.com/a/15775519
+                // Adapted from: https://stackoverflow.com/a/15775519
                 size_t colons = prettyFunction.find("(");
                 if (colons == std::string::npos)
                     return "::";
@@ -31,14 +36,14 @@ namespace Anthem{
                 auto timestamp = std::time(nullptr);
                 auto formattedTime = std::asctime(std::localtime(&timestamp));
                 formattedTime[strlen(formattedTime)-1] = '\0';
-                std::cout << "[" << level << "] (" << formattedTime << ") ";
+                std::cout << ANTH_LOGGER_CYAN << "["  << level << "] "<< ANTH_LOGGER_GREEN <<"(" << formattedTime << ") " << ANTH_LOGGER_RESET;
             }
  
 
             template<typename... _Args>
             void log_wrapper(const char* func, const char* level, std::function<void(std::tuple<_Args...>)> wrapper,std::tuple<_Args...> args){
                 this->log_prefix(level);
-                std::cout << "<" << func << ">: ";
+                std::cout << ANTH_LOGGER_RED << "<" << func << ">"<<ANTH_LOGGER_RESET<<" :";
                 wrapper(args);
             }
 

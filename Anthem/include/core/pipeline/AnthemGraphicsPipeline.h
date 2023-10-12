@@ -16,7 +16,7 @@ namespace Anthem::Core{
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
         std::vector<VkDynamicState> reqiredDynamicStates={
             VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_LINE_WIDTH
+            VK_DYNAMIC_STATE_SCISSOR
         };
         VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};
@@ -35,6 +35,7 @@ namespace Anthem::Core{
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
         VkPipelineLayout pipelineLayout = {};
 
+        bool pipelineCreated = false;
         VkPipeline pipeline;
         VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
 
@@ -50,5 +51,7 @@ namespace Anthem::Core{
         
         bool createPipeline();
         bool destroyPipeline();
+
+        const VkPipeline* getPipeline() const;
     };
 }

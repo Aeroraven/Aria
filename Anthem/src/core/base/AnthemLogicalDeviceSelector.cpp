@@ -71,6 +71,8 @@ namespace Anthem::Core{
     }
     bool AnthemLogicalDeviceSelector::getLogicalDevice(AnthemLogicalDevice* logicalDevice){
         logicalDevice->specifyDevice(this->logicalDevice);
+        logicalDevice->specifyGraphicsQueue(this->graphicsQueue);
+        logicalDevice->specifyPresentQueue(this->presentationQueue);
         return true;
     }
 }   

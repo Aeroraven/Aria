@@ -145,12 +145,18 @@ namespace Anthem::Core{
             return false;
         }
         ANTH_LOGI("Graphics pipeline created");
+        this->pipelineCreated = true;
         return true;
     }
 
     bool AnthemGraphicsPipeline::destroyPipeline(){
         ANTH_LOGI("Destroying graphics pipeline");
         vkDestroyPipeline(this->logicalDevice->getLogicalDevice(),this->pipeline,nullptr);
+        this->pipelineCreated = false;
         return true;
+    }
+    const VkPipeline* AnthemGraphicsPipeline::getPipeline() const{
+        ANTH_ASSERT(this->pipelineCreated,"Invalid pipeline");
+        return &(this->pipeline);
     }
 }

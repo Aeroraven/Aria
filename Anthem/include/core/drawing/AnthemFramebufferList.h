@@ -14,5 +14,6 @@ namespace Anthem::Core{
         bool virtual specifyLogicalDevice(const AnthemLogicalDevice* device);
         bool virtual createFramebuffersFromSwapChain(const AnthemSwapChain* swapChain,const AnthemRenderPass* renderPass);
         bool virtual destroyFramebuffers();
+        const VkFramebuffer* getFramebuffer(uint32_t index) const;
     };
 }
