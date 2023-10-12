@@ -52,7 +52,7 @@ namespace Anthem::Core{
         phyDevice->specifyDevice(this->physicalDevice,this->physicalDeviceQueueFamily);
         return true;
     }
-    bool AnthemPhyDeviceSelector::selectPhyDevice(VkInstance* instance, ANTH_SHARED_PTR(AnthemWindowSurface) surface){
+    bool AnthemPhyDeviceSelector::selectPhyDevice(const VkInstance* instance, ANTH_SHARED_PTR(AnthemWindowSurface) surface){
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(*instance, &deviceCount, nullptr);
         ANTH_ASSERT(deviceCount!=0,"Failed to find support");

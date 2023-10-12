@@ -12,7 +12,7 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->logicalDevice != VK_NULL_HANDLE,"Logical device not specified");
         return this->logicalDevice;
     }
-    bool AnthemLogicalDevice::destroyLogicalDevice(VkInstance* instance){
+    bool AnthemLogicalDevice::destroyLogicalDevice(const VkInstance* instance){
         vkDestroyDevice(this->logicalDevice,nullptr);
         this->specifiedDevice = false;
         return true;

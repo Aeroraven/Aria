@@ -24,7 +24,7 @@ namespace Anthem::Core{
         }
         return true;
     }
-    bool AnthemValLayer::destroyDebugMsgLayer(VkInstance* instance){
+    bool AnthemValLayer::destroyDebugMsgLayer(const VkInstance* instance){
         if(!cfg->VKCFG_ENABLE_VALIDATION_LAYERS){
             return true;
         }
@@ -38,7 +38,7 @@ namespace Anthem::Core{
         }
         return true;
     }
-    bool AnthemValLayer::createDebugMsgLayer(VkInstance* instance){
+    bool AnthemValLayer::createDebugMsgLayer(const VkInstance* instance){
         if(!cfg->VKCFG_ENABLE_VALIDATION_LAYERS){
             return true;
         }

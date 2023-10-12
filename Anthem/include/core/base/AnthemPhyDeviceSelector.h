@@ -16,7 +16,7 @@ namespace Anthem::Core{
         std::vector<const char*> requiredDeviceSupportedExtension = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
         
     public:
-        bool virtual selectPhyDevice(VkInstance* instance, ANTH_SHARED_PTR(AnthemWindowSurface) surface);
+        bool virtual selectPhyDevice(const VkInstance* instance, ANTH_SHARED_PTR(AnthemWindowSurface) surface);
         bool virtual checkDeviceExtensionSupport(VkPhysicalDevice device);
         ANTH_UNSAFE_PTR(AnthemPhyQueueFamilyIdx) findQueueFamilies(VkPhysicalDevice device,ANTH_SHARED_PTR(AnthemWindowSurface) surface);
         bool virtual getPhyDevice(AnthemPhyDevice* phyDevice);

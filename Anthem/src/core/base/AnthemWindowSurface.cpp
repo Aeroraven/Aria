@@ -1,7 +1,7 @@
 #include "../../../include/core/base/AnthemWindowSurface.h"
 
 namespace Anthem::Core{
-    bool AnthemWindowSurface::createWindowSurface(VkInstance* instance){
+    bool AnthemWindowSurface::createWindowSurface(const VkInstance* instance){
         auto result = glfwCreateWindowSurface(*instance,window,nullptr,&windowSurface);
         if(result != VK_SUCCESS){
             ANTH_LOGI("Failed to create window surface",result);
@@ -13,7 +13,7 @@ namespace Anthem::Core{
     AnthemWindowSurface::AnthemWindowSurface(GLFWwindow* window){
         this->window = window;
     }
-    bool AnthemWindowSurface::destroyWindowSurface(VkInstance* instance){
+    bool AnthemWindowSurface::destroyWindowSurface(const VkInstance* instance){
         ANTH_LOGI("Destroying window surface");
         vkDestroySurfaceKHR(*instance, windowSurface, nullptr);
         return true;

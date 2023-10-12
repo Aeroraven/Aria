@@ -13,8 +13,8 @@ namespace Anthem::Core{
         AnthemValLayer(ANTH_SHARED_PTR(AnthemConfig) cfg);
         virtual bool checkValidLayerSupport();
         virtual bool createDebugMsgLayerInfo();
-        virtual bool createDebugMsgLayer(VkInstance* instance);
-        virtual bool destroyDebugMsgLayer(VkInstance* instance);
+        virtual bool createDebugMsgLayer(const VkInstance* instance);
+        virtual bool destroyDebugMsgLayer(const VkInstance* instance);
         virtual bool fillingPointerData(const void** p);
         static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
             VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,void* pUserData) {

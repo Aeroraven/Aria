@@ -19,7 +19,7 @@ namespace Anthem::Core{
         VkQueue virtual getGraphicsQueue() const;
         VkQueue virtual getPresentQueue() const;
 
-        bool virtual destroyLogicalDevice(VkInstance* instance);
+        bool virtual destroyLogicalDevice(const VkInstance* instance) ;
         bool virtual waitForIdle() const;
     };
 

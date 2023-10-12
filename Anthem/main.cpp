@@ -1,13 +1,9 @@
-#include <iostream>
-#include <memory>
-#include "include/core/base/AnthemEnvImpl.h"
+#include "include/entry/AnthemEnvImpl.h"
 
 int main(){
-    ANTH_LOGI("Hello World!","Fucking");
-
+    ANTH_LOGI("Hello World!");
     auto cfg = ANTH_MAKE_SHARED(Anthem::Core::AnthemConfig)();
-    auto x = ANTH_MAKE_SHARED(Anthem::Core::AnthemEnvImpl)(cfg);
-    x->run();
-    std::cout << "Hello World!" << std::endl;
+    auto app = ANTH_MAKE_SHARED(Anthem::Entry::AnthemEnvImpl)(cfg);
+    app->run();
     return 0;
 }

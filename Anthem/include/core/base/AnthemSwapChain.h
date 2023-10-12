@@ -31,7 +31,7 @@ namespace Anthem::Core{
     public:
         AnthemSwapChain(ANTH_SHARED_PTR(AnthemWindowSurface) windowSurface);
         bool virtual prepareSwapChainInfo(VkPhysicalDevice phyDevice,AnthemSwapChainDetails& outDetails);
-        bool virtual specifySwapChainDetails(AnthemPhyDevice* phyDevice,GLFWwindow* window);
+        bool virtual specifySwapChainDetails(AnthemPhyDevice* phyDevice,const GLFWwindow* window);
         bool virtual createSwapChain(AnthemLogicalDevice* device,AnthemPhyDevice* phyDevice);
         bool virtual destroySwapChain(AnthemLogicalDevice* device);
         bool virtual retrieveSwapChainImages(AnthemLogicalDevice* device);

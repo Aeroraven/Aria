@@ -23,7 +23,7 @@ namespace Anthem::Core{
         
         return true;
     }
-    bool AnthemSwapChain::specifySwapChainDetails(AnthemPhyDevice* phyDevice,GLFWwindow* window){
+    bool AnthemSwapChain::specifySwapChainDetails(AnthemPhyDevice* phyDevice,const GLFWwindow* window){
         //Retrieve Swap Chain Details
         this->specifiedSwapChainDetails = ANTH_MAKE_SHARED(AnthemSwapChainDetails)();
         this->prepareSwapChainInfo(phyDevice->getPhysicalDevice(),*(this->specifiedSwapChainDetails));
@@ -51,7 +51,8 @@ namespace Anthem::Core{
             this->scExtent = this->specifiedSwapChainDetails->capabilities.currentExtent;
         }else{
             int width,height;
-            glfwGetFramebufferSize(window,&width,&height);
+            ANTH_LOGW("Forced type cast");
+            glfwGetFramebufferSize((GLFWwindow*)(window),&width,&height);
             VkExtent2D actualExtent = {
                 static_cast<uint32_t>(width),
                 static_cast<uint32_t>(height)
