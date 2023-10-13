@@ -111,9 +111,12 @@ namespace Anthem::Entry{
 
         //Create Render Pass
         this->initRenderPass();
-        ANTH_LOGI("Render Pass Created->XXX");
+
+        //Creating Command Buffer
+        this->initCommandManager();
+        this->createDrawingCommandHelper();
+
         //Create Vertex Buffer
-        
         this->createVertexBuffer();
 
         //Create Graphics Pipeline
@@ -122,7 +125,6 @@ namespace Anthem::Entry{
 
         //Create Drawing Objects
         this->initFramebuffer();
-        this->initCommandManager();
         this->initSyncObjects();
 
         ANTH_LOGI("Environment initialized");
@@ -180,7 +182,6 @@ namespace Anthem::Entry{
         this->commandManager->specifyPhyDevice(this->phyDevice.get());
         this->commandManager->specifySwapChain(this->swapChain.get());
         this->commandManager->createCommandPool();
-        this->commandManager->createCommandBuffer();
     }
     void AnthemEnvImpl::initSyncObjects(){
         this->mainLoopSyncer = ANTH_MAKE_SHARED(AnthemMainLoopSyncer)();
@@ -211,11 +212,9 @@ namespace Anthem::Entry{
             .framebufferIdx = imageIdx,
             .clearValue = {{{0.0f,0.0f,0.0f,1.0f}}},
         };
-        this->commandManager->startCommandRecording(currentFrame);
-        this->commandManager->startRenderPass(&beginInfo,currentFrame);
-        this->commandManager->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,currentFrame);
-        this->commandManager->endRenderPass(currentFrame);
-        this->commandManager->endCommandRecording(currentFrame);
+        this->drawingCommandHelper->startRenderPass(&beginInfo,currentFrame);
+        this->drawingCommandHelper->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,currentFrame);
+        this->drawingCommandHelper->endRenderPass(currentFrame);
 
         this->mainLoopSyncer->submitCommandBuffer(this->commandManager->getCommandBuffer(currentFrame),currentFrame);
         
@@ -233,6 +232,13 @@ namespace Anthem::Entry{
         }
         currentFrame = (currentFrame+1)%this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;
     }
+    void AnthemEnvImpl::createDrawingCommandHelper(){
+        this->drawingCommandHelper = ANTH_MAKE_SHARED(AnthemDrawingCommandHelper)();
+        this->drawingCommandHelper->specifyConfig(this->cfg.get());
+        this->drawingCommandHelper->specifyCommandBuffers(this->commandManager.get());
+        this->drawingCommandHelper->specifySwapChain(this->swapChain.get());
+        this->drawingCommandHelper->initializeHelper();
+    }
     void AnthemEnvImpl::createVertexBuffer(){
         using vxColorAttr = AnthemVAOAttrDesc<float,3>;
         using vxPosAttr = AnthemVAOAttrDesc<float,2>;
@@ -240,6 +246,7 @@ namespace Anthem::Entry{
         auto vxBufferImpl = new AnthemVertexBufferImpl<vxPosAttr,vxColorAttr>();
         vxBufferImpl->specifyLogicalDevice(this->logicalDevice.get());
         vxBufferImpl->specifyPhyDevice(this->phyDevice.get());
+        vxBufferImpl->specifyCommandBuffers(this->commandManager.get());
         ANTH_LOGI("Setting Vertices");
         vxBufferImpl->setTotalVertices(3);
         ANTH_LOGI("Inserting Data");
@@ -249,9 +256,7 @@ namespace Anthem::Entry{
         ANTH_LOGI("Data Inserted");
         
         this->vertexBuffer = vxBufferImpl;
-        this->vertexBuffer->createBuffer();
-        this->vertexBuffer->allocateMemory();
-        this->vertexBuffer->copyBufferMemoryToDevice();
+        this->vertexBuffer->createBuffer();;
     }
             
     

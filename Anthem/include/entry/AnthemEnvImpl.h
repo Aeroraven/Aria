@@ -16,6 +16,7 @@
 #include "../core/drawing/AnthemCommandBuffers.h"
 #include "../core/drawing/AnthemMainLoopSyncer.h"
 #include "../core/drawing/AnthemVertexBuffer.h"
+#include "../core/drawing/AnthemDrawingCommandHelper.h"
 
 namespace Anthem::Entry{
     using namespace Anthem::Core;
@@ -42,6 +43,8 @@ namespace Anthem::Entry{
         ANTH_SHARED_PTR(AnthemFramebufferList) framebufferList;
         ANTH_SHARED_PTR(AnthemCommandBuffers) commandManager;
         ANTH_SHARED_PTR(AnthemMainLoopSyncer) mainLoopSyncer;
+
+        ANTH_SHARED_PTR(AnthemDrawingCommandHelper) drawingCommandHelper;
 
         AnthemVertexBuffer* vertexBuffer;
 
@@ -71,6 +74,7 @@ namespace Anthem::Entry{
         void virtual recreateSwapChain();
 
         void virtual createVertexBuffer();
+        void virtual createDrawingCommandHelper();
     };
 }
 

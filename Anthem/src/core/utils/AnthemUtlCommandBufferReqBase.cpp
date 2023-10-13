@@ -1,7 +1,8 @@
 #include "../../../include/core/utils/AnthemUtlCommandBufferReqBase.h"
 
 namespace Anthem::Core::Util{
-    bool AnthemUtlCommandBufferReqBase::specifyCommandBuffers(const AnthemCommandBuffers* cmdBuf){
+    using namespace Anthem::Core;
+    bool AnthemUtlCommandBufferReqBase::specifyCommandBuffers(AnthemCommandBuffers* cmdBuf){
         this->cmdBufs = cmdBuf;
         return true;
     }

@@ -2,11 +2,12 @@
 #include "../drawing/AnthemCommandBuffers.h"
 
 namespace Anthem::Core::Util{
+    
     class AnthemUtlCommandBufferReqBase{
     protected:
-        const AnthemCommandBuffers* cmdBufs = nullptr;
+        AnthemCommandBuffers* cmdBufs;
     public:
-        bool virtual specifyCommandBuffers(const AnthemCommandBuffers* cmdBufs);
+        bool virtual specifyCommandBuffers(AnthemCommandBuffers* cmdBufs);
         const AnthemCommandBuffers* getCommandBuffer() const;
     };
 }

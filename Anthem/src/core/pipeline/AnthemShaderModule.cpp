@@ -11,7 +11,7 @@ namespace Anthem::Core{
         this->readFile(filename->vertexShader.value(),vertexShaderCode);
         this->readFile(filename->fragmentShader.value(),fragShaderCode);
 
-        //Specify Shader Module]
+        //Specify Shader Module
         ANTH_LOGI("Creating Shader Module");
         this->createSingleShaderModule(device,vertexShaderCode,&(this->shaderModules->vertexShaderModule));
         this->createSingleShaderModule(device,fragShaderCode,&(this->shaderModules->fragmentShaderModule));

@@ -2,6 +2,7 @@
 #include "../base/AnthemBaseImports.h"
 #include "../utils/AnthemUtlLogicalDeviceReqBase.h"
 #include "../utils/AnthemUtlPhyDeviceReqBase.h"
+#include "../utils/AnthemUtlCommandBufferReqBase.h"
 
 namespace Anthem::Core{
     struct AnthemVertexStageBufferProp{
@@ -10,19 +11,57 @@ namespace Anthem::Core{
         VkDeviceMemory bufferMem;
     };
     
-    class AnthemVertexBuffer:public Util::AnthemUtlLogicalDeviceReqBase,public Util::AnthemUtlPhyDeviceReqBase{
+    class AnthemVertexBuffer: public Util::AnthemUtlLogicalDeviceReqBase,public Util::AnthemUtlPhyDeviceReqBase,public Util::AnthemUtlCommandBufferReqBase{
     protected:
         uint32_t attributeNums = 0;
         uint32_t totalVertices = 0;
+        char* rawBufferData;
 
         AnthemVertexStageBufferProp vertBuffer;
-        char* rawBufferData;
+        AnthemVertexStageBufferProp stagingBuffer;
+        
         VkVertexInputBindingDescription vertexInputBindingDescription = {};
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescription = {};
 
     protected:
         uint32_t virtual calculateBufferSize() = 0;
     protected:
+        bool virtual copyStagingToVertexBuffer(){
+            //Copy data from CPUMEM to Staging Buffer
+            ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
+            ANTH_ASSERT(this->rawBufferData,"Raw buffer data is nullptr!");
+            
+            void* data;
+            vkMapMemory(this->logicalDevice->getLogicalDevice(),this->stagingBuffer.bufferMem,0,this->calculateBufferSize(),0,&data);
+            memcpy(data,this->rawBufferData,this->calculateBufferSize());
+            vkUnmapMemory(this->logicalDevice->getLogicalDevice(),this->stagingBuffer.bufferMem);
+            ANTH_LOGI("Data copied to staging buffer");
+
+            //Allocate command buffer
+            uint32_t cmdBufIdx;
+            this->cmdBufs->createCommandBuffer(&cmdBufIdx);
+            ANTH_LOGI("Command buffer created");
+            this->cmdBufs->startCommandRecording(cmdBufIdx);
+            VkBufferCopy copyRegion = {};
+            copyRegion.srcOffset = 0;
+            copyRegion.dstOffset = 0;
+            copyRegion.size = this->calculateBufferSize();
+            auto cmdBuf = this->cmdBufs->getCommandBuffer(cmdBufIdx);
+            ANTH_LOGI("Command buffer recording started");
+            vkCmdCopyBuffer(*cmdBuf,this->stagingBuffer.buffer,this->vertBuffer.buffer,1,&copyRegion);
+            this->cmdBufs->endCommandRecording(cmdBufIdx);
+
+            ANTH_LOGI("Command buffer recording ended");
+            //Submit Command
+            this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx,true);
+            this->cmdBufs->freeCommandBuffer(cmdBufIdx);
+
+            //Free staging buffer
+            vkDestroyBuffer(this->logicalDevice->getLogicalDevice(),this->stagingBuffer.buffer,nullptr);
+            vkFreeMemory(this->logicalDevice->getLogicalDevice(),this->stagingBuffer.bufferMem,nullptr);
+            ANTH_LOGI("Staging buffer freed");
+            return true;
+        }
         bool virtual bindBufferInternal(AnthemVertexStageBufferProp* bufProp){
             //Bind Memory
             auto result = vkBindBufferMemory(this->logicalDevice->getLogicalDevice(),bufProp->buffer,bufProp->bufferMem,0);
@@ -57,7 +96,7 @@ namespace Anthem::Core{
                 return false;
             }
             ANTH_LOGI("Memory allocated");
-            //this->bindBufferInternal(bufProp);
+            this->bindBufferInternal(bufProp);
             return true;
         }
     public:
@@ -110,7 +149,11 @@ namespace Anthem::Core{
             return true;
         }
         bool virtual createBuffer(){
-            this->createBufferInternal(&(this->vertBuffer),VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            this->createBufferInternal(&(this->stagingBuffer),VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            this->createBufferInternal(&(this->vertBuffer), (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_TRANSFER_DST_BIT|VK_BUFFER_USAGE_VERTEX_BUFFER_BIT),
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            this->copyStagingToVertexBuffer();
             return true;
         }
         bool virtual destroyBuffer(){
