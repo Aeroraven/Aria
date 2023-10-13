@@ -4,6 +4,7 @@
 #include "AnthemShaderModule.h"
 #include "AnthemViewport.h"
 #include "AnthemRenderPass.h"
+#include "../drawing/AnthemVertexBuffer.h"
 
 namespace Anthem::Core{
     class AnthemGraphicsPipeline{     
@@ -12,6 +13,8 @@ namespace Anthem::Core{
         const AnthemShaderModule* shaderModule = nullptr;
         const AnthemViewport* viewport = nullptr;
         const AnthemRenderPass* renderPass = nullptr;
+    
+        AnthemVertexBuffer* vertexBuffer = nullptr;
 
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
         std::vector<VkDynamicState> reqiredDynamicStates={
@@ -44,6 +47,7 @@ namespace Anthem::Core{
         bool specifyViewport(const AnthemViewport* viewport);
         bool specifyRenderPass(const AnthemRenderPass* renderPass);
         bool specifyShaderModule(const AnthemShaderModule* shaderModule);
+        bool specifyVertexBuffer(AnthemVertexBuffer* vertexBuffer);
 
         bool preparePreqPipelineCreateInfo();
         bool createPipelineLayout();

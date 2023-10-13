@@ -17,6 +17,11 @@ namespace Anthem::Core{
         this->shaderModule = shaderModule;
         return true;
     }
+    bool AnthemGraphicsPipeline::specifyVertexBuffer(AnthemVertexBuffer* vertexBuffer){
+        this->vertexBuffer = vertexBuffer;
+        return true;
+    }
+
     bool AnthemGraphicsPipeline::preparePreqPipelineCreateInfo(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->viewport != nullptr,"Viewport not specified");
@@ -31,13 +36,22 @@ namespace Anthem::Core{
         this->dynamicStateCreateInfo.pDynamicStates = this->reqiredDynamicStates.data();
         
         //Specify Vertex Shader Input Info
-        this->vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        this->vertexInputStateCreateInfo.pNext = nullptr;
-        this->vertexInputStateCreateInfo.flags = 0;
-        this->vertexInputStateCreateInfo.vertexBindingDescriptionCount = 0;
-        this->vertexInputStateCreateInfo.pVertexBindingDescriptions = nullptr;
-        this->vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 0;
-        this->vertexInputStateCreateInfo.pVertexAttributeDescriptions = nullptr;
+        if(this->vertexBuffer==nullptr){
+            ANTH_LOGW("Vertex buffer not specified, using default vertex input state");
+            this->vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            this->vertexInputStateCreateInfo.pNext = nullptr;
+            this->vertexInputStateCreateInfo.flags = 0;
+            this->vertexInputStateCreateInfo.vertexBindingDescriptionCount = 0;
+            this->vertexInputStateCreateInfo.pVertexBindingDescriptions = nullptr;
+            this->vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 0;
+            this->vertexInputStateCreateInfo.pVertexAttributeDescriptions = nullptr;
+        }else{
+            this->vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            this->vertexInputStateCreateInfo.pNext = nullptr;
+            this->vertexInputStateCreateInfo.flags = 0;
+            this->vertexBuffer->prepareVertexInputInfo(&(this->vertexInputStateCreateInfo));
+        }
+
 
         //Specify Input Assembly Info
         this->inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

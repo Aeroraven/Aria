@@ -19,7 +19,7 @@ namespace Anthem::Core{
         VkClearValue clearValue;
     };
 
-    class AnthemCommandManager: public Util::AnthemUtlLogicalDeviceReqBase, 
+    class AnthemCommandBuffers: public Util::AnthemUtlLogicalDeviceReqBase, 
         public Util::AnthemUtlPhyDeviceReqBase, public Util::AnthemUtlSwapChainReqBase,
         public Util::AnthemUtlConfigReqBase{
     private:

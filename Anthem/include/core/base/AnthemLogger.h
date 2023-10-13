@@ -1,8 +1,5 @@
 #pragma once
 #include "AnthemDefs.h"
-#include <iostream>
-#include <ctime>
-#include <cstring>
 
 #define ANTH_LOGGER_RED     "\033[31m"     
 #define ANTH_LOGGER_GREEN   "\033[32m"     
@@ -23,13 +20,23 @@ namespace Anthem{
 
             inline std::string className(const std::string& prettyFunction){
                 // Adapted from: https://stackoverflow.com/a/15775519
-                size_t colons = prettyFunction.find("(");
+                std::regex r("(<.*>|\\[.*\\])");
+                auto p = std::regex_replace(prettyFunction,r,"");
+
+                size_t colons = p.find("(");
                 if (colons == std::string::npos)
                     return "::";
-                size_t begin = prettyFunction.substr(0,colons).rfind(" ")+1;  
-                size_t end = colons - begin;
+                size_t begin = p.substr(0,colons).rfind(' ')+1;  
+                //std::cout<<std::endl;
+                //std::cout<<"Finding:"<<p.substr(0,colons)<<" WITH"<<begin<<" INLEN="<<p.substr(0,colons).length()<<std::endl;
+                if (begin != std::string::npos){
+                    size_t end = colons - begin;
+                    return p.substr(begin,end);
+                }else{
+                    size_t end = colons;
+                    return p.substr(0,end);
+                }
 
-                return prettyFunction.substr(begin,end);
             }
 
 

@@ -4,101 +4,118 @@
 #include "../utils/AnthemUtlPhyDeviceReqBase.h"
 
 namespace Anthem::Core{
+    struct AnthemVertexStageBufferProp{
+        VkBuffer buffer;
+        VkBufferCreateInfo bufferCreateInfo = {};
+        VkDeviceMemory bufferMem;
+    };
     
     class AnthemVertexBuffer:public Util::AnthemUtlLogicalDeviceReqBase,public Util::AnthemUtlPhyDeviceReqBase{
     protected:
         uint32_t attributeNums = 0;
         uint32_t totalVertices = 0;
-        VkBuffer buffer;
-        VkBufferCreateInfo bufferCreateInfo = {};
-        VkDeviceMemory vertexBufferMemory;
+
+        AnthemVertexStageBufferProp vertBuffer;
         char* rawBufferData;
+        VkVertexInputBindingDescription vertexInputBindingDescription = {};
+        std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescription = {};
 
     protected:
         uint32_t virtual calculateBufferSize() = 0;
-    public:
-        const VkBuffer* getVertexBufferObj() const{
-            return &(this->buffer);
-        }
-        bool virtual getInputBindingDescription(VkVertexInputBindingDescription* desc) = 0;
-        bool virtual getInputAttrDescription(std::vector<VkVertexInputAttributeDescription>* desc) = 0;
-        bool virtual freeMemory(){
-            ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
-            vkFreeMemory(this->logicalDevice->getLogicalDevice(),this->vertexBufferMemory,nullptr);
-            return true;
-        }
-        bool virtual copyBufferMemoryToDevice(){
-            ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
-            ANTH_ASSERT(this->rawBufferData,"Raw buffer data is nullptr!");
-            
+    protected:
+        bool virtual bindBufferInternal(AnthemVertexStageBufferProp* bufProp){
             //Bind Memory
-            auto result = vkBindBufferMemory(this->logicalDevice->getLogicalDevice(),buffer,this->vertexBufferMemory,0);
+            auto result = vkBindBufferMemory(this->logicalDevice->getLogicalDevice(),bufProp->buffer,bufProp->bufferMem,0);
             if(result!=VK_SUCCESS){
                 ANTH_LOGE("Failed to bind buffer memory");
                 return false;
             }
             ANTH_LOGI("Buffer memory binded");
-
-            //Copy Data To Device
-            void* data;
-            vkMapMemory(this->logicalDevice->getLogicalDevice(),this->vertexBufferMemory,0,this->calculateBufferSize(),0,&data);
-            memcpy(data,this->rawBufferData,this->calculateBufferSize());
-            vkUnmapMemory(this->logicalDevice->getLogicalDevice(),this->vertexBufferMemory);
-            ANTH_LOGI("Data copied to device");
             return true;
         }
-        bool virtual allocateMemory(){
+        bool virtual createBufferInternal(AnthemVertexStageBufferProp* bufProp, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memProp){
             ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
-            ANTH_ASSERT(this->buffer,"Buffer is nullptr!");
+            ANTH_LOGI("Creating buffer");
+            bufProp->bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+            bufProp->bufferCreateInfo.size = this->calculateBufferSize();
+            bufProp->bufferCreateInfo.usage = usage;
+            bufProp->bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            bufProp->bufferCreateInfo.pNext = nullptr;
+            if(vkCreateBuffer(this->logicalDevice->getLogicalDevice(),&(bufProp->bufferCreateInfo),nullptr,&(bufProp->buffer))!=VK_SUCCESS){
+                ANTH_LOGE("Failed to create buffer");
+                return false;
+            }
+            ANTH_LOGI("Buffer created");
             VkMemoryRequirements memReq = {};
-            vkGetBufferMemoryRequirements(this->logicalDevice->getLogicalDevice(),buffer,&memReq);
+            vkGetBufferMemoryRequirements(this->logicalDevice->getLogicalDevice(),bufProp->buffer,&memReq);
             VkMemoryAllocateInfo allocInfo = {};
             allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
             allocInfo.allocationSize = memReq.size;
-            allocInfo.memoryTypeIndex = this->phyDevice->findMemoryType(memReq.memoryTypeBits,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-            if(vkAllocateMemory(this->logicalDevice->getLogicalDevice(),&allocInfo,nullptr,&this->vertexBufferMemory)!=VK_SUCCESS){
+            allocInfo.memoryTypeIndex = this->phyDevice->findMemoryType(memReq.memoryTypeBits,memProp);
+            if(vkAllocateMemory(this->logicalDevice->getLogicalDevice(),&allocInfo,nullptr,&(bufProp->bufferMem))!=VK_SUCCESS){
                 ANTH_LOGE("Failed to allocate memory");
                 return false;
             }
             ANTH_LOGI("Memory allocated");
+            //this->bindBufferInternal(bufProp);
+            return true;
+        }
+    public:
+        bool virtual getInputBindingDescriptionInternal(VkVertexInputBindingDescription* desc) = 0;
+        bool virtual getInputAttrDescriptionInternal(std::vector<VkVertexInputAttributeDescription>* desc) = 0;
+
+        const VkBuffer* getVertexBufferObj() const{
+            return &(this->vertBuffer.buffer);
+        }
+        const VkVertexInputBindingDescription* getVertexInputBindingDescription() const{
+            return &(this->vertexInputBindingDescription);
+        }
+        const std::vector<VkVertexInputAttributeDescription>* getVertexInputAttributeDescription() const{
+            return &(this->vertexInputAttributeDescription);
+        }
+
+        bool virtual freeMemory(){
+            ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
+            vkFreeMemory(this->logicalDevice->getLogicalDevice(),this->vertBuffer.bufferMem,nullptr);
+            return true;
+        }
+        bool virtual copyBufferMemoryToDevice(){
+            ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
+            ANTH_ASSERT(this->rawBufferData,"Raw buffer data is nullptr!");
+            this->bindBufferInternal(&(this->vertBuffer));
+            void* data;
+            vkMapMemory(this->logicalDevice->getLogicalDevice(),this->vertBuffer.bufferMem,0,this->calculateBufferSize(),0,&data);
+            memcpy(data,this->rawBufferData,this->calculateBufferSize());
+            vkUnmapMemory(this->logicalDevice->getLogicalDevice(),this->vertBuffer.bufferMem);
+            ANTH_LOGI("Data copied to device");
+            return true;
+        }
+        bool virtual allocateMemory(){
             return true;
         }
         bool virtual prepareVertexInputInfo(VkPipelineVertexInputStateCreateInfo* info){
-            VkVertexInputBindingDescription bindingDesc = {};
-            std::vector<VkVertexInputAttributeDescription> attrDesc = {};
-            if(!this->getInputBindingDescription(&bindingDesc)){
+            if(!this->getInputBindingDescriptionInternal(&vertexInputBindingDescription)){
                 ANTH_LOGE("Failed to get input binding description");
                 return false;
             }
-            if(!this->getInputAttrDescription(&attrDesc)){
+            if(!this->getInputAttrDescriptionInternal(&vertexInputAttributeDescription)){
                 ANTH_LOGE("Failed to get input attribute description");
                 return false;
             }
             info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
             info->vertexBindingDescriptionCount = 1;
-            info->pVertexBindingDescriptions = &bindingDesc;
-            info->vertexAttributeDescriptionCount = attrDesc.size();
-            info->pVertexAttributeDescriptions = attrDesc.data();
+            info->pVertexBindingDescriptions = &vertexInputBindingDescription;
+            info->vertexAttributeDescriptionCount = vertexInputAttributeDescription.size();
+            info->pVertexAttributeDescriptions = vertexInputAttributeDescription.data();
             return true;
         }
         bool virtual createBuffer(){
-            ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
-            ANTH_LOGI("Creating buffer");
-            bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            bufferCreateInfo.size = this->calculateBufferSize();
-            bufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-            bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            bufferCreateInfo.pNext = nullptr;
-            if(vkCreateBuffer(this->logicalDevice->getLogicalDevice(),&bufferCreateInfo,nullptr,&buffer)!=VK_SUCCESS){
-                ANTH_LOGE("Failed to create buffer");
-                return false;
-            }
-            ANTH_LOGI("Buffer created");
+            this->createBufferInternal(&(this->vertBuffer),VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT|VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
             return true;
         }
         bool virtual destroyBuffer(){
             ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
-            vkDestroyBuffer(this->logicalDevice->getLogicalDevice(),buffer,nullptr);
+            vkDestroyBuffer(this->logicalDevice->getLogicalDevice(),this->vertBuffer.buffer,nullptr);
             return true;
         }
     };
@@ -148,18 +165,12 @@ namespace Anthem::Core{
             auto dataOffset = 0;
             for(auto i=0;i<sizeof...(AttrSz);i++){
                 auto dataSz = this->attrTpSize.at(i)*this->attrDims.at(i);
-                ANTH_LOGI("Data size=",dataSz," Data offset=",dataOffset," BasePtr=",reinterpret_cast<long long>(this->rawBufferData));
-                ANTH_LOGI("Total Size=",this->calculateBufferSize());
-                ANTH_LOGI("Offset=",offset);
-                ANTH_LOGI("Src Ptr=",reinterpret_cast<long long>(dataPtrs[i]));
-                ANTH_LOGI("Total Offset=",offset+dataOffset,"==",dataSz);
-                ANTH_LOGI("===========");
                 memcpy(this->rawBufferData+offset+dataOffset,dataPtrs[i],dataSz);
                 dataOffset+=dataSz;
             }
             return true;
         }
-        bool getInputBindingDescription(VkVertexInputBindingDescription* desc) override{
+        bool getInputBindingDescriptionInternal(VkVertexInputBindingDescription* desc) override{
             ANTH_ASSERT(desc,"Description is nullptr");
             desc->binding = 0;
             desc->stride = this->singleVertexSize;
@@ -259,7 +270,7 @@ namespace Anthem::Core{
             }
             return VK_FORMAT_UNDEFINED;
         }
-        bool getInputAttrDescription(std::vector<VkVertexInputAttributeDescription>* desc) override{
+        bool getInputAttrDescriptionInternal(std::vector<VkVertexInputAttributeDescription>* desc) override{
             ANTH_ASSERT(desc,"Description is nullptr");
             uint32_t offset = 0;
             desc->clear();

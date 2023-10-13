@@ -1,7 +1,7 @@
-#include "../../../include/core/drawing/AnthemCommandManager.h"
+#include "../../../include/core/drawing/AnthemCommandBuffers.h"
 
 namespace Anthem::Core{
-    bool AnthemCommandManager::createCommandPool(){
+    bool AnthemCommandBuffers::createCommandPool(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->phyDevice != nullptr,"Physical device not specified");
 
@@ -20,12 +20,12 @@ namespace Anthem::Core{
         this->commandPoolCreated = true;
         return true;
     }
-    bool AnthemCommandManager::destroyCommandPool(){
+    bool AnthemCommandBuffers::destroyCommandPool(){
         ANTH_LOGI("Destroying command pool");
         vkDestroyCommandPool(this->logicalDevice->getLogicalDevice(),commandPool,nullptr);
         return true;
     }
-    bool AnthemCommandManager::createCommandBuffer(){
+    bool AnthemCommandBuffers::createCommandBuffer(){
         ANTH_ASSERT(this->commandPoolCreated,"Command pool not created");
         ANTH_ASSERT(this->config != nullptr,"Config not specified");
         this->commandBuffer.resize(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
@@ -43,10 +43,10 @@ namespace Anthem::Core{
         ANTH_LOGV("Command buffer allocated");
         return true;
     }
-    bool AnthemCommandManager::destroyCommandBuffer(){
+    bool AnthemCommandBuffers::destroyCommandBuffer(){
         return true;
     }
-    bool AnthemCommandManager::resetCommandBuffer(uint32_t frameIdx){
+    bool AnthemCommandBuffers::resetCommandBuffer(uint32_t frameIdx){
         ANTH_ASSERT(this->commandPoolCreated,"Command pool not created");
         if(vkResetCommandBuffer(commandBuffer[frameIdx],0)!=VK_SUCCESS){
             ANTH_LOGE("Failed to reset command buffer, Id=", frameIdx);
@@ -55,7 +55,7 @@ namespace Anthem::Core{
         ANTH_LOGV("Command buffer reset");
         return true;
     }
-    bool AnthemCommandManager::startCommandRecording(uint32_t frameIdx){
+    bool AnthemCommandBuffers::startCommandRecording(uint32_t frameIdx){
         ANTH_LOGV("Starting command recording");
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -70,7 +70,7 @@ namespace Anthem::Core{
         this->commandBufferStarted = true;
         return true;
     }
-    bool AnthemCommandManager::endCommandRecording(uint32_t frameIdx){
+    bool AnthemCommandBuffers::endCommandRecording(uint32_t frameIdx){
         ANTH_LOGV("Ending command recording");
         if(vkEndCommandBuffer(commandBuffer[frameIdx])!=VK_SUCCESS){
             ANTH_LOGE("Failed to end command buffer recording");
@@ -80,7 +80,7 @@ namespace Anthem::Core{
         this->commandBufferStarted = false;
         return true;
     }
-    bool AnthemCommandManager::startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx){
+    bool AnthemCommandBuffers::startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx){
         ANTH_ASSERT(this->commandBufferStarted,"Command buffer not started");
         ANTH_ASSERT(swapChain != nullptr,"Swap chain not specified");
 
@@ -99,31 +99,33 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemCommandManager::endRenderPass(uint32_t frameIdx){
+    bool AnthemCommandBuffers::endRenderPass(uint32_t frameIdx){
         ANTH_ASSERT(this->commandBufferStarted,"Command buffer not started");
         vkCmdEndRenderPass(commandBuffer[frameIdx]);
         return true;
     }
-    bool AnthemCommandManager::demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,uint32_t frameIdx){
+    bool AnthemCommandBuffers::demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,uint32_t frameIdx){
         ANTH_ASSERT(this->commandBufferStarted,"Command buffer not started");
         ANTH_ASSERT(pipeline != nullptr,"Pipeline not specified");
         ANTH_ASSERT(viewport != nullptr,"Viewport not specified");
-
-        vkCmdBindPipeline(commandBuffer[frameIdx],VK_PIPELINE_BIND_POINT_GRAPHICS,*(pipeline->getPipeline()));
-        
-        /*
-        VkBuffer vertexBuffers[] = {
-            *(vbuf->getVertexBufferObj())
-        };
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer[frameIdx],0,1,vertexBuffers,offsets);*/
-
         vkCmdSetViewport(commandBuffer[frameIdx],0,1,viewport->getViewport());
         vkCmdSetScissor(commandBuffer[frameIdx],0,1,viewport->getScissor());
-        vkCmdDraw(commandBuffer[frameIdx],3,1,0,0);
+        vkCmdBindPipeline(commandBuffer[frameIdx],VK_PIPELINE_BIND_POINT_GRAPHICS,*(pipeline->getPipeline()));
+        
+        if(vbuf!=nullptr){
+            VkBuffer vertexBuffers[] = {
+                *(vbuf->getVertexBufferObj())
+            };
+            VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(commandBuffer[frameIdx],0,1,vertexBuffers,offsets);
+            vkCmdDraw(commandBuffer[frameIdx],3,1,0,0);
+        }else{
+            ANTH_LOGW("Not using vertex buffer");
+            vkCmdDraw(commandBuffer[frameIdx],3,1,0,0);
+        }
         return true;
     }
-    const VkCommandBuffer* AnthemCommandManager::getCommandBuffer(uint32_t frameIdx) const{
+    const VkCommandBuffer* AnthemCommandBuffers::getCommandBuffer(uint32_t frameIdx) const{
         return &(this->commandBuffer[frameIdx]);
     }
     

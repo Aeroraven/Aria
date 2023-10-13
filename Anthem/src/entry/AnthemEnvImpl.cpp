@@ -156,6 +156,7 @@ namespace Anthem::Entry{
         this->graphicsPipeline->specifyViewport(this->viewport.get());
         this->graphicsPipeline->specifyRenderPass(this->renderPass.get());
         this->graphicsPipeline->specifyShaderModule(this->shader.get());
+        this->graphicsPipeline->specifyVertexBuffer(this->vertexBuffer);
 
         this->graphicsPipeline->preparePreqPipelineCreateInfo();
         this->graphicsPipeline->createPipelineLayout();
@@ -173,7 +174,7 @@ namespace Anthem::Entry{
         this->framebufferList->createFramebuffersFromSwapChain(this->swapChain.get(),this->renderPass.get());
     }
     void AnthemEnvImpl::initCommandManager(){
-        this->commandManager = ANTH_MAKE_SHARED(AnthemCommandManager)();
+        this->commandManager = ANTH_MAKE_SHARED(AnthemCommandBuffers)();
         this->commandManager->specifyLogicalDevice(this->logicalDevice.get());
         this->commandManager->specifyConfig(this->cfg.get());
         this->commandManager->specifyPhyDevice(this->phyDevice.get());
@@ -242,15 +243,15 @@ namespace Anthem::Entry{
         ANTH_LOGI("Setting Vertices");
         vxBufferImpl->setTotalVertices(3);
         ANTH_LOGI("Inserting Data");
-        vxBufferImpl->insertData(0,{0.0, -0.5},{1.0, 0.0, 0.0});
-        vxBufferImpl->insertData(1,{0.5, 0.5},{0.0, 1.0, 0.0});
-        vxBufferImpl->insertData(2,{-0.5, 0.5},{0.0, 0.0, 1.0});
+        vxBufferImpl->insertData(0,{0.0, -1.0},{0.01, 0.0, 0.0});
+        vxBufferImpl->insertData(1,{0.5, 0.5},{0.0, 0.01, 0.0});
+        vxBufferImpl->insertData(2,{-0.5, 0.5},{0.0, 0.0, 0.01});
         ANTH_LOGI("Data Inserted");
         
         this->vertexBuffer = vxBufferImpl;
         this->vertexBuffer->createBuffer();
         this->vertexBuffer->allocateMemory();
-        //this->vertexBuffer->copyBufferMemoryToDevice();
+        this->vertexBuffer->copyBufferMemoryToDevice();
     }
             
     

@@ -13,7 +13,7 @@
 #include "../core/pipeline/AnthemGraphicsPipeline.h"
 #include "../core/pipeline/AnthemRenderPass.h"
 #include "../core/drawing/AnthemFramebufferList.h"
-#include "../core/drawing/AnthemCommandManager.h"
+#include "../core/drawing/AnthemCommandBuffers.h"
 #include "../core/drawing/AnthemMainLoopSyncer.h"
 #include "../core/drawing/AnthemVertexBuffer.h"
 
@@ -40,7 +40,7 @@ namespace Anthem::Entry{
         ANTH_SHARED_PTR(AnthemRenderPass) renderPass;
 
         ANTH_SHARED_PTR(AnthemFramebufferList) framebufferList;
-        ANTH_SHARED_PTR(AnthemCommandManager) commandManager;
+        ANTH_SHARED_PTR(AnthemCommandBuffers) commandManager;
         ANTH_SHARED_PTR(AnthemMainLoopSyncer) mainLoopSyncer;
 
         AnthemVertexBuffer* vertexBuffer;

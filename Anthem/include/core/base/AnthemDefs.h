@@ -11,6 +11,8 @@
 #include <set>
 #include <functional>
 #include <fstream>
+#include <ctime>
+#include <regex>
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>
