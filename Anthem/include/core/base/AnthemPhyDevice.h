@@ -29,5 +29,6 @@ namespace Anthem::Core{
         std::optional<uint32_t> virtual getPhyQueuePresentFamilyIndice() const;
         const std::vector<const char*>* const getRequiredDevSupportedExts() const;
         bool virtual destroyPhyDevice(VkInstance* instance);
+        uint32_t virtual findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
     };
 }

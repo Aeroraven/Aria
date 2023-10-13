@@ -8,6 +8,7 @@
 #include "../drawing/AnthemFramebufferList.h"
 #include "../pipeline/AnthemGraphicsPipeline.h"
 #include "../pipeline/AnthemViewport.h"
+#include "../drawing/AnthemVertexBuffer.h"
 
 namespace Anthem::Core{
 
@@ -42,7 +43,7 @@ namespace Anthem::Core{
         bool virtual endCommandRecording(uint32_t frameIdx);
 
         bool virtual startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx);
-        bool virtual demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,uint32_t frameIdx);
+        bool virtual demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,uint32_t frameIdx);
         bool virtual endRenderPass(uint32_t frameIdx);
 
         const VkCommandBuffer* getCommandBuffer(uint32_t frameIdx) const;

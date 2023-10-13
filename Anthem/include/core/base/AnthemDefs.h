@@ -49,3 +49,5 @@
 
 // Default
 #define ANTH_ERROR_RAISE_DEFAULT_FUNC ([](){ANTH_LOGE("Unspecified error handler");exit(1);})
+
+// String Literals

@@ -39,5 +39,16 @@ namespace Anthem::Core{
     bool AnthemPhyDevice::destroyPhyDevice(VkInstance* instance){
         return true;
     }
-    
+    uint32_t AnthemPhyDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const{
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(this->physicalDevice, &memProperties);
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+            if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+                ANTH_LOGI("Found suitable memory type, idx=",i);
+                return i;
+            }
+        }
+        ANTH_LOGE("Failed to find suitable memory type!");
+        return 0;
+    }
 }

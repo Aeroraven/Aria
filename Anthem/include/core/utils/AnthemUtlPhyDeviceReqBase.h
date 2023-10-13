@@ -1,3 +1,4 @@
+#pragma once
 #include "../base/AnthemPhyDevice.h"
 
 namespace Anthem::Core::Util{

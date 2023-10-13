@@ -54,6 +54,10 @@ namespace Anthem::Entry{
         
         this->destroySwapChain();
 
+        //Destroy Vertex Buffer
+        this->vertexBuffer->freeMemory();
+        this->vertexBuffer->destroyBuffer();
+
         //Destroy Sync Objects
         mainLoopSyncer->destroySyncObjects();
 
@@ -107,6 +111,10 @@ namespace Anthem::Entry{
 
         //Create Render Pass
         this->initRenderPass();
+        ANTH_LOGI("Render Pass Created->XXX");
+        //Create Vertex Buffer
+        
+        this->createVertexBuffer();
 
         //Create Graphics Pipeline
         this->loadShader();
@@ -204,7 +212,7 @@ namespace Anthem::Entry{
         };
         this->commandManager->startCommandRecording(currentFrame);
         this->commandManager->startRenderPass(&beginInfo,currentFrame);
-        this->commandManager->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get(),currentFrame);
+        this->commandManager->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,currentFrame);
         this->commandManager->endRenderPass(currentFrame);
         this->commandManager->endCommandRecording(currentFrame);
 
@@ -224,6 +232,27 @@ namespace Anthem::Entry{
         }
         currentFrame = (currentFrame+1)%this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;
     }
+    void AnthemEnvImpl::createVertexBuffer(){
+        using vxColorAttr = AnthemVAOAttrDesc<float,3>;
+        using vxPosAttr = AnthemVAOAttrDesc<float,2>;
+        ANTH_LOGI("Beging VBuf Creation");
+        auto vxBufferImpl = new AnthemVertexBufferImpl<vxPosAttr,vxColorAttr>();
+        vxBufferImpl->specifyLogicalDevice(this->logicalDevice.get());
+        vxBufferImpl->specifyPhyDevice(this->phyDevice.get());
+        ANTH_LOGI("Setting Vertices");
+        vxBufferImpl->setTotalVertices(3);
+        ANTH_LOGI("Inserting Data");
+        vxBufferImpl->insertData(0,{0.0, -0.5},{1.0, 0.0, 0.0});
+        vxBufferImpl->insertData(1,{0.5, 0.5},{0.0, 1.0, 0.0});
+        vxBufferImpl->insertData(2,{-0.5, 0.5},{0.0, 0.0, 1.0});
+        ANTH_LOGI("Data Inserted");
+        
+        this->vertexBuffer = vxBufferImpl;
+        this->vertexBuffer->createBuffer();
+        this->vertexBuffer->allocateMemory();
+        //this->vertexBuffer->copyBufferMemoryToDevice();
+    }
+            
     
 }
 

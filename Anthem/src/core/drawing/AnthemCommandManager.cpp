@@ -44,8 +44,6 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemCommandManager::destroyCommandBuffer(){
-        //ANTH_LOGI("Destroying command buffer");
-        //vkFreeCommandBuffers(this->logicalDevice->getLogicalDevice(),this->commandPool,1,&commandBuffer);
         return true;
     }
     bool AnthemCommandManager::resetCommandBuffer(uint32_t frameIdx){
@@ -106,12 +104,20 @@ namespace Anthem::Core{
         vkCmdEndRenderPass(commandBuffer[frameIdx]);
         return true;
     }
-    bool AnthemCommandManager::demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,uint32_t frameIdx){
+    bool AnthemCommandManager::demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,uint32_t frameIdx){
         ANTH_ASSERT(this->commandBufferStarted,"Command buffer not started");
         ANTH_ASSERT(pipeline != nullptr,"Pipeline not specified");
         ANTH_ASSERT(viewport != nullptr,"Viewport not specified");
 
         vkCmdBindPipeline(commandBuffer[frameIdx],VK_PIPELINE_BIND_POINT_GRAPHICS,*(pipeline->getPipeline()));
+        
+        /*
+        VkBuffer vertexBuffers[] = {
+            *(vbuf->getVertexBufferObj())
+        };
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(commandBuffer[frameIdx],0,1,vertexBuffers,offsets);*/
+
         vkCmdSetViewport(commandBuffer[frameIdx],0,1,viewport->getViewport());
         vkCmdSetScissor(commandBuffer[frameIdx],0,1,viewport->getScissor());
         vkCmdDraw(commandBuffer[frameIdx],3,1,0,0);
