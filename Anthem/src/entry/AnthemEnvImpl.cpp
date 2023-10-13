@@ -55,8 +55,8 @@ namespace Anthem::Entry{
         this->destroySwapChain();
 
         //Destroy Vertex Buffer
-        this->vertexBuffer->freeMemory();
         this->vertexBuffer->destroyBuffer();
+        this->indexBuffer->destroyBuffer();
 
         //Destroy Sync Objects
         mainLoopSyncer->destroySyncObjects();
@@ -116,8 +116,9 @@ namespace Anthem::Entry{
         this->initCommandManager();
         this->createDrawingCommandHelper();
 
-        //Create Vertex Buffer
+        //Create Vertex Buffer / Index Buffer
         this->createVertexBuffer();
+        this->createIndexBuffer();
 
         //Create Graphics Pipeline
         this->loadShader();
@@ -213,7 +214,8 @@ namespace Anthem::Entry{
             .clearValue = {{{0.0f,0.0f,0.0f,1.0f}}},
         };
         this->drawingCommandHelper->startRenderPass(&beginInfo,currentFrame);
-        this->drawingCommandHelper->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,currentFrame);
+        //this->drawingCommandHelper->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,currentFrame);
+        this->drawingCommandHelper->demoDrawCommand2(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,this->indexBuffer,currentFrame);
         this->drawingCommandHelper->endRenderPass(currentFrame);
 
         this->mainLoopSyncer->submitCommandBuffer(this->commandManager->getCommandBuffer(currentFrame),currentFrame);
@@ -242,24 +244,36 @@ namespace Anthem::Entry{
     void AnthemEnvImpl::createVertexBuffer(){
         using vxColorAttr = AnthemVAOAttrDesc<float,3>;
         using vxPosAttr = AnthemVAOAttrDesc<float,2>;
-        ANTH_LOGI("Beging VBuf Creation");
+        ANTH_LOGI("Begining VBuf Creation");
         auto vxBufferImpl = new AnthemVertexBufferImpl<vxPosAttr,vxColorAttr>();
         vxBufferImpl->specifyLogicalDevice(this->logicalDevice.get());
         vxBufferImpl->specifyPhyDevice(this->phyDevice.get());
         vxBufferImpl->specifyCommandBuffers(this->commandManager.get());
         ANTH_LOGI("Setting Vertices");
-        vxBufferImpl->setTotalVertices(3);
+        vxBufferImpl->setTotalVertices(4);
         ANTH_LOGI("Inserting Data");
-        vxBufferImpl->insertData(0,{0.0, -1.0},{0.01, 0.0, 0.0});
-        vxBufferImpl->insertData(1,{0.5, 0.5},{0.0, 0.01, 0.0});
-        vxBufferImpl->insertData(2,{-0.5, 0.5},{0.0, 0.0, 0.01});
+        vxBufferImpl->insertData(0,{-0.5f, -0.5f},{0.5, 0.0, 0.0});
+        vxBufferImpl->insertData(1,{0.5f, -0.5f},{0.0, 0.5, 0.0});
+        vxBufferImpl->insertData(2,{0.5f, 0.5f},{0.0, 0.0, 0.5});
+        vxBufferImpl->insertData(3,{-0.5f, 0.5f},{0.5, 0.5, 0.5});
         ANTH_LOGI("Data Inserted");
-        
         this->vertexBuffer = vxBufferImpl;
         this->vertexBuffer->createBuffer();;
     }
-            
-    
+
+    void AnthemEnvImpl::createIndexBuffer(){
+        ANTH_LOGI("Begining IBuf Creation");
+        auto ixBuffer = new AnthemIndexBuffer();
+        ixBuffer->specifyLogicalDevice(this->logicalDevice.get());
+        ixBuffer->specifyPhyDevice(this->phyDevice.get());
+        ixBuffer->specifyCommandBuffers(this->commandManager.get());
+        ANTH_LOGI("Setting Indices");
+        ixBuffer->setIndices({0,1,2,2,3,0});
+        this->indexBuffer = ixBuffer;
+        this->indexBuffer->createBuffer();
+    }
+
+                
 }
 
 
