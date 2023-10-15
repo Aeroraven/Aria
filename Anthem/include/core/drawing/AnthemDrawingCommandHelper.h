@@ -7,6 +7,7 @@
 #include "../pipeline/AnthemRenderPass.h"
 #include "../pipeline/AnthemGraphicsPipeline.h"
 #include "../drawing/AnthemIndexBuffer.h"
+#include "../drawing/AnthemUniformBuffer.h"
 
 namespace Anthem::Core{
     struct AnthemCommandManagerRenderPassStartInfo{
@@ -25,6 +26,7 @@ namespace Anthem::Core{
         bool virtual startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx);
         bool virtual demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,uint32_t frameIdx);
         bool virtual demoDrawCommand2(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,AnthemIndexBuffer* ibuf,uint32_t frameIdx);
+        bool virtual demoDrawCommand3(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,AnthemIndexBuffer* ibuf,AnthemUniformBuffer* ubuf ,uint32_t frameIdx);
         bool virtual endRenderPass(uint32_t frameIdx);
     };
 }

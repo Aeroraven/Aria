@@ -75,5 +75,24 @@ namespace Anthem::Core{
         vkCmdDrawIndexed(*cmdBuf, static_cast<uint32_t>(ibuf->getIndexCount()), 1, 0, 0, 0);
         return true;
     }
+
+    bool AnthemDrawingCommandHelper::demoDrawCommand3(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,
+    AnthemIndexBuffer* ibuf,AnthemUniformBuffer* ubuf, uint32_t frameIdx){
+        auto cmdBuf = cmdBufs->getCommandBuffer(commandBufferIdx[frameIdx]);
+        ANTH_ASSERT(pipeline != nullptr,"Pipeline not specified");
+        ANTH_ASSERT(viewport != nullptr,"Viewport not specified");
+        vkCmdSetViewport(*cmdBuf,0,1,viewport->getViewport());
+        vkCmdSetScissor(*cmdBuf,0,1,viewport->getScissor());
+        vkCmdBindPipeline(*cmdBuf,VK_PIPELINE_BIND_POINT_GRAPHICS,*(pipeline->getPipeline()));
+
+        VkBuffer vertexBuffers[] = {*(vbuf->getDestBufferObject())};
+        VkDeviceSize offsets[] = {0};
+        vkCmdBindVertexBuffers(*cmdBuf,0,1,vertexBuffers,offsets);
+        vkCmdBindIndexBuffer(*cmdBuf, *(ibuf->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
+        //ANTH_LOGI("Binding pipeline layout:",(long long)(pipeline->getPipelineLayout()));
+        vkCmdBindDescriptorSets(*cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0, 1, ubuf->getDescriptorSet(frameIdx), 0, nullptr);
+        vkCmdDrawIndexed(*cmdBuf, static_cast<uint32_t>(ibuf->getIndexCount()), 1, 0, 0, 0);
+        return true;
+    }
 }
     

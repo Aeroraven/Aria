@@ -14,6 +14,7 @@
 #include <ctime>
 #include <regex>
 #include <concepts>
+#include <cmath>
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>
@@ -66,7 +67,7 @@ namespace Anthem::Core::TmplDefs{
     concept ATpdIsdAttrEquals = (std::same_as<SrcTp,DstTp> && (SrcSz==DstSz));
 
     template<class SrcTp,int SrcSz, class DstTp, int DstLb,int DstUb>
-    concept ATpdIsdAttrEqualsEx = (std::same_as<SrcTp,DstTp> && (SrcSz<=DstUb) && (SrcSz>=DstUb));
+    concept ATpdIsdAttrEqualsEx = (std::same_as<SrcTp,DstTp> && (SrcSz<=DstUb) && (SrcSz>=DstLb));
 
     template<class SrcTp,int SrcSz> 
     concept ATpIsdAttrVecf = ATpdIsdAttrEqualsEx<SrcTp,SrcSz,float,1,4>;

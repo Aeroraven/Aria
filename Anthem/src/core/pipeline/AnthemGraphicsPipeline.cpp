@@ -21,6 +21,10 @@ namespace Anthem::Core{
         this->vertexBuffer = vertexBuffer;
         return true;
     }
+    bool AnthemGraphicsPipeline::specifyUniformBuffer(AnthemUniformBuffer* uniformBuffer){
+        this->uniformBuffer = uniformBuffer;
+        return true;
+    }
 
     bool AnthemGraphicsPipeline::preparePreqPipelineCreateInfo(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
@@ -107,9 +111,19 @@ namespace Anthem::Core{
 
     bool AnthemGraphicsPipeline::createPipelineLayout(){
         //Specify Pipeline Layout Creation Info
-        this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        this->pipelineLayoutCreateInfo.pNext = nullptr;
-        this->pipelineLayoutCreateInfo.flags = 0;
+        if(this->uniformBuffer == nullptr){
+            this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            this->pipelineLayoutCreateInfo.pNext = nullptr;
+            this->pipelineLayoutCreateInfo.flags = 0;
+            ANTH_LOGW("Uniform buffer not specified, using default pipeline layout");
+        }else{
+            this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+            this->pipelineLayoutCreateInfo.pNext = nullptr;
+            this->pipelineLayoutCreateInfo.flags = 0;
+            this->pipelineLayoutCreateInfo.setLayoutCount = 1;
+            this->pipelineLayoutCreateInfo.pSetLayouts = this->uniformBuffer->getDescriptorSetLayout();
+            ANTH_LOGI("Specified pipeline layout",  (long long)(this->uniformBuffer->getDescriptorSetLayout()));
+        }
         
         //Create Layout
         auto result = vkCreatePipelineLayout(this->logicalDevice->getLogicalDevice(),&(this->pipelineLayoutCreateInfo),nullptr,&(this->pipelineLayout));
@@ -172,5 +186,9 @@ namespace Anthem::Core{
     const VkPipeline* AnthemGraphicsPipeline::getPipeline() const{
         ANTH_ASSERT(this->pipelineCreated,"Invalid pipeline");
         return &(this->pipeline);
+    }
+    const VkPipelineLayout* AnthemGraphicsPipeline::getPipelineLayout() const{
+        ANTH_ASSERT(this->pipelineCreated,"Invalid pipeline");
+        return &(this->pipelineLayout);
     }
 }

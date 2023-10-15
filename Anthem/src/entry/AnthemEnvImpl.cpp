@@ -54,6 +54,10 @@ namespace Anthem::Entry{
         
         this->destroySwapChain();
 
+        this->uniformBuffer->destroyBuffers();
+        this->uniformBuffer->destroyDescriptorPool();
+        this->uniformBuffer->destroyLayoutBinding();
+
         //Destroy Vertex Buffer
         this->vertexBuffer->destroyBuffer();
         this->indexBuffer->destroyBuffer();
@@ -122,6 +126,7 @@ namespace Anthem::Entry{
 
         //Create Graphics Pipeline
         this->loadShader();
+        this->createUniformBuffer();
         this->initGraphicsPipeline();
 
         //Create Drawing Objects
@@ -160,6 +165,7 @@ namespace Anthem::Entry{
         this->graphicsPipeline->specifyRenderPass(this->renderPass.get());
         this->graphicsPipeline->specifyShaderModule(this->shader.get());
         this->graphicsPipeline->specifyVertexBuffer(this->vertexBuffer);
+        this->graphicsPipeline->specifyUniformBuffer(this->uniformBuffer);
 
         this->graphicsPipeline->preparePreqPipelineCreateInfo();
         this->graphicsPipeline->createPipelineLayout();
@@ -205,6 +211,10 @@ namespace Anthem::Entry{
 
         ANTH_LOGV("Acquired Image Idx=",imageIdx);
         this->commandManager->resetCommandBuffer(currentFrame);
+        
+        ANTH_LOGV("Preparing Updating Uniforms");
+        this->uniformUpdateFunc();
+        this->uniformBuffer->updateBuffer(currentFrame);
 
         ANTH_LOGV("Wait For Command");
         AnthemCommandManagerRenderPassStartInfo beginInfo = {
@@ -215,7 +225,9 @@ namespace Anthem::Entry{
         };
         this->drawingCommandHelper->startRenderPass(&beginInfo,currentFrame);
         //this->drawingCommandHelper->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,currentFrame);
-        this->drawingCommandHelper->demoDrawCommand2(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,this->indexBuffer,currentFrame);
+        //this->drawingCommandHelper->demoDrawCommand2(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,this->indexBuffer,currentFrame);
+        this->drawingCommandHelper->demoDrawCommand3(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,this->indexBuffer,this->uniformBuffer,currentFrame);
+        
         this->drawingCommandHelper->endRenderPass(currentFrame);
 
         this->mainLoopSyncer->submitCommandBuffer(this->commandManager->getCommandBuffer(currentFrame),currentFrame);
@@ -252,10 +264,10 @@ namespace Anthem::Entry{
         ANTH_LOGI("Setting Vertices");
         vxBufferImpl->setTotalVertices(4);
         ANTH_LOGI("Inserting Data");
-        vxBufferImpl->insertData(0,{-0.5f, -0.5f},{0.5, 0.0, 0.0});
-        vxBufferImpl->insertData(1,{0.5f, -0.5f},{0.0, 0.5, 0.0});
-        vxBufferImpl->insertData(2,{0.5f, 0.5f},{0.0, 0.0, 0.5});
-        vxBufferImpl->insertData(3,{-0.5f, 0.5f},{0.5, 0.5, 0.5});
+        vxBufferImpl->insertData(0,{-0.5f, -0.5f},{0.05, 0.0, 0.0});
+        vxBufferImpl->insertData(1,{0.5f, -0.5f},{0.0, 0.05, 0.0});
+        vxBufferImpl->insertData(2,{0.5f, 0.5f},{0.0, 0.0, 0.05});
+        vxBufferImpl->insertData(3,{-0.5f, 0.5f},{0.05, 0.05, 0.05});
         ANTH_LOGI("Data Inserted");
         this->vertexBuffer = vxBufferImpl;
         this->vertexBuffer->createBuffer();;
@@ -273,6 +285,21 @@ namespace Anthem::Entry{
         this->indexBuffer->createBuffer();
     }
 
+    void AnthemEnvImpl::createUniformBuffer(){
+        ANTH_LOGI("Begining UBuf Creation");
+        auto ubuf = new AnthemUniformBufferImpl<AnthemUniformVecf<4>>();
+        ubuf->specifyLogicalDevice(this->logicalDevice.get());
+        ubuf->specifyPhyDevice(this->phyDevice.get());
+        ubuf->createLayoutBinding(0);
+        ubuf->createBuffer(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
+        ubuf->createDescriptorPool(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
+        ubuf->createDescriptorSet(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
+        this->uniformUpdateFunc = [&](){
+            float color[4] = {0.5f,0.0f,0.0f,0.0f};
+            ((AnthemUniformBufferImpl<AnthemUniformVecf<4>>*)(this->uniformBuffer))->specifyUniforms(color);
+        };
+        this->uniformBuffer = ubuf;
+    }
                 
 }
 

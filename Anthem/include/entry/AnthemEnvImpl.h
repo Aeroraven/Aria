@@ -18,7 +18,7 @@
 #include "../core/drawing/AnthemVertexBuffer.h"
 #include "../core/drawing/AnthemIndexBuffer.h"
 #include "../core/drawing/AnthemDrawingCommandHelper.h"
-
+#include "../core/drawing/AnthemUniformBuffer.h"
 namespace Anthem::Entry{
     using namespace Anthem::Core;
     
@@ -49,6 +49,9 @@ namespace Anthem::Entry{
 
         AnthemVertexBuffer* vertexBuffer;
         AnthemIndexBuffer* indexBuffer;
+        AnthemUniformBuffer* uniformBuffer;
+
+        std::function<void()> uniformUpdateFunc;
 
         int currentFrame = 0;
         bool resizeStatusFlag = false;
@@ -78,6 +81,8 @@ namespace Anthem::Entry{
         void virtual createVertexBuffer();
         void virtual createIndexBuffer();
         void virtual createDrawingCommandHelper();
+
+        void virtual createUniformBuffer();
     };
 }
 
