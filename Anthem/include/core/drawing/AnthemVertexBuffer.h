@@ -53,9 +53,13 @@ namespace Anthem::Core{
         
     };
 
-    template<typename Tp,uint32_t Sz> struct AnthemVAOAttrDesc;
+    template<typename Tp,uint32_t Sz> 
+    requires TmplDefs::ATpIsdValidAttr<Tp,Sz>
+    struct AnthemVAOAttrDesc;
 
-    template<typename... AVAOTpDesc> class AnthemVertexBufferImpl;
+    template<typename... AVAOTpDesc> 
+    class AnthemVertexBufferImpl;
+    
     template<typename... AttrTp,uint32_t... AttrSz>
     class AnthemVertexBufferImpl<AnthemVAOAttrDesc<AttrTp,AttrSz>...>:public AnthemVertexBuffer{
     static_assert(sizeof...(AttrSz)==sizeof...(AttrTp),"Invalid data size");

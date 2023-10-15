@@ -13,6 +13,7 @@
 #include <fstream>
 #include <ctime>
 #include <regex>
+#include <concepts>
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>
@@ -52,4 +53,34 @@
 // Default
 #define ANTH_ERROR_RAISE_DEFAULT_FUNC ([](){ANTH_LOGE("Unspecified error handler");exit(1);})
 
-// String Literals
+// Concepts
+namespace Anthem::Core::TmplDefs{
+    template<class T,class... U>
+    concept ATpdAnyOf = (std::same_as<T,U> || ...);
+
+    template<class... T,class U>
+    concept ATpdAllAre = (std::same_as<T,U> || ...);
+
+    //Attributes Templates
+    template<class SrcTp,int SrcSz, class DstTp, int DstSz>
+    concept ATpdIsdAttrEquals = (std::same_as<SrcTp,DstTp> && (SrcSz==DstSz));
+
+    template<class SrcTp,int SrcSz, class DstTp, int DstLb,int DstUb>
+    concept ATpdIsdAttrEqualsEx = (std::same_as<SrcTp,DstTp> && (SrcSz<=DstUb) && (SrcSz>=DstUb));
+
+    template<class SrcTp,int SrcSz> 
+    concept ATpIsdAttrVecf = ATpdIsdAttrEqualsEx<SrcTp,SrcSz,float,1,4>;
+
+    template<class SrcTp,int SrcSz> 
+    concept ATpIsdValidAttr = ATpIsdAttrVecf<SrcTp,SrcSz>;
+
+    //Uniform Templates
+    template<class SrcTp,int SrcDm,int SrcSz,class DstTp,int DstDmLb,int DstDmUb,int DstSzLb,int DstSzUb>
+    concept ATpIsdUniEquals = (std::same_as<SrcTp,DstTp> && (SrcDm<=DstDmUb) && (SrcDm>=DstDmLb) && (SrcSz<=DstSzUb) && (SrcSz>=DstSzLb));
+
+    template<class SrcTp,int SrcDm,int SrcSz>
+    concept ATpIsdUniMatVecf = ATpIsdUniEquals<SrcTp,SrcDm,SrcSz,float,1,2,1,4>;
+
+    template<class SrcTp,int SrcDm,int SrcSz>
+    concept ATpIsdValidUniform = ATpIsdUniMatVecf<SrcTp,SrcDm,SrcSz>;
+}
