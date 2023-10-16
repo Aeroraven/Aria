@@ -3,6 +3,7 @@
 #include "../utils/AnthemUtlLogicalDeviceReqBase.h"
 #include "../utils/AnthemUtlPhyDeviceReqBase.h"
 #include "AnthemGeneralBufferBase.h"
+#include "AnthemDescriptorPoolReqBase.h"
 
 namespace Anthem::Core{
 
@@ -10,16 +11,16 @@ namespace Anthem::Core{
         
     };
 
-    class AnthemUniformBuffer:public AnthemGeneralBufferBase{
+    class AnthemUniformBuffer:
+    public virtual AnthemGeneralBufferBase,
+    public virtual AnthemDescriptorPoolReqBase{
+
     private:
         VkDescriptorSetLayoutBinding layoutBindingDesc = {};
         VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
         VkDescriptorSetLayout layout = VK_NULL_HANDLE;
 
-        VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-
         std::vector<AnthemUniformBufferProp> uniformBuffers = {};
-        std::vector<VkDescriptorSet> descriptorSets = {};
 
     protected:
         size_t virtual getBufferSize() = 0;
@@ -31,35 +32,16 @@ namespace Anthem::Core{
         }
 
     public:
-        const VkDescriptorSet* getDescriptorSet(uint32_t idx) const{
-            return &(descriptorSets.at(idx));
+        bool destroyDescriptorPool(){
+            return this->destroyDescriptorPoolInternal(this->logicalDevice);
+        }
+        bool createDescriptorPool(uint32_t numSets){
+            return this->createDescriptorPoolInternal(this->logicalDevice,numSets,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
         }
         const VkDescriptorSetLayout* getDescriptorSetLayout() const{
             return &layout;
         }
-        bool createDescriptorPool(uint32_t numSets){
-            VkDescriptorPoolSize poolSize = {};
-            poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            poolSize.descriptorCount = numSets;
-
-            VkDescriptorPoolCreateInfo poolCreateInfo = {};
-            poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-            poolCreateInfo.pNext = nullptr;
-            poolCreateInfo.flags = 0;
-            poolCreateInfo.maxSets = numSets;
-            poolCreateInfo.poolSizeCount = 1;
-            poolCreateInfo.pPoolSizes = &poolSize;
-
-            if(vkCreateDescriptorPool(this->logicalDevice->getLogicalDevice(),&poolCreateInfo,nullptr,&descriptorPool)!=VK_SUCCESS){
-                ANTH_LOGE("Failed to create descriptor pool");
-                return false;
-            }
-            return true;
-        }
-        bool destroyDescriptorPool(){
-            vkDestroyDescriptorPool(this->logicalDevice->getLogicalDevice(),descriptorPool,nullptr);
-            return true;
-        }
+        
         bool createDescriptorSet(uint32_t numSets){
             //Create
             std::vector<VkDescriptorSetLayout> descSetLayout(numSets,layout);
@@ -75,6 +57,7 @@ namespace Anthem::Core{
                 ANTH_LOGE("Failed to allocate descriptor sets");
                 return false;
             }
+
 
             for(int i=0;i<numSets;i++){
                 VkDescriptorBufferInfo bufferInfo = {};

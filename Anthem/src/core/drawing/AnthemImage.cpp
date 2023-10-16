@@ -1,6 +1,9 @@
 #include "../../../include/core/drawing/AnthemImage.h"
 
 namespace Anthem::Core{
+    bool AnthemImage::createDescriptorPool(uint32_t maxSets){
+        return this->createDescriptorPoolInternal(this->logicalDevice,maxSets,VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+    }
     bool AnthemImage::loadImageData(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels){
         this->rawImageData = new char[width*height*channels];
         ANTH_LOGV("Before Memcpy Sz=", width*height*channels, " PTR=",(long long)(data));

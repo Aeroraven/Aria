@@ -1,6 +1,7 @@
 #pragma once
 #include "../base/AnthemBaseImports.h"
 #include "./AnthemGeneralBufferBase.h"
+#include "./AnthemDescriptorPoolReqBase.h"
 #include "../utils/AnthemUtlCommandBufferReqBase.h"
 
 namespace Anthem::Core{
@@ -13,7 +14,8 @@ namespace Anthem::Core{
 
     class AnthemImage:
     public AnthemGeneralBufferBase,
-    public Util::AnthemUtlCommandBufferReqBase{
+    public Util::AnthemUtlCommandBufferReqBase,
+    public AnthemDescriptorPoolReqBase{
     private:
         char* rawImageData = nullptr;
         uint32_t width,height,channels;
@@ -30,6 +32,8 @@ namespace Anthem::Core{
         bool copyBufferToImage();
         bool createImageView();
         bool createSampler();
+
+        bool createDescriptorPool(uint32_t maxSets);
     public:
         bool prepareImage();
         bool destroyImage();
