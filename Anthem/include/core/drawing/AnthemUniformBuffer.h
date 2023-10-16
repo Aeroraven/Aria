@@ -2,17 +2,15 @@
 #include "../base/AnthemBaseImports.h"
 #include "../utils/AnthemUtlLogicalDeviceReqBase.h"
 #include "../utils/AnthemUtlPhyDeviceReqBase.h"
+#include "AnthemGeneralBufferBase.h"
 
 namespace Anthem::Core{
 
-    struct AnthemUniformBufferProp{
-        VkBuffer buffer;
-        VkBufferCreateInfo bufferCreateInfo = {};
-        VkDeviceMemory bufferMem;
+    struct AnthemUniformBufferProp:public AnthemGeneralBufferProp{
         void* mappedMem;
     };
 
-    class AnthemUniformBuffer:public Util::AnthemUtlLogicalDeviceReqBase,public Util::AnthemUtlPhyDeviceReqBase{
+    class AnthemUniformBuffer:public AnthemGeneralBufferBase{
     private:
         VkDescriptorSetLayoutBinding layoutBindingDesc = {};
         VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
@@ -28,43 +26,10 @@ namespace Anthem::Core{
         bool virtual getRawBufferData(void** ptr) = 0;
 
     protected:
-        bool bindBufferInternal(AnthemUniformBufferProp* bufProp){
-            //Bind Memory
-            auto result = vkBindBufferMemory(this->logicalDevice->getLogicalDevice(),bufProp->buffer,bufProp->bufferMem,0);
-            if(result!=VK_SUCCESS){
-                ANTH_LOGE("Failed to bind buffer memory");
-                return false;
-            }
-            ANTH_LOGI("Buffer memory binded");
-            return true;
+        uint32_t calculateBufferSize() override{
+            return this->getBufferSize();
         }
-        bool virtual createBufferInternal(AnthemUniformBufferProp* bufProp, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memProp){
-            ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
-            ANTH_LOGI("Creating buffer");
-            bufProp->bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-            bufProp->bufferCreateInfo.size = this->getBufferSize();
-            bufProp->bufferCreateInfo.usage = usage;
-            bufProp->bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            bufProp->bufferCreateInfo.pNext = nullptr;
-            if(vkCreateBuffer(this->logicalDevice->getLogicalDevice(),&(bufProp->bufferCreateInfo),nullptr,&(bufProp->buffer))!=VK_SUCCESS){
-                ANTH_LOGE("Failed to create buffer");
-                return false;
-            }
-            ANTH_LOGI("Buffer created");
-            VkMemoryRequirements memReq = {};
-            vkGetBufferMemoryRequirements(this->logicalDevice->getLogicalDevice(),bufProp->buffer,&memReq);
-            VkMemoryAllocateInfo allocInfo = {};
-            allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-            allocInfo.allocationSize = memReq.size;
-            allocInfo.memoryTypeIndex = this->phyDevice->findMemoryType(memReq.memoryTypeBits,memProp);
-            if(vkAllocateMemory(this->logicalDevice->getLogicalDevice(),&allocInfo,nullptr,&(bufProp->bufferMem))!=VK_SUCCESS){
-                ANTH_LOGE("Failed to allocate memory");
-                return false;
-            }
-            ANTH_LOGI("Memory allocated");
-            this->bindBufferInternal(bufProp);
-            return true;
-        }
+
     public:
         const VkDescriptorSet* getDescriptorSet(uint32_t idx) const{
             return &(descriptorSets.at(idx));

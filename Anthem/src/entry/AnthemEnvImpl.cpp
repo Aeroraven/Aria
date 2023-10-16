@@ -287,7 +287,7 @@ namespace Anthem::Entry{
 
     void AnthemEnvImpl::createUniformBuffer(){
         ANTH_LOGI("Begining UBuf Creation");
-        auto ubuf = new AnthemUniformBufferImpl<AnthemUniformVecf<4>>();
+        auto ubuf = new AnthemUniformBufferImpl<AnthemUniformVecf<4>,AnthemUniformMatf<4>>();
         ubuf->specifyLogicalDevice(this->logicalDevice.get());
         ubuf->specifyPhyDevice(this->phyDevice.get());
         ubuf->createLayoutBinding(0);
@@ -295,8 +295,13 @@ namespace Anthem::Entry{
         ubuf->createDescriptorPool(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
         ubuf->createDescriptorSet(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
         this->uniformUpdateFunc = [&](){
+            auto s = ((AnthemUniformBufferImpl<AnthemUniformVecf<4>,AnthemUniformMatf<4>>*)(this->uniformBuffer));
             float color[4] = {0.5f,0.0f,0.0f,0.0f};
-            ((AnthemUniformBufferImpl<AnthemUniformVecf<4>>*)(this->uniformBuffer))->specifyUniforms(color);
+            float matVal[16];
+            auto mat = Math::AnthemLinAlg::eye<float,4>();
+            mat[0][3] = 0.5f;
+            mat.columnMajorVectorization(matVal);
+            s->specifyUniforms(color,matVal);
         };
         this->uniformBuffer = ubuf;
     }

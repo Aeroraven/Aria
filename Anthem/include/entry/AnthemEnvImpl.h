@@ -19,6 +19,8 @@
 #include "../core/drawing/AnthemIndexBuffer.h"
 #include "../core/drawing/AnthemDrawingCommandHelper.h"
 #include "../core/drawing/AnthemUniformBuffer.h"
+#include "../core/math/AnthemMatrix.h"
+#include "../core/math/AnthemLinAlg.h"
 namespace Anthem::Entry{
     using namespace Anthem::Core;
     
