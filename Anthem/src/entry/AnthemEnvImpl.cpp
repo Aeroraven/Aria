@@ -54,9 +54,13 @@ namespace Anthem::Entry{
         
         this->destroySwapChain();
 
+        //Destroy Uniform Buffer
         this->uniformBuffer->destroyBuffers();
         this->uniformBuffer->destroyDescriptorPool();
         this->uniformBuffer->destroyLayoutBinding();
+
+        //Destroy Texture Image
+        this->textureImage->destroyImage();
 
         //Destroy Vertex Buffer
         this->vertexBuffer->destroyBuffer();
@@ -120,9 +124,16 @@ namespace Anthem::Entry{
         this->initCommandManager();
         this->createDrawingCommandHelper();
 
+        //Create Texture Image
+        ANTH_LOGI("Creating Texture Image");
+        this->createTextureImage();
+
         //Create Vertex Buffer / Index Buffer
         this->createVertexBuffer();
         this->createIndexBuffer();
+
+        
+        
 
         //Create Graphics Pipeline
         this->loadShader();
@@ -304,6 +315,25 @@ namespace Anthem::Entry{
             s->specifyUniforms(color,matVal);
         };
         this->uniformBuffer = ubuf;
+    }
+
+    void AnthemEnvImpl::createTextureImage(){
+        this->imageLoader = ANTH_MAKE_SHARED(Anthem::External::AnthemImageLoader)();
+        uint32_t texWidth,texHeight,texChannels;
+        uint8_t* texData;
+        ANTH_LOGI("Loading Image");
+        this->imageLoader->loadImage("/home/funkybirds/Aria/Anthem/assets/tutorialtex.jpg",&texWidth,&texHeight,&texChannels,&texData);
+        
+        ANTH_LOGI("Preparing Image");
+        this->textureImage = ANTH_MAKE_SHARED(AnthemImage)();
+        this->textureImage->specifyLogicalDevice(this->logicalDevice.get());
+        this->textureImage->specifyPhyDevice(this->phyDevice.get());
+        this->textureImage->specifyCommandBuffers(this->commandManager.get());
+
+        ANTH_LOGI("START!!!!");
+        this->textureImage->loadImageData(texData,texWidth,texHeight,texChannels);
+        ANTH_LOGI("START PREP!!!!");
+        this->textureImage->prepareImage();
     }
                 
 }

@@ -16,6 +16,7 @@ namespace Anthem::Core{
 
         //Get Device Features
         this->creatingFeats = phyDevice->getDeviceFeatures();
+        this->creatingFeats.samplerAnisotropy = VK_TRUE;
 
         //Create Device
         ANTH_LOGI("Creating Queue");

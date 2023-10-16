@@ -10,6 +10,7 @@ namespace Anthem::Core{
         VkBuffer buffer;
         VkBufferCreateInfo bufferCreateInfo = {};
         VkDeviceMemory bufferMem;
+        void* mappedMem;
     };
 
     class AnthemGeneralBufferBase:public Util::AnthemUtlLogicalDeviceReqBase,

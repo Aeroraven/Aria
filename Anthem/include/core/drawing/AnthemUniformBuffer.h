@@ -7,7 +7,7 @@
 namespace Anthem::Core{
 
     struct AnthemUniformBufferProp:public AnthemGeneralBufferProp{
-        void* mappedMem;
+        
     };
 
     class AnthemUniformBuffer:public AnthemGeneralBufferBase{

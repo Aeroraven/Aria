@@ -2,3 +2,6 @@
 build/*
 build
 build/*
+
+include/external_ref/*
+include/external_ref

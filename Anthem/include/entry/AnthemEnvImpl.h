@@ -19,8 +19,10 @@
 #include "../core/drawing/AnthemIndexBuffer.h"
 #include "../core/drawing/AnthemDrawingCommandHelper.h"
 #include "../core/drawing/AnthemUniformBuffer.h"
+#include "../core/drawing/AnthemImage.h"
 #include "../core/math/AnthemMatrix.h"
 #include "../core/math/AnthemLinAlg.h"
+#include "../external/AnthemImageLoader.h"
 namespace Anthem::Entry{
     using namespace Anthem::Core;
     
@@ -52,6 +54,9 @@ namespace Anthem::Entry{
         AnthemVertexBuffer* vertexBuffer;
         AnthemIndexBuffer* indexBuffer;
         AnthemUniformBuffer* uniformBuffer;
+
+        ANTH_SHARED_PTR(AnthemImage) textureImage;
+        ANTH_SHARED_PTR(Anthem::External::AnthemImageLoader) imageLoader;
 
         std::function<void()> uniformUpdateFunc;
 
@@ -85,6 +90,7 @@ namespace Anthem::Entry{
         void virtual createDrawingCommandHelper();
 
         void virtual createUniformBuffer();
+        void virtual createTextureImage();
     };
 }
 

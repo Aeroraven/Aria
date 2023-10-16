@@ -24,7 +24,7 @@ namespace Anthem::Core{
         bool virtual specifyDevice(VkPhysicalDevice device,AnthemPhyQueueFamilyIdx* queueFamilyIdx);
         VkPhysicalDevice virtual getPhysicalDevice();
         VkPhysicalDeviceFeatures virtual getDeviceFeatures();
-        VkPhysicalDeviceProperties virtual getDeviceProperties();
+        VkPhysicalDeviceProperties virtual getDeviceProperties() const;
         std::optional<uint32_t> virtual getPhyQueueGraphicsFamilyIndice() const;
         std::optional<uint32_t> virtual getPhyQueuePresentFamilyIndice() const;
         const std::vector<const char*>* const getRequiredDevSupportedExts() const;

@@ -51,6 +51,8 @@
     #define ANTH_LOGI_IF(...)
 #endif
 
+#define ANTH_TODO(...)
+
 // Default
 #define ANTH_ERROR_RAISE_DEFAULT_FUNC ([](){ANTH_LOGE("Unspecified error handler");exit(1);})
 
