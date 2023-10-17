@@ -4,6 +4,7 @@
 #include "AnthemShaderModule.h"
 #include "AnthemViewport.h"
 #include "AnthemRenderPass.h"
+#include "../drawing/AnthemDescriptorPool.h"
 #include "../drawing/AnthemVertexBuffer.h"
 #include "../drawing/AnthemUniformBuffer.h"
 
@@ -17,6 +18,7 @@ namespace Anthem::Core{
     
         AnthemVertexBuffer* vertexBuffer = nullptr;
         AnthemUniformBuffer* uniformBuffer = nullptr;
+        AnthemDescriptorPool* descriptorPool = nullptr;
 
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
         std::vector<VkDynamicState> reqiredDynamicStates={
@@ -51,6 +53,7 @@ namespace Anthem::Core{
         bool specifyShaderModule(const AnthemShaderModule* shaderModule);
         bool specifyVertexBuffer(AnthemVertexBuffer* vertexBuffer);
         bool specifyUniformBuffer(AnthemUniformBuffer* uniformBuffer);
+        bool specifyDescriptor(AnthemDescriptorPool* pool);
 
 
         bool preparePreqPipelineCreateInfo();

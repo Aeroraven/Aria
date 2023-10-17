@@ -54,10 +54,11 @@ namespace Anthem::Entry{
         
         this->destroySwapChain();
 
+        this->descriptorPool->destroyDescriptorPool();
+        this->descriptorPool->destroyLayoutBinding();
+        
         //Destroy Uniform Buffer
         this->uniformBuffer->destroyBuffers();
-        this->uniformBuffer->destroyDescriptorPool();
-        this->uniformBuffer->destroyLayoutBinding();
 
         //Destroy Texture Image
         this->textureImage->destroyImage();
@@ -132,12 +133,12 @@ namespace Anthem::Entry{
         this->createVertexBuffer();
         this->createIndexBuffer();
 
-        
-        
-
         //Create Graphics Pipeline
         this->loadShader();
         this->createUniformBuffer();
+        this->createDescriptorPool();
+
+        ANTH_LOGI("Init Pipeline");
         this->initGraphicsPipeline();
 
         //Create Drawing Objects
@@ -177,9 +178,13 @@ namespace Anthem::Entry{
         this->graphicsPipeline->specifyShaderModule(this->shader.get());
         this->graphicsPipeline->specifyVertexBuffer(this->vertexBuffer);
         this->graphicsPipeline->specifyUniformBuffer(this->uniformBuffer);
+        this->graphicsPipeline->specifyDescriptor(this->descriptorPool);
 
+        ANTH_LOGI("Prepare Pipeline Create Info");
         this->graphicsPipeline->preparePreqPipelineCreateInfo();
+        ANTH_LOGI("Create Layout");
         this->graphicsPipeline->createPipelineLayout();
+        ANTH_LOGI("Creat Pipeline");
         this->graphicsPipeline->createPipeline();
     }
     void AnthemEnvImpl::initRenderPass(){
@@ -237,7 +242,8 @@ namespace Anthem::Entry{
         this->drawingCommandHelper->startRenderPass(&beginInfo,currentFrame);
         //this->drawingCommandHelper->demoDrawCommand(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,currentFrame);
         //this->drawingCommandHelper->demoDrawCommand2(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,this->indexBuffer,currentFrame);
-        this->drawingCommandHelper->demoDrawCommand3(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,this->indexBuffer,this->uniformBuffer,currentFrame);
+        this->drawingCommandHelper->demoDrawCommand3(this->graphicsPipeline.get(),this->viewport.get(),this->vertexBuffer,this->indexBuffer,this->uniformBuffer,
+            descriptorPool,currentFrame);
         
         this->drawingCommandHelper->endRenderPass(currentFrame);
 
@@ -301,10 +307,7 @@ namespace Anthem::Entry{
         auto ubuf = new AnthemUniformBufferImpl<AnthemUniformVecf<4>,AnthemUniformMatf<4>>();
         ubuf->specifyLogicalDevice(this->logicalDevice.get());
         ubuf->specifyPhyDevice(this->phyDevice.get());
-        ubuf->createLayoutBinding(0);
         ubuf->createBuffer(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
-        ubuf->createDescriptorPool(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
-        ubuf->createDescriptorSet(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
         this->uniformUpdateFunc = [&](){
             auto s = ((AnthemUniformBufferImpl<AnthemUniformVecf<4>,AnthemUniformMatf<4>>*)(this->uniformBuffer));
             float color[4] = {0.5f,0.0f,0.0f,0.0f};
@@ -334,6 +337,20 @@ namespace Anthem::Entry{
         this->textureImage->loadImageData(texData,texWidth,texHeight,texChannels);
         ANTH_LOGI("START PREP!!!!");
         this->textureImage->prepareImage();
+    }
+
+    void AnthemEnvImpl::createDescriptorPool(){
+        ANTH_LOGI("Creating Desc Pool");
+        this->descriptorPool = new AnthemDescriptorPool();
+        this->descriptorPool->specifyLogicalDevice(this->logicalDevice.get());
+        ANTH_LOGI("Creating Desc Pool - In Prog");
+        uint32_t uniformPool;
+        this->descriptorPool->createDescriptorPool(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&uniformPool);
+        ANTH_LOGI("Adding Uniform Buffer");
+        this->descriptorPool->addUniformBuffer(this->uniformBuffer,0,uniformPool);
+        ANTH_LOGI("Creating Desc Set");
+        this->descriptorPool->createDescriptorSet(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
+
     }
                 
 }

@@ -25,6 +25,10 @@ namespace Anthem::Core{
         this->uniformBuffer = uniformBuffer;
         return true;
     }
+    bool AnthemGraphicsPipeline::specifyDescriptor(AnthemDescriptorPool* pool){
+        this->descriptorPool = pool;
+        return true;
+    }
 
     bool AnthemGraphicsPipeline::preparePreqPipelineCreateInfo(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
@@ -121,8 +125,9 @@ namespace Anthem::Core{
             this->pipelineLayoutCreateInfo.pNext = nullptr;
             this->pipelineLayoutCreateInfo.flags = 0;
             this->pipelineLayoutCreateInfo.setLayoutCount = 1;
-            this->pipelineLayoutCreateInfo.pSetLayouts = this->uniformBuffer->getDescriptorSetLayout();
-            ANTH_LOGI("Specified pipeline layout",  (long long)(this->uniformBuffer->getDescriptorSetLayout()));
+            ANTH_LOGI("Here");
+            this->pipelineLayoutCreateInfo.pSetLayouts = this->descriptorPool->getDescriptorSetLayoutUniformBuffer(0);
+            ANTH_LOGI("Specified pipeline layout",  (long long)(this->descriptorPool->getDescriptorSetLayoutUniformBuffer(0)));
         }
         
         //Create Layout
