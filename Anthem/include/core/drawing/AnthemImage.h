@@ -38,5 +38,7 @@ namespace Anthem::Core{
         bool prepareImage();
         bool destroyImage();
         bool loadImageData(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
+        const VkImageView* getImageView() const;
+        const VkSampler* getSampler() const;
     };
 }

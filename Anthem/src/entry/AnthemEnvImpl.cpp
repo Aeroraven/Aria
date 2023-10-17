@@ -273,18 +273,19 @@ namespace Anthem::Entry{
     void AnthemEnvImpl::createVertexBuffer(){
         using vxColorAttr = AnthemVAOAttrDesc<float,3>;
         using vxPosAttr = AnthemVAOAttrDesc<float,2>;
+        using vxTexAttr = AnthemVAOAttrDesc<float,2>;
         ANTH_LOGI("Begining VBuf Creation");
-        auto vxBufferImpl = new AnthemVertexBufferImpl<vxPosAttr,vxColorAttr>();
+        auto vxBufferImpl = new AnthemVertexBufferImpl<vxPosAttr,vxColorAttr,vxTexAttr>();
         vxBufferImpl->specifyLogicalDevice(this->logicalDevice.get());
         vxBufferImpl->specifyPhyDevice(this->phyDevice.get());
         vxBufferImpl->specifyCommandBuffers(this->commandManager.get());
         ANTH_LOGI("Setting Vertices");
         vxBufferImpl->setTotalVertices(4);
         ANTH_LOGI("Inserting Data");
-        vxBufferImpl->insertData(0,{-0.5f, -0.5f},{0.05, 0.0, 0.0});
-        vxBufferImpl->insertData(1,{0.5f, -0.5f},{0.0, 0.05, 0.0});
-        vxBufferImpl->insertData(2,{0.5f, 0.5f},{0.0, 0.0, 0.05});
-        vxBufferImpl->insertData(3,{-0.5f, 0.5f},{0.05, 0.05, 0.05});
+        vxBufferImpl->insertData(0,{-0.5f, -0.5f},{0.05, 0.0, 0.0},{1.0f, 0.0f});
+        vxBufferImpl->insertData(1,{0.5f, -0.5f},{0.0, 0.05, 0.0},{0.0f, 0.0f});
+        vxBufferImpl->insertData(2,{0.5f, 0.5f},{0.0, 0.0, 0.05},{0.0f, 1.0f});
+        vxBufferImpl->insertData(3,{-0.5f, 0.5f},{0.05, 0.05, 0.05},{1.0f, 1.0f});
         ANTH_LOGI("Data Inserted");
         this->vertexBuffer = vxBufferImpl;
         this->vertexBuffer->createBuffer();;
@@ -313,7 +314,8 @@ namespace Anthem::Entry{
             float color[4] = {0.5f,0.0f,0.0f,0.0f};
             float matVal[16];
             auto mat = Math::AnthemLinAlg::eye<float,4>();
-            mat[0][3] = 0.5f;
+            mat[0][0] = 2.0f;
+            mat[1][1] = 2.0f;
             mat.columnMajorVectorization(matVal);
             s->specifyUniforms(color,matVal);
         };
@@ -325,7 +327,7 @@ namespace Anthem::Entry{
         uint32_t texWidth,texHeight,texChannels;
         uint8_t* texData;
         ANTH_LOGI("Loading Image");
-        this->imageLoader->loadImage("/home/funkybirds/Aria/Anthem/assets/tutorialtex.jpg",&texWidth,&texHeight,&texChannels,&texData);
+        this->imageLoader->loadImage("/home/funkybirds/Aria/Anthem/assets/cat.jpg",&texWidth,&texHeight,&texChannels,&texData);
         
         ANTH_LOGI("Preparing Image");
         this->textureImage = ANTH_MAKE_SHARED(AnthemImage)();
@@ -340,15 +342,17 @@ namespace Anthem::Entry{
     }
 
     void AnthemEnvImpl::createDescriptorPool(){
-        ANTH_LOGI("Creating Desc Pool");
         this->descriptorPool = new AnthemDescriptorPool();
         this->descriptorPool->specifyLogicalDevice(this->logicalDevice.get());
-        ANTH_LOGI("Creating Desc Pool - In Prog");
         uint32_t uniformPool;
+        uint32_t imagePool;
+        ANTH_LOGI("Creating Pool");
         this->descriptorPool->createDescriptorPool(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&uniformPool);
-        ANTH_LOGI("Adding Uniform Buffer");
+        this->descriptorPool->createDescriptorPool(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT,VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,&imagePool);
+
+        ANTH_LOGI("Creating Descriptor Set");
         this->descriptorPool->addUniformBuffer(this->uniformBuffer,0,uniformPool);
-        ANTH_LOGI("Creating Desc Set");
+        this->descriptorPool->addSampler(this->textureImage.get(),1,imagePool);
         this->descriptorPool->createDescriptorSet(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
 
     }

@@ -115,6 +115,7 @@ namespace Anthem::Core{
 
     bool AnthemGraphicsPipeline::createPipelineLayout(){
         //Specify Pipeline Layout Creation Info
+        
         if(this->uniformBuffer == nullptr){
             this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
             this->pipelineLayoutCreateInfo.pNext = nullptr;
@@ -124,10 +125,15 @@ namespace Anthem::Core{
             this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
             this->pipelineLayoutCreateInfo.pNext = nullptr;
             this->pipelineLayoutCreateInfo.flags = 0;
-            this->pipelineLayoutCreateInfo.setLayoutCount = 1;
+            
             ANTH_LOGI("Here");
-            this->pipelineLayoutCreateInfo.pSetLayouts = this->descriptorPool->getDescriptorSetLayoutUniformBuffer(0);
-            ANTH_LOGI("Specified pipeline layout",  (long long)(this->descriptorPool->getDescriptorSetLayoutUniformBuffer(0)));
+            this->descriptorPool->getAllDescriptorLayouts(&layouts);
+            for(auto x:layouts){
+                ANTH_LOGI("Layouts Are:",(long long)(x));
+            }
+            this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
+            this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+            ANTH_LOGI("Specified pipeline layout");
         }
         
         //Create Layout

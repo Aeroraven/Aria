@@ -45,6 +45,7 @@ namespace Anthem::Core{
         bool pipelineCreated = false;
         VkPipeline pipeline;
         VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
+        std::vector<VkDescriptorSetLayout> layouts;
 
     public:
         bool specifyLogicalDevice(const AnthemLogicalDevice* device);

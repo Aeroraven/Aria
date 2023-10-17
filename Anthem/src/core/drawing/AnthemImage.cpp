@@ -202,5 +202,11 @@ namespace Anthem::Core{
     uint32_t AnthemImage::calculateBufferSize(){
         return this->height*this->width*this->channels;
     }
+    const VkImageView* AnthemImage::getImageView() const{
+        return &(this->imageView);
+    }
+    const VkSampler* AnthemImage::getSampler() const{
+        return &(this->sampler);
+    }
 
 }

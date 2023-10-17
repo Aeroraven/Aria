@@ -90,7 +90,10 @@ namespace Anthem::Core{
         vkCmdBindVertexBuffers(*cmdBuf,0,1,vertexBuffers,offsets);
         vkCmdBindIndexBuffer(*cmdBuf, *(ibuf->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
         //ANTH_LOGI("Binding pipeline layout:",(long long)(pipeline->getPipelineLayout()));
-        vkCmdBindDescriptorSets(*cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0, 1, descPool->getDescriptorSet(frameIdx), 0, nullptr);
+        std::vector<VkDescriptorSet> descSets = {};
+        descPool->getAllDescriptorSets(frameIdx,&descSets);
+        vkCmdBindDescriptorSets(*cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
+            descSets.size(),descSets.data() , 0, nullptr);
         vkCmdDrawIndexed(*cmdBuf, static_cast<uint32_t>(ibuf->getIndexCount()), 1, 0, 0, 0);
         return true;
     }

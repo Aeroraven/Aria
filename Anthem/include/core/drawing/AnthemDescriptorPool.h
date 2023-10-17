@@ -2,8 +2,10 @@
 #include "../base/AnthemBaseImports.h"
 #include "../utils/AnthemUtlLogicalDeviceReqBase.h"
 #include "./AnthemUniformBuffer.h"
+#include "./AnthemImage.h"
 
 namespace Anthem::Core{
+
     struct AnthemUniformBufferDescriptorInfo{
         const std::vector<AnthemUniformBufferProp>* buffer;
         uint32_t size;
@@ -15,17 +17,65 @@ namespace Anthem::Core{
         uint32_t descPoolId;
     };
 
+    struct AnthemSamplerDescriptorInfo{
+        AnthemImage* img;
+        uint32_t bindLoc;
+        VkDescriptorSetLayoutBinding layoutBindingDesc = {};
+        VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
+        uint32_t descPoolId;
+        VkDescriptorSetLayout layout = VK_NULL_HANDLE;
+        VkDescriptorImageInfo imageInfo = {};
+    };
+
     class AnthemDescriptorPool:public Util::AnthemUtlLogicalDeviceReqBase{
     protected:
-        std::vector<VkDescriptorSet> descriptorSets = {};
+        std::vector<VkDescriptorSet> descriptorSetsUniform = {};
+        std::vector<VkDescriptorSet> descriptorSetsImg = {};
         std::vector<VkDescriptorPool> descriptorPoolList = {};
         
         std::vector<AnthemUniformBufferDescriptorInfo> uniformBuffers;
-        std::vector<VkWriteDescriptorSet> descWrite = {};
-
+        std::vector<AnthemSamplerDescriptorInfo> samplersDesc;
+        std::vector<VkWriteDescriptorSet> descWriteUniform = {};
+        std::vector<VkWriteDescriptorSet> descWriteSampler = {};
     public:
-        const VkDescriptorSet* getDescriptorSet(uint32_t idx) const{
-            return &(descriptorSets.at(idx));
+        const VkDescriptorSet* getDescriptorSetUniform(uint32_t idx) const{
+            return &(descriptorSetsUniform.at(idx));
+        }
+        const bool getAllDescriptorSets(uint32_t frameIdx, std::vector<VkDescriptorSet>* outRef){
+            for(int i=0;i<this->uniformBuffers.size();i++){
+                outRef->push_back(this->descriptorSetsUniform.at(frameIdx*this->uniformBuffers.size()+i));
+            }
+            for(int i=0;i<this->samplersDesc.size();i++){
+                outRef->push_back(this->descriptorSetsImg.at(frameIdx*this->samplersDesc.size()+i));
+            }
+            return true;
+        }
+        bool addSampler(AnthemImage* imageSampler,uint32_t bindLoc, uint32_t descPoolId){
+            this->samplersDesc.push_back({});
+            ANTH_LOGI("Spec Binding Addrs");
+            auto& layoutBindingDesc = this->samplersDesc.back().layoutBindingDesc;
+            auto& layoutCreateInfo = this->samplersDesc.back().layoutCreateInfo;
+
+            this->samplersDesc.back().img = imageSampler;
+            this->samplersDesc.back().bindLoc = bindLoc;
+            this->samplersDesc.back().descPoolId = descPoolId;
+
+            layoutBindingDesc.binding = bindLoc;
+            layoutBindingDesc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            layoutBindingDesc.descriptorCount = 1;
+            layoutBindingDesc.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+            layoutBindingDesc.pImmutableSamplers = nullptr;
+
+            layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            layoutCreateInfo.bindingCount = 1;
+            layoutCreateInfo.pBindings = &layoutBindingDesc;
+
+            ANTH_LOGI("Start Create Layout");
+            if(vkCreateDescriptorSetLayout(logicalDevice->getLogicalDevice(),&layoutCreateInfo,nullptr,&(this->samplersDesc.back().layout))!=VK_SUCCESS){
+                ANTH_LOGE("Failed to create descriptor set layout");
+                return false;
+            }
+            return true;
         }
         bool addUniformBuffer(AnthemUniformBuffer* uniformBuffer, uint32_t bindLoc, uint32_t descPoolId){
             this->uniformBuffers.push_back({});
@@ -63,6 +113,19 @@ namespace Anthem::Core{
             for(int i=0;i<this->uniformBuffers.size();i++){
                 vkDestroyDescriptorSetLayout(this->logicalDevice->getLogicalDevice(),this->uniformBuffers.at(i).layout,nullptr);
             }
+            for(int i=0;i<this->samplersDesc.size();i++){
+                vkDestroyDescriptorSetLayout(this->logicalDevice->getLogicalDevice(),this->samplersDesc.at(i).layout,nullptr);
+            }
+            return true;
+        }
+        bool getAllDescriptorLayouts(std::vector<VkDescriptorSetLayout>* outRef){
+            ANTH_LOGI("Total Size=",this->uniformBuffers.size(),"+",this->samplersDesc.size());
+            for(int i=0;i<this->uniformBuffers.size();i++){
+                outRef->push_back(this->uniformBuffers.at(i).layout);
+            }
+            for(int i=0;i<this->samplersDesc.size();i++){
+                outRef->push_back(this->samplersDesc.at(i).layout);
+            }
             return true;
         }
         const VkDescriptorSetLayout* getDescriptorSetLayoutUniformBuffer(uint32_t idx) const{
@@ -71,7 +134,7 @@ namespace Anthem::Core{
             return &(this->uniformBuffers.at(idx).layout);
         }
         bool createDescriptorSet(uint32_t numSets){
-            //Create
+            //Create Uniform Descriptor Sets
             for(int i=0;i<this->uniformBuffers.size();i++){
                 std::vector<VkDescriptorSetLayout> descSetLayout(numSets,this->uniformBuffers.at(i).layout);
                 VkDescriptorSetAllocateInfo allocInfo = {};
@@ -81,13 +144,13 @@ namespace Anthem::Core{
                 allocInfo.descriptorSetCount = numSets;
                 allocInfo.pSetLayouts = descSetLayout.data();
 
-                descriptorSets.resize(numSets);
-                if(vkAllocateDescriptorSets(this->logicalDevice->getLogicalDevice(),&allocInfo,descriptorSets.data())!=VK_SUCCESS){
+                descriptorSetsUniform.resize(numSets);
+                if(vkAllocateDescriptorSets(this->logicalDevice->getLogicalDevice(),&allocInfo,descriptorSetsUniform.data())!=VK_SUCCESS){
                     ANTH_LOGE("Failed to allocate descriptor sets");
                     return false;
                 }
             }
-            ANTH_LOGI("Preparing Descriptor Update");
+            ANTH_LOGI("Preparing Descriptor Update: Uniforms");
             for(int i=0;i<numSets;i++){
                 for(int j=0;j<this->uniformBuffers.size();j++){
                     ANTH_LOGI("Buffer Copies =",uniformBuffers.at(j).buffer->size());
@@ -98,8 +161,8 @@ namespace Anthem::Core{
                     VkWriteDescriptorSet descCp = {};
                     descCp.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                     descCp.pNext = nullptr;
-                    descCp.dstSet = descriptorSets.at(i);
-                    descCp.dstBinding = 0;
+                    descCp.dstSet = descriptorSetsUniform.at(i);
+                    descCp.dstBinding = uniformBuffers.at(j).bindLoc;
                     descCp.dstArrayElement = 0;
                     descCp.descriptorCount = 1;
                     descCp.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -107,11 +170,54 @@ namespace Anthem::Core{
                     descCp.pBufferInfo = &uniformBuffers.at(j).bufferInfo;
                     descCp.pTexelBufferView = nullptr;
 
-                    descWrite.push_back(descCp);
+                    descWriteUniform.push_back(descCp);
                 }
                 
-                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(),descWrite.size(),descWrite.data(),0,nullptr);
+                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(),descWriteUniform.size(),descWriteUniform.data(),0,nullptr);
             }
+            //Create Image Descriptor Sets
+            ANTH_LOGI("Preparing Descriptor Alloc: Samplers");
+            for(int i=0;i<this->samplersDesc.size();i++){
+                ANTH_LOGI("Allocate in Pool:",this->samplersDesc.at(i).descPoolId);
+                std::vector<VkDescriptorSetLayout> descSetLayout(numSets,this->samplersDesc.at(i).layout);
+                VkDescriptorSetAllocateInfo allocInfo = {};
+                allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                allocInfo.pNext = nullptr;
+                allocInfo.descriptorPool = descriptorPoolList.at(this->samplersDesc.at(i).descPoolId);
+                allocInfo.descriptorSetCount = numSets;
+                allocInfo.pSetLayouts = descSetLayout.data();
+
+                descriptorSetsImg.resize(numSets);
+                if(vkAllocateDescriptorSets(this->logicalDevice->getLogicalDevice(),&allocInfo,descriptorSetsImg.data())!=VK_SUCCESS){
+                    ANTH_LOGE("Failed to allocate descriptor sets");
+                    return false;
+                }
+            }
+            ANTH_LOGI("Preparing Descriptor Update: Samplers");
+            for(int i=0;i<numSets;i++){
+                for(int j=0;j<this->samplersDesc.size();j++){
+                    samplersDesc.at(j).imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    samplersDesc.at(j).imageInfo.imageView = *(samplersDesc.at(j).img->getImageView());
+                    samplersDesc.at(j).imageInfo.sampler = *(samplersDesc.at(j).img->getSampler());
+
+                    VkWriteDescriptorSet descCp = {};
+                    descCp.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                    descCp.pNext = nullptr;
+                    descCp.dstSet = descriptorSetsImg.at(i);
+                    descCp.dstBinding = samplersDesc.at(j).bindLoc;
+                    descCp.dstArrayElement = 0;
+                    descCp.descriptorCount = 1;
+                    descCp.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                    descCp.pImageInfo = &samplersDesc.at(j).imageInfo;
+                    descCp.pBufferInfo = nullptr;
+                    descCp.pTexelBufferView = nullptr;
+
+                    descWriteSampler.push_back(descCp);
+                }
+                
+                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(),descWriteSampler.size(),descWriteSampler.data(),0,nullptr);
+            }
+
             ANTH_LOGI("done");
             return true;
         }
@@ -122,6 +228,12 @@ namespace Anthem::Core{
         bool destroyUniformBufferDescriptorLayouts(){
             for(int i=0;i<this->uniformBuffers.size();i++){
                 vkDestroyDescriptorSetLayout(this->logicalDevice->getLogicalDevice(),this->uniformBuffers.at(i).layout,nullptr);
+            }
+            return true;
+        }
+        bool destroyImageBufferDescriptorLayouts(){
+            for(int i=0;i<this->samplersDesc.size();i++){
+                vkDestroyDescriptorSetLayout(this->logicalDevice->getLogicalDevice(),this->samplersDesc.at(i).layout,nullptr);
             }
             return true;
         }
