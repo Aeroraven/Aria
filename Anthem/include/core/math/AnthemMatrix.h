@@ -19,6 +19,13 @@ namespace Anthem::Core::Math{
     }
 
     public:
+        AnthemMatrix(){
+            for(int i=0;i<R;i++){
+                for(int j=0;j<C;j++){
+                    data[i][j] = 0;
+                }
+            }
+        }
         void dot(const AnthemMatrix<T,R,C>* other,AnthemMatrix<T,R,C>* out){
             for (uint32_t i = 0; i < R; i++){
                 for (uint32_t j = 0; j < C; j++){

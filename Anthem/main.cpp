@@ -1,4 +1,5 @@
 #include "include/entry/AnthemEnvImpl.h"
+#include "include/core/math/AnthemVector.h"
 using namespace Anthem::Core;
 using namespace Anthem::Entry;
 

@@ -61,8 +61,8 @@ namespace Anthem::Core::TmplDefs{
     template<class T,class... U>
     concept ATpdAnyOf = (std::same_as<T,U> || ...);
 
-    template<class... T,class U>
-    concept ATpdAllAre = (std::same_as<T,U> || ...);
+    template<class T,class... U>
+    concept ATpdAllAre = (std::same_as<T,U> && ...);
 
     //Attributes Templates
     template<class SrcTp,int SrcSz, class DstTp, int DstSz>
