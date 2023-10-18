@@ -6,11 +6,11 @@
 namespace Anthem::Core{
     class AnthemValLayer{
     private:
-        ANTH_SHARED_PTR(AnthemConfig) cfg;
+        AnthemConfig* cfg;
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
         VkDebugUtilsMessengerEXT debugMessenger;
     public:
-        AnthemValLayer(ANTH_SHARED_PTR(AnthemConfig) cfg);
+        AnthemValLayer(AnthemConfig* cfg);
         virtual bool checkValidLayerSupport();
         virtual bool createDebugMsgLayerInfo();
         virtual bool createDebugMsgLayer(const VkInstance* instance);

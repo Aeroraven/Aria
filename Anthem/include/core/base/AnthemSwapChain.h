@@ -13,7 +13,7 @@ namespace Anthem::Core{
     };
     class AnthemSwapChain{
     private:
-        ANTH_SHARED_PTR(AnthemWindowSurface) windowSurface;
+        AnthemWindowSurface* windowSurface;
         ANTH_SHARED_PTR(AnthemSwapChainDetails) specifiedSwapChainDetails;
 
         VkPresentModeKHR specifiedPresentMode;
@@ -29,7 +29,7 @@ namespace Anthem::Core{
         std::vector<VkImageView> swapChainImageViews;
 
     public:
-        AnthemSwapChain(ANTH_SHARED_PTR(AnthemWindowSurface) windowSurface);
+        AnthemSwapChain(AnthemWindowSurface* windowSurface);
         bool virtual prepareSwapChainInfo(VkPhysicalDevice phyDevice,AnthemSwapChainDetails& outDetails);
         bool virtual specifySwapChainDetails(AnthemPhyDevice* phyDevice,const GLFWwindow* window);
         bool virtual createSwapChain(AnthemLogicalDevice* device,AnthemPhyDevice* phyDevice);

@@ -33,6 +33,7 @@ namespace Anthem::Core{
         for(auto framebuffer : this->framebuffers){
             vkDestroyFramebuffer(this->logicalDevice->getLogicalDevice(),framebuffer,nullptr);
         }
+        this->framebuffers.clear();
         return true;
     }
     const VkFramebuffer* AnthemFramebufferList::getFramebuffer(uint32_t index) const{

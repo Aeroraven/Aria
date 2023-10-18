@@ -136,6 +136,7 @@ namespace Anthem::Core{
         bool createDescriptorSet(uint32_t numSets){
             //Create Uniform Descriptor Sets
             for(int i=0;i<this->uniformBuffers.size();i++){
+                ANTH_LOGI("Allocate in Pool:",this->uniformBuffers.at(i).descPoolId);
                 std::vector<VkDescriptorSetLayout> descSetLayout(numSets,this->uniformBuffers.at(i).layout);
                 VkDescriptorSetAllocateInfo allocInfo = {};
                 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;

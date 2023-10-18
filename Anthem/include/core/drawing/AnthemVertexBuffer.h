@@ -226,7 +226,6 @@ namespace Anthem::Core{
         uint32_t getOffsets() override{
             return this->singleVertexSize;
         }
-
     };
 
 }

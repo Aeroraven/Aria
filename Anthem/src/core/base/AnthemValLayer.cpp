@@ -76,7 +76,7 @@ namespace Anthem::Core{
         debugCreateInfo.pUserData = nullptr;
         return true;
     }
-    AnthemValLayer::AnthemValLayer(ANTH_SHARED_PTR(AnthemConfig) cfg){
+    AnthemValLayer::AnthemValLayer(AnthemConfig* cfg){
         this->cfg = cfg;
     }
 }

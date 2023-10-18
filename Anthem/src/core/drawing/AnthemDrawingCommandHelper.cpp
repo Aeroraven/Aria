@@ -16,7 +16,7 @@ namespace Anthem::Core{
     bool AnthemDrawingCommandHelper::startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx){
         this->cmdBufs->startCommandRecording(commandBufferIdx[frameIdx]);
         ANTH_ASSERT(swapChain != nullptr,"Swap chain not specified");
-
+        
         VkRenderPassBeginInfo renderPassBeginInfo = {};
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassBeginInfo.renderPass = *(startInfo->renderPass->getRenderPass());

@@ -18,7 +18,7 @@ namespace Anthem::Core{
         }
         return supportedReqExts == this->requiredDeviceSupportedExtension.size();
     }
-    ANTH_UNSAFE_PTR(AnthemPhyQueueFamilyIdx) AnthemPhyDeviceSelector::findQueueFamilies(VkPhysicalDevice device,ANTH_SHARED_PTR(AnthemWindowSurface) surface){
+    ANTH_UNSAFE_PTR(AnthemPhyQueueFamilyIdx) AnthemPhyDeviceSelector::findQueueFamilies(VkPhysicalDevice device,AnthemWindowSurface* surface){
         auto indices = ANTH_MAKE_UNSAFE(AnthemPhyQueueFamilyIdx)();
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
@@ -52,7 +52,7 @@ namespace Anthem::Core{
         phyDevice->specifyDevice(this->physicalDevice,this->physicalDeviceQueueFamily);
         return true;
     }
-    bool AnthemPhyDeviceSelector::selectPhyDevice(const VkInstance* instance, ANTH_SHARED_PTR(AnthemWindowSurface) surface){
+    bool AnthemPhyDeviceSelector::selectPhyDevice(const VkInstance* instance, AnthemWindowSurface* surface){
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(*instance, &deviceCount, nullptr);
         ANTH_ASSERT(deviceCount!=0,"Failed to find support");
@@ -112,7 +112,7 @@ namespace Anthem::Core{
     const std::vector<const char*>* const AnthemPhyDeviceSelector::getRequiredDevSupportedExts() const{
         return &(this->requiredDeviceSupportedExtension);
     }
-    AnthemPhyDeviceSelector::AnthemPhyDeviceSelector(ANTH_SHARED_PTR(AnthemWindowSurface) surface,ANTH_SHARED_PTR(AnthemSwapChain) swapChain){
+    AnthemPhyDeviceSelector::AnthemPhyDeviceSelector(AnthemWindowSurface* surface,AnthemSwapChain* swapChain){
         this->surface = surface;
         this->swapChain = swapChain;
     }

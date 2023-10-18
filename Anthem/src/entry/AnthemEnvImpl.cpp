@@ -5,7 +5,7 @@ namespace Anthem::Entry{
         this->cfg = cfg;
         this->instance = ANTH_MAKE_SHARED(AnthemInstance)();
         this->instance->specifyConfig(cfg.get());
-        this->valLayer = ANTH_MAKE_SHARED(AnthemValLayer)(cfg);
+        this->valLayer = ANTH_MAKE_SHARED(AnthemValLayer)(cfg.get());
     }
     bool AnthemEnvImpl::createWindow(){
         this->instance->createWindow();
@@ -20,7 +20,6 @@ namespace Anthem::Entry{
     void AnthemEnvImpl::createInstance(){
         this->instance->createInstance();
         if(cfg->VKCFG_ENABLE_VALIDATION_LAYERS){
-            auto w = this->instance->getCreateInfo()->pNext;
             valLayer->fillingPointerData(this->instance->getCreateInfoPNext());
         }
         this->instance->specifyResizeHandler([&](int w,int h){
@@ -101,8 +100,8 @@ namespace Anthem::Entry{
         windowSurface->createWindowSurface(this->instance->getInstance());
 
         //Selecting Physical Device
-        phyDeviceSelector = ANTH_MAKE_SHARED(AnthemPhyDeviceSelector)(windowSurface,swapChain);
-        phyDeviceSelector->selectPhyDevice(this->instance->getInstance(),this->windowSurface);
+        phyDeviceSelector = ANTH_MAKE_SHARED(AnthemPhyDeviceSelector)(windowSurface.get(),swapChain.get());
+        phyDeviceSelector->selectPhyDevice(this->instance->getInstance(),this->windowSurface.get());
         phyDevice = ANTH_MAKE_SHARED(AnthemPhyDevice)();
         phyDeviceSelector->getPhyDevice(this->phyDevice.get());
 
@@ -148,12 +147,13 @@ namespace Anthem::Entry{
         ANTH_LOGI("Environment initialized");
     }
     void AnthemEnvImpl::run(){
+        ANTH_DEPRECATED_MSG;
         this->init();
         this->drawLoop();
         this->destroyEnv();
     } 
     void AnthemEnvImpl::initSwapChain(){
-        this->swapChain = ANTH_MAKE_SHARED(AnthemSwapChain)(this->windowSurface);
+        this->swapChain = ANTH_MAKE_SHARED(AnthemSwapChain)(this->windowSurface.get());
     }
     void AnthemEnvImpl::loadShader(){
         this->shader = ANTH_MAKE_SHARED(AnthemShaderModule)();
@@ -319,7 +319,7 @@ namespace Anthem::Entry{
             auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
             auto proj = Math::AnthemLinAlg::spatialPerspectiveTransform(0.1f,100.0f,-0.1f,0.1f,0.1f,-0.1f);
             auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
-            auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.01);
+            auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime());
             auto mat = proj.multiply(lookAt.multiply(local));
             mat.columnMajorVectorization(matVal);
             s->specifyUniforms(color,matVal);
@@ -339,10 +339,7 @@ namespace Anthem::Entry{
         this->textureImage->specifyLogicalDevice(this->logicalDevice.get());
         this->textureImage->specifyPhyDevice(this->phyDevice.get());
         this->textureImage->specifyCommandBuffers(this->commandManager.get());
-
-        ANTH_LOGI("START!!!!");
         this->textureImage->loadImageData(texData,texWidth,texHeight,texChannels);
-        ANTH_LOGI("START PREP!!!!");
         this->textureImage->prepareImage();
     }
 
