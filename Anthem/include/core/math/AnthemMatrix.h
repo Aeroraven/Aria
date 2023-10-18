@@ -17,7 +17,9 @@ namespace Anthem::Core::Math{
     T* operator[](uint32_t i){
         return data[i];
     }
-
+    const T* operator[](uint32_t i) const{
+        return data[i];
+    }
     public:
         AnthemMatrix(){
             for(int i=0;i<R;i++){
@@ -25,6 +27,14 @@ namespace Anthem::Core::Math{
                     data[i][j] = 0;
                 }
             }
+        }
+        const AnthemMatrix<T,R,C>& operator=(const AnthemMatrix<T,R,C>& other){
+            for(int i=0;i<R;i++){
+                for(int j=0;j<C;j++){
+                    data[i][j] = other.data[i][j];
+                }
+            }
+            return *this;
         }
         void dot(const AnthemMatrix<T,R,C>* other,AnthemMatrix<T,R,C>* out){
             for (uint32_t i = 0; i < R; i++){
@@ -36,15 +46,25 @@ namespace Anthem::Core::Math{
 
         template<typename T2, uint32_t R2, uint32_t C2>
         requires (R2 == C)
-        void multiply(const AnthemMatrix<T2,R2,C2>* other,AnthemMatrix<T2,R,C2>* out){
+        AnthemMatrix<T2,R,C2> multiply(const AnthemMatrix<T2,R2,C2>& other){
+            AnthemMatrix<T2,R,C2> out;
             for (uint32_t i = 0; i < R; i++){
                 for (uint32_t j = 0; j < C2; j++){
                     T2 sum = 0;
                     for (uint32_t k = 0; k < C; k++){
-                        sum += data[i][k] * other->data[k][j];
+                        sum += data[i][k] * other[k][j];
                     }
-                    out->data[i][j] = sum;
+                    out[i][j] = sum;
                 }
+            }
+            return out;
+        }
+        void print() const{
+            for (uint32_t i = 0; i < R; i++){
+                for (uint32_t j = 0; j < C; j++){
+                    std::cout << data[i][j] << " ";
+                }
+                std::cout << std::endl;
             }
         }
         void rowMajorVectorization(T* out) const{

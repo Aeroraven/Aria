@@ -311,11 +311,16 @@ namespace Anthem::Entry{
         ubuf->createBuffer(this->cfg->VKCFG_MAX_IMAGES_IN_FLIGHT);
         this->uniformUpdateFunc = [&](){
             auto s = ((AnthemUniformBufferImpl<AnthemUniformVecf<4>,AnthemUniformMatf<4>>*)(this->uniformBuffer));
-            float color[4] = {0.5f,0.0f,0.0f,0.0f};
+            float color[4] = {0.1f,0.0f,0.0f,0.0f};
             float matVal[16];
-            auto mat = Math::AnthemLinAlg::eye<float,4>();
-            mat[0][0] = 2.0f;
-            mat[1][1] = 2.0f;
+            auto axis = Math::AnthemVector<float,3>({1.0f,0.0f,0.0f});
+            auto center = Math::AnthemVector<float,3>({0.0f,0.0f,0.0f});
+            auto eye = Math::AnthemVector<float,3>({0.0f,0.0f,-1.0f});
+            auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
+            auto proj = Math::AnthemLinAlg::spatialPerspectiveTransform(0.1f,100.0f,-0.1f,0.1f,0.1f,-0.1f);
+            auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
+            auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.01);
+            auto mat = proj.multiply(lookAt.multiply(local));
             mat.columnMajorVectorization(matVal);
             s->specifyUniforms(color,matVal);
         };

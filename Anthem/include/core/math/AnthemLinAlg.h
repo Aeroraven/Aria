@@ -26,6 +26,24 @@ namespace Anthem::Core::Math{
             }
             return out;
         }
+    
+        template<typename T,uint32_t R>
+        inline static ALinAlgMat<T,R,R> identity(){
+            return This::eye<T,R>();
+        }
+
+        template<typename T,uint32_t R, uint32_t C>
+        inline static ALinAlgVec<T,R> linearTransform(const ALinAlgMat<T,R,C>& t,const ALinAlgVec<T,C>& v){
+            ALinAlgVec<T,R> out;
+            for (uint32_t i = 0; i < R; i++){
+                T sum = 0;
+                for (uint32_t j = 0; j < C; j++){
+                    sum += t[i][j] * v[j];
+                }
+                out[i] = sum;
+            }
+            return out;
+        }
 
         template<typename T>
         requires ALinAlgIsNumericTp<T>
@@ -48,14 +66,14 @@ namespace Anthem::Core::Math{
         requires ALinAlgIsNumericTp<T>
         inline static ALinAlgMat<T,4,4> spatialPerspectiveTransform(T zNear, T zFar, T nLeft, T nRight, T nTop, T nBottom){
             ALinAlgMat<T,4,4> out;
-            // Cn+D = n*n && Cf+D = f*f
-            // C(n-f) = (n-f)(n+f) => C=(n+f)
-            // (n+f)n+D=n*n => n*n+nf+D=n*n => D=-nf
             out[0][0] = 2*zNear/(nRight-nLeft);
             out[1][1] = 2*zNear/(nTop-nBottom);
-            out[2][2] = (zNear+zFar)/(zNear-zFar);
-            out[2][3] = -2*zNear*zFar/(zNear-zFar);
+            out[2][2] = (zFar+zNear)/(zFar-zNear);
             out[3][2] = 1;
+            out[2][3] = -2*zFar*zNear/(zFar-zNear);
+            out[3][3] = 0;
+            out[0][2] = -(nRight+nLeft)/(nRight-nLeft);
+            out[1][2] = -(nTop+nBottom)/(nTop-nBottom);
             return out;
         }
 
@@ -72,7 +90,7 @@ namespace Anthem::Core::Math{
         template<typename T>
         requires ALinAlgIsNumericTp<T>
         inline static ALinAlgMat<T,4,4> modelLookAtTransform(const ALinAlgVec<T,3>& e,const ALinAlgVec<T,3>& c,const ALinAlgVec<T,3>& u){
-            auto z = (e-c).normalize_();
+            auto z = (c-e).normalize_();
             auto un = u.normalize();
             auto x = This::cross3(un,z);
             auto y = This::cross3(z,x);
@@ -83,10 +101,12 @@ namespace Anthem::Core::Math{
                 rot[1][i] = y[i];
                 rot[2][i] = z[i];
                 trans[i][3] = -e[i];
+                trans[i][i] = 1;
             }
             rot[3][3] = 1;
             trans[3][3] = 1;
-            return rot*trans;
+            auto ret = rot.multiply(trans);
+            return ret;
         }
 
         template<typename T>
@@ -104,9 +124,37 @@ namespace Anthem::Core::Math{
 
         template<typename T, typename U>
         requires ALinAlgIsNumericTp<T> && ALinAlgIsNumericTp<U>
-        inline static ALinAlgMat<T,4,4> axisAngleRotationTransform(const ALinAlgVec<T,3>& axis, U rad){
+        inline static ALinAlgMat<T,4,4> axisAngleRotationTransform3(const ALinAlgVec<T,3>& axis, U rad){
             auto axis_n = axis.normalize();
-            ANTH_TODO("When gets up,");
+            auto c = std::cos(rad);
+            auto s = std::sin(rad);
+            auto t = 1-c;
+            ALinAlgMat<T,4,4> ret;
+            ret[0][0] = t*axis_n[0]*axis_n[0]+c;
+            ret[0][1] = t*axis_n[0]*axis_n[1]-s*axis_n[2];
+            ret[0][2] = t*axis_n[0]*axis_n[2]+s*axis_n[1];
+            ret[1][0] = t*axis_n[0]*axis_n[1]+s*axis_n[2];
+            ret[1][1] = t*axis_n[1]*axis_n[1]+c;
+            ret[1][2] = t*axis_n[1]*axis_n[2]-s*axis_n[0];
+            ret[2][0] = t*axis_n[0]*axis_n[2]-s*axis_n[1];
+            ret[2][1] = t*axis_n[1]*axis_n[2]+s*axis_n[0];
+            ret[2][2] = t*axis_n[2]*axis_n[2]+c;
+            ret[3][3] = 1;
+            return ret;
+        }
+
+        template<typename T>
+        requires ALinAlgIsNumericTp<T>
+        inline static ALinAlgMat<T,4,4> translationTransform3(const ALinAlgVec<T,3>& t){
+            ALinAlgMat<T,4,4> ret;
+            ret[0][0] = 1;
+            ret[1][1] = 1;
+            ret[2][2] = 1;
+            ret[3][3] = 1;
+            ret[0][3] = t[0];
+            ret[1][3] = t[1];
+            ret[2][3] = t[2];
+            return ret;
         }
     };
 }

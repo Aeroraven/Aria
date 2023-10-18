@@ -28,6 +28,9 @@ namespace Anthem::Core::Math{
         T& operator[](uint32_t i){
             return data[i];
         }
+        T operator[](uint32_t i) const{
+            return data[i];
+        }
         AnthemSameShapeVectorTp operator-(const AnthemSameShapeVectorTp& second) const{
             AnthemSameShapeVectorTp r;
             for(int i=0;i<R;i++){
@@ -41,6 +44,13 @@ namespace Anthem::Core::Math{
                 r += data[i]*data[i];
             }
             return static_cast<T>(sqrt(r));
+        }
+        void print() const{
+            std::cout << "[";
+            for(int i=0;i<R;i++){
+                std::cout << data[i] << ((i==R-1)?"":",");
+            }
+            std::cout << "]" << std::endl;
         }
         AnthemSameShapeVectorTp& normalize_(){
             auto l = len();

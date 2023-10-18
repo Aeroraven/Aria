@@ -79,7 +79,7 @@ namespace Anthem::Core{
         this->rasterizerStateCreateInfo.depthClampEnable = VK_FALSE;
         this->rasterizerStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
         this->rasterizerStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
-        this->rasterizerStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+        this->rasterizerStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
         this->rasterizerStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
         this->rasterizerStateCreateInfo.depthBiasEnable = VK_FALSE;
         this->rasterizerStateCreateInfo.depthBiasConstantFactor = 0.0f;

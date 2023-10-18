@@ -27,8 +27,6 @@ namespace Anthem{
                 if (colons == std::string::npos)
                     return "::";
                 size_t begin = p.substr(0,colons).rfind(' ')+1;  
-                //std::cout<<std::endl;
-                //std::cout<<"Finding:"<<p.substr(0,colons)<<" WITH"<<begin<<" INLEN="<<p.substr(0,colons).length()<<std::endl;
                 if (begin != std::string::npos){
                     size_t end = colons - begin;
                     return p.substr(begin,end);
