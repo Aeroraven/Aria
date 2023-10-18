@@ -84,10 +84,16 @@ int main(){
     app->createPipeline(&piepline,pass,shader,vxBuffer,ubuf);
     ANTH_LOGI("Pipeline Created");
 
-    //Start Draw Loop
+    //Start Loop
     app->registerPipelineSubComponents();
     int currentFrame = 0;
     app->setDrawFunction([&](){
+        auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.01);
+        auto mat = proj.multiply(lookAt.multiply(local));
+        mat.columnMajorVectorization(matVal);
+        ubuf->specifyUniforms(color,matVal);
+        ubuf->updateBuffer(currentFrame);
+
         uint32_t imgIdx;
         app->prepareFrame(currentFrame,&imgIdx);
         app->presentFrameDemo(currentFrame,pass,piepline,framebuffer,imgIdx,vxBuffer,ubuf,ixBuffer);
