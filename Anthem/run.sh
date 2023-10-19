@@ -1,1 +1,1 @@
-LIBGL_ALWAYS_INDIRECT=0 ./build/Anthem
+LIBGL_ALWAYS_INDIRECT=0 ./bin/AD1_Triangles

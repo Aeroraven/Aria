@@ -1,17 +1,11 @@
 #pragma once
-#include "../base/AnthemBaseImports.h"
-#include "../utils/AnthemUtlLogicalDeviceReqBase.h"
-#include "../utils/AnthemUtlPhyDeviceReqBase.h"
-#include "../utils/AnthemUtlCommandBufferReqBase.h"
-
+#include "../../base/AnthemBaseImports.h"
+#include "../../utils/AnthemUtlLogicalDeviceReqBase.h"
+#include "../../utils/AnthemUtlPhyDeviceReqBase.h"
+#include "../../utils/AnthemUtlCommandBufferReqBase.h"
+#include "./../buffer/AnthemGeneralBufferProp.h"
 
 namespace Anthem::Core{
-    struct AnthemGeneralBufferProp{
-        VkBuffer buffer;
-        VkBufferCreateInfo bufferCreateInfo = {};
-        VkDeviceMemory bufferMem;
-        void* mappedMem;
-    };
 
     class AnthemGeneralBufferBase:public Util::AnthemUtlLogicalDeviceReqBase,
     public Util::AnthemUtlPhyDeviceReqBase{

@@ -1,4 +1,4 @@
-#include "../../../include/core/drawing/AnthemIndexBuffer.h"
+#include "../../../../include/core/drawing/buffer/AnthemIndexBuffer.h"
 
 namespace Anthem::Core{
     bool AnthemIndexBuffer::setIndices(std::vector<uint32_t> indices){

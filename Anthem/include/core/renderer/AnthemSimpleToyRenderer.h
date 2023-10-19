@@ -8,11 +8,7 @@
 #include "../base/AnthemLogicalDeviceSelector.h"
 #include "../base/AnthemSwapChain.h"
 #include "../drawing/AnthemCommandBuffers.h"
-#include "../drawing/AnthemImage.h"
-#include "../drawing/AnthemVertexBuffer.h"
-#include "../drawing/AnthemUniformBuffer.h"
 #include "../drawing/AnthemDescriptorPool.h"
-#include "../drawing/AnthemIndexBuffer.h"
 #include "../drawing/AnthemMainLoopSyncer.h"
 #include "../drawing/AnthemFramebufferList.h"
 #include "../pipeline/AnthemViewport.h"
@@ -62,6 +58,7 @@ namespace Anthem::Core{
 
     private:
         bool resizeRefreshState = false;
+        bool setupState = false;
         std::function<void()> drawLoopHandler = nullptr;
 
     protected:
@@ -69,6 +66,8 @@ namespace Anthem::Core{
         bool recreateSwapChain();
 
     public:
+        ~AnthemSimpleToyRenderer();
+
         bool setConfig(const AnthemConfig* config);
         bool initialize();
         bool finialize();

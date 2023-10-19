@@ -37,7 +37,6 @@ namespace Anthem{
 
             }
 
-
             void log_prefix(const char* level){
                 auto timestamp = std::time(nullptr);
                 auto formattedTime = std::asctime(std::localtime(&timestamp));
@@ -45,7 +44,6 @@ namespace Anthem{
                 std::cout << ANTH_LOGGER_CYAN << "["  << level << "] "<< ANTH_LOGGER_GREEN <<"(" << formattedTime << ") " << ANTH_LOGGER_RESET;
             }
  
-
             template<typename... _Args>
             void log_wrapper(const char* func, const char* level, std::function<void(std::tuple<_Args...>)> wrapper,std::tuple<_Args...> args){
                 this->log_prefix(level);
@@ -99,7 +97,7 @@ namespace Anthem{
             }
 
             template<typename... Args>
-            void assert(bool condition, Args... args){
+            void cst_assert(bool condition, Args... args){
                 if(!condition){
                     this->log_prefix("ASSERT");
                     (std::cout << ... << args) << std::endl;

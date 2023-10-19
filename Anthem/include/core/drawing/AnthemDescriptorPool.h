@@ -1,8 +1,8 @@
 #pragma once
 #include "../base/AnthemBaseImports.h"
 #include "../utils/AnthemUtlLogicalDeviceReqBase.h"
-#include "./AnthemUniformBuffer.h"
-#include "./AnthemImage.h"
+#include "./buffer/AnthemUniformBuffer.h"
+#include "image/AnthemImage.h"
 
 namespace Anthem::Core{
 

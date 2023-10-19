@@ -1,6 +1,6 @@
-#include "include/core/renderer/AnthemSimpleToyRenderer.h"
-#include "include/core/math/AnthemLinAlg.h"
-#include "include/external/AnthemImageLoader.h"
+#include "../include/core/renderer/AnthemSimpleToyRenderer.h"
+#include "../include/core/math/AnthemLinAlg.h"
+#include "../include/external/AnthemImageLoader.h"
 using namespace Anthem::Core;
 using namespace Anthem::External;
 
@@ -27,7 +27,6 @@ int main(){
         vxBuffer->insertData(2+T,{0.5f+T*dfz, 0.5f+T*dfz, 1.0f+T*dpz},{0.0, 0.0, 0.05},{0.0f, 1.0f});
         vxBuffer->insertData(3+T,{-0.5f+T*dfz, 0.5f+T*dfz, 1.0f+T*dpz},{0.05, 0.05, 0.05},{1.0f, 1.0f});
     }
-
     ANTH_LOGI("Vertex Buffer Created");
     
     //Create Index Buffer
@@ -112,7 +111,6 @@ int main(){
     });
     ANTH_LOGI("Draw Loop Started");
     app->startDrawLoopDemo();
-
     app->finialize();
     return 0;
 }

@@ -36,10 +36,10 @@ namespace Anthem::Core::Math{
             }
             return *this;
         }
-        void dot(const AnthemMatrix<T,R,C>* other,AnthemMatrix<T,R,C>* out){
+        void dot(const AnthemMatrix<T,R,C>& other,AnthemMatrix<T,R,C>& out){
             for (uint32_t i = 0; i < R; i++){
                 for (uint32_t j = 0; j < C; j++){
-                    out->data[i][j] = data[i][j] * other->data[i][j];
+                    out.data[i][j] = data[i][j] * other.data[i][j];
                 }
             }
         }

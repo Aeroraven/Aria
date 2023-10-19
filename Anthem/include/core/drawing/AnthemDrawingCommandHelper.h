@@ -6,8 +6,8 @@
 #include "../drawing/AnthemFramebufferList.h"
 #include "../pipeline/AnthemRenderPass.h"
 #include "../pipeline/AnthemGraphicsPipeline.h"
-#include "../drawing/AnthemIndexBuffer.h"
-#include "../drawing/AnthemUniformBuffer.h"
+#include "../drawing/buffer/AnthemIndexBuffer.h"
+#include "../drawing/buffer/AnthemUniformBuffer.h"
 #include "../drawing/AnthemDescriptorPool.h"
 
 namespace Anthem::Core{

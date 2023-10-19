@@ -1,7 +1,5 @@
-#include "../../../include/external/AnthemImageLoader.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "../../../include/external_ref/stb_image.h"
+#include "../../include/external/AnthemImageLoader.h"
+#include "../../include/external_ref/tinygltf/stb_image.h"
 
 namespace Anthem::External{
     bool AnthemImageLoader::freeImage(uint8_t* data){

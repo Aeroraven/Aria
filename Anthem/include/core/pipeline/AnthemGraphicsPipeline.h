@@ -5,8 +5,8 @@
 #include "AnthemViewport.h"
 #include "AnthemRenderPass.h"
 #include "../drawing/AnthemDescriptorPool.h"
-#include "../drawing/AnthemVertexBuffer.h"
-#include "../drawing/AnthemUniformBuffer.h"
+#include "../drawing/buffer/AnthemVertexBuffer.h"
+#include "../drawing/buffer/AnthemUniformBuffer.h"
 
 namespace Anthem::Core{
     class AnthemGraphicsPipeline{     

@@ -2,6 +2,10 @@
 build/*
 build
 build/*
-
 include/external_ref/*
 include/external_ref
+src/external_ref/*
+src/external_ref
+bin/*
+bin/
+bin

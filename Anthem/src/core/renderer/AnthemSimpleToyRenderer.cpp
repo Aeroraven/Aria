@@ -130,7 +130,8 @@ namespace Anthem::Core{
         this->drawingCommandHelper->specifyCommandBuffers(this->commandBuffers.get());
         this->drawingCommandHelper->specifySwapChain(this->swapChain.get());
         this->drawingCommandHelper->initializeHelper();
-
+        
+        this->setupState = true;
         return true;
     }
 
@@ -152,6 +153,7 @@ namespace Anthem::Core{
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
         textureImage->loadImageData(texData,texWidth,texHeight,texChannel);
+        textureImage->specifyUsage(AnthemImageUsage::AT_IU_TEXTURE2D);
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
@@ -331,5 +333,11 @@ namespace Anthem::Core{
         this->depthBuffers.push_back(depthBuffer);
         *pDepthBuffer = depthBuffer;
         return true;
+    }
+
+    AnthemSimpleToyRenderer::~AnthemSimpleToyRenderer(){
+        if(this->setupState){
+            this->finialize();
+        }
     }
 }

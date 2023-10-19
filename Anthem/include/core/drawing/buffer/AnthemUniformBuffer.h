@@ -1,9 +1,9 @@
 #pragma once
-#include "../base/AnthemBaseImports.h"
-#include "../utils/AnthemUtlLogicalDeviceReqBase.h"
-#include "../utils/AnthemUtlPhyDeviceReqBase.h"
+#include "../../base/AnthemBaseImports.h"
+#include "../../utils/AnthemUtlLogicalDeviceReqBase.h"
+#include "../../utils/AnthemUtlPhyDeviceReqBase.h"
 #include "AnthemGeneralBufferBase.h"
-#include "AnthemDescriptorPoolReqBase.h"
+#include "../AnthemDescriptorPoolReqBase.h"
 
 namespace Anthem::Core{
 

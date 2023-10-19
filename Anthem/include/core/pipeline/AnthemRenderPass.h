@@ -3,7 +3,7 @@
 #include "../base/AnthemSwapChain.h"
 #include "../base/AnthemLogicalDevice.h"
 #include "../base/AnthemSwapChain.h"
-#include "../drawing/AnthemDepthBuffer.h"
+#include "../drawing/image/AnthemDepthBuffer.h"
 
 namespace Anthem::Core{
     class AnthemRenderPass{
