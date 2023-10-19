@@ -36,6 +36,8 @@ namespace Anthem::Core{
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
         VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
 
+        VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = {};
+
         std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo = {};
 
         bool prerequisiteInfoSpecified = false;

@@ -23,8 +23,19 @@ namespace Anthem::Core{
         renderPassBeginInfo.framebuffer = *(startInfo->framebufferList->getFramebuffer(startInfo->framebufferIdx));
         renderPassBeginInfo.renderArea.offset = {0,0};
         renderPassBeginInfo.renderArea.extent = *(swapChain->getSwapChainExtent());
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &(startInfo->clearValue);
+        
+        if(startInfo->depthClearValue.has_value()){
+            renderPassBeginInfo.clearValueCount = 2;
+            
+            clearValuesTmpX[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+            clearValuesTmpX[1].depthStencil = {1.0f, 0};
+
+            renderPassBeginInfo.pClearValues = clearValuesTmpX.data();;
+        }else{
+            ANTH_LOGW("Depth clear value not specified");
+            renderPassBeginInfo.clearValueCount = 1;
+            renderPassBeginInfo.pClearValues = &(startInfo->clearValue);
+        }
 
         ANTH_LOGV("Starting render pass");
         auto cmdBuf = cmdBufs->getCommandBuffer(commandBufferIdx[frameIdx]);

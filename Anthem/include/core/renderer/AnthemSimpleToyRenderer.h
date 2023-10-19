@@ -53,6 +53,7 @@ namespace Anthem::Core{
         std::vector<AnthemUniformBuffer*> uniformBuffers;
 
         std::vector<AnthemFramebufferList*> framebufferListObjs;
+        std::vector<AnthemDepthBuffer*> depthBuffers;
 
         std::vector<AnthemGraphicsPipeline*> graphicsPipelines;
 
@@ -80,11 +81,12 @@ namespace Anthem::Core{
             AnthemGraphicsPipeline* pipeline, AnthemFramebufferList* framebuffer,uint32_t avaImageIdx,
             AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf);
 
-        bool setupDemoRenderPass(AnthemRenderPass** pRenderPass);
+        bool setupDemoRenderPass(AnthemRenderPass** pRenderPass, AnthemDepthBuffer* depthBuffer);
+        bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer);
         bool createTexture(AnthemImage** pImage, uint8_t* texData, uint32_t texWidth,uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc);
         bool createIndexBuffer(AnthemIndexBuffer** pIndexBuffer);
         bool createShader(AnthemShaderModule** pShaderModule,AnthemShaderFilePaths* filename);
-        bool createFramebufferList(AnthemFramebufferList** pFramebufferList,const AnthemRenderPass* renderPass);
+        bool createFramebufferList(AnthemFramebufferList** pFramebufferList,const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
 
         bool registerPipelineSubComponents();
         bool createPipeline(AnthemGraphicsPipeline** pPipeline,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);

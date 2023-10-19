@@ -134,10 +134,11 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::setupDemoRenderPass(AnthemRenderPass** pRenderPass){
+    bool AnthemSimpleToyRenderer::setupDemoRenderPass(AnthemRenderPass** pRenderPass,AnthemDepthBuffer* depthBuffer){
         auto newRenderPass = new AnthemRenderPass();
         newRenderPass->specifyLogicalDevice(this->logicalDevice.get());
         newRenderPass->specifySwapChain(this->swapChain.get());
+        newRenderPass->setDepthBuffer(depthBuffer);
         newRenderPass->createDemoRenderPass();
         this->renderPasses.push_back(newRenderPass);
         *pRenderPass = newRenderPass;
@@ -209,9 +210,10 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::createFramebufferList(AnthemFramebufferList** pFramebufferList,const AnthemRenderPass* renderPass){
+    bool AnthemSimpleToyRenderer::createFramebufferList(AnthemFramebufferList** pFramebufferList,const AnthemRenderPass* renderPass,const AnthemDepthBuffer* depthBuffer){
         auto framebufferList = new AnthemFramebufferList();
         framebufferList->specifyLogicalDevice(this->logicalDevice.get());
+        framebufferList->setDepthBuffer((AnthemDepthBuffer*)depthBuffer);
         framebufferList->createFramebuffersFromSwapChain(this->swapChain.get(),renderPass);
         *pFramebufferList = framebufferList;
         this->framebufferListObjs.push_back(framebufferList);
@@ -221,6 +223,9 @@ namespace Anthem::Core{
     bool AnthemSimpleToyRenderer::destroySwapChain(){
         for(const auto& p:this->framebufferListObjs){
             p->destroyFramebuffers();
+        }
+        for(const auto& p:this->depthBuffers){
+            p->destroyDepthBuffer();
         }
         this->swapChain->destroySwapChainImageViews(this->logicalDevice.get());
         this->swapChain->destroySwapChain(this->logicalDevice.get());
@@ -236,6 +241,9 @@ namespace Anthem::Core{
         this->swapChain->retrieveSwapChainImages(this->logicalDevice.get());
         this->swapChain->createSwapChainImageViews(this->logicalDevice.get());
         this->viewport->prepareViewportState();
+        for(const auto& p:this->depthBuffers){
+            p->createDepthBuffer();
+        }
         for(const auto& p:this->framebufferListObjs){
             p->createFramebuffersFromSwapChain(this->swapChain.get(),this->renderPasses.at(0));
         }
@@ -271,6 +279,7 @@ namespace Anthem::Core{
             .framebufferList = framebuffer,
             .framebufferIdx = avaImageIdx,
             .clearValue = {{{0.0f,0.0f,0.0f,1.0f}}},
+            .depthClearValue = {{1.0f, 0}}
         };
         ANTH_LOGV("Starting Pass",currentFrame,avaImageIdx);
         this->drawingCommandHelper->startRenderPass(&beginInfo,currentFrame);
@@ -309,6 +318,18 @@ namespace Anthem::Core{
 
     bool AnthemSimpleToyRenderer::setDrawFunction(std::function<void()> drawLoopHandler){
         this->drawLoopHandler = drawLoopHandler;
+        return true;
+    }
+
+    bool AnthemSimpleToyRenderer::createDepthBuffer(AnthemDepthBuffer** pDepthBuffer){
+        auto depthBuffer = new AnthemDepthBuffer();
+        depthBuffer->specifyLogicalDevice(this->logicalDevice.get());
+        depthBuffer->specifyPhyDevice(this->phyDevice.get());
+        depthBuffer->specifyCommandBuffers(this->commandBuffers.get());
+        depthBuffer->specifySwapChain(this->swapChain.get());
+        depthBuffer->createDepthBuffer();
+        this->depthBuffers.push_back(depthBuffer);
+        *pDepthBuffer = depthBuffer;
         return true;
     }
 }

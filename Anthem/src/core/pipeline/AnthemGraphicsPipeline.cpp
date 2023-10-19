@@ -108,6 +108,22 @@ namespace Anthem::Core{
         this->colorBlendStateCreateInfo.attachmentCount = 1;
         this->colorBlendStateCreateInfo.pAttachments = &(this->colorBlendAttachmentState);
 
+
+        //Specify Depth & Stencil Info
+        this->depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        this->depthStencilStateCreateInfo.pNext = nullptr;  
+        this->depthStencilStateCreateInfo.flags = 0;
+        this->depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+        this->depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+        this->depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+        this->depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+        this->depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+        this->depthStencilStateCreateInfo.front = {};
+        this->depthStencilStateCreateInfo.back = {};
+        this->depthStencilStateCreateInfo.minDepthBounds = 0.0f;
+        this->depthStencilStateCreateInfo.maxDepthBounds = 1.0f;
+
+
         //Setup Flag
         this->prerequisiteInfoSpecified = true;
         return true;
@@ -168,7 +184,7 @@ namespace Anthem::Core{
         this->pipelineCreateInfo.pViewportState = &(this->viewportStateCreateInfo);
         this->pipelineCreateInfo.pRasterizationState = &(this->rasterizerStateCreateInfo);
         this->pipelineCreateInfo.pMultisampleState = &(this->multisampleStateCreateInfo);
-        this->pipelineCreateInfo.pDepthStencilState = nullptr;
+        this->pipelineCreateInfo.pDepthStencilState = &(this->depthStencilStateCreateInfo);
         this->pipelineCreateInfo.pColorBlendState = &(this->colorBlendStateCreateInfo);
         this->pipelineCreateInfo.pDynamicState = &(this->dynamicStateCreateInfo);
         this->pipelineCreateInfo.layout = this->pipelineLayout;

@@ -3,6 +3,7 @@
 #include "../base/AnthemSwapChain.h"
 #include "../base/AnthemLogicalDevice.h"
 #include "../base/AnthemSwapChain.h"
+#include "../drawing/AnthemDepthBuffer.h"
 
 namespace Anthem::Core{
     class AnthemRenderPass{
@@ -15,11 +16,13 @@ namespace Anthem::Core{
 
         AnthemLogicalDevice* logicalDevice = nullptr;
         AnthemSwapChain* swapChain = nullptr;
+        AnthemDepthBuffer* depthBuffer = nullptr;
     public:
         bool virtual specifyLogicalDevice(AnthemLogicalDevice* device);
         bool virtual specifySwapChain(AnthemSwapChain* swapChain);
         bool virtual createDemoRenderPass();
         bool virtual destroyRenderPass();
+        bool virtual setDepthBuffer(AnthemDepthBuffer* depthBuffer);
         const VkRenderPass* getRenderPass() const;
     };
 }

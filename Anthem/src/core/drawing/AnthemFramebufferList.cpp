@@ -6,16 +6,18 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemFramebufferList::createFramebuffersFromSwapChain(const AnthemSwapChain* swapChain,const AnthemRenderPass* renderPass){
+        ANTH_ASSERT(this->depthBuffer != nullptr,"Depth buffer not specified");
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         this->framebuffers.resize(swapChain->getSwapChainImageViews()->size());
         for(size_t i = 0; i < swapChain->getSwapChainImageViews()->size(); i++){
             VkImageView attachments[] = {
-                swapChain->getSwapChainImageViews()->at(i)
+                swapChain->getSwapChainImageViews()->at(i),
+                *(this->depthBuffer->getImageView())
             };
             VkFramebufferCreateInfo framebufferInfo = {};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             framebufferInfo.renderPass = *(renderPass->getRenderPass());
-            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.attachmentCount = 2;
             framebufferInfo.pAttachments = attachments;
             framebufferInfo.width = swapChain->getSwapChainExtent()->width;
             framebufferInfo.height = swapChain->getSwapChainExtent()->height;
@@ -34,6 +36,10 @@ namespace Anthem::Core{
             vkDestroyFramebuffer(this->logicalDevice->getLogicalDevice(),framebuffer,nullptr);
         }
         this->framebuffers.clear();
+        return true;
+    }
+    bool AnthemFramebufferList::setDepthBuffer(AnthemDepthBuffer* depthBuffer){
+        this->depthBuffer = depthBuffer;
         return true;
     }
     const VkFramebuffer* AnthemFramebufferList::getFramebuffer(uint32_t index) const{

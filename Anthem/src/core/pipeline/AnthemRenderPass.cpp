@@ -34,6 +34,28 @@ namespace Anthem::Core{
         colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         this->colorAttachments.push_back(colorAttachment);
 
+        //Create Depth Attachment Description
+        VkAttachmentDescription depthAttachment = {};
+        VkAttachmentReference depthAttachmentRef{};
+
+        if(this->depthBuffer != nullptr){
+            depthAttachment.format = this->depthBuffer->getDepthFormat();
+            depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+            depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            this->colorAttachments.push_back(depthAttachment);
+
+            depthAttachmentRef.attachment = 1;
+            depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        }
+        else{
+            ANTH_LOGW("Depth buffer not specified");
+        }
+
         //Create Attachment Reference
         VkAttachmentReference colorAttachmentReference = {};
         colorAttachmentReference.attachment = 0;
@@ -45,15 +67,16 @@ namespace Anthem::Core{
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass.colorAttachmentCount = this->colorAttachmentReferences.size();
         subpass.pColorAttachments = this->colorAttachmentReferences.data();
+        subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
         //Create Subpass Dependencies
         VkSubpassDependency subpassDependency = {};
         subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         subpassDependency.dstSubpass = 0;
-        subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
         subpassDependency.srcAccessMask = 0;
-        subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;;
 
         //Create Render Pass
         VkRenderPassCreateInfo renderPassCreateInfo = {};
@@ -72,6 +95,10 @@ namespace Anthem::Core{
         }
         this->renderPassCreated = true;
         ANTH_LOGI("Render pass created");
+        return true;
+    }
+    bool AnthemRenderPass::setDepthBuffer(AnthemDepthBuffer* depthBuffer){
+        this->depthBuffer = depthBuffer;
         return true;
     }
 }

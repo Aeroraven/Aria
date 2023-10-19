@@ -9,8 +9,9 @@ namespace Anthem::Core{
     private:
         const AnthemLogicalDevice* logicalDevice = nullptr;
         std::vector<VkFramebuffer> framebuffers;
-
+        AnthemDepthBuffer* depthBuffer = nullptr;
     public:
+        bool virtual setDepthBuffer(AnthemDepthBuffer* depthBuffer);
         bool virtual specifyLogicalDevice(const AnthemLogicalDevice* device);
         bool virtual createFramebuffersFromSwapChain(const AnthemSwapChain* swapChain,const AnthemRenderPass* renderPass);
         bool virtual destroyFramebuffers();
