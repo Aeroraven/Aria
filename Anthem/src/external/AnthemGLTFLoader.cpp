@@ -14,11 +14,17 @@ namespace Anthem::External{
             ANTH_LOGE("Failed to load gltf model");
             return false;
         }
+        this->modelPath = path;
+        auto end = this->modelPath.rfind("/");
+        this->modelDirectory = this->modelPath.substr(0,end);
+        ANTH_LOGI("Model Dir=",this->modelDirectory);
         return true;
     }
     bool AnthemGLTFLoader::parseModel(AnthemGLTFLoaderParseConfig config,std::vector<AnthemGLTFLoaderParseResult>& result){
         result.resize(model.meshes.size());
         const auto& accessor = model.accessors;
+        const auto& materials = model.materials;
+        const auto& textures = model.textures;
         const auto specifyStride = [](int tp,int& dimOutput,std::string& tpOutput)->int{
             if(tp==TINYGLTF_TYPE_SCALAR){
                 dimOutput = 1;
@@ -53,7 +59,15 @@ namespace Anthem::External{
             auto& indexBufferView = model.bufferViews.at(indexAccessor.bufferView);
             auto stride = indexBufferView.byteStride;
             bufferParse<uint32_t,uint16_t>(indexAccessor.bufferView,2,curResult.indices);
-            
+
+            // Material Entry
+            auto& materialEntry = materials.at(curPrimitive.material);
+            auto& materialIndex = materialEntry.pbrMetallicRoughness.baseColorTexture.index;
+            if(materialIndex!=-1){
+                auto imageIdx = textures.at(materialIndex).source;
+                curResult.pbrBaseColorTexPath = model.images.at(imageIdx).uri;
+            }
+
             // Attribute Accessor
             for(auto& attr : curPrimitive.attributes){
                 auto& attrAccessor = accessor.at(attr.second);
@@ -77,11 +91,12 @@ namespace Anthem::External{
                     specifyStride(attrAccessor.type,curResult.texCoordDim,curResult.texCoordPrimitiveType);
                 }
             }
-
+            curResult.basePath = this->modelDirectory+"/";
             ANTH_LOGI("Parse done.");
             ANTH_LOGI("Position Primitive Type:",curResult.positionPrimitiveType, "Dimension:",curResult.positionDim,"Length",curResult.positions.size());
             ANTH_LOGI("Normal Primitive Type:",curResult.normalPrimitiveType, "Dimension:",curResult.normalDim,"Length",curResult.normals.size());
             ANTH_LOGI("TexCoord Primitive Type:",curResult.texCoordPrimitiveType, "Dimension:",curResult.texCoordDim,"Length",curResult.texCoords.size());
+            ANTH_LOGI("Tex Path",curResult.pbrBaseColorTexPath);
         }
         return true;
     }

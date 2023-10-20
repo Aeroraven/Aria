@@ -9,6 +9,16 @@
 #include "../drawing/buffer/AnthemUniformBuffer.h"
 
 namespace Anthem::Core{
+    enum AnthemDescriptorSetEntrySourceType{
+        AT_ACDS_UNDEFINED = 0,
+        AT_ACDS_UNIFORM_BUFFER = 1,
+        AT_ACDS_SAMPLER = 2,
+    };
+    struct AnthemDescriptorSetEntry{
+        AnthemDescriptorPool* descPool = nullptr;
+        AnthemDescriptorSetEntrySourceType descSetType = AT_ACDS_UNDEFINED;
+        uint32_t inTypeIndex = 0;
+    };
     class AnthemGraphicsPipeline{     
     private:
         const AnthemLogicalDevice* logicalDevice = nullptr;
@@ -61,6 +71,7 @@ namespace Anthem::Core{
 
         bool preparePreqPipelineCreateInfo();
         bool createPipelineLayout();
+        bool createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry);
         bool destroyPipelineLayout();
         
         bool createPipeline();

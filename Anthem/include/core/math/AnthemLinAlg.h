@@ -79,6 +79,28 @@ namespace Anthem::Core::Math{
 
         template<typename T>
         requires ALinAlgIsNumericTp<T>
+        inline static ALinAlgMat<T,4,4> spatialPerspectiveTransformWithFovAspect(T zNear, T zFar, T nFovy,T aspect){
+            ALinAlgMat<T,4,4> out;
+            T halfFovy = nFovy/2.0;
+            T nTop = tan(halfFovy) * zNear;
+            T nBottom = -nTop;
+            T nLeft = -aspect*nTop;
+            T nRight = -nLeft;
+            out[0][0] = 2*zNear/(nRight-nLeft);
+            out[1][1] = 2*zNear/(nTop-nBottom);
+            out[2][2] = (zFar+zNear)/(zFar-zNear);
+            out[3][2] = 1;
+            out[2][3] = -2*zFar*zNear/(zFar-zNear);
+            out[3][3] = 0;
+            out[0][2] = -(nRight+nLeft)/(nRight-nLeft);
+            out[1][2] = -(nTop+nBottom)/(nTop-nBottom);
+            return out;
+        }
+
+
+
+        template<typename T>
+        requires ALinAlgIsNumericTp<T>
         inline static ALinAlgVec<T,3> cross3(const ALinAlgVec<T,3>& a, const ALinAlgVec<T,3>& b){
             ALinAlgVec<T,3> ret;
             ret[0] = a[1]*b[2]-a[2]*b[1];

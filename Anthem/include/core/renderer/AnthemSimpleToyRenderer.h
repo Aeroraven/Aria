@@ -19,16 +19,7 @@
 #include "../drawing/AnthemDrawingCommandHelper.h"
 
 namespace Anthem::Core{
-    enum AnthemCmdDescriptorSetEntrySourceType{
-        AT_ACDS_UNDEFINED = 0,
-        AT_ACDS_UNIFORM_BUFFER = 1,
-        AT_ACDS_SAMPLER = 2,
-    };
-    struct AnthemCmdDescriptorSetEntry{
-        AnthemDescriptorPool* descPool = nullptr;
-        AnthemCmdDescriptorSetEntrySourceType descSetType = AT_ACDS_UNDEFINED;
-        uint32_t inTypeIndex = 0;
-    };
+    
 
     class AnthemSimpleToyRenderer{
     private:
@@ -70,6 +61,8 @@ namespace Anthem::Core{
         VkDeviceSize emptyOffsetPlaceholder[1] = {0};
 
     private:
+        int windowWidth = 0;
+        int windowHeight = 0;
         bool resizeRefreshState = false;
         bool setupState = false;
         std::function<void()> drawLoopHandler = nullptr;
@@ -103,6 +96,7 @@ namespace Anthem::Core{
 
         bool registerPipelineSubComponents();
         bool createPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
+        bool createPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
 
         bool drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebufferList* framebufferList, uint32_t avaImgIdx ,uint32_t frameIdx);
         bool drEndRenderPass(uint32_t frameIdx);
@@ -114,8 +108,10 @@ namespace Anthem::Core{
         bool drBindVertexBuffer(AnthemVertexBuffer* vertexBuffer,uint32_t frameIdx);
         bool drBindIndexBuffer(AnthemIndexBuffer* indexBuffer,uint32_t frameIdx);
         bool drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx);
-        bool drBindDescriptorSetCustomized(std::vector<AnthemCmdDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx);
+        bool drBindDescriptorSetCustomized(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx);
         bool drDraw(uint32_t vertices,uint32_t frameIdx);
+
+        bool exGetWindowSize(int& height,int& width);
 
         template<typename... T,uint32_t... S>
         bool createVertexBuffer(AnthemVertexBufferImpl<AnthemVAOAttrDesc<T,S>...>** pVertexBuffer){

@@ -1,5 +1,5 @@
 
-### Materials Referenced / Acknowledgements
+## Materials Referenced / Acknowledgements
 
 **Wavefront African Model and Textures**  : By Dmitry V. Sokolov. In Project "TinyRenderer" https://github.com/ssloy/tinyrenderer
 
@@ -14,14 +14,9 @@
 
 
 
+## Tutorials Referenced / Acknowledgements
 
-### Tutorials Referenced / Acknowledgements
-
-**Rectification**
-
-This repository might rectify my original implementation of path tracer (https://github.com/Aeroraven/Ray-tracing), which contains fatal mistakes to do with implementation.
-
-**Reference**
+Vulkan Tutorial: https://vulkan-tutorial.com/
 
 Basic Tutorial: https://learnopengl.com/
 
@@ -54,3 +49,8 @@ Kawase Blur: https://zhuanlan.zhihu.com/p/125744132
 SMAA: https://iryoku.com/smaa/downloads/SMAA-Enhanced-Subpixel-Morphological-Antialiasing.pdf
 
 Path Tracing: https://raytracing.github.io/books/RayTracingInOneWeekend.html
+
+## Rectification
+
+This repository might rectify my original implementation of path tracer (https://github.com/Aeroraven/Ray-tracing), which contains fatal mistakes to do with implementation.
+

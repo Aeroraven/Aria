@@ -17,6 +17,9 @@ namespace Anthem::External{
         std::string positionPrimitiveType = "";
         std::string normalPrimitiveType = "";
         std::string texCoordPrimitiveType = "";
+        
+        std::string pbrBaseColorTexPath = "";
+        std::string basePath = "";
 
         int positionDim = 3;
         int normalDim = 3;
@@ -25,6 +28,8 @@ namespace Anthem::External{
 
     class AnthemGLTFLoader{
     private:
+        std::string modelPath = "";
+        std::string modelDirectory = "";
         tinygltf::TinyGLTF loader;
         tinygltf::Model model;
     public:

@@ -73,12 +73,16 @@ namespace Anthem::Core{
 
         this->instance->specifyResizeHandler([&](int w,int h){
             this->resizeRefreshState = true;
+            this->windowHeight = h;
+            this->windowWidth = w;
         });
 
         if(this->config->VKCFG_ENABLE_VALIDATION_LAYERS){
             this->validationLayer->fillingPointerData(this->instance->getCreateInfoPNext());
             this->validationLayer->createDebugMsgLayer(this->instance->getInstance());
         }
+        this->windowHeight = this->config->APP_RESLOUTION_H;
+        this->windowWidth = this->config->APP_RESLOUTION_W;
 
         //Step2. Create Window Surface
         this->windowSurface->createWindowSurface(this->instance->getInstance());
@@ -207,7 +211,23 @@ namespace Anthem::Core{
         this->shaders.push_back(shaderModule);
         return true;
     }
+    bool AnthemSimpleToyRenderer::createPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer){
+        auto graphicsPipeline = new AnthemGraphicsPipeline();
+        graphicsPipeline->specifyLogicalDevice(this->logicalDevice.get());
+        graphicsPipeline->specifyViewport(this->viewport.get());
+        graphicsPipeline->specifyRenderPass(renderPass);
+        graphicsPipeline->specifyShaderModule(shaderModule);
+        graphicsPipeline->specifyVertexBuffer(vertexBuffer);
+        graphicsPipeline->specifyUniformBuffer(uniformBuffer);
+        graphicsPipeline->specifyDescriptor(descSetEntries.at(0).descPool);
 
+        graphicsPipeline->preparePreqPipelineCreateInfo();
+        graphicsPipeline->createPipelineLayoutCustomized(descSetEntries);
+        graphicsPipeline->createPipeline();
+        this->graphicsPipelines.push_back(graphicsPipeline);
+        *pPipeline = graphicsPipeline;
+        return true;
+    }
     bool AnthemSimpleToyRenderer::createPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer){
         auto graphicsPipeline = new AnthemGraphicsPipeline();
         graphicsPipeline->specifyLogicalDevice(this->logicalDevice.get());
@@ -338,12 +358,12 @@ namespace Anthem::Core{
         vkCmdBindIndexBuffer(*this->commandBuffers->getCommandBuffer(frameIdx), *(indexBuffer->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
         return true;
     }
-    bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomized(std::vector<AnthemCmdDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx){
+    bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomized(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx){
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
         for(const auto& p:descSetEntries){
-            if(p.descSetType == AnthemCmdDescriptorSetEntrySourceType::AT_ACDS_SAMPLER){
+            if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER){
                 p.descPool->appendDescriptorSetSampler(p.inTypeIndex,descSets);
-            }else if(p.descSetType == AnthemCmdDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER){
+            }else if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER){
                 p.descPool->appendDescriptorSetUniform(p.inTypeIndex,descSets);
             }else{
                 ANTH_LOGE("Unknown Descriptor Set Type");
@@ -411,7 +431,6 @@ namespace Anthem::Core{
         this->drawLoopHandler = drawLoopHandler;
         return true;
     }
-
     bool AnthemSimpleToyRenderer::createDepthBuffer(AnthemDepthBuffer** pDepthBuffer){
         auto depthBuffer = new AnthemDepthBuffer();
         depthBuffer->specifyLogicalDevice(this->logicalDevice.get());
@@ -423,7 +442,11 @@ namespace Anthem::Core{
         *pDepthBuffer = depthBuffer;
         return true;
     }
-
+    bool AnthemSimpleToyRenderer::exGetWindowSize(int& height,int& width){
+        height = this->windowHeight;
+        width = this->windowWidth;
+        return true;
+    }
     AnthemSimpleToyRenderer::~AnthemSimpleToyRenderer(){
         if(this->setupState){
             this->finialize();

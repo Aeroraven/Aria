@@ -23,8 +23,10 @@ int main(){
 
     
     //Creating Descriptor Pool
-    AnthemDescriptorPool* descPool;
-    renderer->createDescriptorPool(&descPool);
+    AnthemDescriptorPool** descPool = new AnthemDescriptorPool*[gltfResult.size()];
+    for(auto chosenMesh=0;chosenMesh<gltfResult.size();chosenMesh++){
+        renderer->createDescriptorPool(&descPool[chosenMesh]);
+    }
 
 
     //Creating Vertex Buffer & Index Buffer
@@ -44,7 +46,8 @@ int main(){
         for(int i=0;i<numVertices;i++){
             vxBuffers[chosenMesh]->insertData(i,
                 {gltfResult.at(chosenMesh).positions.at(i*3),-gltfResult.at(chosenMesh).positions.at(i*3+1),gltfResult.at(chosenMesh).positions.at(i*3+2)},
-                {0.05, 0.0, 0.0},{1.0f, 0.0f});
+                {0.05, 0.0, 0.0},
+                {gltfResult.at(chosenMesh).texCoords.at(i*2),gltfResult.at(chosenMesh).texCoords.at(i*2+1)});
         }
         ANTH_LOGI("Vertex Buffer Created");
 
@@ -59,16 +62,16 @@ int main(){
 
     //Create Uniform Buffer
     AnthemUniformBufferImpl<AnthemUniformVecf<4>,AnthemUniformMatf<4>>* ubuf;
-    renderer->createUniformBuffer(&ubuf,0,descPool);
+    renderer->createUniformBuffer(&ubuf,0,descPool[0]);
     float color[4] = {0.1f,0.0f,0.0f,0.0f};
     float matVal[16];
-    auto axis = Math::AnthemVector<float,3>({1.0f,0.0f,0.0f});
-    auto center = Math::AnthemVector<float,3>({0.0f,0.0f,0.0f});
-    auto eye = Math::AnthemVector<float,3>({0.0f,80.0f,-100.0f});
+    auto axis = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
+    auto center = Math::AnthemVector<float,3>({0.0f,-70.0f,0.0f});
+    auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto proj = Math::AnthemLinAlg::spatialPerspectiveTransform(0.1f,300.0f,-0.1f,0.1f,0.1f,-0.1f);
     auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
-    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.01);
+    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.00);
     auto mat = proj.multiply(lookAt.multiply(local));
     mat.columnMajorVectorization(matVal);
     ubuf->specifyUniforms(color,matVal);
@@ -78,13 +81,19 @@ int main(){
     ANTH_LOGI("Uniform Buffer Created");
 
     //Create Texture
-    auto imageLoader = new Anthem::External::AnthemImageLoader();
-    uint32_t texWidth,texHeight,texChannels;
-    uint8_t* texData;
-    imageLoader->loadImage("/home/funkybirds/Aria/Anthem/assets/cat.jpg",&texWidth,&texHeight,&texChannels,&texData);
-    AnthemImage* image;
-    renderer->createTexture(&image,descPool,texData,texWidth,texHeight,texChannels,1);
-    ANTH_LOGI("Texture Created");
+    AnthemImage** image = new AnthemImage*[gltfResult.size()];
+    for(auto chosenMesh=0;chosenMesh<gltfResult.size();chosenMesh++){
+        auto imageLoader = new Anthem::External::AnthemImageLoader();
+        uint32_t texWidth,texHeight,texChannels;
+        uint8_t* texData;
+        std::string texPath = gltfResult[chosenMesh].basePath + gltfResult[chosenMesh].pbrBaseColorTexPath;
+        if(gltfResult[chosenMesh].pbrBaseColorTexPath==""){
+            texPath = "/home/funkybirds/Aria/Anthem/assets/cat.jpg";
+        }
+        imageLoader->loadImage(texPath.c_str(),&texWidth,&texHeight,&texChannels,&texData);
+        renderer->createTexture(&image[chosenMesh],descPool[chosenMesh],texData,texWidth,texHeight,texChannels,1);
+        ANTH_LOGI("Texture Created");
+    }
 
     //Create Depth Buffer
     auto depthBuffer = new AnthemDepthBuffer();
@@ -111,15 +120,30 @@ int main(){
     ANTH_LOGI("Shader Created");
 
     //Assemble Pipeline
+    AnthemDescriptorSetEntry uniformBufferDescEntryRegPipeline = {
+        .descPool = descPool[0],
+        .descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
+        .inTypeIndex = 0
+    };
+    AnthemDescriptorSetEntry samplerDescEntryRegPipeline = {
+        .descPool = descPool[0],
+        .descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER,
+        .inTypeIndex = 0
+    };
+    std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerDescEntryRegPipeline};
+
     AnthemGraphicsPipeline* pipeline;
-    renderer->createPipeline(&pipeline,descPool,pass,shader,vxBuffers[0],ubuf);
+    renderer->createPipelineCustomized(&pipeline,descSetEntriesRegPipeline,pass,shader,vxBuffers[0],ubuf);
     ANTH_LOGI("Pipeline Created");
 
     //Start Loop
     renderer->registerPipelineSubComponents();
     int currentFrame = 0;
     renderer->setDrawFunction([&](){
-        auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0);
+        int rdWinH,rdWinW;
+        renderer->exGetWindowSize(rdWinH,rdWinW);
+        auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)M_PI/2.0f,1.0f*rdWinW/rdWinH);
+        auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)M_PI*glfwGetTime()*0.1);
         auto mat = proj.multiply(lookAt.multiply(local));
         mat.columnMajorVectorization(matVal);
         ubuf->specifyUniforms(color,matVal);
@@ -130,20 +154,18 @@ int main(){
         renderer->drStartRenderPass(pass,framebuffer,imgIdx,currentFrame);
         renderer->drSetViewportScissor(currentFrame);
         renderer->drBindPipeline(pipeline,currentFrame);
-        
         for(int i=0;i<gltfResult.size();i++){
-            AnthemCmdDescriptorSetEntry uniformBufferDescEntry = {
-                .descPool = descPool,
-                .descSetType = AnthemCmdDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
+            AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
+                .descPool = descPool[0],
+                .descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
                 .inTypeIndex = 0
             };
-            AnthemCmdDescriptorSetEntry samplerDescEntry = {
-                .descPool = descPool,
-                .descSetType = AnthemCmdDescriptorSetEntrySourceType::AT_ACDS_SAMPLER,
+            AnthemDescriptorSetEntry samplerDescEntryRdw = {
+                .descPool = descPool[i],
+                .descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER,
                 .inTypeIndex = 0
             };
-            std::vector<AnthemCmdDescriptorSetEntry> descSetEntries = {uniformBufferDescEntry,samplerDescEntry};
-
+            std::vector<AnthemDescriptorSetEntry> descSetEntries = {uniformBufferDescEntryRdw,samplerDescEntryRdw};
             renderer->drBindVertexBuffer(vxBuffers[i],currentFrame);
             renderer->drBindIndexBuffer(ixBuffers[i],currentFrame);
             renderer->drBindDescriptorSetCustomized(descSetEntries,pipeline,currentFrame);

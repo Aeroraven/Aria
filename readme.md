@@ -1,21 +1,39 @@
 # Aria
 
-This repository is here for **personal purpose**. It serves as the record for the time I used to learn useless algorithms.
+This repository is here for **PERSONAL PURPOSE**. It serves as the record for the time I used to learn useless algorithms.
+
+
 
 ## I. Running Instruction
-Install node dependencies before running this project.
+
+### 1. Native Examples
+
+Native examples use Vulkan as backend. Use following instruction to build the project. Note that your compiler should be `g++` and at least supports partial `C++20` standard. (Tested on `g++11`). `$SELECTED_TARGETS` can be chosen from `demo` subdirectory.
+
+```bash
+cd Anthem
+cmake -S . -B ./build
+cmake --build ./build --config Debug --target $SELECTED_TARGETS
+```
+
+(MSVC support might be considered later, for VS is too large.)
+
+### 2. Browser-based Examples
+
+Browser-based examples uses WebGL as backend. Install node dependencies before running this project. After installation, run the project.
 ```bash
 cd Aria-v2
 npm install --force
-```
-Then run the project.
-```bash
-cd Aria-v2
 npm run deploy
 ```
 
+(WebGPU might be considered later)
 
 ## II. Acknowledgement & License
+
+### Rectification
+
+This repository partially reinplements the WebGL Ray Tracer (https://github.com/Aeroraven/Ray-tracing), which contains fatal mistakes.
 
 ### License
 

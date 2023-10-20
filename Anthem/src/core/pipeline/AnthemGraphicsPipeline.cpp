@@ -128,7 +128,37 @@ namespace Anthem::Core{
         this->prerequisiteInfoSpecified = true;
         return true;
     }
+    bool AnthemGraphicsPipeline::createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry){
+        this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        this->pipelineLayoutCreateInfo.pNext = nullptr;
+        this->pipelineLayoutCreateInfo.flags = 0;
+        for(const auto& p:entry){
+            if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER){
+                p.descPool->appendSamplerDescriptorLayoutIdx(&layouts,p.inTypeIndex);
+            }else if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER){
+                p.descPool->appendUniformDescriptorLayoutIdx(&layouts,p.inTypeIndex);
+            }else{
+                ANTH_LOGE("Invalid layout type");
+            }
+        }
 
+        for(auto x:layouts){
+            ANTH_LOGI("Layouts Are:",(long long)(x));
+        }
+
+        this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
+        this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+        ANTH_LOGI("Specified pipeline layout");
+
+        //Create Layout
+        auto result = vkCreatePipelineLayout(this->logicalDevice->getLogicalDevice(),&(this->pipelineLayoutCreateInfo),nullptr,&(this->pipelineLayout));
+        if(result != VK_SUCCESS){
+            ANTH_LOGE("Failed to create pipeline layout",result);
+            return false;
+        }
+        ANTH_LOGI("Pipeline layout created");
+        return true;
+    }
     bool AnthemGraphicsPipeline::createPipelineLayout(){
         //Specify Pipeline Layout Creation Info
         

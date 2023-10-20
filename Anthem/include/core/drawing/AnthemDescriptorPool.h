@@ -126,6 +126,14 @@ namespace Anthem::Core{
             }
             return true;
         }
+        bool appendUniformDescriptorLayoutIdx(std::vector<VkDescriptorSetLayout>* outRef,int index){
+            outRef->push_back(this->uniformBuffers.at(index).layout);
+            return true;
+        }
+        bool appendSamplerDescriptorLayoutIdx(std::vector<VkDescriptorSetLayout>* outRef,int index){
+            outRef->push_back(this->samplersDesc.at(index).layout);
+            return true;
+        }
         bool getAllDescriptorLayouts(std::vector<VkDescriptorSetLayout>* outRef){
             ANTH_LOGI("Total Size=",this->uniformBuffers.size(),"+",this->samplersDesc.size());
             for(int i=0;i<this->uniformBuffers.size();i++){

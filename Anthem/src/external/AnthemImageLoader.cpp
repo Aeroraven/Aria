@@ -8,7 +8,7 @@ namespace Anthem::External{
     }
     bool AnthemImageLoader::loadImage(const char* path,uint32_t* width,uint32_t* height,uint32_t* channels,uint8_t** data){
         *data = stbi_load(path,(int*)width,(int*)height,(int*)channels,STBI_rgb_alpha);
-        ANTH_ASSERT(*data != nullptr,"Failed to load image");
+        ANTH_ASSERT(*data != nullptr,"Failed to load image",path);
         //Convert to RGBA
         if (*data != nullptr){
             *channels = 4;
