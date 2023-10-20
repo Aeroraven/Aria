@@ -1,1 +1,1 @@
-LIBGL_ALWAYS_INDIRECT=0 ./bin/AD1_Triangles
+LIBGL_ALWAYS_INDIRECT=0 ./bin/AD2_PresentModel

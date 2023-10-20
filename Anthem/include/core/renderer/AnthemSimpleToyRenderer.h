@@ -31,7 +31,6 @@ namespace Anthem::Core{
         ANTH_UNIQUE_PTR(AnthemLogicalDeviceSelector) logicalDeviceSelector;
         ANTH_UNIQUE_PTR(AnthemLogicalDevice) logicalDevice;
         ANTH_UNIQUE_PTR(AnthemCommandBuffers) commandBuffers;
-        ANTH_UNIQUE_PTR(AnthemDescriptorPool) descriptorPool;
         ANTH_UNIQUE_PTR(AnthemMainLoopSyncer) mainLoopSyncer;
         ANTH_UNIQUE_PTR(AnthemViewport) viewport;
 
@@ -50,11 +49,14 @@ namespace Anthem::Core{
 
         std::vector<AnthemFramebufferList*> framebufferListObjs;
         std::vector<AnthemDepthBuffer*> depthBuffers;
+        std::vector<AnthemDescriptorPool*> descriptorPools;
 
         std::vector<AnthemGraphicsPipeline*> graphicsPipelines;
 
         uint32_t uniformDescPoolIdx = -1;
         uint32_t imageDescPoolIdx = -1;
+
+        VkDeviceSize emptyOffsetPlaceholder[1] = {0};
 
     private:
         bool resizeRefreshState = false;
@@ -78,17 +80,30 @@ namespace Anthem::Core{
         bool prepareFrame(uint32_t currentFrame, uint32_t* avaImageIdx);
         bool presentFrameDemo(uint32_t currentFrame, AnthemRenderPass* renderPass, 
             AnthemGraphicsPipeline* pipeline, AnthemFramebufferList* framebuffer,uint32_t avaImageIdx,
-            AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf);
+            AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf, AnthemDescriptorPool* descPool);
 
         bool setupDemoRenderPass(AnthemRenderPass** pRenderPass, AnthemDepthBuffer* depthBuffer);
         bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer);
-        bool createTexture(AnthemImage** pImage, uint8_t* texData, uint32_t texWidth,uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc);
+        bool createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc);
         bool createIndexBuffer(AnthemIndexBuffer** pIndexBuffer);
         bool createShader(AnthemShaderModule** pShaderModule,AnthemShaderFilePaths* filename);
         bool createFramebufferList(AnthemFramebufferList** pFramebufferList,const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
+        bool createDescriptorPool(AnthemDescriptorPool** pDescriptorPool);
 
         bool registerPipelineSubComponents();
-        bool createPipeline(AnthemGraphicsPipeline** pPipeline,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
+        bool createPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
+
+        bool drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebufferList* framebufferList, uint32_t avaImgIdx ,uint32_t frameIdx);
+        bool drEndRenderPass(uint32_t frameIdx);
+        bool drPresentFrame(uint32_t frameIdx, uint32_t avaImageIdx);
+        bool drSubmitBuffer(uint32_t frameIdx);
+
+        bool drSetViewportScissor(uint32_t frameIdx);
+        bool drBindPipeline(AnthemGraphicsPipeline* pipeline,uint32_t frameIdx);
+        bool drBindVertexBuffer(AnthemVertexBuffer* vertexBuffer,uint32_t frameIdx);
+        bool drBindIndexBuffer(AnthemIndexBuffer* indexBuffer,uint32_t frameIdx);
+        bool drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx);
+        bool drDraw(uint32_t vertices,uint32_t frameIdx);
 
         template<typename... T,uint32_t... S>
         bool createVertexBuffer(AnthemVertexBufferImpl<AnthemVAOAttrDesc<T,S>...>** pVertexBuffer){
@@ -102,7 +117,7 @@ namespace Anthem::Core{
         }
 
         template<typename... T,uint32_t... Rk,uint32_t... Sz>
-        bool createUniformBuffer(AnthemUniformBufferImpl<AnthemUBDesc<T,Rk,Sz>...>** pUniformBuffer, uint32_t bindLoc){
+        bool createUniformBuffer(AnthemUniformBufferImpl<AnthemUBDesc<T,Rk,Sz>...>** pUniformBuffer, uint32_t bindLoc, AnthemDescriptorPool *descPool){
             //Allocate Uniform Buffer
             auto ubuf = new AnthemUniformBufferImpl<AnthemUBDesc<T,Rk,Sz>...>();
             ubuf->specifyLogicalDevice(this->logicalDevice.get());
@@ -110,7 +125,7 @@ namespace Anthem::Core{
             ubuf->createBuffer(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
 
             //Allocate Descriptor Set
-            this->descriptorPool->addUniformBuffer(ubuf,bindLoc,this->uniformDescPoolIdx);
+            descPool->addUniformBuffer(ubuf,bindLoc,this->uniformDescPoolIdx);
 
             *pUniformBuffer = ubuf;
             this->uniformBuffers.push_back(ubuf);

@@ -6,11 +6,16 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemSimpleToyRenderer::finialize(){
+        this->setupState = false;
         ANTH_LOGI("Finalizing");
         this->logicalDevice->waitForIdle();
         this->destroySwapChain();
-        this->descriptorPool->destroyDescriptorPool();
-        this->descriptorPool->destroyLayoutBinding();
+
+        for(auto& p:this->descriptorPools){
+            p->destroyDescriptorPool();
+            p->destroyLayoutBinding();
+            delete p;
+        }
 
         for(const auto& p:this->uniformBuffers){
             p->destroyBuffers();
@@ -106,10 +111,7 @@ namespace Anthem::Core{
         this->commandBuffers->createCommandPool();
 
         //Step7. Create Descriptor Pool
-        this->descriptorPool = ANTH_MAKE_UNIQUE(AnthemDescriptorPool)();
-        this->descriptorPool->specifyLogicalDevice(this->logicalDevice.get());
-        this->descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&(this->uniformDescPoolIdx));
-        this->descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ,&(this->imageDescPoolIdx));
+        // Removed
 
         //Step8. Create Main Loop Syncer
         this->mainLoopSyncer = ANTH_MAKE_UNIQUE(AnthemMainLoopSyncer)();
@@ -135,6 +137,16 @@ namespace Anthem::Core{
         return true;
     }
 
+    bool AnthemSimpleToyRenderer::createDescriptorPool(AnthemDescriptorPool** pDescPool){
+        auto descriptorPool = new AnthemDescriptorPool();
+        descriptorPool->specifyLogicalDevice(this->logicalDevice.get());
+        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&(this->uniformDescPoolIdx));
+        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ,&(this->imageDescPoolIdx));
+        *pDescPool = descriptorPool;
+        this->descriptorPools.push_back(descriptorPool);
+        return true;
+    }
+
     bool AnthemSimpleToyRenderer::setupDemoRenderPass(AnthemRenderPass** pRenderPass,AnthemDepthBuffer* depthBuffer){
         auto newRenderPass = new AnthemRenderPass();
         newRenderPass->specifyLogicalDevice(this->logicalDevice.get());
@@ -146,7 +158,7 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::createTexture(AnthemImage** pImage, uint8_t* texData, uint32_t texWidth, uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc){
+    bool AnthemSimpleToyRenderer::createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth, uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc){
         //Allocate Image
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
@@ -157,7 +169,7 @@ namespace Anthem::Core{
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
-        this->descriptorPool->addSampler(textureImage,bindLoc,this->imageDescPoolIdx);
+        descPool->addSampler(textureImage,bindLoc,this->imageDescPoolIdx);
         *pImage = textureImage;
         this->textures.push_back(textureImage);
         return true;
@@ -172,7 +184,9 @@ namespace Anthem::Core{
             p->createBuffer();
         }
         //Prepare Descriptor Sets
-        this->descriptorPool->createDescriptorSet(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
+        for(const auto& p:descriptorPools){
+            p->createDescriptorSet(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
+        }
         return true;
     }
 
@@ -194,7 +208,7 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::createPipeline(AnthemGraphicsPipeline** pPipeline,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer){
+    bool AnthemSimpleToyRenderer::createPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer){
         auto graphicsPipeline = new AnthemGraphicsPipeline();
         graphicsPipeline->specifyLogicalDevice(this->logicalDevice.get());
         graphicsPipeline->specifyViewport(this->viewport.get());
@@ -202,7 +216,7 @@ namespace Anthem::Core{
         graphicsPipeline->specifyShaderModule(shaderModule);
         graphicsPipeline->specifyVertexBuffer(vertexBuffer);
         graphicsPipeline->specifyUniformBuffer(uniformBuffer);
-        graphicsPipeline->specifyDescriptor(this->descriptorPool.get());
+        graphicsPipeline->specifyDescriptor(descPool);
 
         graphicsPipeline->preparePreqPipelineCreateInfo();
         graphicsPipeline->createPipelineLayout();
@@ -269,13 +283,77 @@ namespace Anthem::Core{
         ANTH_LOGV("Presenting Frame, Done");
         return true;
     }
+    bool AnthemSimpleToyRenderer::drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebufferList* framebufferList, uint32_t avaImgIdx ,uint32_t frameIdx){
+        AnthemCommandManagerRenderPassStartInfo beginInfo = {
+            .renderPass = renderPass,
+            .framebufferList = framebufferList,
+            .framebufferIdx = avaImgIdx,
+            .clearValue = {{{0.0f,0.0f,0.0f,1.0f}}},
+            .depthClearValue = {{1.0f, 0}}
+        };
+        this->drawingCommandHelper->startRenderPass(&beginInfo,frameIdx);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drEndRenderPass(uint32_t frameIdx){
+        this->drawingCommandHelper->endRenderPass(frameIdx);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drSubmitBuffer(uint32_t frameIdx){
+        this->mainLoopSyncer->submitCommandBuffer(this->commandBuffers->getCommandBuffer(frameIdx),frameIdx);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drPresentFrame(uint32_t frameIdx, uint32_t avaImageIdx){
+        //Presentation
+        auto presentRes = this->mainLoopSyncer->presentFrame(avaImageIdx,frameIdx,[&](){
+            this->recreateSwapChain();
+            this->resizeRefreshState = false;
+        });
+        if(this->resizeRefreshState){
+            this->recreateSwapChain();
+            this->resizeRefreshState = false;
+        }
+        if(!presentRes){
+            ANTH_LOGW("Suboptimal Swap Chain, drawFrame interrupted");
+        }
+        ANTH_LOGV("Present Frame, DONE");
+        return true;
+    }
+
+    bool AnthemSimpleToyRenderer::drSetViewportScissor(uint32_t frameIdx){
+        vkCmdSetViewport(*this->commandBuffers->getCommandBuffer(frameIdx),0,1,viewport->getViewport());
+        vkCmdSetScissor(*this->commandBuffers->getCommandBuffer(frameIdx),0,1,viewport->getScissor());
+        return true;
+    }
+
+    bool AnthemSimpleToyRenderer::drBindPipeline(AnthemGraphicsPipeline* pipeline,uint32_t frameIdx){
+        vkCmdBindPipeline(*this->commandBuffers->getCommandBuffer(frameIdx),VK_PIPELINE_BIND_POINT_GRAPHICS,*(pipeline->getPipeline()));
+        return true;
+    }
+
+    bool AnthemSimpleToyRenderer::drBindVertexBuffer(AnthemVertexBuffer* vertexBuffer,uint32_t frameIdx){
+        vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(frameIdx),0,1,(vertexBuffer->getDestBufferObject()),emptyOffsetPlaceholder);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drBindIndexBuffer(AnthemIndexBuffer* indexBuffer,uint32_t frameIdx){
+        vkCmdBindIndexBuffer(*this->commandBuffers->getCommandBuffer(frameIdx), *(indexBuffer->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx){
+        std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
+        ANTH_TODO("Memory Leaks");
+        descPool->getAllDescriptorSets(frameIdx,descSets);
+        vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(frameIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
+            descSets->size(),descSets->data() , 0, nullptr);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drDraw(uint32_t vertices,uint32_t frameIdx){
+        vkCmdDrawIndexed(*this->commandBuffers->getCommandBuffer(frameIdx), vertices, 1, 0, 0, 0);
+        return true;
+    }
 
     bool AnthemSimpleToyRenderer::presentFrameDemo(uint32_t currentFrame, AnthemRenderPass* renderPass, 
     AnthemGraphicsPipeline* pipeline, AnthemFramebufferList* framebuffer,uint32_t avaImageIdx,
-    AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf){
-        ANTH_LOGV("Presenting Frame");
-
-        ANTH_LOGV("Wait For Command");
+    AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf,AnthemDescriptorPool* descPool){
         AnthemCommandManagerRenderPassStartInfo beginInfo = {
             .renderPass = renderPass,
             .framebufferList = framebuffer,
@@ -283,20 +361,15 @@ namespace Anthem::Core{
             .clearValue = {{{0.0f,0.0f,0.0f,1.0f}}},
             .depthClearValue = {{1.0f, 0}}
         };
-        ANTH_LOGV("Starting Pass",currentFrame,avaImageIdx);
         this->drawingCommandHelper->startRenderPass(&beginInfo,currentFrame);
-        ANTH_LOGV("Begin To Draw");
         this->drawingCommandHelper->demoDrawCommand3(pipeline,this->viewport.get(),vbuf,ibuf,ubuf,
-            this->descriptorPool.get(),currentFrame);
+            descPool, currentFrame);
         
-        ANTH_LOGV("End Pass");
         this->drawingCommandHelper->endRenderPass(currentFrame);
 
-        ANTH_LOGV("Submit To Buffer");
         this->mainLoopSyncer->submitCommandBuffer(this->commandBuffers->getCommandBuffer(currentFrame),currentFrame);
         
         //Presentation
-        ANTH_LOGV("Present Frame, START");
         auto presentRes = this->mainLoopSyncer->presentFrame(avaImageIdx,currentFrame,[&](){
             this->recreateSwapChain();
             this->resizeRefreshState = false;

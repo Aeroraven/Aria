@@ -7,13 +7,6 @@ using namespace Anthem::Core;
 using namespace Anthem::External;
 
 int main(){
-    
-    AnthemGLTFLoader loader;
-    AnthemGLTFLoaderParseConfig gltfConfig;
-    std::vector<AnthemGLTFLoaderParseResult> gltfResult;
-    loader.loadModel("/home/funkybirds/Aria/Anthem/assets/gsk/untitled.gltf");
-    loader.parseModel(gltfConfig,gltfResult);
-
     ANTH_LOGI("Goodbye World!");
     auto cfg = ANTH_MAKE_SHARED(Anthem::Core::AnthemConfig)();
     auto app = ANTH_MAKE_SHARED(Anthem::Core::AnthemSimpleToyRenderer)();
@@ -21,41 +14,61 @@ int main(){
     app->initialize();
     ANTH_LOGI("Intialization Complete");
 
-    //Creating Vertex Buffer
+    //Loading Model
+    AnthemGLTFLoader loader;
+    AnthemGLTFLoaderParseConfig gltfConfig;
+    std::vector<AnthemGLTFLoaderParseResult> gltfResult;
+    loader.loadModel("/home/funkybirds/Aria/Anthem/assets/gsk/untitled.gltf");
+    loader.parseModel(gltfConfig,gltfResult);
+
+    
+    //Creating Descriptor Pool
+    AnthemDescriptorPool* descPool;
+    app->createDescriptorPool(&descPool);
+
+
+    //Creating Vertex Buffer & Index Buffer
     using vxColorAttr = AnthemVAOAttrDesc<float,3>;
     using vxPosAttr = AnthemVAOAttrDesc<float,3>;
     using vxTexAttr = AnthemVAOAttrDesc<float,2>;
-    AnthemVertexBufferImpl<vxPosAttr,vxColorAttr,vxTexAttr>* vxBuffer;
-    app->createVertexBuffer(&vxBuffer);
-    vxBuffer->setTotalVertices(8);
-    float dfz = 0.1f;
-    float dpz = 0.5f;
-    for(int T=0;T<8;T+=4){
-        vxBuffer->insertData(0+T,{-0.5f+T*dfz, -0.5f+T*dfz, 1.0f+T*dpz},{0.05, 0.0, 0.0},{1.0f, 0.0f});
-        vxBuffer->insertData(1+T,{0.5f+T*dfz, -0.5f+T*dfz, 1.0f+T*dpz},{0.0, 0.05, 0.0},{0.0f, 0.0f});
-        vxBuffer->insertData(2+T,{0.5f+T*dfz, 0.5f+T*dfz, 1.0f+T*dpz},{0.0, 0.0, 0.05},{0.0f, 1.0f});
-        vxBuffer->insertData(3+T,{-0.5f+T*dfz, 0.5f+T*dfz, 1.0f+T*dpz},{0.05, 0.05, 0.05},{1.0f, 1.0f});
+
+    AnthemVertexBufferImpl<vxPosAttr,vxColorAttr,vxTexAttr>** vxBuffers = new AnthemVertexBufferImpl<vxPosAttr,vxColorAttr,vxTexAttr>*[gltfResult.size()];
+    AnthemIndexBuffer** ixBuffers = new AnthemIndexBuffer*[gltfResult.size()];
+
+    for(auto chosenMesh=0;chosenMesh<gltfResult.size();chosenMesh++){
+        app->createVertexBuffer(&vxBuffers[chosenMesh]);
+        float dfz = 0.1f;
+        float dpz = 0.5f;
+        int numVertices = gltfResult.at(chosenMesh).positions.size()/3;
+        vxBuffers[chosenMesh]->setTotalVertices(numVertices);
+        for(int i=0;i<numVertices;i++){
+            vxBuffers[chosenMesh]->insertData(i,
+                {gltfResult.at(chosenMesh).positions.at(i*3),-gltfResult.at(chosenMesh).positions.at(i*3+1),gltfResult.at(chosenMesh).positions.at(i*3+2)},
+                {0.05, 0.0, 0.0},{1.0f, 0.0f});
+        }
+        ANTH_LOGI("Vertex Buffer Created");
+
+        app->createIndexBuffer(&ixBuffers[chosenMesh]);
+        std::vector<uint32_t> indices;
+        for(int i=0;i<gltfResult.at(chosenMesh).indices.size();i++){
+            indices.push_back(gltfResult.at(chosenMesh).indices.at(i));
+        }
+        ixBuffers[chosenMesh]->setIndices(indices);
+        ANTH_LOGI("Index Buffer Created");
     }
-    ANTH_LOGI("Vertex Buffer Created");
-    
-    //Create Index Buffer
-    AnthemIndexBuffer* ixBuffer;
-    app->createIndexBuffer(&ixBuffer);
-    ixBuffer->setIndices({0,1,2,2,3,0,4,5,6,6,7,4});
-    ANTH_LOGI("Index Buffer Created");
 
     //Create Uniform Buffer
     AnthemUniformBufferImpl<AnthemUniformVecf<4>,AnthemUniformMatf<4>>* ubuf;
-    app->createUniformBuffer(&ubuf,0);
+    app->createUniformBuffer(&ubuf,0,descPool);
     float color[4] = {0.1f,0.0f,0.0f,0.0f};
     float matVal[16];
     auto axis = Math::AnthemVector<float,3>({1.0f,0.0f,0.0f});
     auto center = Math::AnthemVector<float,3>({0.0f,0.0f,0.0f});
-    auto eye = Math::AnthemVector<float,3>({0.0f,0.0f,-1.0f});
+    auto eye = Math::AnthemVector<float,3>({0.0f,80.0f,-100.0f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
-    auto proj = Math::AnthemLinAlg::spatialPerspectiveTransform(0.1f,100.0f,-0.1f,0.1f,0.1f,-0.1f);
+    auto proj = Math::AnthemLinAlg::spatialPerspectiveTransform(0.1f,300.0f,-0.1f,0.1f,0.1f,-0.1f);
     auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
-    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*200);
+    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.01);
     auto mat = proj.multiply(lookAt.multiply(local));
     mat.columnMajorVectorization(matVal);
     ubuf->specifyUniforms(color,matVal);
@@ -70,7 +83,7 @@ int main(){
     uint8_t* texData;
     imageLoader->loadImage("/home/funkybirds/Aria/Anthem/assets/cat.jpg",&texWidth,&texHeight,&texChannels,&texData);
     AnthemImage* image;
-    app->createTexture(&image,texData,texWidth,texHeight,texChannels,1);
+    app->createTexture(&image,descPool,texData,texWidth,texHeight,texChannels,1);
     ANTH_LOGI("Texture Created");
 
     //Create Depth Buffer
@@ -98,15 +111,15 @@ int main(){
     ANTH_LOGI("Shader Created");
 
     //Assemble Pipeline
-    AnthemGraphicsPipeline* piepline;
-    app->createPipeline(&piepline,pass,shader,vxBuffer,ubuf);
+    AnthemGraphicsPipeline* pipeline;
+    app->createPipeline(&pipeline,descPool,pass,shader,vxBuffers[0],ubuf);
     ANTH_LOGI("Pipeline Created");
 
     //Start Loop
     app->registerPipelineSubComponents();
     int currentFrame = 0;
     app->setDrawFunction([&](){
-        auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime());
+        auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0);
         auto mat = proj.multiply(lookAt.multiply(local));
         mat.columnMajorVectorization(matVal);
         ubuf->specifyUniforms(color,matVal);
@@ -114,7 +127,20 @@ int main(){
 
         uint32_t imgIdx;
         app->prepareFrame(currentFrame,&imgIdx);
-        app->presentFrameDemo(currentFrame,pass,piepline,framebuffer,imgIdx,vxBuffer,ubuf,ixBuffer);
+
+        app->drStartRenderPass(pass,framebuffer,imgIdx,currentFrame);
+        app->drSetViewportScissor(currentFrame);
+        app->drBindPipeline(pipeline,currentFrame);
+        for(int i=0;i<gltfResult.size();i++){
+            app->drBindVertexBuffer(vxBuffers[i],currentFrame);
+            app->drBindIndexBuffer(ixBuffers[i],currentFrame);
+            app->drBindDescriptorSet(descPool,pipeline,currentFrame);
+            app->drDraw(ixBuffers[i]->getIndexCount(),currentFrame);
+        }
+        app->drEndRenderPass(currentFrame);
+        app->drSubmitBuffer(currentFrame);
+        app->drPresentFrame(currentFrame,imgIdx);
+        
         currentFrame++;
         currentFrame %= 2;
     });

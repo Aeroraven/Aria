@@ -5,12 +5,12 @@ This repository is here for **personal purpose**. It serves as the record for th
 ## I. Running Instruction
 Install node dependencies before running this project.
 ```bash
-cd Active-v2
+cd Aria-v2
 npm install --force
 ```
 Then run the project.
 ```bash
-cd Active-v2
+cd Aria-v2
 npm run deploy
 ```
 

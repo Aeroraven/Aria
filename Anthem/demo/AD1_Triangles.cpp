@@ -12,6 +12,10 @@ int main(){
     app->initialize();
     ANTH_LOGI("Intialization Complete");
 
+    //Creating Descriptor Pool
+    AnthemDescriptorPool* descPool;
+    app->createDescriptorPool(&descPool);
+
     //Creating Vertex Buffer
     using vxColorAttr = AnthemVAOAttrDesc<float,3>;
     using vxPosAttr = AnthemVAOAttrDesc<float,3>;
@@ -37,7 +41,7 @@ int main(){
 
     //Create Uniform Buffer
     AnthemUniformBufferImpl<AnthemUniformVecf<4>,AnthemUniformMatf<4>>* ubuf;
-    app->createUniformBuffer(&ubuf,0);
+    app->createUniformBuffer(&ubuf,0,descPool);
     float color[4] = {0.1f,0.0f,0.0f,0.0f};
     float matVal[16];
     auto axis = Math::AnthemVector<float,3>({1.0f,0.0f,0.0f});
@@ -61,7 +65,7 @@ int main(){
     uint8_t* texData;
     imageLoader->loadImage("/home/funkybirds/Aria/Anthem/assets/cat.jpg",&texWidth,&texHeight,&texChannels,&texData);
     AnthemImage* image;
-    app->createTexture(&image,texData,texWidth,texHeight,texChannels,1);
+    app->createTexture(&image,descPool,texData,texWidth,texHeight,texChannels,1);
     ANTH_LOGI("Texture Created");
 
     //Create Depth Buffer
@@ -89,8 +93,8 @@ int main(){
     ANTH_LOGI("Shader Created");
 
     //Assemble Pipeline
-    AnthemGraphicsPipeline* piepline;
-    app->createPipeline(&piepline,pass,shader,vxBuffer,ubuf);
+    AnthemGraphicsPipeline* pipeline;
+    app->createPipeline(&pipeline,descPool,pass,shader,vxBuffer,ubuf);
     ANTH_LOGI("Pipeline Created");
 
     //Start Loop
@@ -105,7 +109,17 @@ int main(){
 
         uint32_t imgIdx;
         app->prepareFrame(currentFrame,&imgIdx);
-        app->presentFrameDemo(currentFrame,pass,piepline,framebuffer,imgIdx,vxBuffer,ubuf,ixBuffer);
+        app->drStartRenderPass(pass,framebuffer,imgIdx,currentFrame);
+        app->drSetViewportScissor(currentFrame);
+        app->drBindPipeline(pipeline,currentFrame);
+        app->drBindVertexBuffer(vxBuffer,currentFrame);
+        app->drBindIndexBuffer(ixBuffer,currentFrame);
+        app->drBindDescriptorSet(descPool,pipeline,currentFrame);
+        app->drDraw(ixBuffer->getIndexCount(),currentFrame);
+        app->drEndRenderPass(currentFrame);
+        app->drSubmitBuffer(currentFrame);
+        app->drPresentFrame(currentFrame,imgIdx);
+        
         currentFrame++;
         currentFrame %= 2;
     });
