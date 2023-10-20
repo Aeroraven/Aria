@@ -11,6 +11,7 @@ namespace Anthem::Core{
         VkDeviceMemory memory;
         VkImageCreateInfo imageInfo = {};
         VkImageView imageView;
+        int mipmapLodLevels = 1;
     };
 
     class AnthemImageContainer:
@@ -25,6 +26,7 @@ namespace Anthem::Core{
         bool createImageTransitionLayout(VkImageLayout oldLayout,VkImageLayout newLayout);
         bool destroyImageInternal();
         bool destroyImageViewInternal();
+        bool generateMipmap(uint32_t texWidth,uint32_t texHeight);
     public:
         const VkImageView* getImageView() const;
     };

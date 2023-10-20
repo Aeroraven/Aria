@@ -92,6 +92,7 @@ int main(){
         }
         imageLoader->loadImage(texPath.c_str(),&texWidth,&texHeight,&texChannels,&texData);
         renderer->createTexture(&image[chosenMesh],descPool[chosenMesh],texData,texWidth,texHeight,texChannels,1);
+        image[chosenMesh]->enableMipMapping();
         ANTH_LOGI("Texture Created");
     }
 

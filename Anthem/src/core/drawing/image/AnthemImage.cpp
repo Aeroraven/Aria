@@ -22,7 +22,11 @@ namespace Anthem::Core{
             this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
             this->copyBufferToImage();
             ANTH_LOGI("Buffer copied");
-            this->createImageTransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            if(this->image.mipmapLodLevels > 1){
+                this->generateMipmap(this->width,this->height);
+            }else{
+                this->createImageTransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            }
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
             this->createSampler();
             this->destroyStagingBuffer();
@@ -75,6 +79,11 @@ namespace Anthem::Core{
         }
         this->destroyImageViewInternal();
         this->destroyImageInternal();
+        return true;
+    }
+    bool AnthemImage::enableMipMapping(){
+        int32_t mipLevels = static_cast<int32_t>(std::floor(std::log2(std::max(this->width,this->height)))) + 1;
+        this->image.mipmapLodLevels = mipLevels;
         return true;
     }
     bool AnthemImage::createSampler(){

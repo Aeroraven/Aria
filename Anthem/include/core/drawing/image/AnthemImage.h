@@ -35,6 +35,7 @@ namespace Anthem::Core{
         bool specifyUsage(AnthemImageUsage usage);
         bool prepareImage();
         bool destroyImage();
+        bool enableMipMapping();
         bool loadImageData(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
         const VkImageView* getImageView() const;
         const VkSampler* getSampler() const;

@@ -1,6 +1,80 @@
 #include "../../../../include/core/drawing/image/AnthemImageContainer.h"
 
 namespace Anthem::Core{
+    bool AnthemImageContainer::generateMipmap(uint32_t texWidth,uint32_t texHeight){
+        //Referenced from https://vulkan-tutorial.com/Generating_Mipmaps
+
+        uint32_t cmdBufIdx;
+        this->cmdBufs->createCommandBuffer(&cmdBufIdx);
+        this->cmdBufs->startCommandRecording(cmdBufIdx);
+
+        VkImageMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.pNext = nullptr;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = this->image.image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.layerCount = 1;
+
+        uint32_t mipWidth = texWidth;
+        uint32_t mipHeight = texHeight;
+
+        for (uint32_t i = 1; i < this->image.mipmapLodLevels; i++) {
+            barrier.subresourceRange.baseMipLevel = i - 1;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+            vkCmdPipelineBarrier(*this->cmdBufs->getCommandBuffer(cmdBufIdx),VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                0, nullptr,0, nullptr,1, &barrier);
+
+            VkImageBlit blit{};
+            blit.srcOffsets[0] = { 0, 0, 0 };
+            blit.srcOffsets[1] = { (signed)mipWidth, (signed)mipHeight, 1 };
+            blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.srcSubresource.mipLevel = i - 1;
+            blit.srcSubresource.baseArrayLayer = 0;
+            blit.srcSubresource.layerCount = 1;
+            blit.dstOffsets[0] = { 0, 0, 0 };
+            blit.dstOffsets[1] = { (signed)mipWidth > 1 ? (signed)mipWidth / 2 : 1,(signed) mipHeight > 1 ? (signed)mipHeight / 2 : 1, 1 };
+            blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.dstSubresource.mipLevel = i;
+            blit.dstSubresource.baseArrayLayer = 0;
+            blit.dstSubresource.layerCount = 1;
+
+            vkCmdBlitImage(*this->cmdBufs->getCommandBuffer(cmdBufIdx),this->image.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,this->image.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1, &blit,VK_FILTER_LINEAR);
+
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            vkCmdPipelineBarrier(*this->cmdBufs->getCommandBuffer(cmdBufIdx),VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+                0, nullptr, 0, nullptr, 1, &barrier);
+
+            if (mipWidth > 1) mipWidth /= 2;
+            if (mipHeight > 1) mipHeight /= 2;
+        }
+        barrier.subresourceRange.baseMipLevel = this->image.mipmapLodLevels - 1;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        vkCmdPipelineBarrier(*(this->cmdBufs->getCommandBuffer(cmdBufIdx)), VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+            0,0, nullptr,0, nullptr,1, &barrier);  
+
+        this->cmdBufs->endCommandRecording(cmdBufIdx);  
+        this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx,true);
+        this->cmdBufs->freeCommandBuffer(cmdBufIdx);
+        ANTH_LOGI("Mipmap generated");
+        return true;
+    }
     bool AnthemImageContainer::destroyImageViewInternal(){
         vkDestroyImageView(this->logicalDevice->getLogicalDevice(),this->image.imageView,nullptr);
         return true;
@@ -24,7 +98,7 @@ namespace Anthem::Core{
         createInfo.subresourceRange.baseArrayLayer = 0;
         createInfo.subresourceRange.baseMipLevel = 0;
         createInfo.subresourceRange.layerCount = 1;
-        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.levelCount = this->image.mipmapLodLevels;
         auto result = vkCreateImageView(this->logicalDevice->getLogicalDevice(),&createInfo,nullptr,&(this->image.imageView));
         if(result != VK_SUCCESS){
             ANTH_LOGI("Failed to create image view",result);
@@ -51,7 +125,7 @@ namespace Anthem::Core{
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         }
         barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.levelCount = this->image.mipmapLodLevels;
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount = 1;
 
@@ -95,7 +169,7 @@ namespace Anthem::Core{
         this->image.imageInfo.extent.width = width;
         this->image.imageInfo.extent.height = height;
         this->image.imageInfo.extent.depth = 1;
-        this->image.imageInfo.mipLevels = 1;
+        this->image.imageInfo.mipLevels = this->image.mipmapLodLevels;
         this->image.imageInfo.arrayLayers = 1;
         this->image.imageInfo.format = format;
         this->image.imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
