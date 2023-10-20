@@ -41,6 +41,14 @@ namespace Anthem::Core{
         const VkDescriptorSet* getDescriptorSetUniform(uint32_t idx) const{
             return &(descriptorSetsUniform.at(idx));
         }
+        const bool appendDescriptorSetUniform(uint32_t idx,std::vector<VkDescriptorSet>* outRef) const{
+            outRef->push_back(descriptorSetsUniform.at(idx));
+            return true;
+        }
+        const bool appendDescriptorSetSampler(uint32_t idx,std::vector<VkDescriptorSet>* outRef) const{
+            outRef->push_back(descriptorSetsImg.at(idx));
+            return true;
+        }
         const bool getAllDescriptorSets(uint32_t frameIdx, std::vector<VkDescriptorSet>* outRef){
             for(int i=0;i<this->uniformBuffers.size();i++){
                 outRef->push_back(this->descriptorSetsUniform.at(frameIdx*this->uniformBuffers.size()+i));

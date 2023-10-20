@@ -19,6 +19,17 @@
 #include "../drawing/AnthemDrawingCommandHelper.h"
 
 namespace Anthem::Core{
+    enum AnthemCmdDescriptorSetEntrySourceType{
+        AT_ACDS_UNDEFINED = 0,
+        AT_ACDS_UNIFORM_BUFFER = 1,
+        AT_ACDS_SAMPLER = 2,
+    };
+    struct AnthemCmdDescriptorSetEntry{
+        AnthemDescriptorPool* descPool = nullptr;
+        AnthemCmdDescriptorSetEntrySourceType descSetType = AT_ACDS_UNDEFINED;
+        uint32_t inTypeIndex = 0;
+    };
+
     class AnthemSimpleToyRenderer{
     private:
         const AnthemConfig* config = nullptr;
@@ -103,6 +114,7 @@ namespace Anthem::Core{
         bool drBindVertexBuffer(AnthemVertexBuffer* vertexBuffer,uint32_t frameIdx);
         bool drBindIndexBuffer(AnthemIndexBuffer* indexBuffer,uint32_t frameIdx);
         bool drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx);
+        bool drBindDescriptorSetCustomized(std::vector<AnthemCmdDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx);
         bool drDraw(uint32_t vertices,uint32_t frameIdx);
 
         template<typename... T,uint32_t... S>

@@ -338,12 +338,28 @@ namespace Anthem::Core{
         vkCmdBindIndexBuffer(*this->commandBuffers->getCommandBuffer(frameIdx), *(indexBuffer->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
         return true;
     }
+    bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomized(std::vector<AnthemCmdDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx){
+        std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
+        for(const auto& p:descSetEntries){
+            if(p.descSetType == AnthemCmdDescriptorSetEntrySourceType::AT_ACDS_SAMPLER){
+                p.descPool->appendDescriptorSetSampler(p.inTypeIndex,descSets);
+            }else if(p.descSetType == AnthemCmdDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER){
+                p.descPool->appendDescriptorSetUniform(p.inTypeIndex,descSets);
+            }else{
+                ANTH_LOGE("Unknown Descriptor Set Type");
+            }
+        }
+        vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(frameIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
+            descSets->size(),descSets->data() , 0, nullptr);
+        delete descSets;
+        return true;
+    }
     bool AnthemSimpleToyRenderer::drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx){
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
-        ANTH_TODO("Memory Leaks");
         descPool->getAllDescriptorSets(frameIdx,descSets);
         vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(frameIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
             descSets->size(),descSets->data() , 0, nullptr);
+        delete descSets;
         return true;
     }
     bool AnthemSimpleToyRenderer::drDraw(uint32_t vertices,uint32_t frameIdx){
