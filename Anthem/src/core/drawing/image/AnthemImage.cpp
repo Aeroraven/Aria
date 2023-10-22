@@ -104,7 +104,11 @@ namespace Anthem::Core{
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         samplerInfo.mipLodBias = 0.0f;
         samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = 0.0f;
+        if(this->image.mipmapLodLevels > 1){
+            samplerInfo.maxLod = this->image.mipmapLodLevels;
+        }else{
+            samplerInfo.maxLod = 1.0f;
+        }
         this->samplerCreated = true;
         auto samplerResult = vkCreateSampler(this->logicalDevice->getLogicalDevice(),&samplerInfo,nullptr,&(this->sampler));
         ANTH_ASSERT(samplerResult==VK_SUCCESS,"Failed to create sampler");
