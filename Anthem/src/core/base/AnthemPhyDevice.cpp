@@ -4,7 +4,7 @@ namespace Anthem::Core{
     AnthemPhyDevice::AnthemPhyDevice(){
         
     }
-    VkPhysicalDevice AnthemPhyDevice::getPhysicalDevice(){
+    VkPhysicalDevice AnthemPhyDevice::getPhysicalDevice() const{
         ANTH_ASSERT(this->physicalDevice != VK_NULL_HANDLE,"Physical device not specified");
         return this->physicalDevice;
     }

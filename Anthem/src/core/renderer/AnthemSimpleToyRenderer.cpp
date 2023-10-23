@@ -162,7 +162,9 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth, uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc){
+    bool AnthemSimpleToyRenderer::createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
+        uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap){
+            
         //Allocate Image
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
@@ -170,6 +172,9 @@ namespace Anthem::Core{
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
         textureImage->loadImageData(texData,texWidth,texHeight,texChannel);
         textureImage->specifyUsage(AnthemImageUsage::AT_IU_TEXTURE2D);
+        if(generateMipmap){
+            textureImage->enableMipMapping();
+        }
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler

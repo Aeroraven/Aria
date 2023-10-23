@@ -91,7 +91,7 @@ int main(){
             texPath = "/home/funkybirds/Aria/Anthem/assets/cat.jpg";
         }
         imageLoader->loadImage(texPath.c_str(),&texWidth,&texHeight,&texChannels,&texData);
-        renderer->createTexture(&image[chosenMesh],descPool[chosenMesh],texData,texWidth,texHeight,texChannels,1);
+        renderer->createTexture(&image[chosenMesh],descPool[chosenMesh],texData,texWidth,texHeight,texChannels,1,true);
         image[chosenMesh]->enableMipMapping();
         ANTH_LOGI("Texture Created");
     }
@@ -144,7 +144,7 @@ int main(){
         int rdWinH,rdWinW;
         renderer->exGetWindowSize(rdWinH,rdWinW);
         auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)M_PI/2.0f,1.0f*rdWinW/rdWinH);
-        auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)M_PI*glfwGetTime()*0.1);
+        auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)M_PI*glfwGetTime()*0.0);
         auto mat = proj.multiply(lookAt.multiply(local));
         mat.columnMajorVectorization(matVal);
         ubuf->specifyUniforms(color,matVal);

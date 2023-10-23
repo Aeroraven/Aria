@@ -19,10 +19,11 @@ namespace Anthem::Core{
         barrier.subresourceRange.levelCount = 1;
         barrier.subresourceRange.layerCount = 1;
 
-        uint32_t mipWidth = texWidth;
-        uint32_t mipHeight = texHeight;
+        int32_t mipWidth = texWidth;
+        int32_t mipHeight = texHeight;
 
         for (uint32_t i = 1; i < this->image.mipmapLodLevels; i++) {
+            ANTH_LOGI("MipLvl:",i," Wid=",(signed)mipWidth, " Hei=",(signed) mipHeight);
             barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -34,13 +35,13 @@ namespace Anthem::Core{
 
             VkImageBlit blit{};
             blit.srcOffsets[0] = { 0, 0, 0 };
-            blit.srcOffsets[1] = { (signed)mipWidth, (signed)mipHeight, 1 };
+            blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
             blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             blit.srcSubresource.mipLevel = i - 1;
             blit.srcSubresource.baseArrayLayer = 0;
             blit.srcSubresource.layerCount = 1;
             blit.dstOffsets[0] = { 0, 0, 0 };
-            blit.dstOffsets[1] = { (signed)mipWidth > 1 ? (signed)mipWidth / 2 : 1,(signed) mipHeight > 1 ? (signed)mipHeight / 2 : 1, 1 };
+            blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
             blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             blit.dstSubresource.mipLevel = i;
             blit.dstSubresource.baseArrayLayer = 0;
@@ -73,6 +74,10 @@ namespace Anthem::Core{
         this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx,true);
         this->cmdBufs->freeCommandBuffer(cmdBufIdx);
         ANTH_LOGI("Mipmap generated");
+
+        VkFormatProperties formatProperties;
+        vkGetPhysicalDeviceFormatProperties(phyDevice->getPhysicalDevice(), VK_FORMAT_R8G8B8A8_SRGB, &formatProperties);
+        ANTH_ASSERT((formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT),"Unsupported Linear Filtering");
         return true;
     }
     bool AnthemImageContainer::destroyImageViewInternal(){
@@ -178,6 +183,8 @@ namespace Anthem::Core{
         this->image.imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         this->image.imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         this->image.imageInfo.flags = 0;
+
+        ANTH_LOGI("Image Mip Lvls:", this->image.imageInfo.mipLevels);
 
         auto creatImageRes = vkCreateImage(this->logicalDevice->getLogicalDevice(),&(this->image.imageInfo),nullptr,&(this->image.image));
         ANTH_ASSERT(creatImageRes==VK_SUCCESS,"Failed to create image");

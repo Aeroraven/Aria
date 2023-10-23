@@ -15,9 +15,11 @@ message(CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
 
 find_package(glfw3 3.3 REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(glm REQUIRED)
 
 file(GLOB_RECURSE SOURCE_0 "include/*.h")
 file(GLOB_RECURSE SOURCE_1 "src/*.cpp")
+file(GLOB_RECURSE SOURCE_2 "include/external_ref/*.h")
 
 file(GLOB SOURCE_STAGES "demo/*.cpp")
 
@@ -26,6 +28,3 @@ foreach( SRC_FILE_NAME ${SOURCE_STAGES} )
     add_executable( ${SRC_FILE_NAME_SHORT} ${SRC_FILE_NAME} ${SOURCE_0} ${SOURCE_1})
     target_link_libraries( ${SRC_FILE_NAME_SHORT} Vulkan::Vulkan glfw )
 endforeach( SRC_FILE_NAME ${SOURCE_STAGES} )
-
-
-

@@ -22,7 +22,7 @@ namespace Anthem::Core{
     public:
         AnthemPhyDevice(); 
         bool virtual specifyDevice(VkPhysicalDevice device,AnthemPhyQueueFamilyIdx* queueFamilyIdx);
-        VkPhysicalDevice virtual getPhysicalDevice();
+        VkPhysicalDevice virtual getPhysicalDevice() const;
         VkPhysicalDeviceFeatures virtual getDeviceFeatures();
         VkPhysicalDeviceProperties virtual getDeviceProperties() const;
         std::optional<uint32_t> virtual getPhyQueueGraphicsFamilyIndice() const;

@@ -17,15 +17,17 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->definedUsage != AT_IU_UNDEFINED,"Image usage not specified");
         if (this->definedUsage == AT_IU_TEXTURE2D){
             this->createStagingBuffer();
-            this->createImageInternal(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_FORMAT_R8G8B8A8_SRGB, this->width, this->height);
+            this->createImageInternal( VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_FORMAT_R8G8B8A8_SRGB, this->width, this->height);
             ANTH_LOGI("Image created");
             this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
             this->copyBufferToImage();
             ANTH_LOGI("Buffer copied");
             if(this->image.mipmapLodLevels > 1){
                 this->generateMipmap(this->width,this->height);
+                ANTH_LOGI("Generated Mipmap");
             }else{
                 this->createImageTransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                ANTH_LOGI("Skip generating Mipmap");
             }
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
             this->createSampler();
@@ -84,16 +86,17 @@ namespace Anthem::Core{
     bool AnthemImage::enableMipMapping(){
         int32_t mipLevels = static_cast<int32_t>(std::floor(std::log2(std::max(this->width,this->height)))) + 1;
         this->image.mipmapLodLevels = mipLevels;
+        ANTH_LOGI("Mipmap Level",mipLevels);
         return true;
     }
     bool AnthemImage::createSampler(){
         VkSamplerCreateInfo samplerInfo = {};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_NEAREST;
-        samplerInfo.minFilter = VK_FILTER_NEAREST;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         samplerInfo.anisotropyEnable = VK_TRUE;
         auto maxAnisotropy =  (this->phyDevice->getDeviceProperties()).limits.maxSamplerAnisotropy;
         samplerInfo.maxAnisotropy = maxAnisotropy;
@@ -109,6 +112,7 @@ namespace Anthem::Core{
         }else{
             samplerInfo.maxLod = 1.0f;
         }
+        ANTH_LOGI("Sampler Max LOD:",this->image.mipmapLodLevels);
         this->samplerCreated = true;
         auto samplerResult = vkCreateSampler(this->logicalDevice->getLogicalDevice(),&samplerInfo,nullptr,&(this->sampler));
         ANTH_ASSERT(samplerResult==VK_SUCCESS,"Failed to create sampler");

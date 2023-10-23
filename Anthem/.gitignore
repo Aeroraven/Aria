@@ -9,3 +9,6 @@ src/external_ref
 bin/*
 bin/
 bin
+assets/*.obj
+*.spv
+*.png

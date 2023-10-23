@@ -46,7 +46,7 @@ int main(){
     float matVal[16];
     auto axis = Math::AnthemVector<float,3>({1.0f,0.0f,0.0f});
     auto center = Math::AnthemVector<float,3>({0.0f,0.0f,0.0f});
-    auto eye = Math::AnthemVector<float,3>({0.0f,0.0f,-1.0f});
+    auto eye = Math::AnthemVector<float,3>({0.0f,0.0f,-0.5f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto proj = Math::AnthemLinAlg::spatialPerspectiveTransform(0.1f,100.0f,-0.1f,0.1f,0.1f,-0.1f);
     auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
@@ -65,7 +65,7 @@ int main(){
     uint8_t* texData;
     imageLoader->loadImage("/home/funkybirds/Aria/Anthem/assets/cat.jpg",&texWidth,&texHeight,&texChannels,&texData);
     AnthemImage* image;
-    app->createTexture(&image,descPool,texData,texWidth,texHeight,texChannels,1);
+    app->createTexture(&image,descPool,texData,texWidth,texHeight,texChannels,1,true);
     ANTH_LOGI("Texture Created");
 
     //Create Depth Buffer
