@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <GLFW/glfw3.h>
 #include <algorithm>
 #include <optional>
 #include <set>
@@ -15,6 +14,8 @@
 #include <regex>
 #include <concepts>
 #include <cmath>
+#include <cstring>
+#include <GLFW/glfw3.h>
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>

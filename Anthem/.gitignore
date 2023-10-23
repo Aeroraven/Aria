@@ -12,3 +12,5 @@ bin
 assets/*.obj
 *.spv
 *.png
+lib/
+*.gltf

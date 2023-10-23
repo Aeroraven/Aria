@@ -63,7 +63,7 @@ int main(){
     auto imageLoader = new Anthem::External::AnthemImageLoader();
     uint32_t texWidth,texHeight,texChannels;
     uint8_t* texData;
-    imageLoader->loadImage("/home/funkybirds/Aria/Anthem/assets/cat.jpg",&texWidth,&texHeight,&texChannels,&texData);
+    imageLoader->loadImage("C:\\WR\\Aria\\Anthem\\assets\\cat.jpg",&texWidth,&texHeight,&texChannels,&texData);
     AnthemImage* image;
     app->createTexture(&image,descPool,texData,texWidth,texHeight,texChannels,1,true);
     ANTH_LOGI("Texture Created");
@@ -86,8 +86,8 @@ int main(){
     //Create Shader
     AnthemShaderModule* shader;
     AnthemShaderFilePaths shaderFile = {
-        .vertexShader = "/home/funkybirds/Aria/Anthem/shader/default/shader.vert.spv",
-        .fragmentShader = "/home/funkybirds/Aria/Anthem/shader/default/shader.frag.spv"
+        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\default\\shader.vert.spv",
+        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\default\\shader.frag.spv"
     };
     app->createShader(&shader,&shaderFile);
     ANTH_LOGI("Shader Created");
