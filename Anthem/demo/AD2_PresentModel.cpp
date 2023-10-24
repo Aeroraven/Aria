@@ -142,8 +142,10 @@ int main(){
     
 
     //Prepare Command
+    
     for(int i=0;i<cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
         renderer->drClearCommands(i);
+        renderer->drStartCommandRecording(i);
         renderer->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(i)),i);
         renderer->drSetViewportScissor(i);
         renderer->drBindPipeline(pipeline,i);
@@ -165,6 +167,7 @@ int main(){
             renderer->drDraw(ixBuffers[j]->getIndexCount(),i);
         }
         renderer->drEndRenderPass(i);
+        renderer->drEndCommandRecording(i);
     }
 
     //Start DRAW!
