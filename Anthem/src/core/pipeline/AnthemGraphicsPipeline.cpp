@@ -60,7 +60,6 @@ namespace Anthem::Core{
             this->vertexBuffer->prepareVertexInputInfo(&(this->vertexInputStateCreateInfo));
         }
 
-
         //Specify Input Assembly Info
         this->inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         this->inputAssemblyStateCreateInfo.pNext = nullptr;
@@ -162,25 +161,18 @@ namespace Anthem::Core{
     bool AnthemGraphicsPipeline::createPipelineLayout(){
         //Specify Pipeline Layout Creation Info
         
-        if(this->uniformBuffer == nullptr){
-            this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            this->pipelineLayoutCreateInfo.pNext = nullptr;
-            this->pipelineLayoutCreateInfo.flags = 0;
-            ANTH_LOGW("Uniform buffer not specified, using default pipeline layout");
-        }else{
-            this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            this->pipelineLayoutCreateInfo.pNext = nullptr;
-            this->pipelineLayoutCreateInfo.flags = 0;
-            
-            ANTH_LOGI("Here");
-            this->descriptorPool->getAllDescriptorLayouts(&layouts);
-            for(auto x:layouts){
-                ANTH_LOGI("Layouts Are:",(long long)(x));
-            }
-            this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-            this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-            ANTH_LOGI("Specified pipeline layout");
+        this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        this->pipelineLayoutCreateInfo.pNext = nullptr;
+        this->pipelineLayoutCreateInfo.flags = 0;
+        
+        ANTH_LOGI("Here");
+        this->descriptorPool->getAllDescriptorLayouts(&layouts);
+        for(auto x:layouts){
+            ANTH_LOGI("Layouts Are:",(long long)(x));
         }
+        this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
+        this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+        ANTH_LOGI("Specified pipeline layout");
         
         //Create Layout
         auto result = vkCreatePipelineLayout(this->logicalDevice->getLogicalDevice(),&(this->pipelineLayoutCreateInfo),nullptr,&(this->pipelineLayout));

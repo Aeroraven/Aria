@@ -79,8 +79,8 @@ int main(){
     ANTH_LOGI("Render Pass Created");
 
     //Create Framebuffer
-    AnthemFramebufferList* framebuffer;
-    app->createFramebufferList(&framebuffer,pass,depthBuffer);
+    AnthemSwapchainFramebuffer* framebuffer;
+    app->createSwapchainImageFramebuffers(&framebuffer,pass,depthBuffer);
     ANTH_LOGI("Framebuffer Created", (long long )(framebuffer));
 
     //Create Shader
@@ -109,7 +109,8 @@ int main(){
 
         uint32_t imgIdx;
         app->prepareFrame(currentFrame,&imgIdx);
-        app->drStartRenderPass(pass,framebuffer,imgIdx,currentFrame);
+        app->drClearCommands(currentFrame);
+        app->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(currentFrame)),currentFrame);
         app->drSetViewportScissor(currentFrame);
         app->drBindPipeline(pipeline,currentFrame);
         app->drBindVertexBuffer(vxBuffer,currentFrame);

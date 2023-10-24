@@ -60,7 +60,7 @@ namespace Anthem::Core{
         }
         bool addSampler(AnthemImage* imageSampler,uint32_t bindLoc, uint32_t descPoolId){
             this->samplersDesc.push_back({});
-            ANTH_LOGI("Spec Binding Addrs");
+            ANTH_LOGI("Spec Binding Addrs", (long long)(this),"/",this->samplersDesc.size());
             auto& layoutBindingDesc = this->samplersDesc.back().layoutBindingDesc;
             auto& layoutCreateInfo = this->samplersDesc.back().layoutCreateInfo;
 
@@ -151,6 +151,7 @@ namespace Anthem::Core{
         }
         bool createDescriptorSet(uint32_t numSets){
             //Create Uniform Descriptor Sets
+            ANTH_LOGI("Allocating Descriptor Update: Uniforms");
             for(int i=0;i<this->uniformBuffers.size();i++){
                 ANTH_LOGI("Allocate in Pool:",this->uniformBuffers.at(i).descPoolId);
                 std::vector<VkDescriptorSetLayout> descSetLayout(numSets,this->uniformBuffers.at(i).layout);
@@ -193,7 +194,7 @@ namespace Anthem::Core{
                 vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(),descWriteUniform.size(),descWriteUniform.data(),0,nullptr);
             }
             //Create Image Descriptor Sets
-            ANTH_LOGI("Preparing Descriptor Alloc: Samplers");
+            ANTH_LOGI("Allocating Descriptor Alloc: Samplers",this->samplersDesc.size());
             for(int i=0;i<this->samplersDesc.size();i++){
                 ANTH_LOGI("Allocate in Pool:",this->samplersDesc.at(i).descPoolId);
                 std::vector<VkDescriptorSetLayout> descSetLayout(numSets,this->samplersDesc.at(i).layout);
@@ -205,8 +206,9 @@ namespace Anthem::Core{
                 allocInfo.pSetLayouts = descSetLayout.data();
 
                 descriptorSetsImg.resize(numSets);
-                if(vkAllocateDescriptorSets(this->logicalDevice->getLogicalDevice(),&allocInfo,descriptorSetsImg.data())!=VK_SUCCESS){
-                    ANTH_LOGE("Failed to allocate descriptor sets");
+                auto res = vkAllocateDescriptorSets(this->logicalDevice->getLogicalDevice(),&allocInfo,descriptorSetsImg.data());
+                if(res!=VK_SUCCESS){
+                    ANTH_LOGE("Failed to allocate descriptor sets",res);
                     return false;
                 }
             }

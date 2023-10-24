@@ -13,6 +13,11 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->channels==4,"Image channels must be 4");
         return true;
     }
+    bool AnthemImage::setImageSize(uint32_t width, uint32_t height){
+        this->width = width;
+        this->height = height;
+        return true;
+    }
     bool AnthemImage::prepareImage(){
         ANTH_ASSERT(this->definedUsage != AT_IU_UNDEFINED,"Image usage not specified");
         if (this->definedUsage == AT_IU_TEXTURE2D){
@@ -33,8 +38,9 @@ namespace Anthem::Core{
             this->createSampler();
             this->destroyStagingBuffer();
         }else if(this->definedUsage == AT_IU_COLOR_ATTACHMENT){
-            this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT, VK_FORMAT_R8G8B8A8_SRGB, this->width, this->height);
+            this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_FORMAT_B8G8R8A8_SRGB, this->width, this->height);
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
+            this->createSampler();
         }
         return true;
     }
@@ -131,5 +137,11 @@ namespace Anthem::Core{
     bool AnthemImage::specifyUsage(AnthemImageUsage usage){
         this->definedUsage = usage;
         return true;
+    }
+    uint32_t AnthemImage::getWidth() const{
+        return this->width;
+    }
+    uint32_t AnthemImage::getHeight() const{
+        return this->height;
     }
 }

@@ -10,7 +10,8 @@
 #include "../drawing/AnthemCommandBuffers.h"
 #include "../drawing/AnthemDescriptorPool.h"
 #include "../drawing/AnthemMainLoopSyncer.h"
-#include "../drawing/AnthemFramebufferList.h"
+#include "../drawing/AnthemSwapchainFramebuffer.h"
+#include "../drawing/AnthemFramebuffer.h"
 #include "../pipeline/AnthemViewport.h"
 #include "../pipeline/AnthemShaderModule.h"
 
@@ -36,7 +37,7 @@ namespace Anthem::Core{
         ANTH_UNIQUE_PTR(AnthemMainLoopSyncer) mainLoopSyncer;
         ANTH_UNIQUE_PTR(AnthemViewport) viewport;
 
-        ANTH_UNIQUE_PTR(AnthemFramebufferList) framebufferList;
+        ANTH_UNIQUE_PTR(AnthemSwapchainFramebuffer) framebufferList;
 
         ANTH_UNIQUE_PTR(AnthemDrawingCommandHelper) drawingCommandHelper;
 
@@ -49,7 +50,8 @@ namespace Anthem::Core{
         std::vector<AnthemIndexBuffer*> indexBuffers;
         std::vector<AnthemUniformBuffer*> uniformBuffers;
 
-        std::vector<AnthemFramebufferList*> framebufferListObjs;
+        std::vector<AnthemSwapchainFramebuffer*> framebufferListObjs;
+        std::vector<AnthemFramebuffer*> simpleFramebuffers;
         std::vector<AnthemDepthBuffer*> depthBuffers;
         std::vector<AnthemDescriptorPool*> descriptorPools;
 
@@ -83,26 +85,32 @@ namespace Anthem::Core{
 
         bool prepareFrame(uint32_t currentFrame, uint32_t* avaImageIdx);
         bool presentFrameDemo(uint32_t currentFrame, AnthemRenderPass* renderPass, 
-            AnthemGraphicsPipeline* pipeline, AnthemFramebufferList* framebuffer,uint32_t avaImageIdx,
+            AnthemGraphicsPipeline* pipeline, AnthemSwapchainFramebuffer* framebuffer,uint32_t avaImageIdx,
             AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf, AnthemDescriptorPool* descPool);
 
         bool setupDemoRenderPass(AnthemRenderPass** pRenderPass, AnthemDepthBuffer* depthBuffer);
+        bool setupRenderPass(AnthemRenderPass** pRenderPass, AnthenRenderPassSetupOption* setupOption, AnthemDepthBuffer* depthBuffer);
         bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer);
         bool createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,uint32_t texHeight,
              uint32_t texChannel, uint32_t bindLoc, bool generateMipmap);
+        bool createColorAttachmentImage(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint32_t bindLoc);
         bool createIndexBuffer(AnthemIndexBuffer** pIndexBuffer);
         bool createShader(AnthemShaderModule** pShaderModule,AnthemShaderFilePaths* filename);
-        bool createFramebufferList(AnthemFramebufferList** pFramebufferList,const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
+        bool createSwapchainImageFramebuffers(AnthemSwapchainFramebuffer** pFramebufferList,const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
+        bool createSimpleFramebuffer(AnthemFramebuffer** pFramebuffer, const AnthemImage* colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
         bool createDescriptorPool(AnthemDescriptorPool** pDescriptorPool);
 
         bool registerPipelineSubComponents();
         bool createPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
-        bool createPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
+        bool createPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer);
 
-        bool drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebufferList* framebufferList, uint32_t avaImgIdx ,uint32_t frameIdx);
+        bool drStartCommandRecording(uint32_t frameIdx);
+        bool drEndCommandRecording(uint32_t frameIdx);
+        bool drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebuffer* framebufferList ,uint32_t frameIdx);
         bool drEndRenderPass(uint32_t frameIdx);
         bool drPresentFrame(uint32_t frameIdx, uint32_t avaImageIdx);
         bool drSubmitBuffer(uint32_t frameIdx);
+        bool drClearCommands(uint32_t frameIdx);
 
         bool drSetViewportScissor(uint32_t frameIdx);
         bool drBindPipeline(AnthemGraphicsPipeline* pipeline,uint32_t frameIdx);

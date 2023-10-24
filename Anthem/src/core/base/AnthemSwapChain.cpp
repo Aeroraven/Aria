@@ -38,12 +38,17 @@ namespace Anthem::Core{
         }
 
         //Specify Surface Format
+        bool fd = false;
         this->specifiedSurfaceFormat = this->specifiedSwapChainDetails->formats[0];
         for(const auto& p:this->specifiedSwapChainDetails->formats){
             if(p.format == VK_FORMAT_B8G8R8A8_SRGB && p.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR){
                 this->specifiedSurfaceFormat = p;
+                fd = true;
                 break;
             }
+        }
+        if(!fd){
+            ANTH_LOGE("Failed to find surface format");
         }
 
         //Specify Extent 2D

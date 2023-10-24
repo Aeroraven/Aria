@@ -37,7 +37,10 @@ namespace Anthem::Core{
         bool destroyImage();
         bool enableMipMapping();
         bool loadImageData(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
+        bool setImageSize(uint32_t width, uint32_t height);
         const VkImageView* getImageView() const;
         const VkSampler* getSampler() const;
+        uint32_t getWidth() const;
+        uint32_t getHeight() const;
     };
 }

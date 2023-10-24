@@ -14,13 +14,14 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemDrawingCommandHelper::startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx){
-        this->cmdBufs->startCommandRecording(commandBufferIdx[frameIdx]);
+        //this->cmdBufs->startCommandRecording(commandBufferIdx[frameIdx]);
+        ANTH_LOGI("Cmdbuf binds");
         ANTH_ASSERT(swapChain != nullptr,"Swap chain not specified");
         
         VkRenderPassBeginInfo renderPassBeginInfo = {};
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassBeginInfo.renderPass = *(startInfo->renderPass->getRenderPass());
-        renderPassBeginInfo.framebuffer = *(startInfo->framebufferList->getFramebuffer(startInfo->framebufferIdx));
+        renderPassBeginInfo.framebuffer = *(startInfo->framebufferList->getFramebuffer());
         renderPassBeginInfo.renderArea.offset = {0,0};
         renderPassBeginInfo.renderArea.extent = *(swapChain->getSwapChainExtent());
         
@@ -47,7 +48,7 @@ namespace Anthem::Core{
     bool AnthemDrawingCommandHelper::endRenderPass(uint32_t frameIdx){
         auto cmdBuf = cmdBufs->getCommandBuffer(commandBufferIdx[frameIdx]);
         vkCmdEndRenderPass(*cmdBuf);
-        this->cmdBufs->endCommandRecording(commandBufferIdx[frameIdx]);
+        //this->cmdBufs->endCommandRecording(commandBufferIdx[frameIdx]);
         return true;
     }
     bool AnthemDrawingCommandHelper::demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,uint32_t frameIdx){
