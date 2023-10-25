@@ -30,5 +30,6 @@ namespace Anthem::Core{
         const std::vector<const char*>* const getRequiredDevSupportedExts() const;
         bool virtual destroyPhyDevice(VkInstance* instance);
         uint32_t virtual findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+        VkSampleCountFlags getMaxSampleCount() const;
     };
 }

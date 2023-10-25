@@ -12,4 +12,8 @@ namespace Anthem::Core{
         this->destroyImageInternal();
         return true;
     }
+    bool AnthemDepthBuffer::enableMsaa(){
+        this->image.msaaCount = this->phyDevice->getMaxSampleCount();
+        return true;
+    }
 }

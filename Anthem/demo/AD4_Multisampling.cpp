@@ -6,6 +6,7 @@
 using namespace Anthem::Core;
 using namespace Anthem::External;
 
+
 struct OffscreenPass{
     using vxColorAttr = AnthemVAOAttrDesc<float,3>;
     using vxPosAttr = AnthemVAOAttrDesc<float,3>;
@@ -21,73 +22,12 @@ struct OffscreenPass{
     AnthemRenderPass* pass;
     AnthemGraphicsPipeline* pipeline;
     AnthemShaderModule* shader;
-    AnthemFramebuffer* framebuffer;
+    AnthemSwapchainFramebuffer* framebuffer;
     AnthemImage* colorAttachment;
 
     int numMeshes = 4;
 };
 
-struct TargetPass{
-    using vxPosAttr = AnthemVAOAttrDesc<float,2>;
-    using vxTexAttr = AnthemVAOAttrDesc<float,2>;
-
-    AnthemDescriptorPool* descPool;
-    AnthemVertexBufferImpl<vxPosAttr,vxTexAttr>* vxBuffer;
-    AnthemIndexBuffer* ixBuffer;
-    AnthemDepthBuffer* depthBuffer;
-    AnthemRenderPass* pass;
-    AnthemGraphicsPipeline* pipeline;
-    AnthemShaderModule* shader;
-    AnthemSwapchainFramebuffer* framebuffer;
-    AnthemImage* image;
-};
-void prepareTarget(TargetPass& target,AnthemSimpleToyRenderer& renderer){
-    //Creating Descriptor Pool
-    renderer.createDescriptorPool(&target.descPool);
-
-    //Creating Vertex Buffer
-    renderer.createVertexBuffer(&target.vxBuffer);
-    target.vxBuffer->setTotalVertices(4);
-    target.vxBuffer->insertData(0,{-1.0f, -1.0f}, {1.0f, 0.0f});
-    target.vxBuffer->insertData(1,{1.0f, -1.0f}, {0.0f, 0.0f});
-    target.vxBuffer->insertData(2,{1.0f, 1.0f}, {0.0f, 1.0f});
-    target.vxBuffer->insertData(3,{-1.0f, 1.0f}, {1.0f, 1.0f});
-
-    renderer.createIndexBuffer(&target.ixBuffer);
-    target.ixBuffer->setIndices({0,1,2,2,3,0});
-    
-    //Load Image
-    auto imageLoader = new Anthem::External::AnthemImageLoader();
-    uint32_t texWidth,texHeight,texChannels;
-    uint8_t* texData;
-    imageLoader->loadImage("C:\\WR\\Aria\\Anthem\\assets\\cat.jpg",&texWidth,&texHeight,&texChannels,&texData);
-    renderer.createTexture(&target.image,target.descPool,texData,texWidth,texHeight,texChannels,0,true,false);
-    ANTH_LOGI("Texture Created");
-
-    //Depth Buffer
-    renderer.createDepthBuffer(&target.depthBuffer,false);
-
-    //Create Pass
-    renderer.setupDemoRenderPass(&target.pass,target.depthBuffer);
-    renderer.createSwapchainImageFramebuffers(&target.framebuffer,target.pass,target.depthBuffer);
-
-    AnthemShaderFilePaths shaderFile = {
-        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\identity\\shader.vert.spv",
-        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\identity\\shader.frag.spv"
-    };
-    renderer.createShader(&target.shader,&shaderFile);
-
-    //Create Pipeline
-    AnthemDescriptorSetEntry samplerDescEntryRegPipeline = {
-        .descPool = target.descPool,
-        .descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER,
-        .inTypeIndex = 0
-    };
-    std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerDescEntryRegPipeline};
-
-    renderer.createPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
-    ANTH_LOGI("Done");
-}
 void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer){
     //Loading Model
     AnthemGLTFLoader loader;
@@ -168,24 +108,24 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     ANTH_LOGI("Texture Created");
 
     //Create Depth Buffer
-    renderer.createDepthBuffer(&offscreen.depthBuffer,false);
+    renderer.createDepthBuffer(&offscreen.depthBuffer,true);
     ANTH_LOGI("Depth Buffer Created");
+
+    //Create Attachment
+    renderer.createColorAttachmentImage(&offscreen.colorAttachment,offscreen.descPoolColorAtt,0,true);
 
     //Create Pass
     AnthenRenderPassSetupOption setupOpt{
-        .attachmentAccess = AT_ARPAA_INTERMEDIATE_PASS,
-        .msaaType = AT_ARPMT_NO_MSAA
+        .attachmentAccess = AT_ARPAA_FINAL_PASS,
+        .msaaType = AT_ARPMT_MSAA,
+        .msaaColorAttachment = offscreen.colorAttachment,
+        .msaaSamples = (VkSampleCountFlagBits)(offscreen.colorAttachment->getSampleCount())
     };
     renderer.setupRenderPass(&offscreen.pass,&setupOpt,offscreen.depthBuffer);
     ANTH_LOGI("Render Pass Created");
 
-    //Create Attachment
-    renderer.createColorAttachmentImage(&offscreen.colorAttachment, offscreen.descPoolColorAtt,0,false);
-
     //Create Framebuffer
-    renderer.createSimpleFramebuffer(&offscreen.framebuffer,offscreen.colorAttachment,offscreen.pass,offscreen.depthBuffer);
-    //renderer.createSwapchainImageFramebuffers(&framebuffer,offscreen.pass,offscreen.depthBuffer);
-    
+    renderer.createSwapchainImageFramebuffers(&offscreen.framebuffer,offscreen.pass,offscreen.depthBuffer);
     ANTH_LOGI("Framebuffer Created", (long long )(offscreen.framebuffer));
 
     //Create Shader
@@ -213,28 +153,9 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     ANTH_LOGI("Pipeline Created");
 }
 
-
-
-void recordCommandsTarget(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, TargetPass& target, OffscreenPass& offscreen ,int i){
-    renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
-    renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(target.pipeline,i);
-    AnthemDescriptorSetEntry samplerDescEntryRegPipeline = {
-        .descPool = offscreen.descPoolColorAtt,
-        .descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER,
-        .inTypeIndex = 0
-    };
-    std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerDescEntryRegPipeline};
-    renderer.drBindVertexBuffer(target.vxBuffer,i);
-    renderer.drBindIndexBuffer(target.ixBuffer,i);
-    renderer.drBindDescriptorSetCustomized(descSetEntriesRegPipeline,target.pipeline,i);
-    renderer.drDraw(target.ixBuffer->getIndexCount(),i);
-    renderer.drEndRenderPass(i);
-}
-
 void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, OffscreenPass& offscreen,int i){
     //Prepare Command
-    renderer.drStartRenderPass(offscreen.pass,(AnthemFramebuffer *)(offscreen.framebuffer),i,false);
+    renderer.drStartRenderPass(offscreen.pass,(AnthemFramebuffer *)(offscreen.framebuffer->getFramebufferObject(i)),i,true);
     renderer.drSetViewportScissor(i);
     renderer.drBindPipeline(offscreen.pipeline,i);
     for(int j=0;j<offscreen.numMeshes;j++){
@@ -257,19 +178,6 @@ void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer
     renderer.drEndRenderPass(i);
 }
 
-void recordCommandsAll(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, OffscreenPass& offscreen, TargetPass& target){
-    for(int i=0;i<cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
-        renderer.drClearCommands(i);
-        ANTH_LOGI("Cmd Cleared");
-        renderer.drStartCommandRecording(i);
-        ANTH_LOGI("Offscreen starts");
-        recordCommandsOffscreen(cfg, renderer, offscreen,i);
-        ANTH_LOGI("Target starts");
-        recordCommandsTarget(cfg, renderer, target,offscreen,i);
-        renderer.drEndCommandRecording(i);
-    }
-}
-
 void updateOffscrUniform(OffscreenPass& offscr,AnthemSimpleToyRenderer& renderer,int currentFrame){
     int rdWinH,rdWinW;
     renderer.exGetWindowSize(rdWinH,rdWinW);
@@ -289,26 +197,27 @@ void updateOffscrUniform(OffscreenPass& offscr,AnthemSimpleToyRenderer& renderer
 }
 
 int main(){
-    ANTH_LOGI("Goodbye World!");
-    auto cfg = ANTH_MAKE_SHARED(Anthem::Core::AnthemConfig)();
-    auto renderer = ANTH_MAKE_SHARED(Anthem::Core::AnthemSimpleToyRenderer)();
+    auto cfg = ANTH_MAKE_UNIQUE(Anthem::Core::AnthemConfig)();
+    auto renderer = ANTH_MAKE_UNIQUE(Anthem::Core::AnthemSimpleToyRenderer)();
     renderer->setConfig(cfg.get());
     renderer->initialize();
     ANTH_LOGI("Intialization Complete");
 
     OffscreenPass offscr;
-    TargetPass tgtscr;
 
     //Prepare Components
     prepareOffscreen(offscr,*renderer.get());
-    prepareTarget(tgtscr,*renderer.get());
-
+    
     //Start Loop
     ANTH_LOGI("Start Reg");
     renderer->registerPipelineSubComponents();
 
     ANTH_LOGI("Start Rec Commands");
-    recordCommandsAll(cfg.get(),*renderer.get(),offscr,tgtscr);
+    for(int i=0;i<cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+        renderer->drStartCommandRecording(i);
+        recordCommandsOffscreen(cfg.get(),*renderer.get(),offscr,i);
+        renderer->drEndCommandRecording(i);
+    }
 
     //Start DRAW!
     int currentFrame = 0;
@@ -324,5 +233,6 @@ int main(){
     ANTH_LOGI("Loop Started");
     renderer->startDrawLoopDemo();
     renderer->finialize();
+    return 0;
     return 0;
 }

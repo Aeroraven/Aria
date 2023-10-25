@@ -51,4 +51,15 @@ namespace Anthem::Core{
         ANTH_LOGE("Failed to find suitable memory type!");
         return 0;
     }
+    VkSampleCountFlags AnthemPhyDevice::getMaxSampleCount() const{
+        auto& property = this->deviceProperties;
+        VkSampleCountFlags flags = property.limits.framebufferDepthSampleCounts & property.limits.sampledImageDepthSampleCounts;
+        for(int i=64;i>=1;(i>>=1)){
+            if(flags & i){
+                return i;
+            }
+        }
+        ANTH_LOGE("Failed to find available count");
+        return 0;
+    }
 }

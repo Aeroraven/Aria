@@ -16,6 +16,7 @@ namespace Anthem::Core{
     public:
         bool createDepthBuffer();
         bool destroyDepthBuffer();
+        bool enableMsaa();
         VkFormat getDepthFormat() const{
             return depthFormat;
         }

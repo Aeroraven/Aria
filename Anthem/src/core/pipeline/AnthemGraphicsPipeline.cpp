@@ -90,7 +90,11 @@ namespace Anthem::Core{
         this->multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         this->multisampleStateCreateInfo.pNext = nullptr;
         this->multisampleStateCreateInfo.flags = 0;
-        this->multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        if(renderPass->getSetupOption().msaaType != AT_ARPMT_MSAA){
+            this->multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        }else{
+            this->multisampleStateCreateInfo.rasterizationSamples = renderPass->getSetupOption().msaaSamples;
+        }
         this->multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
         this->multisampleStateCreateInfo.minSampleShading = 1.0f;
         this->multisampleStateCreateInfo.pSampleMask = nullptr;

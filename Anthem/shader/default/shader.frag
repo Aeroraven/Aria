@@ -11,7 +11,7 @@ layout(location = 1) in vec2 fragTexCoord;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    vec4 col = textureLod(texSampler, fragTexCoord,6.0);
+    vec4 col = textureLod(texSampler, fragTexCoord,2.0);
     vec4 org = vec4(fragColor, 1.0);
-    outColor = col+vec4(0.01);
+    outColor = col;
 }

@@ -61,5 +61,6 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "valarray": "cpp"
-    }
+    },
+    "workbench.colorTheme": "Monokai Dimmed"
 }

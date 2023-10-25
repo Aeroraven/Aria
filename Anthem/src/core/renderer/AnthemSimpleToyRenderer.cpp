@@ -114,9 +114,6 @@ namespace Anthem::Core{
         this->commandBuffers->specifySwapChain(this->swapChain.get());
         this->commandBuffers->createCommandPool();
 
-        //Step7. Create Descriptor Pool
-        // Removed
-
         //Step8. Create Main Loop Syncer
         this->mainLoopSyncer = ANTH_MAKE_UNIQUE(AnthemMainLoopSyncer)();
         this->mainLoopSyncer->specifyLogicalDevice(this->logicalDevice.get());
@@ -172,7 +169,7 @@ namespace Anthem::Core{
     }
 
     bool AnthemSimpleToyRenderer::createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
-        uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap){
+        uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap, bool enableMsaa){
             
         //Allocate Image
         auto textureImage = new AnthemImage();
@@ -184,6 +181,9 @@ namespace Anthem::Core{
         if(generateMipmap){
             textureImage->enableMipMapping();
         }
+        if(enableMsaa){
+            textureImage->enableMsaa();
+        }
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
@@ -194,18 +194,23 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::createColorAttachmentImage(AnthemImage** pImage,AnthemDescriptorPool* descPool, uint32_t bindLoc){
+    bool AnthemSimpleToyRenderer::createColorAttachmentImage(AnthemImage** pImage,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa){
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
         textureImage->setImageSize(this->swapChain->getSwapChainExtentWidth(),this->swapChain->getSwapChainExtentHeight());
         textureImage->specifyUsage(AT_IU_COLOR_ATTACHMENT);
+        if(enableMsaa){
+            textureImage->enableMsaa();
+        }
         ANTH_LOGI("Creating Color Attachment");
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
-        descPool->addSampler(textureImage,bindLoc,this->imageDescPoolIdx);
+        if(!enableMsaa){
+            descPool->addSampler(textureImage,bindLoc,this->imageDescPoolIdx);
+        }
         *pImage = textureImage;
         this->textures.push_back(textureImage);
         return true;
@@ -216,15 +221,11 @@ namespace Anthem::Core{
         for(const auto& p:vertexBuffers){
             p->createBuffer();
         }
-
-        ANTH_LOGI("XXXXXXXXXXXXXXXXXxx Vertex done");
         for(const auto& p:indexBuffers){
             p->createBuffer();
         }
-        ANTH_LOGI("XXXXXXXXXXXXXXXXXxx Buffers done");
         //Prepare Descriptor Sets
         for(const auto& p:descriptorPools){
-            ANTH_LOGI("XXXXXXXXXXXXXXXXXxx Registering:",(long long)(&p));
             p->createDescriptorSet(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
         }
         return true;
@@ -345,7 +346,7 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::prepareFrame(uint32_t currentFrame, uint32_t* avaImageIdx){
+    bool AnthemSimpleToyRenderer::drPrepareFrame(uint32_t currentFrame, uint32_t* avaImageIdx){
         ANTH_LOGV("Preparing Frame");
         this->mainLoopSyncer->waitForPrevFrame(currentFrame);
         auto imageIdx = this->mainLoopSyncer->acquireNextFrame(currentFrame,[&](){
@@ -370,13 +371,14 @@ namespace Anthem::Core{
         ANTH_LOGI("Record starts, done");
         return true;
     }
-    bool AnthemSimpleToyRenderer::drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebuffer* framebuffer ,uint32_t frameIdx){
+    bool AnthemSimpleToyRenderer::drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebuffer* framebuffer ,uint32_t frameIdx,bool enableMsaa){
         AnthemCommandManagerRenderPassStartInfo beginInfo = {
             .renderPass = renderPass,
             .framebufferList = framebuffer,
             .framebufferIdx = 0,
             .clearValue = {{{0.0f,0.0f,0.0f,1.0f}}},
-            .depthClearValue = {{1.0f, 0}}
+            .depthClearValue = {{1.0f, 0}},
+            .usingMsaa = enableMsaa
         };
         this->drawingCommandHelper->startRenderPass(&beginInfo,frameIdx);
         return true;
@@ -471,12 +473,15 @@ namespace Anthem::Core{
         this->drawLoopHandler = drawLoopHandler;
         return true;
     }
-    bool AnthemSimpleToyRenderer::createDepthBuffer(AnthemDepthBuffer** pDepthBuffer){
+    bool AnthemSimpleToyRenderer::createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa){
         auto depthBuffer = new AnthemDepthBuffer();
         depthBuffer->specifyLogicalDevice(this->logicalDevice.get());
         depthBuffer->specifyPhyDevice(this->phyDevice.get());
         depthBuffer->specifyCommandBuffers(this->commandBuffers.get());
         depthBuffer->specifySwapChain(this->swapChain.get());
+        if(enableMsaa){
+            depthBuffer->enableMsaa();
+        }
         depthBuffer->createDepthBuffer();
         this->depthBuffers.push_back(depthBuffer);
         *pDepthBuffer = depthBuffer;

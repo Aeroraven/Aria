@@ -17,13 +17,14 @@ namespace Anthem::Core{
         uint32_t framebufferIdx;
         VkClearValue clearValue;
         std::optional<VkClearValue> depthClearValue;
+        bool usingMsaa = false;
     };
 
     class AnthemDrawingCommandHelper: public Util::AnthemUtlConfigReqBase,
         public Util::AnthemUtlCommandBufferReqBase,public Util::AnthemUtlSwapChainReqBase{
     private:
         std::vector<uint32_t> commandBufferIdx;
-        std::array<VkClearValue, 2> clearValuesTmpX{};
+        std::array<VkClearValue, 3> clearValuesTmpX{};
     public:
         bool virtual initializeHelper();
         bool virtual startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx);

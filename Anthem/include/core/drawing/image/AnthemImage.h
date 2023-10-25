@@ -22,6 +22,7 @@ namespace Anthem::Core{
         uint32_t width,height,channels;
         AnthemGeneralBufferProp stagingBuffer;
         VkSampler sampler;
+        bool msaaOn = false;
         AnthemImageUsage definedUsage;
 
     protected: 
@@ -36,6 +37,7 @@ namespace Anthem::Core{
         bool prepareImage();
         bool destroyImage();
         bool enableMipMapping();
+        bool enableMsaa();
         bool loadImageData(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
         bool setImageSize(uint32_t width, uint32_t height);
         const VkImageView* getImageView() const;

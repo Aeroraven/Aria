@@ -91,14 +91,14 @@ int main(){
             texPath = "C:\\WR\\Aria\\Anthem\\assets\\cat.jpg";
         }
         imageLoader->loadImage(texPath.c_str(),&texWidth,&texHeight,&texChannels,&texData);
-        renderer->createTexture(&image[chosenMesh],descPool[chosenMesh],texData,texWidth,texHeight,texChannels,1,true);
+        renderer->createTexture(&image[chosenMesh],descPool[chosenMesh],texData,texWidth,texHeight,texChannels,1,true,false);
         image[chosenMesh]->enableMipMapping();
         ANTH_LOGI("Texture Created");
     }
 
     //Create Depth Buffer
     auto depthBuffer = new AnthemDepthBuffer();
-    renderer->createDepthBuffer(&depthBuffer);
+    renderer->createDepthBuffer(&depthBuffer,false);
     ANTH_LOGI("Depth Buffer Created");
 
     //Create Pass
@@ -146,7 +146,7 @@ int main(){
     for(int i=0;i<cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
         renderer->drClearCommands(i);
         renderer->drStartCommandRecording(i);
-        renderer->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(i)),i);
+        renderer->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(i)),i,false);
         renderer->drSetViewportScissor(i);
         renderer->drBindPipeline(pipeline,i);
         for(int j=0;j<gltfResult.size();j++){
@@ -183,7 +183,7 @@ int main(){
         ubuf->updateBuffer(currentFrame);
 
         uint32_t imgIdx;
-        renderer->prepareFrame(currentFrame,&imgIdx);
+        renderer->drPrepareFrame(currentFrame,&imgIdx);
 
         renderer->drSubmitBuffer(currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);

@@ -38,7 +38,11 @@ namespace Anthem::Core{
             this->createSampler();
             this->destroyStagingBuffer();
         }else if(this->definedUsage == AT_IU_COLOR_ATTACHMENT){
-            this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_FORMAT_B8G8R8A8_SRGB, this->width, this->height);
+            if(this->msaaOn){
+                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT , VK_FORMAT_B8G8R8A8_SRGB, this->width, this->height);
+            }else{
+                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT , VK_FORMAT_B8G8R8A8_SRGB, this->width, this->height);
+            }
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
             this->createSampler();
         }
@@ -93,6 +97,11 @@ namespace Anthem::Core{
         int32_t mipLevels = static_cast<int32_t>(std::floor(std::log2(std::max(this->width,this->height)))) + 1;
         this->image.mipmapLodLevels = mipLevels;
         ANTH_LOGI("Mipmap Level",mipLevels);
+        return true;
+    }
+    bool AnthemImage::enableMsaa(){
+        this->msaaOn = true;
+        this->image.msaaCount = this->phyDevice->getMaxSampleCount();
         return true;
     }
     bool AnthemImage::createSampler(){

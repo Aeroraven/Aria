@@ -18,6 +18,9 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->renderPassCreated,"Render pass not created");
         return &(this->renderPass);
     }
+    const AnthenRenderPassSetupOption& AnthemRenderPass::getSetupOption() const{
+        return this->setupOption;
+    }
     bool AnthemRenderPass::createDemoRenderPass(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->swapChain != nullptr,"Swap chain not specified"); 
@@ -105,7 +108,12 @@ namespace Anthem::Core{
     bool AnthemRenderPass::createRenderPass(const AnthenRenderPassSetupOption& opt){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->swapChain != nullptr,"Swap chain not specified"); 
-        ANTH_LOGI("Creating render pass www");
+        
+        ANTH_ASSERT(opt.attachmentAccess != AT_ARPAA_UNDEFINED,"attachmentAccess flag should not be undefined");
+        ANTH_ASSERT(opt.msaaType != AT_ARPMT_UNDEFINED,"msaaType flag should not be undefined");
+
+        this->setupOption = opt;
+
         //Create Attachment Description
         VkAttachmentDescription colorAttachment = {};
         colorAttachment.format = (this->swapChain->getSwapChainSurfaceFormat())->format;
@@ -115,13 +123,30 @@ namespace Anthem::Core{
         colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        if(opt.attachmentAccess == AT_ARP_FINAL_PASS){
+        if(opt.attachmentAccess == AT_ARPAA_FINAL_PASS){
             colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         }else{
             colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         }
         
+        //Create Msaa Attachment
+        VkAttachmentDescription colorAttachmentMsaa = {}; 
+        if(opt.msaaType == AT_ARPMT_MSAA){
+            colorAttachmentMsaa.format = (this->swapChain->getSwapChainSurfaceFormat())->format;
+            colorAttachmentMsaa.samples = opt.msaaSamples;
+            colorAttachmentMsaa.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            colorAttachmentMsaa.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            colorAttachmentMsaa.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            colorAttachmentMsaa.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            colorAttachmentMsaa.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            colorAttachmentMsaa.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+            colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        }
         this->colorAttachments.push_back(colorAttachment);
+        if(opt.msaaType == AT_ARPMT_MSAA){
+            this->colorAttachments.push_back(colorAttachmentMsaa);
+        }
 
         //Create Depth Attachment Description
         VkAttachmentDescription depthAttachment = {};
@@ -129,7 +154,11 @@ namespace Anthem::Core{
 
         if(this->depthBuffer != nullptr){
             depthAttachment.format = this->depthBuffer->getDepthFormat();
-            depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+            if(opt.msaaType == AT_ARPMT_MSAA){
+                depthAttachment.samples = opt.msaaSamples;
+            }else{
+                depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+            }
             depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
             depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -138,7 +167,7 @@ namespace Anthem::Core{
             depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             this->colorAttachments.push_back(depthAttachment);
 
-            depthAttachmentRef.attachment = 1;
+            depthAttachmentRef.attachment = this->colorAttachments.size()-1;
             depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         }
         else{
@@ -147,21 +176,32 @@ namespace Anthem::Core{
 
         //Create Attachment Reference
         VkAttachmentReference colorAttachmentReference = {};
+        VkAttachmentReference colorAttachmentMsaaReference = {};
+
         colorAttachmentReference.attachment = 0;
         colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        this->colorAttachmentReferences.push_back(colorAttachmentReference);
+
+        colorAttachmentMsaaReference.attachment = 1;
+        colorAttachmentMsaaReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         //Create Subpass
         VkSubpassDescription subpass = {};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = this->colorAttachmentReferences.size();
-        subpass.pColorAttachments = this->colorAttachmentReferences.data();
+        if(opt.msaaType == AT_ARPMT_NO_MSAA){
+            subpass.colorAttachmentCount = 1;
+            subpass.pColorAttachments = &colorAttachmentReference;
+        }else{
+            subpass.colorAttachmentCount = 1;
+            subpass.pColorAttachments = &colorAttachmentMsaaReference;
+            subpass.pResolveAttachments = &colorAttachmentReference;
+        }
+
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
         //Create Subpass Dependencies
         std::vector<VkSubpassDependency> subpassDependency = {};
 
-        if(opt.attachmentAccess == AT_ARP_FINAL_PASS){
+        if(opt.attachmentAccess == AT_ARPAA_FINAL_PASS){
             subpassDependency.resize(1);
             subpassDependency[0].srcSubpass = VK_SUBPASS_EXTERNAL;
             subpassDependency[0].dstSubpass = 0;
@@ -169,7 +209,7 @@ namespace Anthem::Core{
             subpassDependency[0].srcAccessMask = 0;
             subpassDependency[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
             subpassDependency[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        }else if(opt.attachmentAccess == AT_ARP_INTERMEDIATE_PASS){
+        }else if(opt.attachmentAccess == AT_ARPAA_INTERMEDIATE_PASS){
             subpassDependency.resize(2);
             subpassDependency[0].srcSubpass = VK_SUBPASS_EXTERNAL;
             subpassDependency[0].dstSubpass = 0;

@@ -8,13 +8,15 @@ This repository is here for **PERSONAL PURPOSE**. It serves as the record for th
 
 ### 1. Native Examples
 
-Native examples use Vulkan as backend. Use following instruction to build the project. Note that your compiler should be `g++` and at least supports partial `C++20` standard. (Tested on `g++11`). `$SELECTED_TARGETS` can be chosen from `demo` subdirectory.
+Native examples use Vulkan as backend. Use following instruction to build the project. Note that your compiler should be `g++` and at least supports partial `C++20` standard. `$SELECTED_TARGETS` can be chosen from `demo` subdirectory.
 
 ```bash
 cd Anthem
 cmake -S . -B ./build
 cmake --build ./build --config Debug --target $SELECTED_TARGETS
 ```
+
+Only supports `gcc` compilers (including MinGW)
 
 (MSVC support might be considered later, for VS is too large.)
 

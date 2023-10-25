@@ -83,17 +83,17 @@ namespace Anthem::Core{
         bool startDrawLoopDemo();
         bool setDrawFunction(std::function<void()> drawLoopHandler);
 
-        bool prepareFrame(uint32_t currentFrame, uint32_t* avaImageIdx);
+        bool drPrepareFrame(uint32_t currentFrame, uint32_t* avaImageIdx);
         bool presentFrameDemo(uint32_t currentFrame, AnthemRenderPass* renderPass, 
             AnthemGraphicsPipeline* pipeline, AnthemSwapchainFramebuffer* framebuffer,uint32_t avaImageIdx,
             AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf, AnthemDescriptorPool* descPool);
 
         bool setupDemoRenderPass(AnthemRenderPass** pRenderPass, AnthemDepthBuffer* depthBuffer);
         bool setupRenderPass(AnthemRenderPass** pRenderPass, AnthenRenderPassSetupOption* setupOption, AnthemDepthBuffer* depthBuffer);
-        bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer);
+        bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa);
         bool createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,uint32_t texHeight,
-             uint32_t texChannel, uint32_t bindLoc, bool generateMipmap);
-        bool createColorAttachmentImage(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint32_t bindLoc);
+             uint32_t texChannel, uint32_t bindLoc, bool generateMipmap, bool enableMsaa);
+        bool createColorAttachmentImage(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa);
         bool createIndexBuffer(AnthemIndexBuffer** pIndexBuffer);
         bool createShader(AnthemShaderModule** pShaderModule,AnthemShaderFilePaths* filename);
         bool createSwapchainImageFramebuffers(AnthemSwapchainFramebuffer** pFramebufferList,const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
@@ -106,7 +106,7 @@ namespace Anthem::Core{
 
         bool drStartCommandRecording(uint32_t frameIdx);
         bool drEndCommandRecording(uint32_t frameIdx);
-        bool drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebuffer* framebufferList ,uint32_t frameIdx);
+        bool drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebuffer* framebufferList ,uint32_t frameIdx,bool enableMsaa);
         bool drEndRenderPass(uint32_t frameIdx);
         bool drPresentFrame(uint32_t frameIdx, uint32_t avaImageIdx);
         bool drSubmitBuffer(uint32_t frameIdx);

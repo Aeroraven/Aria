@@ -65,12 +65,12 @@ int main(){
     uint8_t* texData;
     imageLoader->loadImage("C:\\WR\\Aria\\Anthem\\assets\\cat.jpg",&texWidth,&texHeight,&texChannels,&texData);
     AnthemImage* image;
-    renderer->createTexture(&image,descPool,texData,texWidth,texHeight,texChannels,1,true);
+    renderer->createTexture(&image,descPool,texData,texWidth,texHeight,texChannels,1,true,false);
     ANTH_LOGI("Texture Created");
 
     //Create Depth Buffer
     auto depthBuffer = new AnthemDepthBuffer();
-    renderer->createDepthBuffer(&depthBuffer);
+    renderer->createDepthBuffer(&depthBuffer,false);
     ANTH_LOGI("Depth Buffer Created");
 
     //Create Pass
@@ -108,10 +108,10 @@ int main(){
         ubuf->updateBuffer(currentFrame);
 
         uint32_t imgIdx;
-        renderer->prepareFrame(currentFrame,&imgIdx);
+        renderer->drPrepareFrame(currentFrame,&imgIdx);
         renderer->drClearCommands(currentFrame);
         renderer->drStartCommandRecording(currentFrame);
-        renderer->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(currentFrame)),currentFrame);
+        renderer->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(currentFrame)),currentFrame,false);
         renderer->drSetViewportScissor(currentFrame);
         renderer->drBindPipeline(pipeline,currentFrame);
         renderer->drBindVertexBuffer(vxBuffer,currentFrame);

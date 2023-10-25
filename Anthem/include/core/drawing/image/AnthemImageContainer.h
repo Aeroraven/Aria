@@ -12,6 +12,7 @@ namespace Anthem::Core{
         VkImageCreateInfo imageInfo = {};
         VkImageView imageView;
         int mipmapLodLevels = 1;
+        VkSampleCountFlags msaaCount = VK_SAMPLE_COUNT_1_BIT;
     };
 
     class AnthemImageContainer:
@@ -29,5 +30,8 @@ namespace Anthem::Core{
         bool generateMipmap(uint32_t texWidth,uint32_t texHeight);
     public:
         const VkImageView* getImageView() const;
+        const VkSampleCountFlags getSampleCount() const{
+            return this->image.msaaCount;
+        }
     };
 }

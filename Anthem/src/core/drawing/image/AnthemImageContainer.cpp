@@ -181,7 +181,7 @@ namespace Anthem::Core{
         this->image.imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         this->image.imageInfo.usage = usage;
         this->image.imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        this->image.imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        this->image.imageInfo.samples = (decltype(this->image.imageInfo.samples)) this->image.msaaCount;
         this->image.imageInfo.flags = 0;
 
         ANTH_LOGI("Image Mip Lvls:", this->image.imageInfo.mipLevels);

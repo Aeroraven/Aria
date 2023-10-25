@@ -25,14 +25,24 @@ namespace Anthem::Core{
         renderPassBeginInfo.renderArea.offset = {0,0};
         renderPassBeginInfo.renderArea.extent = *(swapChain->getSwapChainExtent());
         
+        
         if(startInfo->depthClearValue.has_value()){
-            renderPassBeginInfo.clearValueCount = 2;
-            
-            clearValuesTmpX[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-            clearValuesTmpX[1].depthStencil = {1.0f, 0};
+            if(startInfo->usingMsaa){
+                renderPassBeginInfo.clearValueCount = 3;
+                clearValuesTmpX[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+                clearValuesTmpX[1].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+                clearValuesTmpX[2].depthStencil = {1.0f, 0};
+            }else{
+                renderPassBeginInfo.clearValueCount = 2;
+                clearValuesTmpX[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+                clearValuesTmpX[1].depthStencil = {1.0f, 0};
+            }
 
             renderPassBeginInfo.pClearValues = clearValuesTmpX.data();;
         }else{
+            if(startInfo->usingMsaa){
+                ANTH_LOGE("");
+            }
             ANTH_LOGW("Depth clear value not specified");
             renderPassBeginInfo.clearValueCount = 1;
             renderPassBeginInfo.pClearValues = &(startInfo->clearValue);

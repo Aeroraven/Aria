@@ -33,15 +33,18 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->depthBuffer != nullptr,"Depth buffer not specified");
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         
-        VkImageView attachments[] = {
-            *swapChainImageView,
-            *(this->depthBuffer->getImageView())
-        };
+        std::vector<VkImageView> attachments = {};
+        attachments.push_back(*swapChainImageView);
+        if(renderPass->getSetupOption().msaaType == AT_ARPMT_MSAA){
+            attachments.push_back(*renderPass->getSetupOption().msaaColorAttachment->getImageView());
+        }
+        attachments.push_back(*(this->depthBuffer->getImageView()));
+
         VkFramebufferCreateInfo framebufferInfo = {};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = *(renderPass->getRenderPass());
-        framebufferInfo.attachmentCount = 2;
-        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.attachmentCount = attachments.size();
+        framebufferInfo.pAttachments = attachments.data();
         framebufferInfo.width = width;
         framebufferInfo.height = height;
         framebufferInfo.layers = 1;
