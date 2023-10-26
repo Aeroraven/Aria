@@ -23,7 +23,7 @@ struct OffscreenPass{
     AnthemShaderModule* shader;
     AnthemFramebuffer* framebuffer;
     AnthemImage* colorAttachment;
-
+    
     int numMeshes = 4;
 };
 
@@ -41,6 +41,8 @@ struct TargetPass{
     AnthemSwapchainFramebuffer* framebuffer;
     AnthemImage* image;
 };
+
+
 void prepareTarget(TargetPass& target,AnthemSimpleToyRenderer& renderer){
     //Creating Descriptor Pool
     renderer.createDescriptorPool(&target.descPool);
@@ -95,11 +97,10 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     std::vector<AnthemGLTFLoaderParseResult> gltfResult;
     loader.loadModel("C:\\WR\\Aria\\Anthem\\assets\\gsk\\untitled.gltf");
     loader.parseModel(gltfConfig,gltfResult);
-
     ANTH_LOGI("Model Loaded");
+
     //Creating Descriptor Pool
     renderer.createDescriptorPool(&offscreen.descPoolColorAtt);
-
     offscreen.descPool = new AnthemDescriptorPool*[gltfResult.size()];
     for(auto chosenMesh=0;chosenMesh<gltfResult.size();chosenMesh++){
         renderer.createDescriptorPool(&offscreen.descPool[chosenMesh]);
@@ -183,7 +184,8 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     renderer.createColorAttachmentImage(&offscreen.colorAttachment, offscreen.descPoolColorAtt,0,false);
 
     //Create Framebuffer
-    renderer.createSimpleFramebuffer(&offscreen.framebuffer,offscreen.colorAttachment,offscreen.pass,offscreen.depthBuffer);
+    std::vector<const AnthemImage*> tmpColorAttachment = { offscreen.colorAttachment};
+    renderer.createSimpleFramebuffer(&offscreen.framebuffer,&tmpColorAttachment,offscreen.pass,offscreen.depthBuffer);
     //renderer.createSwapchainImageFramebuffers(&framebuffer,offscreen.pass,offscreen.depthBuffer);
     
     ANTH_LOGI("Framebuffer Created", (long long )(offscreen.framebuffer));

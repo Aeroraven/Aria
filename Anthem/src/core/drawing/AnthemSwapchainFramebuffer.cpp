@@ -14,6 +14,7 @@ namespace Anthem::Core{
             this->framebuffers[i].setDepthBuffer(this->depthBuffer);
             this->framebuffers[i].specifyLogicalDevice(this->logicalDevice);
             auto x = (VkImageView)swapChain->getSwapChainImageViews()->at(i);
+            ANTH_LOGI("Creating FB:",i);
             this->framebuffers[i].createFromSwapchainImageView(&x,renderPass,swapChain->getSwapChainExtent()->height,
                 swapChain->getSwapChainExtent()->width);
         }

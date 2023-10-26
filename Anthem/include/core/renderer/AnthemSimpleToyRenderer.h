@@ -97,7 +97,7 @@ namespace Anthem::Core{
         bool createIndexBuffer(AnthemIndexBuffer** pIndexBuffer);
         bool createShader(AnthemShaderModule** pShaderModule,AnthemShaderFilePaths* filename);
         bool createSwapchainImageFramebuffers(AnthemSwapchainFramebuffer** pFramebufferList,const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
-        bool createSimpleFramebuffer(AnthemFramebuffer** pFramebuffer, const AnthemImage* colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
+        bool createSimpleFramebuffer(AnthemFramebuffer** pFramebuffer, const std::vector<const AnthemImage*>* colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
         bool createDescriptorPool(AnthemDescriptorPool** pDescriptorPool);
 
         bool registerPipelineSubComponents();

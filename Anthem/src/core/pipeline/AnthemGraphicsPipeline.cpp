@@ -102,15 +102,22 @@ namespace Anthem::Core{
         this->multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
 
         //Specify Color Blending Info
-        this->colorBlendAttachmentState.blendEnable = VK_FALSE;
-        this->colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        auto numColorAttachments = renderPass->getFilteredAttachmentCnt(AT_ARPCA_COLOR);
+        this->colorBlendAttachmentState.resize(numColorAttachments);
+        for(int i=0;i<numColorAttachments;i++){
+             this->colorBlendAttachmentState[i].blendEnable = VK_FALSE;
+             this->colorBlendAttachmentState[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        }
+        
+
         this->colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         this->colorBlendStateCreateInfo.pNext = nullptr;
         this->colorBlendStateCreateInfo.flags = 0;
         this->colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
-        this->colorBlendStateCreateInfo.attachmentCount = 1;
-        this->colorBlendStateCreateInfo.pAttachments = &(this->colorBlendAttachmentState);
+        this->colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentState.size();
+        this->colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentState.data();
 
+        ANTH_ASSERT( colorBlendAttachmentState.size()>0, "Color blend attachment should not be empty");
 
         //Specify Depth & Stencil Info
         this->depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;

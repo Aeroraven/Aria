@@ -153,6 +153,9 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     ANTH_LOGI("Pipeline Created");
 }
 
+
+
+
 void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, OffscreenPass& offscreen,int i){
     //Prepare Command
     renderer.drStartRenderPass(offscreen.pass,(AnthemFramebuffer *)(offscreen.framebuffer->getFramebufferObject(i)),i,true);

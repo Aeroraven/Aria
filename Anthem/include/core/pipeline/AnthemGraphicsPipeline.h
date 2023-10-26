@@ -43,7 +43,7 @@ namespace Anthem::Core{
         VkPipelineRasterizationStateCreateInfo rasterizerStateCreateInfo = {};
         VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = {};
         
-        VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
+        std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentState = {};
         VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
 
         VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = {};

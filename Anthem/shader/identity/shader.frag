@@ -11,4 +11,5 @@ void main() {
     }else{
         outColor = vec4(vec3(1.0),1.0);
     }
+    outColor = col;
 }

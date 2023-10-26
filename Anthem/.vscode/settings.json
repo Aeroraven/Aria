@@ -62,5 +62,5 @@
         "typeinfo": "cpp",
         "valarray": "cpp"
     },
-    "workbench.colorTheme": "Monokai Dimmed"
+    "workbench.colorTheme": "Visual Studio Dark - C++"
 }

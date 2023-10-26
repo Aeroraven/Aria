@@ -283,7 +283,7 @@ namespace Anthem::Core{
         *pPipeline = graphicsPipeline;
         return true;
     }
-    bool AnthemSimpleToyRenderer::createSimpleFramebuffer(AnthemFramebuffer** pFramebuffer, const AnthemImage* colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer){
+    bool AnthemSimpleToyRenderer::createSimpleFramebuffer(AnthemFramebuffer** pFramebuffer,const std::vector<const AnthemImage*>* colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer){
         ANTH_TODO("Forced type cast");
         auto fb = new AnthemFramebuffer();
         fb->specifyLogicalDevice(this->logicalDevice.get());

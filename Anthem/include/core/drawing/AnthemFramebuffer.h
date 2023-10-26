@@ -16,7 +16,7 @@ namespace Anthem::Core{
     private:
         const AnthemLogicalDevice* logicalDevice = nullptr;
         VkFramebuffer framebuffer;
-        const AnthemImage* colorAttachment = nullptr;
+        std::vector<const AnthemImage*> colorAttachment = {};
         AnthemDepthBuffer* depthBuffer = nullptr;
         const AnthemRenderPass* ctRenderPass = nullptr;
         AnthemFramebufferUsage framebufferUsage = AT_AFU_UNDEFINED;
@@ -25,8 +25,7 @@ namespace Anthem::Core{
         bool virtual specifyLogicalDevice(const AnthemLogicalDevice* device);
 
         bool virtual createFromSwapchainImageView(VkImageView* swapChainImageView, const AnthemRenderPass* renderPass, int height, int width);
-        bool virtual createFromColorAttachment(const AnthemImage* colorImage, const AnthemRenderPass* renderPass);
-
+        bool virtual createFromColorAttachment(const std::vector<const AnthemImage*>* colorImages, const AnthemRenderPass* renderPass);
         bool virtual destroyFramebuffers();
         bool virtual recreateFramebuffer();
         const VkFramebuffer* getFramebuffer() const;
