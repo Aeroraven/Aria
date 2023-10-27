@@ -181,7 +181,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     ANTH_LOGI("Render Pass Created");
 
     //Create Attachment
-    renderer.createColorAttachmentImage(&offscreen.colorAttachment, offscreen.descPoolColorAtt,0,false);
+    renderer.createColorAttachmentImage(&offscreen.colorAttachment, offscreen.descPoolColorAtt,0,AT_IF_SBGR_UINT8,false);
 
     //Create Framebuffer
     std::vector<const AnthemImage*> tmpColorAttachment = { offscreen.colorAttachment};

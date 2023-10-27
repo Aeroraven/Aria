@@ -112,7 +112,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     ANTH_LOGI("Depth Buffer Created");
 
     //Create Attachment
-    renderer.createColorAttachmentImage(&offscreen.colorAttachment,offscreen.descPoolColorAtt,0,true);
+    renderer.createColorAttachmentImage(&offscreen.colorAttachment,offscreen.descPoolColorAtt,0,AT_IF_SBGR_UINT8,true);
 
     //Create Pass
     AnthenRenderPassSetupOption setupOpt{
