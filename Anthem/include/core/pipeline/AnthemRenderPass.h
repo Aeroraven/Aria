@@ -27,7 +27,7 @@ namespace Anthem::Core{
         //Infos
         AnthemRenderPassAttachmentAccess attachmentAccess;
         AnthemRenderPassMultisampleType msaaType;
-        std::vector<std::optional<VkFormat>> colorAttachmentFormats = {std::nullopt};
+        std::vector<std::optional<AnthemImageFormat>> colorAttachmentFormats = {std::nullopt};
 
         //Objects
         AnthemImage* msaaColorAttachment = nullptr;

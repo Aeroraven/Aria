@@ -178,5 +178,28 @@ namespace Anthem::Core::Math{
             ret[2][3] = t[2];
             return ret;
         }
+
+        template<typename T>
+        requires ALinAlgIsNumericTp<T>
+        inline static ALinAlgMat<T,3,3> inverse3(const ALinAlgMat<T,3,3>& m){
+            //Adapted from:  https://stackoverflow.com/questions/983999/simple-3x3-matrix-inverse-code-c
+            T det = m[0][0] * (m[1][1] * m[2][2] - m[2][1] * m[1][2]) -
+                        m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+                        m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+            T invdet = 1 / det;
+            ALinAlgMat<T,3,3> minv; 
+            minv[0][0] = (m[1][1] * m[2][2] - m[2][1] * m[1][2]) * invdet;
+            minv[0][1] = (m[0][2] * m[2][1] - m[0][1] * m[2][2]) * invdet;
+            minv[0][2] = (m[0][1] * m[1][2] - m[0][2] * m[1][1]) * invdet;
+            minv[1][0] = (m[1][2] * m[2][0] - m[1][0] * m[2][2]) * invdet;
+            minv[1][1] = (m[0][0] * m[2][2] - m[0][2] * m[2][0]) * invdet;
+            minv[1][2] = (m[1][0] * m[0][2] - m[0][0] * m[1][2]) * invdet;
+            minv[2][0] = (m[1][0] * m[2][1] - m[2][0] * m[1][1]) * invdet;
+            minv[2][1] = (m[2][0] * m[0][1] - m[0][0] * m[2][1]) * invdet;
+            minv[2][2] = (m[0][0] * m[1][1] - m[1][0] * m[0][1]) * invdet;
+            return minv;
+        }
+
+
     };
 }

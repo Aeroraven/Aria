@@ -184,6 +184,7 @@ namespace Anthem::Core{
         if(enableMsaa){
             textureImage->enableMsaa();
         }
+        textureImage->setImageFormat(AT_IF_SRGB_UINT8);
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
@@ -194,7 +195,7 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::createColorAttachmentImage(AnthemImage** pImage,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa){
+    bool AnthemSimpleToyRenderer::createColorAttachmentImage(AnthemImage** pImage,AnthemDescriptorPool* descPool, uint32_t bindLoc, AnthemImageFormat format, bool enableMsaa){
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
@@ -205,6 +206,7 @@ namespace Anthem::Core{
             textureImage->enableMsaa();
         }
         ANTH_LOGI("Creating Color Attachment");
+        textureImage->setImageFormat(format);
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler

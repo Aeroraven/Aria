@@ -67,5 +67,10 @@ namespace Anthem::Core::Math{
             }
             return out;
         }
+        void vectorization(T* out) const{
+            for(int i=0;i<R;i++){
+                out[i] = data[i];
+            }
+        }
     };
 }

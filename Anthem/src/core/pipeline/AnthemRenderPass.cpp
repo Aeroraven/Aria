@@ -147,7 +147,16 @@ namespace Anthem::Core{
         for(int i=0;i<opt.colorAttachmentFormats.size();i++){
             VkAttachmentDescription colorAttachment = {};
             if(opt.colorAttachmentFormats[i].has_value()){
-                colorAttachment.format = opt.colorAttachmentFormats[i].value();
+                const auto dfm = opt.colorAttachmentFormats[i].value();
+                VkFormat tgtFm;
+                if(dfm==AT_IF_SRGB_FLOAT32){
+                    tgtFm = VK_FORMAT_R32G32B32A32_SFLOAT;
+                }else if(dfm==AT_IF_SRGB_UINT8){
+                    tgtFm = VK_FORMAT_R8G8B8A8_SRGB;
+                }else if(dfm==AT_IF_SBGR_UINT8){
+                    tgtFm = VK_FORMAT_B8G8R8A8_SRGB;
+                }
+                colorAttachment.format = tgtFm;
             }else{
                 colorAttachment.format = (this->swapChain->getSwapChainSurfaceFormat())->format;
             }

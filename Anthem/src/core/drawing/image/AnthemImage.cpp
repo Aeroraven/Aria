@@ -13,6 +13,10 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->channels==4,"Image channels must be 4");
         return true;
     }
+    bool AnthemImage::setImageFormat(AnthemImageFormat format){
+        this->desiredFormat = format;
+        return true;
+    }
     bool AnthemImage::setImageSize(uint32_t width, uint32_t height){
         this->width = width;
         this->height = height;
@@ -20,9 +24,19 @@ namespace Anthem::Core{
     }
     bool AnthemImage::prepareImage(){
         ANTH_ASSERT(this->definedUsage != AT_IU_UNDEFINED,"Image usage not specified");
+        ANTH_ASSERT(this->desiredFormat != AT_IF_UNDEFINED, "Image format should not be empty");
+
+        VkFormat pendingFormat;
+        if(this->desiredFormat == AT_IF_SRGB_UINT8){
+            pendingFormat = VK_FORMAT_R8G8B8A8_SRGB;
+        }else if(this->desiredFormat == AT_IF_SRGB_FLOAT32){
+            pendingFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
+        }else if(this->desiredFormat == AT_IF_SBGR_UINT8){
+            pendingFormat = VK_FORMAT_B8G8R8A8_SRGB;
+        }
         if (this->definedUsage == AT_IU_TEXTURE2D){
             this->createStagingBuffer();
-            this->createImageInternal( VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_FORMAT_R8G8B8A8_SRGB, this->width, this->height);
+            this->createImageInternal( VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, pendingFormat, this->width, this->height);
             ANTH_LOGI("Image created");
             this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
             this->copyBufferToImage();
@@ -39,9 +53,9 @@ namespace Anthem::Core{
             this->destroyStagingBuffer();
         }else if(this->definedUsage == AT_IU_COLOR_ATTACHMENT){
             if(this->msaaOn){
-                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT , VK_FORMAT_B8G8R8A8_SRGB, this->width, this->height);
+                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT , pendingFormat, this->width, this->height);
             }else{
-                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT , VK_FORMAT_B8G8R8A8_SRGB, this->width, this->height);
+                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT , pendingFormat, this->width, this->height);
             }
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
             this->createSampler();
