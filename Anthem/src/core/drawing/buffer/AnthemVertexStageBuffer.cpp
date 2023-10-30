@@ -44,6 +44,7 @@ namespace Anthem::Core{
     
     bool AnthemVertexStageBuffer::destroyBuffer(){
         ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
+        ANTH_LOGI("Deleting Buffer");
         vkFreeMemory(this->logicalDevice->getLogicalDevice(),this->dstBuffer.bufferMem,nullptr);
         vkDestroyBuffer(this->logicalDevice->getLogicalDevice(),this->dstBuffer.buffer,nullptr);
         return true;

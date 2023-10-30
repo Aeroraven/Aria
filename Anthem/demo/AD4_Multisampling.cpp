@@ -235,7 +235,7 @@ int main(){
     });
     ANTH_LOGI("Loop Started");
     renderer->startDrawLoopDemo();
-    renderer->finialize();
+    renderer->finalize();
     return 0;
     return 0;
 }

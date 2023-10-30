@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstring>
 #include <GLFW/glfw3.h>
+#include <random>
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>
@@ -87,4 +88,7 @@ namespace Anthem::Core::TmplDefs{
 
     template<class SrcTp,int SrcDm,int SrcSz>
     concept ATpIsdValidUniform = ATpIsdUniMatVecf<SrcTp,SrcDm,SrcSz>;
+
+    template<class SrcTp,int SrcDm,int SrcSz,int SrcArrSz>
+    concept ATpIsdValidUniformWithArr = ATpIsdUniMatVecf<SrcTp,SrcDm,SrcSz> && (SrcArrSz>0);
 }

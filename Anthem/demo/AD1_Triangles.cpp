@@ -128,6 +128,6 @@ int main(){
     });
     ANTH_LOGI("Draw Loop Started");
     renderer->startDrawLoopDemo();
-    renderer->finialize();
+    renderer->finalize();
     return 0;
 }

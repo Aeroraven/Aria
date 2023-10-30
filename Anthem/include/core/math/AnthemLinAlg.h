@@ -15,6 +15,18 @@ namespace Anthem::Core::Math{
 
     class AnthemLinAlg{
     using This=AnthemLinAlg;
+    
+    private:
+        template<typename T> 
+        requires ALinAlgIsNumericTp<T>
+        inline static T atUniformNumber(T s,T t){
+            std::random_device rd;
+            std::mt19937 generator(rd());
+            std::uniform_real_distribution<float> unf(0.0f,1.0f);
+            
+            auto res = unf(generator);
+            return res;
+        }
     public:
         template<typename T,uint32_t R>
         inline static ALinAlgMat<T,R,R> eye(){
@@ -199,6 +211,33 @@ namespace Anthem::Core::Math{
             minv[2][2] = (m[0][0] * m[1][1] - m[1][0] * m[0][1]) * invdet;
             return minv;
         }
+
+        template<typename T>
+        requires ALinAlgIsNumericTp<T>
+        inline static ALinAlgVec<T,3> randomVector3(){
+            const auto a = atUniformNumber(0.0f,static_cast<float>(M_PI));
+            const auto b = atUniformNumber(0.0f,static_cast<float>(M_PI));
+            const auto x = std::cos(a)*std::cos(b);
+            const auto z = std::cos(a)*std::sin(b);
+            const auto y = std::sin(b);
+            ALinAlgVec<T,3> ret = {x,y,z};
+            ANTH_LOGI("NIID=",x,",",y,",",z);
+            return ret;
+        }
+
+        template<typename T>
+        requires ALinAlgIsNumericTp<T>
+        inline static ALinAlgVec<T,3> randomVectorIid3(){
+            const auto a = atUniformNumber(0.0f,1.0f);
+            const auto b = atUniformNumber(0.0f,1.0f);
+            const auto c = atUniformNumber(0.0f,1.0f);
+            ALinAlgVec<T,3> ret = {a,b,c};
+            ANTH_LOGI("IID=",a,",",b,",",c);
+            return ret;
+            
+        }
+
+
 
 
     };

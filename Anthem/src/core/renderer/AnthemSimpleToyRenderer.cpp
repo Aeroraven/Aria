@@ -5,51 +5,68 @@ namespace Anthem::Core{
         this->config = config;
         return true;
     }
-    bool AnthemSimpleToyRenderer::finialize(){
+    bool AnthemSimpleToyRenderer::finalize(){
         this->setupState = false;
         ANTH_LOGI("Finalizing");
+
         this->logicalDevice->waitForIdle();
         this->destroySwapChain();
+        ANTH_LOGI("Swapchain Destroyed");
 
         for(auto& p:this->descriptorPools){
             p->destroyDescriptorPool();
             p->destroyLayoutBinding();
             delete p;
         }
+        ANTH_LOGI("Desc Pools Destroyed");
 
         for(const auto& p:this->uniformBuffers){
             p->destroyBuffers();
             delete p;
         }
+        ANTH_LOGI("Uniform Buffers Destroyed");
+
         for(const auto& p:this->textures){
             p->destroyImage();
             delete p;
         }
+        ANTH_LOGI("Textures Destroyed");
+
         for(const auto& p:this->vertexBuffers){
             p->destroyBuffer();
             delete p;
         }
+        ANTH_LOGI("Vertex Buffers Destroyed");
+
         for(const auto& p:this->indexBuffers){
             p->destroyBuffer();
             delete p;
         }
+        ANTH_LOGI("Index Buffers Destroyed");
 
         this->mainLoopSyncer->destroySyncObjects();
         this->commandBuffers->destroyCommandPool();
+        ANTH_LOGI("Synchronization Objects & Command Pools Destroyed");
 
         for(const auto& p:this->graphicsPipelines){
             p->destroyPipeline();
             p->destroyPipelineLayout();
             delete p;
         }
+        ANTH_LOGI("Pipelines Destroyed");
+
         for(const auto& p:this->shaders){
             p->destroyShaderModules(this->logicalDevice.get());
             delete p;
         }
+        ANTH_LOGI("Shaeders Destroyed");
+
         for(const auto& p:this->renderPasses){
             p->destroyRenderPass();
             delete p;
         }
+        ANTH_LOGI("Render Passes Destroyed");
+
         logicalDevice->destroyLogicalDevice(this->instance->getInstance());
         validationLayer->destroyDebugMsgLayer(this->instance->getInstance());
         windowSurface->destroyWindowSurface(this->instance->getInstance());
@@ -496,7 +513,7 @@ namespace Anthem::Core{
     }
     AnthemSimpleToyRenderer::~AnthemSimpleToyRenderer(){
         if(this->setupState){
-            this->finialize();
+            this->finalize();
         }
     }
 }

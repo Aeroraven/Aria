@@ -78,7 +78,7 @@ namespace Anthem::Core{
 
         bool setConfig(const AnthemConfig* config);
         bool initialize();
-        bool finialize();
+        bool finalize();
 
         bool startDrawLoopDemo();
         bool setDrawFunction(std::function<void()> drawLoopHandler);
@@ -133,10 +133,10 @@ namespace Anthem::Core{
             return true;
         }
 
-        template<typename... T,uint32_t... Rk,uint32_t... Sz>
-        bool createUniformBuffer(AnthemUniformBufferImpl<AnthemUBDesc<T,Rk,Sz>...>** pUniformBuffer, uint32_t bindLoc, AnthemDescriptorPool *descPool){
+        template<typename... T,uint32_t... Rk,uint32_t... Sz,uint32_t... ArrSz>
+        bool createUniformBuffer(AnthemUniformBufferImpl<AnthemUBDesc<T,Rk,Sz,ArrSz>...>** pUniformBuffer, uint32_t bindLoc, AnthemDescriptorPool *descPool){
             //Allocate Uniform Buffer
-            auto ubuf = new AnthemUniformBufferImpl<AnthemUBDesc<T,Rk,Sz>...>();
+            auto ubuf = new AnthemUniformBufferImpl<AnthemUBDesc<T,Rk,Sz,ArrSz>...>();
             ubuf->specifyLogicalDevice(this->logicalDevice.get());
             ubuf->specifyPhyDevice(this->phyDevice.get());
             ubuf->createBuffer(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);

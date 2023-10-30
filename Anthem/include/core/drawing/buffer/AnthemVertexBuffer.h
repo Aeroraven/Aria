@@ -57,6 +57,9 @@ namespace Anthem::Core{
     requires TmplDefs::ATpIsdValidAttr<Tp,Sz>
     struct AnthemVAOAttrDesc;
 
+    template<uint32_t Sz>
+    using AtAttributeVecf = AnthemVAOAttrDesc<float,Sz>;
+
     template<typename... AVAOTpDesc> 
     class AnthemVertexBufferImpl;
     

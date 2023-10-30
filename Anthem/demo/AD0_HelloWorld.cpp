@@ -406,5 +406,16 @@ int main(){
         ANTH_LOGI("D=",d);
     }
     ANTH_LOGI("=============");
+
+    ANTH_LOGI("20=============");
+    {
+        std::random_device rd;
+        std::mt19937 generator(rd());
+        std::uniform_real_distribution<float> unf(0.0f,1.0f);
+        for(int i=0;i<10;i++){
+            ANTH_LOGI(unf(generator));
+        }
+
+    }
     return 0;
 }
