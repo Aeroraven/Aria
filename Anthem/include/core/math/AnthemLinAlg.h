@@ -22,8 +22,7 @@ namespace Anthem::Core::Math{
         inline static T atUniformNumber(T s,T t){
             std::random_device rd;
             std::mt19937 generator(rd());
-            std::uniform_real_distribution<float> unf(0.0f,1.0f);
-            
+            std::uniform_real_distribution<float> unf(s,t);
             auto res = unf(generator);
             return res;
         }
@@ -221,7 +220,6 @@ namespace Anthem::Core::Math{
             const auto z = std::cos(a)*std::sin(b);
             const auto y = std::sin(b);
             ALinAlgVec<T,3> ret = {x,y,z};
-            ANTH_LOGI("NIID=",x,",",y,",",z);
             return ret;
         }
 
@@ -232,7 +230,6 @@ namespace Anthem::Core::Math{
             const auto b = atUniformNumber(-1.0f,1.0f);
             const auto c = atUniformNumber(-1.0f,1.0f);
             ALinAlgVec<T,3> ret = {a,b,c};
-            ANTH_LOGI("IID=",a,",",b,",",c);
             return ret;
             
         }
@@ -242,8 +239,5 @@ namespace Anthem::Core::Math{
         inline static T randomNumber(){
             return atUniformNumber(0.0f,1.0f);
         }
-
-
-
     };
 }

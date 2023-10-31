@@ -17,7 +17,7 @@ struct TempCamera{
 struct AOParams{
     constexpr static int sampleVecDim = 4;
     constexpr static int noiseVecDim = 4;
-    constexpr static int noiseTexSize = 4;
+    constexpr static int noiseTexSize = 8;
     constexpr static int numSamples = 128;
 
     float* samples;  
@@ -231,7 +231,7 @@ void updateOffscrUniform(DeferPass& offscr,AOPass& target ,AnthemSimpleToyRender
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
-    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.0);
+    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.5);
     
     auto modelview = lookAt.multiply(local);
 
@@ -244,7 +244,7 @@ void updateOffscrUniform(DeferPass& offscr,AOPass& target ,AnthemSimpleToyRender
     float viewMatVal[16];
     float modelMatVal[16];
     float normalMatVal[16];
-    float windowState[4] = {rdWinH*1.0f,rdWinW*1.0f,1,1};
+    float windowState[4] = {rdWinH*1.0f,rdWinW*1.0f,aoParam.noiseTexSize,1};
     proj.columnMajorVectorization(projMatVal);
     lookAt.columnMajorVectorization(viewMatVal);
     local.columnMajorVectorization(modelMatVal);

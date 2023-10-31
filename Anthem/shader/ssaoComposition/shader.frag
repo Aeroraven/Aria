@@ -20,12 +20,19 @@ void main() {
     
     float wH = ubo.windowState.x;
     float wW = ubo.windowState.y;
-    vec2 noiseScaler = vec2(wH,wW)/4.0;
+    float tS = ubo.windowState.z;
+    vec2 noiseScaler = vec2(wH,wW)/tS;
 
     //Get Attributes
     vec3 normal = normalize(texture(normalTex,fragTexCoord).rgb);
-    vec3 position = texture(positionTex,fragTexCoord).rgb;
+    vec4 positionT = texture(positionTex,fragTexCoord).rgba;
+    vec3 position = positionT.xyz;
     vec3 noise = normalize(texture(noiseTex,fragTexCoord*noiseScaler).rgb*2.0-1.0);
+
+    if(positionT.w<0.1||positionT.w>0.9){
+        outColor = vec4(0.0);
+        return;
+    }
 
     float occls = 0.0;
     float totls = 0.0;
@@ -49,12 +56,11 @@ void main() {
         float tX = (sampNdcPos.x+1.0)/2.0;
         float tY = (sampNdcPos.y+1.0)/2.0;
         vec4 sampRefPos = texture(positionTex,vec2(tX,tY));
-        sampRefPos/=sampRefPos.w;
 
         float rangeCheck = smoothstep(0.0,1.0,sampleRaidus/abs(sampRefPos.z-position.z));
         avgPos += texture(normalTex,vec2(tX,tY)).rgb;
 
-        if(sampRefPos.z-position.z>1e-3){
+        if(sampRefPos.z-position.z<-1e-3){
             occls+=1.0*rangeCheck;
         }
         avgDiff += sampRefPos.z-position.z;

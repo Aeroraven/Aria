@@ -9,5 +9,6 @@ layout(location = 1) out vec4 outNormal;
 
 void main() {
     outPosition = fragPosition;
+    outPosition.w = 0.5;
     outNormal = vec4(fragNormal,1.0);
 }
