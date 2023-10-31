@@ -18,7 +18,7 @@ struct AOParams{
     constexpr static int sampleVecDim = 4;
     constexpr static int noiseVecDim = 4;
     constexpr static int noiseTexSize = 4;
-    constexpr static int numSamples = 64;
+    constexpr static int numSamples = 128;
 
     float* samples;  
     float* noise;
@@ -231,10 +231,14 @@ void updateOffscrUniform(DeferPass& offscr,AOPass& target ,AnthemSimpleToyRender
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
-    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime());
+    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.0);
     
     auto modelview = lookAt.multiply(local);
-    auto normalMat = Math::AnthemLinAlg::inverse3(modelview.clipSubmatrixLeftTop<3,3>()).transpose().padRightBottom<1,1>();
+
+    auto modelrot = lookAt.clipSubmatrixLeftTop<3,3>();
+    auto localrot = local.clipSubmatrixLeftTop<3,3>();
+    auto modelviewrot = modelrot.multiply(localrot);
+    auto normalMat = Math::AnthemLinAlg::inverse3(modelviewrot).transpose().padRightBottom<1,1>();
 
     float projMatVal[16];
     float viewMatVal[16];
@@ -249,11 +253,9 @@ void updateOffscrUniform(DeferPass& offscr,AOPass& target ,AnthemSimpleToyRender
     offscr.ubuf->specifyUniforms(projMatVal,viewMatVal,modelMatVal,normalMatVal);
     offscr.ubuf->updateBuffer(currentFrame);
 
-
     target.uxBuffer->specifyUniforms(projMatVal,windowState,aoParam.samples);
     target.uxBuffer->updateBuffer(currentFrame);
 }
-
 
 void generateAOParameters(){
     //Generate Samples & Noises
@@ -268,7 +270,12 @@ void generateAOParameters(){
             for(auto j=0;j<3;j++){
                 auto& p = (*(vecContainer[T]))[i*4+j];
                 p = d[j];
-                if(T==1) p = std::abs(p);
+                if(T==0&&j==2) p = std::abs(p);
+                if(T==1&&j==2) p = 0;
+                if(T==0){
+                    auto wx = AnthemLinAlg::randomNumber<float>();
+                    p *=(wx*wx);
+                }
             }
         }
     }
@@ -276,7 +283,7 @@ void generateAOParameters(){
     //Clamp Noises
     aoParam.noiseU = new std::remove_pointer_t<decltype(aoParam.noiseU)>[vecDim[1]*vecNum[1]];
     for(int i=0;i<vecDim[1]*vecNum[1];i++){
-        aoParam.noiseU[i] = aoParam.noise[i] * 255;
+        aoParam.noiseU[i] = (aoParam.noise[i] + 1.0)/2.0 * 255;
     }
 }
 

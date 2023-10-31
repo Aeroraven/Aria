@@ -106,7 +106,9 @@ namespace Anthem::Core{
             return alignOffsets.at(alignOffsets.size()-1)+variableSize.at(variableSize.size()-1);
         }
         bool allocateBuffer(){
-            rawBuffer = new char[getRequiredBufferSize()];
+            auto sz = getRequiredBufferSize();
+            rawBuffer = new char[sz];
+            memset(rawBuffer,0,sz);
             return true;
         }
         bool calculatingOffset(){
@@ -137,6 +139,7 @@ namespace Anthem::Core{
                     }
                     alignOffsets.push_back(alignedOffset);
                     variableSize.push_back(seqLength);
+                    ANTH_LOGI(alignOffsets.size(),"-",alignOffsets.back(),",",variableSize.back());
                     curOffset = alignedOffset+seqLength;
                 }
             }
@@ -164,7 +167,8 @@ namespace Anthem::Core{
             for(int i=0;i<sizeof...(UniTp);i++){
                 for(int j=0;j<uniArraySize.at(i);j++){
                     int seqLength = uniVecSize.at(i)*((uniVecSize.at(i)-1)*(uniRanks.at(i)==2)+1)*uniTpSizeOf.at(i);
-                    char* vdptr = ((char*)voidPtrs.at(i))+uniTpSizeOf.at(i)*j*seqLength;
+                    char* vdptr = ((char*)voidPtrs.at(i))+seqLength*j;
+                    //ANTH_LOGI("I=",i," J=",j," OFFSET=",uniTpSizeOf.at(i)*j*seqLength);
                     memcpy(rawBuffer+alignOffsets.at(idx),vdptr,variableSize.at(idx));
                     idx+=1;
                 }
