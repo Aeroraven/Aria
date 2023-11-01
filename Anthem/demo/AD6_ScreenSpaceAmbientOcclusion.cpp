@@ -185,7 +185,7 @@ void prepareOffscreen(DeferPass& offscreen,AnthemSimpleToyRenderer& renderer){
 
     //Create Pass
     AnthenRenderPassSetupOption setupOpt{
-        .attachmentAccess = AT_ARPAA_INTERMEDIATE_PASS,
+        .renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
         .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32, AT_IF_SRGB_FLOAT32 }
     };

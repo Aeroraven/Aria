@@ -18,8 +18,12 @@ namespace Anthem::Core{
         std::vector<VkImageView> framebufferAttachment;
         int colorImageCur = 0;
         auto totalRenderPassAttachments = renderPass->getTotalAttachmentCnt();
-        auto colorImageWid = (*colorImages)[0]->getWidth();
-        auto colorImageHeight = (*colorImages)[0]->getHeight();
+        auto colorImageWid = (uint32_t)(this->depthBuffer->getImageWidth()); 
+        auto colorImageHeight =(uint32_t)(this->depthBuffer->getImageHeight()); 
+        if((*colorImages).size()>0){
+            colorImageWid = (*colorImages)[0]->getWidth();
+            colorImageHeight = (*colorImages)[0]->getHeight();
+        }
 
         for(int i=0;i<totalRenderPassAttachments;i++){
             ANTH_LOGI("Proc Attachment ",i);

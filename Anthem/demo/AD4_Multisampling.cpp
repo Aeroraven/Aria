@@ -116,7 +116,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
 
     //Create Pass
     AnthenRenderPassSetupOption setupOpt{
-        .attachmentAccess = AT_ARPAA_FINAL_PASS,
+        .renderPassUsage = AT_ARPAA_FINAL_PASS,
         .msaaType = AT_ARPMT_MSAA,
         .msaaColorAttachment = offscreen.colorAttachment,
         .msaaSamples = (VkSampleCountFlagBits)(offscreen.colorAttachment->getSampleCount())

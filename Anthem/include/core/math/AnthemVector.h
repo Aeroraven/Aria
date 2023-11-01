@@ -11,8 +11,20 @@ namespace Anthem::Core::Math{
     using AnthemSameShapeVectorTp = AnthemVector<T,R>;
     private:
         T data[R];
-
+    
+    protected:
+        void deepCopy(const AnthemVector<T,R>& p){
+            for(int i=0;i<R;i++){
+                this->data[i] = p[i];
+            }
+        }
+        void deepCopyRvalue(AnthemVector<T,R>&& p){
+            for(int i=0;i<R;i++){
+                this->data[i] = p[i];
+            }
+        }
     public:
+        constexpr static int dimension = R;
         template<typename... U>
         requires TmplDefs::ATpdAllAre<T,U...>
         AnthemVector(U... args){
@@ -25,6 +37,20 @@ namespace Anthem::Core::Math{
                 data[i] = 0;
             }
         }
+        AnthemVector(const AnthemVector<T,R>& p){
+            this->deepCopy(p);
+        }
+        AnthemVector(AnthemVector<T,R>&& p){
+            this->deepCopy(p);
+        }
+        const AnthemVector<T,R>& operator=(const AnthemVector<T,R>& p){
+            this->deepCopy(p);
+            return *this;
+        }
+        const AnthemVector<T,R>& operator=(AnthemVector<T,R>&& p){
+            this->deepCopy(p);
+            return *this;
+        }
         T& operator[](uint32_t i){
             return data[i];
         }
@@ -35,6 +61,13 @@ namespace Anthem::Core::Math{
             AnthemSameShapeVectorTp r;
             for(int i=0;i<R;i++){
                 r[i]=data[i]-second.data[i];
+            }
+            return r;
+        }
+        AnthemSameShapeVectorTp operator+(const AnthemSameShapeVectorTp& second) const{
+            AnthemSameShapeVectorTp r;
+            for(int i=0;i<R;i++){
+                r[i]=data[i]+second.data[i];
             }
             return r;
         }

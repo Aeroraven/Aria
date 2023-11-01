@@ -7,10 +7,11 @@
 #include "../drawing/image/AnthemImage.h"
 
 namespace Anthem::Core{
-    enum AnthemRenderPassAttachmentAccess{
+    enum AnthemRenderPassUsageType{
         AT_ARPAA_UNDEFINED,
         AT_ARPAA_FINAL_PASS,
-        AT_ARPAA_INTERMEDIATE_PASS
+        AT_ARPAA_INTERMEDIATE_PASS,
+        AT_ARPAA_DEPTH_STENCIL_ONLY_PASS
     };
     enum AnthemRenderPassMultisampleType{
         AT_ARPMT_UNDEFINED,
@@ -25,7 +26,7 @@ namespace Anthem::Core{
 
     struct AnthenRenderPassSetupOption{
         //Infos
-        AnthemRenderPassAttachmentAccess attachmentAccess;
+        AnthemRenderPassUsageType renderPassUsage;
         AnthemRenderPassMultisampleType msaaType;
         std::vector<std::optional<AnthemImageFormat>> colorAttachmentFormats = {std::nullopt};
 

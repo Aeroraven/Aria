@@ -1,20 +1,23 @@
 #include "../include/core/renderer/AnthemSimpleToyRenderer.h"
 #include "../include/core/math/AnthemMathAbbrs.h"
 #include "../include/external/AnthemGLTFLoader.h"
+#include "../include/components/camera/AnthemCamera.h"
 
 using namespace Anthem::Core;
 using namespace Anthem::Core::Math;
 using namespace Anthem::Core::Math::Abbr;
 using namespace Anthem::External;
+using namespace Anthem::Components::Camera;
 
-struct TempCamera{
-    AtMatf4 projection;    
-    AtMatf4 view;
-    AtMatf4 model;
-    AtMatf4 viewspaceNormal;
-};
+struct SharedComponents{
+    AnthemCamera camera = AnthemCamera(AT_ACPT_PERSPECTIVE);
+    AnthemCamera lightPov = AnthemCamera(AT_ACPT_ORTHO);
+    AnthemSimpleToyRenderer renderer;
+    AnthemConfig config;
+}shared;
 
-struct StagePass{
+struct OffscreenPass{
+    constexpr static int numMeshes = 4;
     using vxPosAttr = AtAttributeVecf<3>;
     using vxNormalAttr = AtAttributeVecf<3>;
 
@@ -35,11 +38,12 @@ struct StagePass{
     AnthemShaderModule* shader;
 
     AnthemSwapchainFramebuffer* framebuffer;
-    
-    int numMeshes = 4;
-};
+}offscreenPass;
 
-void preparStage(StagePass& target, AnthemSimpleToyRenderer& renderer){
+void prepareOffscreen(){
+    auto& renderer = shared.renderer;
+    auto& target = offscreenPass;
+
     // Loading Model
     AnthemGLTFLoader loader;
     AnthemGLTFLoaderParseConfig gltfConfig;
@@ -94,9 +98,8 @@ void preparStage(StagePass& target, AnthemSimpleToyRenderer& renderer){
 
     //Create Shader
     AnthemShaderFilePaths shaderFile = {
-        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\geometryNormal\\shader.vert.spv",
-        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\geometryNormal\\shader.frag.spv",
-        .geometryShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\geometryNormal\\shader.geom.spv",
+        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\shadowMappingDirectional\\shader.vert.spv",
+        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\shadowMappingDirectional\\shader.frag.spv",
     };
     renderer.createShader(&target.shader,&shaderFile);
     ANTH_LOGI("Shader Created");
@@ -111,9 +114,14 @@ void preparStage(StagePass& target, AnthemSimpleToyRenderer& renderer){
 
     renderer.createPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffers[0]);
     ANTH_LOGI("Pipeline Created");
+
 }
 
-void recordCommandsStage(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, StagePass& target,int i){
+void recordCommandsStage(int i){
+
+    auto& target = offscreenPass;
+    auto& renderer = shared.renderer;
+    auto& cfg = shared.config;
     //Prepare Command
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
     renderer.drSetViewportScissor(i);
@@ -132,27 +140,47 @@ void recordCommandsStage(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, St
     }
     renderer.drEndRenderPass(i);
 }
-void recordCommandsAll(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, StagePass& target){
-    for(int i=0;i<cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+
+void recordCommandsAll(){
+    auto& target = offscreenPass;
+    auto& renderer = shared.renderer;
+    auto& cfg = shared.config;
+    for(int i=0;i<cfg.VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
         renderer.drClearCommands(i);
         renderer.drStartCommandRecording(i);
-        recordCommandsStage(cfg, renderer, target,i);
+        recordCommandsStage(i);
         renderer.drEndCommandRecording(i);
     }
 }
 
-void updateOffscrUniform(StagePass& target ,AnthemSimpleToyRenderer& renderer,int currentFrame){
+void prepareSharedComponents(){
+    int rdH,rdW;
+    shared.renderer.setConfig(&shared.config);
+    shared.renderer.initialize();
+    shared.renderer.exGetWindowSize(rdH,rdW);
+    shared.camera.specifyFrustum((float)M_PI/2.0f,0.1f,300.0f,1.0f*rdW/rdH);
+    shared.camera.specifyPosition(0.0f,-70.0f,-80.0f);
+
+    shared.lightPov.specifyFrustum((float)M_PI/2.0f,0.1f,300.0f,1.0f*rdW/rdH);
+    shared.lightPov.specifyOrthoClipSpace(0.1f,300.0f,(float)M_PI/2.0f,80.0f);
+    shared.lightPov.specifyPosition(0.0f,0.0f,-80.0f);
+    shared.lightPov.specifyFrontEyeRay(0.0f,-1.0f,1.0f);
+    ANTH_LOGI("Intialization Complete");
+}
+
+
+void updateOffscrUniform(int currentFrame){
+    auto& target = offscreenPass;
+    auto& renderer = shared.renderer;
+
     int rdWinH,rdWinW;
     renderer.exGetWindowSize(rdWinH,rdWinW);
-    auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)M_PI/2.0f,1.0f*rdWinW/rdWinH);
     auto axis = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
-    auto center = Math::AnthemVector<float,3>({0.0f,-70.0f,0.0f});
-    auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
-    auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
-    auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
     auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.0);
     
-    auto modelview = lookAt.multiply(local);
+    AtMatf4 proj,lookAt;
+    shared.lightPov.getProjectionMatrix(proj);
+    shared.lightPov.getViewMatrix(lookAt);
 
     auto modelrot = lookAt.clipSubmatrixLeftTop<3,3>();
     auto localrot = local.clipSubmatrixLeftTop<3,3>();
@@ -173,36 +201,28 @@ void updateOffscrUniform(StagePass& target ,AnthemSimpleToyRenderer& renderer,in
     target.ubuf->updateBuffer(currentFrame);
 }
 
+
 int main(){
-    auto cfg = ANTH_MAKE_SHARED(Anthem::Core::AnthemConfig)();
-    auto renderer = ANTH_MAKE_SHARED(Anthem::Core::AnthemSimpleToyRenderer)();
-    renderer->setConfig(cfg.get());
-    renderer->initialize();
-    ANTH_LOGI("Intialization Complete");
+    prepareSharedComponents();
+    prepareOffscreen();
 
-    StagePass target;
-    preparStage(target,*renderer.get());
-
-    ANTH_LOGI("Start Reg");
-    renderer->registerPipelineSubComponents();
-
-    ANTH_LOGI("Start Rec Commands");
-    recordCommandsAll(cfg.get(),*renderer.get(),target);
+    shared.renderer.registerPipelineSubComponents();
+    recordCommandsAll();
 
     //START!
     int currentFrame = 0;
-    renderer->setDrawFunction([&](){
-        updateOffscrUniform(target,*renderer.get(),currentFrame);
+    shared.renderer.setDrawFunction([&](){
+        updateOffscrUniform(currentFrame);
         uint32_t imgIdx;
-        renderer->drPrepareFrame(currentFrame,&imgIdx);
-        renderer->drSubmitBuffer(currentFrame);
-        renderer->drPresentFrame(currentFrame,imgIdx);
+        shared.renderer.drPrepareFrame(currentFrame,&imgIdx);
+        shared.renderer.drSubmitBuffer(currentFrame);
+        shared.renderer.drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;
     });
     ANTH_LOGI("Loop Started");
-    renderer->startDrawLoopDemo();
-    renderer->finalize();
+    shared.renderer.startDrawLoopDemo();
+    shared.renderer.finalize();
 
     return 0;
 }

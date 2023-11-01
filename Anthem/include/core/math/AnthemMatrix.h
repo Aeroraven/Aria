@@ -13,14 +13,28 @@ namespace Anthem::Core::Math{
     private:
         T data[R][C];
 
+    protected:
+        void deepCopy(const AnthemMatrix<T,R,C>& other){
+            for(int i=0;i<R;i++){
+                for(int j=0;j<C;j++){
+                    data[i][j] = other.data[i][j];
+                }
+            }
+        }
+        void deepCopyRvalue(AnthemMatrix<T,R,C>&& other){
+            for(int i=0;i<R;i++){
+                for(int j=0;j<C;j++){
+                    data[i][j] = other.data[i][j];
+                }
+            }
+        }
     public:
-    T* operator[](uint32_t i){
-        return data[i];
-    }
-    const T* operator[](uint32_t i) const{
-        return data[i];
-    }
-    public:
+        T* operator[](uint32_t i){
+            return data[i];
+        }
+        const T* operator[](uint32_t i) const{
+            return data[i];
+        }
         AnthemMatrix(){
             for(int i=0;i<R;i++){
                 for(int j=0;j<C;j++){
@@ -28,12 +42,18 @@ namespace Anthem::Core::Math{
                 }
             }
         }
+        AnthemMatrix(const AnthemMatrix<T,R,C>& other){
+            this->deepCopy(other);
+        }
+        AnthemMatrix(AnthemMatrix<T,R,C>&& other){
+            this->deepCopy(other);
+        }
         const AnthemMatrix<T,R,C>& operator=(const AnthemMatrix<T,R,C>& other){
-            for(int i=0;i<R;i++){
-                for(int j=0;j<C;j++){
-                    data[i][j] = other.data[i][j];
-                }
-            }
+            this->deepCopy(other);
+            return *this;
+        }
+        const AnthemMatrix<T,R,C>& operator=(AnthemMatrix<T,R,C>&& other){
+            this->deepCopy(other);
             return *this;
         }
         void dot(const AnthemMatrix<T,R,C>& other,AnthemMatrix<T,R,C>& out) const{

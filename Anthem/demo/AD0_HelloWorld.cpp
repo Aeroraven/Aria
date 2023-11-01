@@ -139,6 +139,10 @@ class ClassAB: virtual public ClassA, virtual public ClassB{
     }
 };
 
+class Country{
+
+};
+
 void meowNya(int& a){
     a+=1;
 }

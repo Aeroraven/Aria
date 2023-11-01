@@ -28,7 +28,10 @@ namespace Anthem::Core{
         bool destroyImageInternal();
         bool destroyImageViewInternal();
         bool generateMipmap(uint32_t texWidth,uint32_t texHeight);
+        
     public:
+        uint32_t virtual getImageWidth();
+        uint32_t virtual getImageHeight();
         const VkImageView* getImageView() const;
         const VkSampleCountFlags getSampleCount() const{
             return this->image.msaaCount;

@@ -204,6 +204,12 @@ namespace Anthem::Core{
         ANTH_LOGI("Image created");
         return true;
     }
+    uint32_t AnthemImageContainer::getImageWidth(){
+        return this->image.imageInfo.extent.width;
+    }
+    uint32_t AnthemImageContainer::getImageHeight(){
+        return this->image.imageInfo.extent.height;
+    }
     const VkImageView* AnthemImageContainer::getImageView() const{
         return &(this->image.imageView);
     }

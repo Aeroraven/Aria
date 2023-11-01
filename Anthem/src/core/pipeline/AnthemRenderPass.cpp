@@ -131,14 +131,19 @@ namespace Anthem::Core{
     }
 
     bool AnthemRenderPass::createRenderPass(const AnthenRenderPassSetupOption& opt){
+        //Assertions
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->swapChain != nullptr,"Swap chain not specified"); 
-        ANTH_ASSERT(opt.attachmentAccess != AT_ARPAA_UNDEFINED,"attachmentAccess flag should not be undefined");
+        ANTH_ASSERT(opt.renderPassUsage != AT_ARPAA_UNDEFINED,"renderPassUsage flag should not be undefined");
         ANTH_ASSERT(opt.msaaType != AT_ARPMT_UNDEFINED,"msaaType flag should not be undefined");
         if(opt.msaaType == AT_ARPMT_MSAA){
             ANTH_ASSERT(opt.colorAttachmentFormats.size() == 1,"todo: support multiple color attachments");
         }
-        ANTH_ASSERT(opt.colorAttachmentFormats.size() >= 1, "colorAttachmentFormats should have at least one element");
+        if(opt.renderPassUsage == AT_ARPAA_DEPTH_STENCIL_ONLY_PASS){
+            ANTH_ASSERT(opt.colorAttachmentFormats.size() == 0, "colorAttachmentFormats should not contain element");
+        }else{
+            ANTH_ASSERT(opt.colorAttachmentFormats.size() >= 1, "colorAttachmentFormats should have at least one element");
+        }
 
         this->setupOption = opt;
 
@@ -169,7 +174,7 @@ namespace Anthem::Core{
             if(opt.msaaType == AT_ARPMT_MSAA){
                 colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             }
-            if(opt.attachmentAccess == AT_ARPAA_FINAL_PASS){
+            if(opt.renderPassUsage == AT_ARPAA_FINAL_PASS){
                 colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
             }else{
                 colorAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -260,7 +265,7 @@ namespace Anthem::Core{
         //Create Subpass Dependencies
         std::vector<VkSubpassDependency> subpassDependency = {};
 
-        if(opt.attachmentAccess == AT_ARPAA_FINAL_PASS){
+        if(opt.renderPassUsage == AT_ARPAA_FINAL_PASS){
             subpassDependency.resize(1);
             subpassDependency[0].srcSubpass = VK_SUBPASS_EXTERNAL;
             subpassDependency[0].dstSubpass = 0;
@@ -268,7 +273,7 @@ namespace Anthem::Core{
             subpassDependency[0].srcAccessMask = 0;
             subpassDependency[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
             subpassDependency[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        }else if(opt.attachmentAccess == AT_ARPAA_INTERMEDIATE_PASS){
+        }else if(opt.renderPassUsage == AT_ARPAA_INTERMEDIATE_PASS){
             subpassDependency.resize(2);
             subpassDependency[0].srcSubpass = VK_SUBPASS_EXTERNAL;
             subpassDependency[0].dstSubpass = 0;
@@ -284,6 +289,8 @@ namespace Anthem::Core{
             subpassDependency[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
             subpassDependency[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
             subpassDependency[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+        }else if(opt.renderPassUsage == AT_ARPAA_DEPTH_STENCIL_ONLY_PASS){
+            
         }
 
 
