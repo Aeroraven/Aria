@@ -33,7 +33,7 @@ namespace Anthem::Core{
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
         std::vector<VkDynamicState> reqiredDynamicStates={
             VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_SCISSOR
+            VK_DYNAMIC_STATE_SCISSOR,
         };
         VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};

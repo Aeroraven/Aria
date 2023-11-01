@@ -172,8 +172,8 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
 
     //Create Shader
     AnthemShaderFilePaths shaderFile = {
-        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\deferOffscreen\\shader.vert.spv",
-        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\deferOffscreen\\shader.frag.spv"
+        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\deferOffscreen\\shader.vert.spv",
+        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\deferOffscreen\\shader.frag.spv"
     };
     renderer.createShader(&offscreen.shader,&shaderFile);
     ANTH_LOGI("Shader Created");
@@ -239,8 +239,8 @@ void prepareTarget(TargetPass& target, OffscreenPass& offscr, AnthemSimpleToyRen
     renderer.createSwapchainImageFramebuffers(&target.framebuffer,target.pass,target.depthBuffer);
 
     AnthemShaderFilePaths shaderFile = {
-        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\deferCompositionPbr\\shader.vert.spv",
-        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\deferCompositionPbr\\shader.frag.spv"
+        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\deferCompositionPbr\\shader.vert.spv",
+        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\deferCompositionPbr\\shader.frag.spv"
     };
     renderer.createShader(&target.shader,&shaderFile);
 

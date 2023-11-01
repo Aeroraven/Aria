@@ -86,8 +86,8 @@ int main(){
     //Create Shader
     AnthemShaderModule* shader;
     AnthemShaderFilePaths shaderFile = {
-        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\default\\shader.vert.spv",
-        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\default\\shader.frag.spv"
+        .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\default\\shader.vert.spv",
+        .fragmentShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\default\\shader.frag.spv"
     };
     renderer->createShader(&shader,&shaderFile);
     ANTH_LOGI("Shader Created");

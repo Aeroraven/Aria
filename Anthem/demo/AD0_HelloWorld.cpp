@@ -417,5 +417,6 @@ int main(){
         }
 
     }
+    ANTH_LOGI("=============");
     return 0;
 }
