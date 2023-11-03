@@ -27,7 +27,7 @@ namespace Anthem::Core{
         bool samplerCreated = false;
         uint32_t width,height,channels;
         AnthemGeneralBufferProp stagingBuffer;
-        VkSampler sampler;
+
         bool msaaOn = false;
         AnthemImageUsage definedUsage;
         AnthemImageFormat desiredFormat = AT_IF_UNDEFINED;
@@ -38,9 +38,11 @@ namespace Anthem::Core{
         bool destroyStagingBuffer();
         bool createStagingBuffer();
         bool copyBufferToImage();
-        bool createSampler();
     
     public:
+        AnthemImage(){
+            this->image.desiredLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        }
         bool specifyUsage(AnthemImageUsage usage);
         bool prepareImage();
         bool destroyImage();
@@ -51,7 +53,6 @@ namespace Anthem::Core{
         bool setImageFormat(AnthemImageFormat format);
         
         const VkImageView* getImageView() const;
-        const VkSampler* getSampler() const;
         uint32_t getWidth() const;
         uint32_t getHeight() const;
     };

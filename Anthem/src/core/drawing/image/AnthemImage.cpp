@@ -118,45 +118,14 @@ namespace Anthem::Core{
         this->image.msaaCount = this->phyDevice->getMaxSampleCount();
         return true;
     }
-    bool AnthemImage::createSampler(){
-        VkSamplerCreateInfo samplerInfo = {};
-        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_TRUE;
-        auto maxAnisotropy =  (this->phyDevice->getDeviceProperties()).limits.maxSamplerAnisotropy;
-        samplerInfo.maxAnisotropy = maxAnisotropy;
-        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
-        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        samplerInfo.mipLodBias = 0.0f;
-        samplerInfo.minLod = 0.0f;
-        if(this->image.mipmapLodLevels > 1){
-            samplerInfo.maxLod = this->image.mipmapLodLevels;
-        }else{
-            samplerInfo.maxLod = 1.0f;
-        }
-        ANTH_LOGI("Sampler Max LOD:",this->image.mipmapLodLevels);
-        this->samplerCreated = true;
-        auto samplerResult = vkCreateSampler(this->logicalDevice->getLogicalDevice(),&samplerInfo,nullptr,&(this->sampler));
-        ANTH_ASSERT(samplerResult==VK_SUCCESS,"Failed to create sampler");
-        return true;
-    }
+
     uint32_t AnthemImage::calculateBufferSize(){
         return this->height*this->width*this->channels;
     }
     const VkImageView* AnthemImage::getImageView() const{
         return AnthemImageContainer::getImageView();
     }
-    const VkSampler* AnthemImage::getSampler() const{
-        ANTH_ASSERT(this->samplerCreated,"Sampler not created");
-        return &(this->sampler);
-    }
+
     bool AnthemImage::specifyUsage(AnthemImageUsage usage){
         this->definedUsage = usage;
         return true;

@@ -169,6 +169,7 @@ namespace Anthem::Core{
         newRenderPass->specifyLogicalDevice(this->logicalDevice.get());
         newRenderPass->specifySwapChain(this->swapChain.get());
         newRenderPass->setDepthBuffer(depthBuffer);
+        
         newRenderPass->createRenderPass(*setupOption);
         this->renderPasses.push_back(newRenderPass);
         *pRenderPass = newRenderPass;
@@ -492,6 +493,21 @@ namespace Anthem::Core{
         this->drawLoopHandler = drawLoopHandler;
         return true;
     }
+    bool AnthemSimpleToyRenderer::createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa){
+        auto depthBuffer = new AnthemDepthBuffer();
+        depthBuffer->specifyLogicalDevice(this->logicalDevice.get());
+        depthBuffer->specifyPhyDevice(this->phyDevice.get());
+        depthBuffer->specifyCommandBuffers(this->commandBuffers.get());
+        depthBuffer->specifySwapChain(this->swapChain.get());
+        if(enableMsaa){
+            depthBuffer->enableMsaa();
+        }
+        depthBuffer->createDepthBufferWithSampler();
+        descPool->addSampler(depthBuffer,bindLoc,this->imageDescPoolIdx);
+        this->depthBuffers.push_back(depthBuffer);
+        *pDepthBuffer = depthBuffer;
+        return true;
+    }
     bool AnthemSimpleToyRenderer::createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa){
         auto depthBuffer = new AnthemDepthBuffer();
         depthBuffer->specifyLogicalDevice(this->logicalDevice.get());
@@ -503,6 +519,7 @@ namespace Anthem::Core{
         }
         depthBuffer->createDepthBuffer();
         this->depthBuffers.push_back(depthBuffer);
+        
         *pDepthBuffer = depthBuffer;
         return true;
     }

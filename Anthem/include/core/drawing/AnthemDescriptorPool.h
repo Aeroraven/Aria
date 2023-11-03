@@ -18,7 +18,7 @@ namespace Anthem::Core{
     };
 
     struct AnthemSamplerDescriptorInfo{
-        AnthemImage* img;
+        AnthemImageContainer* img;
         uint32_t bindLoc;
         VkDescriptorSetLayoutBinding layoutBindingDesc = {};
         VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
@@ -58,7 +58,7 @@ namespace Anthem::Core{
             }
             return true;
         }
-        bool addSampler(AnthemImage* imageSampler,uint32_t bindLoc, uint32_t descPoolId){
+        bool addSampler(AnthemImageContainer* imageSampler,uint32_t bindLoc, uint32_t descPoolId){
             this->samplersDesc.push_back({});
             ANTH_LOGI("Spec Binding Addrs", (long long)(this),"/",this->samplersDesc.size());
             auto& layoutBindingDesc = this->samplersDesc.back().layoutBindingDesc;
@@ -215,7 +215,7 @@ namespace Anthem::Core{
             ANTH_LOGI("Preparing Descriptor Update: Samplers");
             for(int i=0;i<numSets;i++){
                 for(int j=0;j<this->samplersDesc.size();j++){
-                    samplersDesc.at(j).imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    samplersDesc.at(j).imageInfo.imageLayout = samplersDesc.at(j).img->getDesiredLayout();
                     samplersDesc.at(j).imageInfo.imageView = *(samplersDesc.at(j).img->getImageView());
                     samplersDesc.at(j).imageInfo.sampler = *(samplersDesc.at(j).img->getSampler());
 

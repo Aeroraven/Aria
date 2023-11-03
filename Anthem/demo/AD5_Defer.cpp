@@ -112,7 +112,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto proj = Math::AnthemLinAlg::spatialPerspectiveTransform(0.1f,300.0f,-0.1f,0.1f,0.1f,-0.1f);
-    auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
+    auto lookAt = Math::AnthemLinAlg::lookAtTransform(eye,center,up);
     auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.00);
     auto normalMat = Math::AnthemLinAlg::inverse3(local.clipSubmatrixLeftTop<3,3>()).transpose();
 
@@ -337,7 +337,7 @@ void updateOffscrUniform(OffscreenPass& offscr,AnthemSimpleToyRenderer& renderer
     auto center = Math::AnthemVector<float,3>({0.0f,-70.0f,0.0f});
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
-    auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
+    auto lookAt = Math::AnthemLinAlg::lookAtTransform(eye,center,up);
     auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime());
     
     auto modelview = lookAt.multiply(local);

@@ -49,7 +49,7 @@ int main(){
     auto eye = Math::AnthemVector<float,3>({0.0f,0.0f,-0.5f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto proj = Math::AnthemLinAlg::spatialPerspectiveTransform(0.1f,100.0f,-0.1f,0.1f,0.1f,-0.1f);
-    auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
+    auto lookAt = Math::AnthemLinAlg::lookAtTransform(eye,center,up);
     auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*200);
     auto mat = proj.multiply(lookAt.multiply(local));
     mat.columnMajorVectorization(matVal);

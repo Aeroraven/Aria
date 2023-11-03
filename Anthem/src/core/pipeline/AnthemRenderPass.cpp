@@ -148,6 +148,7 @@ namespace Anthem::Core{
         this->setupOption = opt;
 
         //Create Attachment Description
+        ANTH_LOGI("Assertion done");
         std::vector<VkAttachmentDescription> colorAttachmentList = {};
         for(int i=0;i<opt.colorAttachmentFormats.size();i++){
             VkAttachmentDescription colorAttachment = {};
@@ -181,7 +182,7 @@ namespace Anthem::Core{
             }
             colorAttachmentList.push_back(colorAttachment);
         }
-        
+        ANTH_LOGI("www");
         //Create Msaa Attachment
         int colorAttachmentMsaaIndex = -1;
         VkAttachmentDescription colorAttachmentMsaa = {}; 
@@ -194,9 +195,9 @@ namespace Anthem::Core{
             colorAttachmentMsaa.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             colorAttachmentMsaa.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             colorAttachmentMsaa.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-            
         }
+
+        ANTH_LOGI("www");
         for(int i=0;i<opt.colorAttachmentFormats.size();i++){
             this->renderPassAttachments.push_back(colorAttachmentList[i]);
             registerAttachmentType(AT_ARPCA_COLOR);
@@ -211,6 +212,7 @@ namespace Anthem::Core{
         VkAttachmentDescription depthAttachment = {};
         VkAttachmentReference depthAttachmentRef{};
 
+        ANTH_LOGI("www");
         if(this->depthBuffer != nullptr){
             depthAttachment.format = this->depthBuffer->getDepthFormat();
             if(opt.msaaType == AT_ARPMT_MSAA){
@@ -219,11 +221,14 @@ namespace Anthem::Core{
                 depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
             }
             depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            if(opt.renderPassUsage == AT_ARPAA_DEPTH_STENCIL_ONLY_PASS){
+                depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            }
             this->renderPassAttachments.push_back(depthAttachment);
             registerAttachmentType(AT_ARPCA_DEPTH);
 
@@ -236,7 +241,7 @@ namespace Anthem::Core{
 
         //Create Attachment Reference
         std::vector<VkAttachmentReference> colorAttachmentReferenceList = {};
-
+        ANTH_LOGI("www");
         for(int i=0;i<opt.colorAttachmentFormats.size();i++){
             VkAttachmentReference colorAttachmentReference = {};
             colorAttachmentReference.attachment = i;
@@ -290,7 +295,22 @@ namespace Anthem::Core{
             subpassDependency[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
             subpassDependency[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
         }else if(opt.renderPassUsage == AT_ARPAA_DEPTH_STENCIL_ONLY_PASS){
-            
+            subpassDependency.resize(2);
+            subpassDependency[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+            subpassDependency[0].dstSubpass = 0;
+            subpassDependency[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            subpassDependency[0].dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+            subpassDependency[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            subpassDependency[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            subpassDependency[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+            subpassDependency[1].srcSubpass = 0;
+            subpassDependency[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+            subpassDependency[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            subpassDependency[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            subpassDependency[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            subpassDependency[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            subpassDependency[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
         }
 
 

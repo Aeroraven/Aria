@@ -82,7 +82,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto proj = Math::AnthemLinAlg::spatialPerspectiveTransform(0.1f,300.0f,-0.1f,0.1f,0.1f,-0.1f);
-    auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
+    auto lookAt = Math::AnthemLinAlg::lookAtTransform(eye,center,up);
     auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.00);
     auto mat = proj.multiply(lookAt.multiply(local));
     mat.columnMajorVectorization(matVal);
@@ -191,7 +191,7 @@ void updateOffscrUniform(OffscreenPass& offscr,AnthemSimpleToyRenderer& renderer
     auto center = Math::AnthemVector<float,3>({0.0f,-70.0f,0.0f});
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
     auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)M_PI/2.0f,1.0f*rdWinW/rdWinH);
-    auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
+    auto lookAt = Math::AnthemLinAlg::lookAtTransform(eye,center,up);
     auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)M_PI*glfwGetTime()*0.01);
     auto mat = proj.multiply(lookAt.multiply(local));
     mat.columnMajorVectorization(matVal);

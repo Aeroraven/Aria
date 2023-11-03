@@ -35,7 +35,6 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->viewport != nullptr,"Viewport not specified");
         ANTH_ASSERT(this->renderPass != nullptr,"Render pass not specified");
 
-
         //Specify Dynamic States
         this->dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         this->dynamicStateCreateInfo.pNext = nullptr;
@@ -117,7 +116,7 @@ namespace Anthem::Core{
         this->colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentState.size();
         this->colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentState.data();
 
-        ANTH_ASSERT( colorBlendAttachmentState.size()>0, "Color blend attachment should not be empty");
+        //ANTH_ASSERT( colorBlendAttachmentState.size()>0, "Color blend attachment should not be empty");
 
         //Specify Depth & Stencil Info
         this->depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -211,8 +210,12 @@ namespace Anthem::Core{
         this->pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         this->pipelineCreateInfo.pNext = nullptr;
         this->pipelineCreateInfo.flags = 0;
+        
+        ANTH_LOGI("www");
         this->pipelineCreateInfo.stageCount = shaderStageCreateInfo.size();
         this->pipelineCreateInfo.pStages = shaderStageCreateInfo.data();
+
+        ANTH_LOGI("www");
         this->pipelineCreateInfo.pVertexInputState = &(this->vertexInputStateCreateInfo);
         this->pipelineCreateInfo.pInputAssemblyState = &(this->inputAssemblyStateCreateInfo);
         this->pipelineCreateInfo.pTessellationState = nullptr;

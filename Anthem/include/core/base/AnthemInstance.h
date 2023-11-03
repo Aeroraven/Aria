@@ -29,6 +29,6 @@ namespace Anthem::Core{
         bool virtual waitForFramebufferReady();
     private:
         std::vector<const char*> getRequiredExtensions();
-        
+   
     };
 }

@@ -149,7 +149,7 @@ void updateOffscrUniform(StagePass& target ,AnthemSimpleToyRenderer& renderer,in
     auto center = Math::AnthemVector<float,3>({0.0f,-70.0f,0.0f});
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
     auto up = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
-    auto lookAt = Math::AnthemLinAlg::modelLookAtTransform(eye,center,up);
+    auto lookAt = Math::AnthemLinAlg::lookAtTransform(eye,center,up);
     auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.0);
     
     auto modelview = lookAt.multiply(local);

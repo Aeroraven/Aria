@@ -63,13 +63,16 @@ namespace Anthem::Core::Math{
             // x'=Ax+b => -1=AL+b 1=AR+b =>A(L+R)+2b=0 
             // 2=A(R-L) => A=2/(R-L) => 2b+2/(R-L)*(R+L) = 0 
             // b=-(R+L)/(R-L) A=2/(R-L)
+
+            //For Depth -> 0-1
+            //0=AL+b 1=AR+b =>b=-AL=>1=AR-AL=A(R-L)=>A=1/(R-L) => b=-AL = -L/(R-L)
             out[0][0] = 2/(nRight-nLeft);
             out[1][1] = 2/(nTop-nBottom);
-            out[2][2] = 2/(zNear-zFar);
+            out[2][2] = 1/(zFar-zNear);
             out[3][3] = 1;
             out[0][3] = -(nRight+nLeft)/(nRight-nLeft);
             out[1][3] = -(nTop+nBottom)/(nTop-nBottom);
-            out[2][3] = -(zNear+zFar)/(zNear-zFar);
+            out[2][3] = -(zNear)/(zFar-zNear);
             return out;
         }
 
@@ -108,6 +111,26 @@ namespace Anthem::Core::Math{
             return out;
         }
 
+        template<typename T>
+        requires ALinAlgIsNumericTp<T>
+        inline static ALinAlgMat<T,4,4> spatialPerspectiveTransformWithFovAspectNegateY(T zNear, T zFar, T nFovy,T aspect){
+            ALinAlgMat<T,4,4> out;
+            T halfFovy = nFovy/2.0;
+            T nTop = tan(halfFovy) * zNear;
+            T nBottom = -nTop;
+            T nLeft = -aspect*nTop;
+            T nRight = -nLeft;
+            out[0][0] = 2*zNear/(nRight-nLeft);
+            out[1][1] = -2*zNear/(nTop-nBottom);
+            out[2][2] = (zFar+zNear)/(zFar-zNear);
+            out[3][2] = 1;
+            out[2][3] = -2*zFar*zNear/(zFar-zNear);
+            out[3][3] = 0;
+            out[0][2] = -(nRight+nLeft)/(nRight-nLeft);
+            out[1][2] = (nTop+nBottom)/(nTop-nBottom);
+            return out;
+        }
+
 
 
         template<typename T>
@@ -122,7 +145,7 @@ namespace Anthem::Core::Math{
 
         template<typename T>
         requires ALinAlgIsNumericTp<T>
-        inline static ALinAlgMat<T,4,4> modelLookAtTransform(const ALinAlgVec<T,3>& e,const ALinAlgVec<T,3>& c,const ALinAlgVec<T,3>& u){
+        inline static ALinAlgMat<T,4,4> lookAtTransform(const ALinAlgVec<T,3>& e,const ALinAlgVec<T,3>& c,const ALinAlgVec<T,3>& u){
             auto z = (c-e).normalize_();
             auto un = u.normalize();
             auto x = This::cross3(un,z);

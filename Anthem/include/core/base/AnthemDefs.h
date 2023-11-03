@@ -17,6 +17,7 @@
 #include <cstring>
 #include <GLFW/glfw3.h>
 #include <random>
+#include <chrono>
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>

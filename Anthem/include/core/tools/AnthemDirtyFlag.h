@@ -14,7 +14,7 @@ namespace Anthem::Core::Tool{
                 if(updater.has_value()){
                     updater.value()(this->data);
                 }else{
-                    ANTH_LOGE("Cannot find updater");
+                    ANTH_LOGE("");
                 }
                 dirty = false;
             }
@@ -25,7 +25,7 @@ namespace Anthem::Core::Tool{
                 if(updater.has_value()){
                     updater.value()(this->data);
                 }else{
-                    ANTH_LOGE("Cannot find updater");
+                    ANTH_LOGE("");
                 }
                 dirty = false;
             }
