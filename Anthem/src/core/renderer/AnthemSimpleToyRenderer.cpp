@@ -59,7 +59,7 @@ namespace Anthem::Core{
             p->destroyShaderModules(this->logicalDevice.get());
             delete p;
         }
-        ANTH_LOGI("Shaeders Destroyed");
+        ANTH_LOGI("Shaders Destroyed");
 
         for(const auto& p:this->renderPasses){
             p->destroyRenderPass();

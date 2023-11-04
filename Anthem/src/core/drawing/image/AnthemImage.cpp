@@ -102,6 +102,8 @@ namespace Anthem::Core{
     bool AnthemImage::destroyImage(){
         if(this->samplerCreated){
             vkDestroySampler(this->logicalDevice->getLogicalDevice(),this->sampler,nullptr);
+        }else{
+            ANTH_LOGI("Sampler not created, skipping");
         }
         this->destroyImageViewInternal();
         this->destroyImageInternal();

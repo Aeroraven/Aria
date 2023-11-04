@@ -19,11 +19,11 @@ layout(location = 3) in vec4 inMisc;
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec4 outNormal;
 layout(location = 2) out vec4 outPosition;
+layout(location = 3) out vec4 outSpecular;
 
 void main(){
-    outColor = texture(baseColorTex,inTex);
+    outColor = vec4(texture(baseColorTex,inTex).rgb,0.0);
     outNormal = vec4(inNormal,1.0);
     outPosition = vec4(inPos,1.0);
-
-    outColor.a = inMisc.x;
+    outSpecular = vec4(inMisc.x);
 }

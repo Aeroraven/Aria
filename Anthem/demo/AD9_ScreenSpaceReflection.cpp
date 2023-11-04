@@ -45,13 +45,15 @@ struct LoadedMesh{
 struct OffscreenPass{
 
     // Render Targets
-    AnthemDescriptorPool* descPoolColor; //(R,G,B,Specular)
+    AnthemDescriptorPool* descPoolColor; //(R,G,B,X)
     AnthemDescriptorPool* descPoolNormal;
     AnthemDescriptorPool* descPoolPos;
+    AnthemDescriptorPool* descPoolSpecular;
 
     AnthemImage* attachmentColor;
     AnthemImage* attachmentNormal;
     AnthemImage* attachmentPosition;
+    AnthemImage* attachmentSpecular;
 
     AnthemDepthBuffer* depthBuffer;
     AnthemFramebuffer* framebuffer;
@@ -86,10 +88,12 @@ void prepareOffscreenPass(){
     renderer.createDescriptorPool(&offscreenPass.descPoolColor);
     renderer.createDescriptorPool(&offscreenPass.descPoolNormal);
     renderer.createDescriptorPool(&offscreenPass.descPoolPos);
+    renderer.createDescriptorPool(&offscreenPass.descPoolSpecular);
 
     renderer.createColorAttachmentImage(&offscreenPass.attachmentColor,offscreenPass.descPoolColor,0,AT_IF_SRGB_FLOAT32,false);
     renderer.createColorAttachmentImage(&offscreenPass.attachmentNormal,offscreenPass.descPoolNormal,0,AT_IF_SRGB_FLOAT32,false);
     renderer.createColorAttachmentImage(&offscreenPass.attachmentPosition,offscreenPass.descPoolPos,0,AT_IF_SRGB_FLOAT32,false);
+    renderer.createColorAttachmentImage(&offscreenPass.attachmentSpecular,offscreenPass.descPoolSpecular,0,AT_IF_SRGB_FLOAT32,false);
 
     renderer.createDepthBuffer(&offscreenPass.depthBuffer,false);
 
@@ -97,12 +101,13 @@ void prepareOffscreenPass(){
     AnthenRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
-        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 }
+        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 }
     };
     renderer.setupRenderPass(&offscreenPass.pass,&setupOpt,offscreenPass.depthBuffer);
     ANTH_LOGI("Render Pass Created");
 
-    const std::vector<const AnthemImage*> temp = {offscreenPass.attachmentColor,offscreenPass.attachmentNormal,offscreenPass.attachmentPosition};
+    const std::vector<const AnthemImage*> temp = {offscreenPass.attachmentColor,
+        offscreenPass.attachmentNormal,offscreenPass.attachmentPosition,offscreenPass.attachmentSpecular};
     renderer.createSimpleFramebuffer(&offscreenPass.framebuffer,&temp,offscreenPass.pass,offscreenPass.depthBuffer);
 
     AnthemShaderFilePaths shaderFile = {
@@ -173,12 +178,17 @@ void prepareSSRPass(){
         .descSetType = AT_ACDS_SAMPLER,
         .inTypeIndex = 0
     };
+    AnthemDescriptorSetEntry samplerSpecular = {
+        .descPool = offscreenPass.descPoolSpecular,
+        .descSetType = AT_ACDS_SAMPLER,
+        .inTypeIndex = 0
+    };
     AnthemDescriptorSetEntry uniformCam = {
         .descPool = shared.descUniform,
         .descSetType = AT_ACDS_UNIFORM_BUFFER,
         .inTypeIndex = 0
     };
-    std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition,samplerColor,samplerNormal,uniformCam};
+    std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition,samplerColor,samplerNormal,samplerSpecular,uniformCam};
     renderer.createPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
     ANTH_LOGI("Done");
 }
@@ -231,12 +241,17 @@ void recordSSRStage(int i){
         .descSetType = AT_ACDS_SAMPLER,
         .inTypeIndex = 0
     };
+    AnthemDescriptorSetEntry samplerSpecular = {
+        .descPool = offscreenPass.descPoolSpecular,
+        .descSetType = AT_ACDS_SAMPLER,
+        .inTypeIndex = 0
+    };
     AnthemDescriptorSetEntry uniformCam = {
         .descPool = shared.descUniform,
         .descSetType = AT_ACDS_UNIFORM_BUFFER,
         .inTypeIndex = 0
     };
-    std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition,samplerColor,samplerNormal,uniformCam};
+    std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition,samplerColor,samplerNormal,samplerSpecular,uniformCam};
     renderer.drBindVertexBuffer(target.vxBuffer,i);
     renderer.drBindIndexBuffer(target.ixBuffer,i);
     renderer.drBindDescriptorSetCustomized(descSetEntriesRegPipeline,target.pipeline,i);

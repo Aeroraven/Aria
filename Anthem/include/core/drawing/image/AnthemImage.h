@@ -24,10 +24,8 @@ namespace Anthem::Core{
     public AnthemDescriptorPoolReqBase{
     private:
         char* rawImageData = nullptr;
-        bool samplerCreated = false;
         uint32_t width,height,channels;
         AnthemGeneralBufferProp stagingBuffer;
-
         bool msaaOn = false;
         AnthemImageUsage definedUsage;
         AnthemImageFormat desiredFormat = AT_IF_UNDEFINED;
