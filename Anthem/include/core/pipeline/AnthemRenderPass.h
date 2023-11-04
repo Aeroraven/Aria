@@ -54,7 +54,7 @@ namespace Anthem::Core{
             this->createdAttachmentType.push_back(tp);
             defaultClearValue.push_back(VkClearValue());
             if(tp == AT_ARPCA_COLOR || tp == AT_ARPCA_COLOR_MSAA){
-                defaultClearValue.back().color = {{0.0f, 0.0f, 0.0f, 1.0f}};
+                defaultClearValue.back().color = {{0.0f, 0.0f, 0.0f, 0.0f}};
             }else{
                 defaultClearValue.back().depthStencil = {1.0f, 0};
             }

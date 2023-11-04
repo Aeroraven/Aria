@@ -131,6 +131,7 @@ namespace Anthem::Core{
             return true;
         }
         bool appendSamplerDescriptorLayoutIdx(std::vector<VkDescriptorSetLayout>* outRef,int index){
+            ANTH_LOGI("Added sampler layout:",this->samplersDesc.at(index).layout);
             outRef->push_back(this->samplersDesc.at(index).layout);
             return true;
         }

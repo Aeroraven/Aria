@@ -159,7 +159,7 @@ namespace Anthem::Core{
 
         this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
         this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-        ANTH_LOGI("Specified pipeline layout");
+        ANTH_LOGI("Specified pipeline layout",layouts.size());
 
         //Create Layout
         auto result = vkCreatePipelineLayout(this->logicalDevice->getLogicalDevice(),&(this->pipelineLayoutCreateInfo),nullptr,&(this->pipelineLayout));
@@ -210,7 +210,7 @@ namespace Anthem::Core{
         this->pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         this->pipelineCreateInfo.pNext = nullptr;
         this->pipelineCreateInfo.flags = 0;
-        
+
         ANTH_LOGI("www");
         this->pipelineCreateInfo.stageCount = shaderStageCreateInfo.size();
         this->pipelineCreateInfo.pStages = shaderStageCreateInfo.data();
