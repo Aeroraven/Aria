@@ -313,7 +313,7 @@ void prepareSharedComponents(){
     shared.renderer.initialize();
     shared.renderer.exGetWindowSize(rdH,rdW);
     shared.camera.specifyFrustum((float)M_PI/2.0f,0.1f,500.0f,1.0f*rdW/rdH);
-    shared.camera.specifyPosition(0.0f,70.0f,-80.0f);
+    shared.camera.specifyPosition(0.0f,70.0f,-120.0f);
     ANTH_LOGI("Intialization Complete");
 
     // Model Loading

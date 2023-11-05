@@ -22,7 +22,11 @@ layout(location = 2) out vec4 outPosition;
 layout(location = 3) out vec4 outSpecular;
 
 void main(){
-    outColor = vec4(texture(baseColorTex,inTex).rgb,0.0);
+    if(inMisc.y>0.5){
+        outColor = vec4(texture(baseColorTex,inTex).rgb,0.0);
+    }else{
+        outColor = vec4(texture(baseColorTex,inTex).rgb,0.0);
+    }
     outNormal = vec4(inNormal,1.0);
     outPosition = vec4(inPos,1.0);
     outSpecular = vec4(inMisc.x);
