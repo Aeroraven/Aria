@@ -7,6 +7,7 @@ namespace Anthem::Core{
         auto vertexShaderCode = new std::vector<char>();
         auto fragShaderCode = new std::vector<char>();
         auto geomShaderCode = new std::vector<char>();
+        auto compShaderCode = new std::vector<char>();
         ANTH_ASSERT(filename->vertexShader.has_value(),"Vertex shader file path not specified");
 
         this->readFile(filename->vertexShader.value(),vertexShaderCode);
@@ -16,7 +17,9 @@ namespace Anthem::Core{
         if(filename->geometryShader.has_value()){
             this->readFile(filename->geometryShader.value(),geomShaderCode);
         }
-
+        if(filename->computeShader.has_value()){
+            this->readFile(filename->computeShader.value(),compShaderCode);
+        }
 
         //Specify Shader Module
         ANTH_LOGI("Creating Shader Module");
@@ -28,11 +31,15 @@ namespace Anthem::Core{
             this->createSingleShaderModule(device,fragShaderCode,&(this->shaderModules->fragmentShaderModule));
             ANTH_LOGI("Fragment shader loaded");
         }
-
         if(filename->geometryShader.has_value()){
             this->shaderModules->geometryShaderModule = std::make_optional<VkShaderModule>();
             this->createSingleShaderModule(device,geomShaderCode,&(this->shaderModules->geometryShaderModule));
             ANTH_LOGI("Geometry shader loaded");
+        }
+        if(filename->computeShader.has_value()){
+            this->shaderModules->computeShaderModule = std::make_optional<VkShaderModule>();
+            this->createSingleShaderModule(device,compShaderCode,&(this->shaderModules->computeShaderModule));
+            ANTH_LOGI("Compute shader loaded");
         }
         this->shaderModules->vertexShaderModuleCreated = true;
         return true;
@@ -56,6 +63,9 @@ namespace Anthem::Core{
         }
         if(this->shaderModules->geometryShaderModule.has_value()){
             vkDestroyShaderModule(device->getLogicalDevice(),this->shaderModules->geometryShaderModule.value(),nullptr);
+        }
+        if(this->shaderModules->computeShaderModule.has_value()){
+            vkDestroyShaderModule(device->getLogicalDevice(),this->shaderModules->computeShaderModule.value(),nullptr);
         }
         return true;
     }
@@ -85,6 +95,15 @@ namespace Anthem::Core{
             geometryShaderStageCreateInfo.module = this->shaderModules->geometryShaderModule.value();
             geometryShaderStageCreateInfo.pName = "main";
             shaderStageCreateInfo->push_back(geometryShaderStageCreateInfo);
+        }
+
+        if(this->shaderModules->computeShaderModule.has_value()){
+            VkPipelineShaderStageCreateInfo computeShaderStageCreateInfo = {};
+            computeShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            computeShaderStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+            computeShaderStageCreateInfo.module = this->shaderModules->computeShaderModule.value();
+            computeShaderStageCreateInfo.pName = "main";
+            shaderStageCreateInfo->push_back(computeShaderStageCreateInfo);
         }
         return true;
     }

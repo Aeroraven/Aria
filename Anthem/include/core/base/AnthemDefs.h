@@ -67,6 +67,9 @@ namespace Anthem::Core::TmplDefs{
     template<class T,class... U>
     concept ATpdAllAre = (std::same_as<T,U> && ...);
 
+    template<typename T,T d,T x,T y>
+    concept ATpdValueInRange = (d>=x) && (d<=y);
+
     //Attributes Templates
     template<class SrcTp,int SrcSz, class DstTp, int DstSz>
     concept ATpdIsdAttrEquals = (std::same_as<SrcTp,DstTp> && (SrcSz==DstSz));

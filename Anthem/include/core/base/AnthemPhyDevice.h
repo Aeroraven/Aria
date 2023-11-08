@@ -5,6 +5,7 @@
 namespace Anthem::Core{
     struct AnthemPhyQueueFamilyIdx{
         std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> computeFamily;
         std::optional<uint32_t> presentFamily;
     };
 
@@ -26,6 +27,7 @@ namespace Anthem::Core{
         VkPhysicalDeviceFeatures virtual getDeviceFeatures();
         VkPhysicalDeviceProperties virtual getDeviceProperties() const;
         std::optional<uint32_t> virtual getPhyQueueGraphicsFamilyIndice() const;
+        std::optional<uint32_t> virtual getPhyQueueComputeFamilyIndice() const;
         std::optional<uint32_t> virtual getPhyQueuePresentFamilyIndice() const;
         const std::vector<const char*>* const getRequiredDevSupportedExts() const;
         bool virtual destroyPhyDevice(VkInstance* instance);

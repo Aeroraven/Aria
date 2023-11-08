@@ -407,7 +407,16 @@ namespace Anthem::AcStage::Usability{
             JUDGE_EXPRESSION((std::is_same_v<decltype(pp2),const int* const>));
         END_EXAMPLE();
 
-        
+        BEGIN_EXAMPLE("Type Alias & Alias Template III: using");
+            using IntPtr = int*;
+            int p = 19;
+            int q = 25;
+            const IntPtr pp2 = &q;
+            
+            JUDGE_EXPRESSION((std::is_same_v<decltype(pp2),const int*>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(pp2),int* const>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(pp2),const int* const>));
+        END_EXAMPLE();
 
     }
 }

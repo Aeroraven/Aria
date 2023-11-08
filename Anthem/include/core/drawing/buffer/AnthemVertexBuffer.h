@@ -99,6 +99,7 @@ namespace Anthem::Core{
             std::vector<void*> dataPtrs = {data.data()...};
 
             //Memcpy
+            ANTH_TODO("Bug");
             auto offset = idx*this->singleVertexSize;
             auto dataOffset = 0;
             for(auto i=0;i<sizeof...(AttrSz);i++){

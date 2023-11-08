@@ -29,6 +29,10 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->physicalDevice != VK_NULL_HANDLE,"Physical device not specified");
         return this->queueFamilyIdx.graphicsFamily;
     }
+    std::optional<uint32_t> AnthemPhyDevice::getPhyQueueComputeFamilyIndice() const{
+        ANTH_ASSERT(this->physicalDevice != VK_NULL_HANDLE,"Physical device not specified");
+        return this->queueFamilyIdx.computeFamily;
+    }
     std::optional<uint32_t> AnthemPhyDevice::getPhyQueuePresentFamilyIndice() const{
         ANTH_ASSERT(this->physicalDevice != VK_NULL_HANDLE,"Physical device not specified");
         return this->queueFamilyIdx.presentFamily;

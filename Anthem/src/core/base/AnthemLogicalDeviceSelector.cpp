@@ -46,6 +46,7 @@ namespace Anthem::Core{
     bool AnthemLogicalDeviceSelector::retrieveQueues(){
         vkGetDeviceQueue(logicalDevice, phyDevice->getPhyQueueGraphicsFamilyIndice().value(), 0, &graphicsQueue);
         vkGetDeviceQueue(logicalDevice, phyDevice->getPhyQueuePresentFamilyIndice().value(), 0, &presentationQueue);
+        vkGetDeviceQueue(logicalDevice, phyDevice->getPhyQueueComputeFamilyIndice().value(), 0, &computeQueue);
         return true;
     }
     bool AnthemLogicalDeviceSelector::registerQueueCreateInfo(std::optional<uint32_t> familyIdx,float priority){
