@@ -22,7 +22,7 @@ namespace Anthem::Core{
         vkGetPhysicalDeviceProperties(device,&this->deviceProperties);
         this->queueFamilyIdx.graphicsFamily = queueFamilyIdx->graphicsFamily;
         this->queueFamilyIdx.presentFamily = queueFamilyIdx->presentFamily;
-
+        this->queueFamilyIdx.computeFamily = queueFamilyIdx->computeFamily;
         return true;
     }
     std::optional<uint32_t> AnthemPhyDevice::getPhyQueueGraphicsFamilyIndice() const{

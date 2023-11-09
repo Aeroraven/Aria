@@ -48,7 +48,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemShaderModule::createSingleShaderModule(AnthemLogicalDevice* device,std::vector<char>* shaderCode,std::optional<VkShaderModule>* shaderModule){
-        ANTH_ASSERT(!shaderModule->has_value(),"Invalid Shader Module");
+        ANTH_ASSERT(shaderModule->has_value(),"Invalid Shader Module");
         VkShaderModuleCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         createInfo.codeSize = shaderCode->size();

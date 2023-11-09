@@ -8,7 +8,7 @@ This repository is here for **PERSONAL PURPOSE**. It serves as the record for th
 
 ### 1. Native Examples
 
-Native examples use Vulkan as backend. Use following instruction to build the project. Note that your compiler should be `g++` and at least supports partial `C++20` standard. `$SELECTED_TARGETS` can be chosen from `demo` subdirectory.
+Native examples use Vulkan as backend. Use following instruction to build the project. Note that your compiler should be `g++` or `msvc` and at least supports partial `C++20` standard. `$SELECTED_TARGETS` can be chosen from `demo` subdirectory.
 
 Before build the project, install `glfw3` and `Vulkan SDK`. Then use `cmake` to build the project.
 
@@ -18,7 +18,9 @@ cmake -S . -B ./build
 cmake --build ./build --config Debug --target $SELECTED_TARGETS
 ```
 
-Only supports `gcc` compilers (Only `mingw-g++` is tested). (MSVC support might be considered later, for VS is too large.)
+Only supports `g++` and `msvc` compilers. (Other compilers like `clang` will not be taken into consideration)
+
+Edit `CMakeLists.txt` before changing compiler.
 
 ### 2. Browser-based Examples
 
