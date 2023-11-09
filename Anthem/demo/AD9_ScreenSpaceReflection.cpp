@@ -312,7 +312,7 @@ void prepareSharedComponents(){
     shared.renderer.setConfig(&shared.config);
     shared.renderer.initialize();
     shared.renderer.exGetWindowSize(rdH,rdW);
-    shared.camera.specifyFrustum((float)M_PI/2.0f,0.1f,500.0f,1.0f*rdW/rdH);
+    shared.camera.specifyFrustum((float)AT_PI/2.0f,0.1f,500.0f,1.0f*rdW/rdH);
     shared.camera.specifyPosition(0.0f,70.0f,-120.0f);
     ANTH_LOGI("Intialization Complete");
 
@@ -334,9 +334,9 @@ void prepareSharedComponents(){
         renderer.createVertexBuffer(&meshes.vxBuffers[chosenMesh]);
         float dfz = 0.1f;
         float dpz = 1.0f;
-        int numVertices = gltfResult.at(chosenMesh).positions.size()/3;
+        uint32_t numVertices = static_cast<uint32_t>(gltfResult.at(chosenMesh).positions.size())/3;
         meshes.vxBuffers[chosenMesh]->setTotalVertices(numVertices);
-        for(int i=0;i<numVertices;i++){
+        for(uint32_t i=0;i<numVertices;i++){
             meshes.vxBuffers[chosenMesh]->insertData(i,
                 {gltfResult.at(chosenMesh).positions.at(i*3),gltfResult.at(chosenMesh).positions.at(i*3+1),gltfResult.at(chosenMesh).positions.at(i*3+2)},
                 {gltfResult.at(chosenMesh).normals.at(i*3),gltfResult.at(chosenMesh).normals.at(i*3+1),gltfResult.at(chosenMesh).normals.at(i*3+2)},
@@ -417,7 +417,7 @@ int main(){
         updateOffscrUniform(currentFrame);
         uint32_t imgIdx;
         shared.renderer.drPrepareFrame(currentFrame,&imgIdx);
-        shared.renderer.drSubmitBufferPrimaryCall(currentFrame);
+        shared.renderer.drSubmitBufferPrimaryCall(currentFrame, currentFrame);
         shared.renderer.drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

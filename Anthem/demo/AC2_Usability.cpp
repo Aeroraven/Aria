@@ -547,8 +547,9 @@ namespace Anthem::AcStage::Usability{
         END_EXAMPLE();
 
         BEGIN_EXAMPLE("default & delete");
-            CatType1 cat1;
-            CatType1 cat2;
+
+            [[maybe_unused]] CatType1 cat1;
+            [[maybe_unused]] CatType1 cat2;
             //cat1 = cat2; // Illegal
         END_EXAMPLE();
 

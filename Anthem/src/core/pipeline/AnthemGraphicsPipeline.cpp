@@ -39,7 +39,7 @@ namespace Anthem::Core{
         this->dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         this->dynamicStateCreateInfo.pNext = nullptr;
         this->dynamicStateCreateInfo.flags = 0;
-        this->dynamicStateCreateInfo.dynamicStateCount = this->reqiredDynamicStates.size();
+        this->dynamicStateCreateInfo.dynamicStateCount = static_cast<uint32_t>(this->reqiredDynamicStates.size());
         this->dynamicStateCreateInfo.pDynamicStates = this->reqiredDynamicStates.data();
         
         //Specify Vertex Shader Input Info
@@ -103,7 +103,7 @@ namespace Anthem::Core{
         //Specify Color Blending Info
         auto numColorAttachments = renderPass->getFilteredAttachmentCnt(AT_ARPCA_COLOR);
         this->colorBlendAttachmentState.resize(numColorAttachments);
-        for(int i=0;i<numColorAttachments;i++){
+        for(uint32_t i=0;i<numColorAttachments;i++){
              this->colorBlendAttachmentState[i].blendEnable = VK_FALSE;
              this->colorBlendAttachmentState[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         }
@@ -113,7 +113,7 @@ namespace Anthem::Core{
         this->colorBlendStateCreateInfo.pNext = nullptr;
         this->colorBlendStateCreateInfo.flags = 0;
         this->colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
-        this->colorBlendStateCreateInfo.attachmentCount = colorBlendAttachmentState.size();
+        this->colorBlendStateCreateInfo.attachmentCount = static_cast<uint32_t>(colorBlendAttachmentState.size());
         this->colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentState.data();
 
         //ANTH_ASSERT( colorBlendAttachmentState.size()>0, "Color blend attachment should not be empty");
@@ -158,7 +158,7 @@ namespace Anthem::Core{
         }
 
         this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-        this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+        this->pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
         ANTH_LOGI("Specified pipeline layout",layouts.size());
 
         //Create Layout
@@ -183,7 +183,7 @@ namespace Anthem::Core{
             ANTH_LOGI("Layouts Are:",(long long)(x));
         }
         this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-        this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+        this->pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
         ANTH_LOGI("Specified pipeline layout");
         
         //Create Layout
@@ -212,7 +212,7 @@ namespace Anthem::Core{
         this->pipelineCreateInfo.flags = 0;
 
         ANTH_LOGI("www");
-        this->pipelineCreateInfo.stageCount = shaderStageCreateInfo.size();
+        this->pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStageCreateInfo.size());
         this->pipelineCreateInfo.pStages = shaderStageCreateInfo.data();
 
         ANTH_LOGI("www");

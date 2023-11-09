@@ -40,7 +40,7 @@ namespace Anthem::Core{
             ANTH_LOGE("Failed to allocate command buffer");
             return false;
         }
-        *bufIdx = this->commandBuffer.size()-1;
+        *bufIdx = static_cast<uint32_t>(this->commandBuffer.size())-1;
         ANTH_LOGV("Command buffer allocated");
         return true;
     }

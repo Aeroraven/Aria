@@ -58,7 +58,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
         for(int i=0;i<numVertices;i++){
             offscreen.vxBuffers[chosenMesh]->insertData(i,
                 {gltfResult.at(chosenMesh).positions.at(i*3),-gltfResult.at(chosenMesh).positions.at(i*3+1),gltfResult.at(chosenMesh).positions.at(i*3+2)},
-                {0.05, 0.0, 0.0},
+                {0.05f, 0.0f, 0.0f},
                 {gltfResult.at(chosenMesh).texCoords.at(i*2),gltfResult.at(chosenMesh).texCoords.at(i*2+1)});
         }
         ANTH_LOGI("Vertex Buffer Created");
@@ -190,9 +190,9 @@ void updateOffscrUniform(OffscreenPass& offscr,AnthemSimpleToyRenderer& renderer
     auto axis = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto center = Math::AnthemVector<float,3>({0.0f,-70.0f,0.0f});
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
-    auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)M_PI/2.0f,1.0f*rdWinW/rdWinH);
+    auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)AT_PI/2.0f,1.0f*rdWinW/rdWinH);
     auto lookAt = Math::AnthemLinAlg::lookAtTransform(eye,center,up);
-    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)M_PI*glfwGetTime()*0.01);
+    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)AT_PI*glfwGetTime()*0.01);
     auto mat = proj.multiply(lookAt.multiply(local));
     mat.columnMajorVectorization(matVal);
     offscr.ubuf->specifyUniforms(color,matVal);
@@ -228,7 +228,7 @@ int main(){
         updateOffscrUniform(offscr,*renderer.get(),currentFrame);
         uint32_t imgIdx;
         renderer->drPrepareFrame(currentFrame,&imgIdx);
-        renderer->drSubmitBufferPrimaryCall(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame, currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

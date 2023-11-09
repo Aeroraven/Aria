@@ -124,8 +124,8 @@ namespace Anthem::Core{
             std::array<IdxType,uniformElemCnt> alignReqs;
             int cIdx = 0;
             int curOffset = 0;
-            for(int i=0;i<dynVarStart;i++){
-                for(int j=0;j<arrayElements.at(i);j++){
+            for(IdxType i=0;i<dynVarStart;i++){
+                for(IdxType j=0;j<arrayElements.at(i);j++){
                     auto diff = curOffset%alignRequirement.at(i);
                     if(diff!=0) curOffset += alignRequirement.at(i)-diff;
                     alignReqs[cIdx++] = static_cast<IdxType>(curOffset);

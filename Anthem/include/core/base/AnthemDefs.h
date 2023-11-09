@@ -33,6 +33,14 @@
 #define ANTH_UNSAFE_PTR(T) T*
 #define ANTH_MAKE_UNSAFE(T) new T
 
+// Compiler Config
+#ifdef _MSC_VER
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#endif
+
+
 // Math Constants
 #define AT_PI 3.1415926535897934384626
 

@@ -38,7 +38,7 @@ namespace Anthem::Core{
             info->sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
             info->vertexBindingDescriptionCount = 1;
             info->pVertexBindingDescriptions = &vertexInputBindingDescription;
-            info->vertexAttributeDescriptionCount = vertexInputAttributeDescription.size();
+            info->vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributeDescription.size());
             info->pVertexAttributeDescriptions = vertexInputAttributeDescription.data();
             return true;
         }

@@ -47,7 +47,7 @@ namespace Anthem::Core{
         }
 
         this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-        this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
+        this->pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
         ANTH_LOGI("Specified pipeline layout",layouts.size());
 
         //Create Layout

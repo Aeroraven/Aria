@@ -23,7 +23,7 @@ namespace Anthem::Core{
 
     protected:
         uint32_t calculateBufferSize() override{
-            return this->getBufferSize();
+            return static_cast<uint32_t>(this->getBufferSize());
         }
 
     public:
@@ -33,7 +33,7 @@ namespace Anthem::Core{
         size_t virtual getBufferSize() = 0;
         bool createBuffer(uint32_t numCopies){
             uniformBuffers.clear();
-            for(int i=0;i<numCopies;i++){
+            for(uint32_t i=0;i<numCopies;i++){
                 uniformBuffers.push_back({});
                 this->createBufferInternal(&(uniformBuffers.at(i)),VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
                 vkMapMemory(this->logicalDevice->getLogicalDevice(),uniformBuffers.at(i).bufferMem,0,this->getBufferSize(),0,&(uniformBuffers.at(i).mappedMem));
@@ -113,8 +113,8 @@ namespace Anthem::Core{
         }
         bool calculatingOffset(){
             int curOffset = 0;
-            for(int i=0;i<sizeof...(UniTp);i++){
-                for(int j=0;j<uniArraySize.at(i);j++){
+            for(uint32_t i=0;i<sizeof...(UniTp);i++){
+                for(uint32_t j=0;j<uniArraySize.at(i);j++){
                     int seqLength = uniVecSize.at(i)*((uniVecSize.at(i)-1)*(uniRanks.at(i)==2)+1)*uniTpSizeOf.at(i);
                     int reqAlign = uniTpSizeOf.at(i);
                     if(uniVecSize.at(i)==1){ //Scalar
@@ -163,8 +163,8 @@ namespace Anthem::Core{
         bool specifyUniforms(UniTp*... variables){
             std::array<void*,sizeof...(UniTp)> voidPtrs = {variables...};
             int idx = 0;
-            for(int i=0;i<sizeof...(UniTp);i++){
-                for(int j=0;j<uniArraySize.at(i);j++){
+            for(uint32_t i=0;i<sizeof...(UniTp);i++){
+                for(uint32_t j=0;j<uniArraySize.at(i);j++){
                     int seqLength = uniVecSize.at(i)*((uniVecSize.at(i)-1)*(uniRanks.at(i)==2)+1)*uniTpSizeOf.at(i);
                     char* vdptr = ((char*)voidPtrs.at(i))+seqLength*j;
                     memcpy(rawBuffer+alignOffsets.at(idx),vdptr,variableSize.at(idx));

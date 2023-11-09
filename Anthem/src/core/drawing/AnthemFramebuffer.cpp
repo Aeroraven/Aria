@@ -25,7 +25,7 @@ namespace Anthem::Core{
             colorImageHeight = (*colorImages)[0]->getHeight();
         }
 
-        for(int i=0;i<totalRenderPassAttachments;i++){
+        for(uint32_t i=0;i<totalRenderPassAttachments;i++){
             ANTH_LOGI("Proc Attachment ",i);
             auto attType = renderPass->getAttachmentType(i);
             if(attType == AT_ARPCA_COLOR || attType == AT_ARPCA_COLOR_MSAA){
@@ -42,7 +42,7 @@ namespace Anthem::Core{
         VkFramebufferCreateInfo framebufferInfo = {};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = *(renderPass->getRenderPass());
-        framebufferInfo.attachmentCount = framebufferAttachment.size();
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(framebufferAttachment.size());
         framebufferInfo.pAttachments = framebufferAttachment.data();
         framebufferInfo.width = colorImageWid;
         framebufferInfo.height = colorImageHeight;
@@ -67,7 +67,7 @@ namespace Anthem::Core{
         VkFramebufferCreateInfo framebufferInfo = {};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         framebufferInfo.renderPass = *(renderPass->getRenderPass());
-        framebufferInfo.attachmentCount = attachments.size();
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         framebufferInfo.pAttachments = attachments.data();
         framebufferInfo.width = width;
         framebufferInfo.height = height;

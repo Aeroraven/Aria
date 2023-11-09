@@ -4,7 +4,7 @@ project(Anthem)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -fmodules-ts")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os")
 
 set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -28,6 +28,10 @@ file(GLOB_RECURSE SOURCE_1 "src/*.cpp")
 file(GLOB_RECURSE SOURCE_2 "include/external_ref/*.h")
 
 file(GLOB SOURCE_STAGES "demo/*.cpp")
+
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
 
 foreach( SRC_FILE_NAME ${SOURCE_STAGES} )
     get_filename_component( SRC_FILE_NAME_SHORT ${SRC_FILE_NAME} NAME_WE )

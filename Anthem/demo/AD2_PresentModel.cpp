@@ -46,7 +46,7 @@ int main(){
         for(int i=0;i<numVertices;i++){
             vxBuffers[chosenMesh]->insertData(i,
                 {gltfResult.at(chosenMesh).positions.at(i*3),-gltfResult.at(chosenMesh).positions.at(i*3+1),gltfResult.at(chosenMesh).positions.at(i*3+2)},
-                {0.05, 0.0, 0.0},
+                {0.05f, 0.0f, 0.0f},
                 {gltfResult.at(chosenMesh).texCoords.at(i*2),gltfResult.at(chosenMesh).texCoords.at(i*2+1)});
         }
         ANTH_LOGI("Vertex Buffer Created");
@@ -175,8 +175,8 @@ int main(){
     renderer->setDrawFunction([&](){
         int rdWinH,rdWinW;
         renderer->exGetWindowSize(rdWinH,rdWinW);
-        auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)M_PI/2.0f,1.0f*rdWinW/rdWinH);
-        auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)M_PI*glfwGetTime());
+        auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)AT_PI/2.0f,1.0f*rdWinW/rdWinH);
+        auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)AT_PI*glfwGetTime());
         auto mat = proj.multiply(lookAt.multiply(local));
         mat.columnMajorVectorization(matVal);
         ubuf->specifyUniforms(color,matVal);
@@ -185,7 +185,7 @@ int main(){
         uint32_t imgIdx;
         renderer->drPrepareFrame(currentFrame,&imgIdx);
 
-        renderer->drSubmitBufferPrimaryCall(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame, currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         
         currentFrame++;

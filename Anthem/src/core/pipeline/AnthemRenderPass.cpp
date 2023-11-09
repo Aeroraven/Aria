@@ -14,7 +14,7 @@ namespace Anthem::Core{
         return ret;
     }
     const uint32_t AnthemRenderPass::getTotalAttachmentCnt() const{
-        return this->createdAttachmentType.size();
+        return static_cast<uint32_t>(this->createdAttachmentType.size());
     }
     const AnthemRenderPassCreatedAttachmentType AnthemRenderPass::getAttachmentType(uint32_t idx) const{
         return this->createdAttachmentType[idx];
@@ -93,7 +93,7 @@ namespace Anthem::Core{
         //Create Subpass
         VkSubpassDescription subpass = {};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = this->colorAttachmentReferences.size();
+        subpass.colorAttachmentCount = static_cast<uint32_t>(this->colorAttachmentReferences.size());
         subpass.pColorAttachments = this->colorAttachmentReferences.data();
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
@@ -109,7 +109,7 @@ namespace Anthem::Core{
         //Create Render Pass
         VkRenderPassCreateInfo renderPassCreateInfo = {};
         renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassCreateInfo.attachmentCount = this->renderPassAttachments.size();
+        renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(this->renderPassAttachments.size());
         renderPassCreateInfo.pAttachments = this->renderPassAttachments.data();
         renderPassCreateInfo.subpassCount = 1;
         renderPassCreateInfo.pSubpasses = &subpass;
@@ -205,7 +205,7 @@ namespace Anthem::Core{
         if(opt.msaaType == AT_ARPMT_MSAA){
             this->renderPassAttachments.push_back(colorAttachmentMsaa);
             registerAttachmentType(AT_ARPCA_COLOR_MSAA);
-            colorAttachmentMsaaIndex = this->renderPassAttachments.size()-1;
+            colorAttachmentMsaaIndex = static_cast<uint32_t>(this->renderPassAttachments.size())-1;
         }
 
         //Create Depth Attachment Description
@@ -232,7 +232,7 @@ namespace Anthem::Core{
             this->renderPassAttachments.push_back(depthAttachment);
             registerAttachmentType(AT_ARPCA_DEPTH);
 
-            depthAttachmentRef.attachment = this->renderPassAttachments.size()-1;
+            depthAttachmentRef.attachment = static_cast<uint32_t>(this->renderPassAttachments.size())-1;
             depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         }
         else{
@@ -257,7 +257,7 @@ namespace Anthem::Core{
         VkSubpassDescription subpass = {};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         if(opt.msaaType == AT_ARPMT_NO_MSAA){
-            subpass.colorAttachmentCount = colorAttachmentReferenceList.size();
+            subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentReferenceList.size());
             subpass.pColorAttachments = colorAttachmentReferenceList.data();
         }else{
             subpass.colorAttachmentCount = 1;
@@ -317,11 +317,11 @@ namespace Anthem::Core{
         //Create Render Pass
         VkRenderPassCreateInfo renderPassCreateInfo = {};
         renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassCreateInfo.attachmentCount = this->renderPassAttachments.size();
+        renderPassCreateInfo.attachmentCount = static_cast<uint32_t>(this->renderPassAttachments.size());
         renderPassCreateInfo.pAttachments = this->renderPassAttachments.data();
         renderPassCreateInfo.subpassCount = 1;
         renderPassCreateInfo.pSubpasses = &subpass;
-        renderPassCreateInfo.dependencyCount = subpassDependency.size();
+        renderPassCreateInfo.dependencyCount = static_cast<uint32_t>(subpassDependency.size());
         renderPassCreateInfo.pDependencies = subpassDependency.data();
 
         auto result = vkCreateRenderPass(this->logicalDevice->getLogicalDevice(),&renderPassCreateInfo,nullptr,&(this->renderPass));

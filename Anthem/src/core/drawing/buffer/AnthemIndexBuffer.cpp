@@ -14,12 +14,12 @@ namespace Anthem::Core{
         return true;
     }
     uint32_t AnthemIndexBuffer::calculateBufferSize(){
-        return this->indices.size()*sizeof(uint32_t);
+        return static_cast<uint32_t>(this->indices.size())*sizeof(uint32_t);
     }
     void AnthemIndexBuffer::getRawBufferData(void** dataDst){
         *dataDst = (void*)this->indices.data();
     }
-    size_t AnthemIndexBuffer::getIndexCount(){
-        return this->indices.size();
+    uint32_t AnthemIndexBuffer::getIndexCount(){
+        return static_cast<uint32_t>(this->indices.size());
     }
 }

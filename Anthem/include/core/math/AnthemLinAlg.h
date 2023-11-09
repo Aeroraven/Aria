@@ -95,7 +95,7 @@ namespace Anthem::Core::Math{
         requires ALinAlgIsNumericTp<T>
         inline static ALinAlgMat<T,4,4> spatialPerspectiveTransformWithFovAspect(T zNear, T zFar, T nFovy,T aspect){
             ALinAlgMat<T,4,4> out;
-            T halfFovy = nFovy/2.0;
+            T halfFovy = nFovy/static_cast<T>(2.0);
             T nTop = tan(halfFovy) * zNear;
             T nBottom = -nTop;
             T nLeft = -aspect*nTop;
@@ -117,7 +117,7 @@ namespace Anthem::Core::Math{
         requires ALinAlgIsNumericTp<T>
         inline static ALinAlgMat<T,4,4> spatialPerspectiveTransformWithFovAspectNegateY(T zNear, T zFar, T nFovy,T aspect){
             ALinAlgMat<T,4,4> out;
-            T halfFovy = nFovy/2.0;
+            T halfFovy = nFovy/static_cast<T>(2.0);
             T nTop = tan(halfFovy) * zNear;
             T nBottom = -nTop;
             T nLeft = -aspect*nTop;
@@ -186,8 +186,8 @@ namespace Anthem::Core::Math{
         requires ALinAlgIsNumericTp<T> && ALinAlgIsNumericTp<U>
         inline static ALinAlgMat<T,4,4> axisAngleRotationTransform3(const ALinAlgVec<T,3>& axis, U rad){
             auto axis_n = axis.normalize();
-            auto c = std::cos(rad);
-            auto s = std::sin(rad);
+            auto c = static_cast<T>(std::cos(rad));
+            auto s = static_cast<T>(std::sin(rad));
             auto t = 1-c;
             ALinAlgMat<T,4,4> ret;
             ret[0][0] = t*axis_n[0]*axis_n[0]+c;

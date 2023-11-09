@@ -26,10 +26,10 @@ int main(){
     float dfz = 0.1f;
     float dpz = 0.5f;
     for(int T=0;T<8;T+=4){
-        vxBuffer->insertData(0+T,{-0.5f+T*dfz, -0.5f+T*dfz, 1.0f+T*dpz},{0.05, 0.0, 0.0},{1.0f, 0.0f});
-        vxBuffer->insertData(1+T,{0.5f+T*dfz, -0.5f+T*dfz, 1.0f+T*dpz},{0.0, 0.05, 0.0},{0.0f, 0.0f});
-        vxBuffer->insertData(2+T,{0.5f+T*dfz, 0.5f+T*dfz, 1.0f+T*dpz},{0.0, 0.0, 0.05},{0.0f, 1.0f});
-        vxBuffer->insertData(3+T,{-0.5f+T*dfz, 0.5f+T*dfz, 1.0f+T*dpz},{0.05, 0.05, 0.05},{1.0f, 1.0f});
+        vxBuffer->insertData(0+T,{-0.5f+T*dfz, -0.5f+T*dfz, 1.0f+T*dpz},{0.05f, 0.0f, 0.0f},{1.0f, 0.0f});
+        vxBuffer->insertData(1+T,{0.5f+T*dfz, -0.5f+T*dfz, 1.0f+T*dpz},{0.0f, 0.05f, 0.0f},{0.0f, 0.0f});
+        vxBuffer->insertData(2+T,{0.5f+T*dfz, 0.5f+T*dfz, 1.0f+T*dpz},{0.0f, 0.0f, 0.05f},{0.0f, 1.0f});
+        vxBuffer->insertData(3+T,{-0.5f+T*dfz, 0.5f+T*dfz, 1.0f+T*dpz},{0.05f, 0.05f, 0.05f},{1.0f, 1.0f});
     }
     ANTH_LOGI("Vertex Buffer Created");
     
@@ -116,11 +116,11 @@ int main(){
         renderer->drBindGraphicsPipeline(pipeline,currentFrame);
         renderer->drBindVertexBuffer(vxBuffer,currentFrame);
         renderer->drBindIndexBuffer(ixBuffer,currentFrame);
-        renderer->drBindDescriptorSet(descPool,pipeline,currentFrame);
+        renderer->drBindDescriptorSet(descPool,pipeline,currentFrame,currentFrame);
         renderer->drDraw(ixBuffer->getIndexCount(),currentFrame);
         renderer->drEndRenderPass(currentFrame);
         renderer->drEndCommandRecording(currentFrame);
-        renderer->drSubmitBufferPrimaryCall(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame, currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         
         currentFrame++;

@@ -292,7 +292,7 @@ int main(){
         constexpr int h = 8;
         feedCat(g);
         feedCat(static_cast<const int>(g));
-        feedCat(reinterpret_cast<const int>(g));
+        //feedCat(reinterpret_cast<const int>(g)); illegal
         feedCat(const_cast<const int&>(g));
         feedCat(const_cast<const int&&>(g));
         feedCat(std::move(const_cast<const int&>(g)));

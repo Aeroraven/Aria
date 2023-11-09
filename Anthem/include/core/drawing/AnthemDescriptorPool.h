@@ -146,7 +146,7 @@ namespace Anthem::Core{
             ANTH_LOGI("Get Buffer Attrs");
             this->uniformBuffers.back().bindLoc = bindLoc;
             this->uniformBuffers.back().buffer = uniformBuffer->getBuffers();
-            this->uniformBuffers.back().size = uniformBuffer->getBufferSize();
+            this->uniformBuffers.back().size = static_cast<uint32_t>(uniformBuffer->getBufferSize());
             this->uniformBuffers.back().descPoolId = descPoolId;
 
             ANTH_LOGI("Start Spec Info");
@@ -234,8 +234,8 @@ namespace Anthem::Core{
                 }
             }
             ANTH_LOGI("Preparing Descriptor Update: SSBO");
-            for(int i=0;i<numSets;i++){
-                for(int j=0;j<this->ssboDesc.size();j++){
+            for(uint32_t i=0;i<numSets;i++){
+                for(uint32_t j=0;j<static_cast<uint32_t>(this->ssboDesc.size());j++){
                     ANTH_LOGI("Buffer Copies =",uniformBuffers.at(j).buffer->size());
                     ssboDesc.at(j).bufferInfo.buffer = ssboDesc.at(j).buffer->at(i).buffer;
                     ssboDesc.at(j).bufferInfo.offset = 0;
@@ -256,8 +256,10 @@ namespace Anthem::Core{
                     descWriteSsbo.push_back(descCp);
                 }
                 
-                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(),descWriteSsbo.size(),descWriteSsbo.data(),0,nullptr);
+                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteSsbo.size()),descWriteSsbo.data(),0,nullptr);
             }
+
+            return true;
         }
         bool createDescriptorSet(uint32_t numSets){
             createDescriptorSetSsbo(numSets);
@@ -280,8 +282,8 @@ namespace Anthem::Core{
                 }
             }
             ANTH_LOGI("Preparing Descriptor Update: Uniforms");
-            for(int i=0;i<numSets;i++){
-                for(int j=0;j<this->uniformBuffers.size();j++){
+            for(uint32_t i=0;i<numSets;i++){
+                for(uint32_t j=0;j<static_cast<uint32_t>(this->uniformBuffers.size());j++){
                     ANTH_LOGI("Buffer Copies =",uniformBuffers.at(j).buffer->size());
                     uniformBuffers.at(j).bufferInfo.buffer = uniformBuffers.at(j).buffer->at(i).buffer;
                     uniformBuffers.at(j).bufferInfo.offset = 0;
@@ -302,7 +304,7 @@ namespace Anthem::Core{
                     descWriteUniform.push_back(descCp);
                 }
                 
-                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(),descWriteUniform.size(),descWriteUniform.data(),0,nullptr);
+                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteUniform.size()),descWriteUniform.data(),0,nullptr);
             }
             //Create Image Descriptor Sets
             ANTH_LOGI("Allocating Descriptor Alloc: Samplers",this->samplersDesc.size());
@@ -324,8 +326,8 @@ namespace Anthem::Core{
                 }
             }
             ANTH_LOGI("Preparing Descriptor Update: Samplers");
-            for(int i=0;i<numSets;i++){
-                for(int j=0;j<this->samplersDesc.size();j++){
+            for(uint32_t i=0;i<numSets;i++){
+                for(uint32_t j=0;j<static_cast<uint32_t>(this->samplersDesc.size());j++){
                     samplersDesc.at(j).imageInfo.imageLayout = samplersDesc.at(j).img->getDesiredLayout();
                     samplersDesc.at(j).imageInfo.imageView = *(samplersDesc.at(j).img->getImageView());
                     samplersDesc.at(j).imageInfo.sampler = *(samplersDesc.at(j).img->getSampler());
@@ -345,7 +347,7 @@ namespace Anthem::Core{
                     descWriteSampler.push_back(descCp);
                 }
                 
-                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(),descWriteSampler.size(),descWriteSampler.data(),0,nullptr);
+                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteSampler.size()),descWriteSampler.data(),0,nullptr);
             }
 
             ANTH_LOGI("done");
@@ -393,7 +395,7 @@ namespace Anthem::Core{
                 return false;
             }
             this->descriptorPoolList.push_back(pool);
-            *index = this->descriptorPoolList.size()-1;
+            *index = static_cast<uint32_t>(this->descriptorPoolList.size())-1;
 
             return true;
         }

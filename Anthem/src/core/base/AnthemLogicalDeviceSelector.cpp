@@ -22,8 +22,8 @@ namespace Anthem::Core{
         ANTH_LOGI("Creating Queue");
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.pQueueCreateInfos = this->queueCreateInfo.data();
-        createInfo.queueCreateInfoCount = this->queueCreateInfo.size();
-        createInfo.enabledExtensionCount = deviceSupportExtensions->size();
+        createInfo.queueCreateInfoCount = static_cast<uint32_t>(this->queueCreateInfo.size());
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceSupportExtensions->size());
         createInfo.ppEnabledExtensionNames = deviceSupportExtensions->data();
         createInfo.enabledLayerCount = 0;
         createInfo.pEnabledFeatures = &(this->creatingFeats);

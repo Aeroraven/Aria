@@ -26,7 +26,7 @@ namespace Anthem::Core{
         renderPassBeginInfo.renderArea.extent = *(swapChain->getSwapChainExtent());
         
         auto renderPassClearValue = startInfo->renderPass->getDefaultClearValue();
-        renderPassBeginInfo.clearValueCount = renderPassClearValue->size();
+        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(renderPassClearValue->size());
         renderPassBeginInfo.pClearValues = renderPassClearValue->data();
 
         ANTH_LOGV("Starting render pass");
@@ -96,7 +96,7 @@ namespace Anthem::Core{
         std::vector<VkDescriptorSet> descSets = {};
         descPool->getAllDescriptorSets(frameIdx,&descSets);
         vkCmdBindDescriptorSets(*cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
-            descSets.size(),descSets.data() , 0, nullptr);
+            static_cast<uint32_t>(descSets.size()),descSets.data() , 0, nullptr);
         vkCmdDrawIndexed(*cmdBuf, static_cast<uint32_t>(ibuf->getIndexCount()), 1, 0, 0, 0);
         return true;
     }

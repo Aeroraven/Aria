@@ -77,7 +77,7 @@ namespace Anthem::Core{
             auto famQueueIdx = this->findQueueFamilies(device,surface);
             auto swapChainSupportAssert = !scDetails.formats.empty() && !scDetails.presentModes.empty();
 
-            for(auto i=0;i<deviceMemoryProperties.memoryHeapCount;i++){
+            for(uint32_t i=0;i<deviceMemoryProperties.memoryHeapCount;i++){
                 rating += 1;
                 ANTH_LOGI("Heap ",i,":",deviceMemoryProperties.memoryHeaps[i].size,",",deviceMemoryProperties.memoryHeaps[i].flags);
             }

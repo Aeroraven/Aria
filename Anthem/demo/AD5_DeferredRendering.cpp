@@ -85,9 +85,9 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
         renderer.createVertexBuffer(&offscreen.vxBuffers[chosenMesh]);
         float dfz = 0.1f;
         float dpz = 1.0f;
-        int numVertices = gltfResult.at(chosenMesh).positions.size()/3;
+        uint32_t numVertices = gltfResult.at(chosenMesh).positions.size()/3;
         offscreen.vxBuffers[chosenMesh]->setTotalVertices(numVertices);
-        for(int i=0;i<numVertices;i++){
+        for(uint32_t i=0;i<numVertices;i++){
             offscreen.vxBuffers[chosenMesh]->insertData(i,
                 {gltfResult.at(chosenMesh).positions.at(i*3),-gltfResult.at(chosenMesh).positions.at(i*3+1),gltfResult.at(chosenMesh).positions.at(i*3+2)},
                 {gltfResult.at(chosenMesh).normals.at(i*3),-gltfResult.at(chosenMesh).normals.at(i*3+1),gltfResult.at(chosenMesh).normals.at(i*3+2)},
@@ -332,7 +332,7 @@ void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer
 void updateOffscrUniform(OffscreenPass& offscr,AnthemSimpleToyRenderer& renderer,int currentFrame){
     int rdWinH,rdWinW;
     renderer.exGetWindowSize(rdWinH,rdWinW);
-    auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)M_PI/2.0f,1.0f*rdWinW/rdWinH);
+    auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)AT_PI/2.0f,1.0f*rdWinW/rdWinH);
     auto axis = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto center = Math::AnthemVector<float,3>({0.0f,-70.0f,0.0f});
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
@@ -393,7 +393,7 @@ int main(){
         updateOffscrUniform(offscr,*renderer.get(),currentFrame);
         uint32_t imgIdx;
         renderer->drPrepareFrame(currentFrame,&imgIdx);
-        renderer->drSubmitBufferPrimaryCall(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame, currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

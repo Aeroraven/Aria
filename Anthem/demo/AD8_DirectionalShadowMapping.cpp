@@ -370,11 +370,11 @@ void prepareSharedComponents(){
     shared.renderer.setConfig(&shared.config);
     shared.renderer.initialize();
     shared.renderer.exGetWindowSize(rdH,rdW);
-    shared.camera.specifyFrustum((float)M_PI/2.0f,0.1f,500.0f,1.0f*rdW/rdH);
+    shared.camera.specifyFrustum((float)AT_PI/2.0f,0.1f,500.0f,1.0f*rdW/rdH);
     shared.camera.specifyPosition(0.0f,70.0f,-80.0f);
 
-    shared.lightPov.specifyFrustum((float)M_PI/2.0f,0.1f,500.0f,1.0f*rdW/rdH);
-    shared.lightPov.specifyOrthoClipSpace(0.1f,300.0f,(float)M_PI/2.0f,100.0f);
+    shared.lightPov.specifyFrustum((float)AT_PI/2.0f,0.1f,500.0f,1.0f*rdW/rdH);
+    shared.lightPov.specifyOrthoClipSpace(0.1f,300.0f,(float)AT_PI/2.0f,100.0f);
     shared.lightPov.specifyPosition(80.0f,140.0f,-80.0f);
     shared.lightPov.specifyFrontEyeRay(-1.0f,-1.0f,1.0f);
 
@@ -456,7 +456,7 @@ int main(){
         updateOffscrUniform(currentFrame);
         uint32_t imgIdx;
         shared.renderer.drPrepareFrame(currentFrame,&imgIdx);
-        shared.renderer.drSubmitBufferPrimaryCall(currentFrame);
+        shared.renderer.drSubmitBufferPrimaryCall(currentFrame, currentFrame);
         shared.renderer.drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

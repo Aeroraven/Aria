@@ -144,7 +144,7 @@ void recordCommandsAll(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, Stag
 void updateOffscrUniform(StagePass& target ,AnthemSimpleToyRenderer& renderer,int currentFrame){
     int rdWinH,rdWinW;
     renderer.exGetWindowSize(rdWinH,rdWinW);
-    auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)M_PI/2.0f,1.0f*rdWinW/rdWinH);
+    auto proj = Math::AnthemLinAlg::spatialPerspectiveTransformWithFovAspect(0.1f,300.0f,(float)AT_PI/2.0f,1.0f*rdWinW/rdWinH);
     auto axis = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
     auto center = Math::AnthemVector<float,3>({0.0f,-70.0f,0.0f});
     auto eye = Math::AnthemVector<float,3>({0.0f,-70.0f,-80.0f});
@@ -195,7 +195,7 @@ int main(){
         updateOffscrUniform(target,*renderer.get(),currentFrame);
         uint32_t imgIdx;
         renderer->drPrepareFrame(currentFrame,&imgIdx);
-        renderer->drSubmitBufferPrimaryCall(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame, currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

@@ -22,7 +22,7 @@ namespace Anthem::Core{
         int32_t mipWidth = texWidth;
         int32_t mipHeight = texHeight;
 
-        for (uint32_t i = 1; i < this->image.mipmapLodLevels; i++) {
+        for (uint32_t i = 1u; i < this->image.mipmapLodLevels; i++) {
             ANTH_LOGI("MipLvl:",i," Wid=",(signed)mipWidth, " Hei=",(signed) mipHeight);
             barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -186,7 +186,7 @@ namespace Anthem::Core{
         samplerInfo.mipLodBias = 0.0f;
         samplerInfo.minLod = 0.0f;
         if(this->image.mipmapLodLevels > 1){
-            samplerInfo.maxLod = this->image.mipmapLodLevels;
+            samplerInfo.maxLod = 1.0f*this->image.mipmapLodLevels;
         }else{
             samplerInfo.maxLod = 1.0f;
         }

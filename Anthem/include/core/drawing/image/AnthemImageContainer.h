@@ -11,7 +11,7 @@ namespace Anthem::Core{
         VkDeviceMemory memory;
         VkImageCreateInfo imageInfo = {};
         VkImageView imageView;
-        int mipmapLodLevels = 1;
+        uint32_t mipmapLodLevels = 1;
         VkSampleCountFlags msaaCount = VK_SAMPLE_COUNT_1_BIT;
         VkImageLayout desiredLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     };

@@ -61,7 +61,7 @@ namespace Anthem::Core{
             ANTH_ASSERT(this->usage != AnthemSSBOUsage::AT_ASBU_UNDEFINED,"Undefined usage");
             auto usageBit = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
             
-            for(int i=0;i<this->numCopies;i++){
+            for(uint32_t i=0;i<this->numCopies;i++){
                 if(this->usage == AnthemSSBOUsage::AT_ASBU_VERTEX){
                     this->createBufferInternal(&this->bufferProp.ssbo[i], 
                         (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT), 
@@ -82,7 +82,7 @@ namespace Anthem::Core{
         }
 
         bool destroySSBO(){
-            for(int i=0;i<this->numCopies;i++){
+            for(uint32_t i=0;i<this->numCopies;i++){
                 vkFreeMemory(this->logicalDevice->getLogicalDevice(),bufferProp.ssbo.at(i).bufferMem,nullptr);
                 vkDestroyBuffer(this->logicalDevice->getLogicalDevice(),bufferProp.ssbo.at(i).buffer,nullptr);
             }

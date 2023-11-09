@@ -458,7 +458,7 @@ namespace Anthem::Core{
         renderPassBeginInfo.renderArea.extent = *(swapChain->getSwapChainExtent());
         
         auto renderPassClearValue = startInfo.renderPass->getDefaultClearValue();
-        renderPassBeginInfo.clearValueCount = renderPassClearValue->size();
+        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(renderPassClearValue->size());
         renderPassBeginInfo.pClearValues = renderPassClearValue->data();
 
         ANTH_LOGV("Starting render pass");
@@ -529,7 +529,7 @@ namespace Anthem::Core{
             }
         }
         vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
-            descSets->size(),descSets->data() , 0, nullptr);
+            static_cast<uint32_t>(descSets->size()),descSets->data() , 0, nullptr);
         delete descSets;
         return true;
     }
@@ -537,7 +537,7 @@ namespace Anthem::Core{
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
         descPool->getAllDescriptorSets(frameIdx,descSets);
         vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
-            descSets->size(),descSets->data() , 0, nullptr);
+            static_cast<uint32_t>(descSets->size()),descSets->data() , 0, nullptr);
         delete descSets;
         return true;
     }
