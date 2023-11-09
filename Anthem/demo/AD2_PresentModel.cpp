@@ -134,7 +134,7 @@ int main(){
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerDescEntryRegPipeline};
 
     AnthemGraphicsPipeline* pipeline;
-    renderer->createPipelineCustomized(&pipeline,descSetEntriesRegPipeline,pass,shader,vxBuffers[0]);
+    renderer->createGraphicsPipelineCustomized(&pipeline,descSetEntriesRegPipeline,pass,shader,vxBuffers[0]);
     ANTH_LOGI("Pipeline Created");
 
     //Start Loop
@@ -148,7 +148,7 @@ int main(){
         renderer->drStartCommandRecording(i);
         renderer->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(i)),i,false);
         renderer->drSetViewportScissor(i);
-        renderer->drBindPipeline(pipeline,i);
+        renderer->drBindGraphicsPipeline(pipeline,i);
         for(int j=0;j<gltfResult.size();j++){
             AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
                 .descPool = descPool[0],
@@ -185,7 +185,7 @@ int main(){
         uint32_t imgIdx;
         renderer->drPrepareFrame(currentFrame,&imgIdx);
 
-        renderer->drSubmitBuffer(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         
         currentFrame++;

@@ -130,7 +130,7 @@ void prepareOffscreenPass(){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerDescEntryRegPipeline,uniformBufferDescEntryRegPipeline};
 
-    renderer.createPipelineCustomized(&offscreenPass.pipeline,descSetEntriesRegPipeline,offscreenPass.pass,offscreenPass.shader,meshes.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&offscreenPass.pipeline,descSetEntriesRegPipeline,offscreenPass.pass,offscreenPass.shader,meshes.vxBuffers[0]);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -189,7 +189,7 @@ void prepareSSRPass(){
         .inTypeIndex = 0
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition,samplerColor,samplerNormal,samplerSpecular,uniformCam};
-    renderer.createPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
     ANTH_LOGI("Done");
 }
 
@@ -197,7 +197,7 @@ void recordOffscreenStage(int i){
     auto& renderer = shared.renderer;
     renderer.drStartRenderPass(offscreenPass.pass,(AnthemFramebuffer *)(offscreenPass.framebuffer),i,false);
     renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(offscreenPass.pipeline,i);
+    renderer.drBindGraphicsPipeline(offscreenPass.pipeline,i);
     for(int j=0;j<meshes.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
             .descPool = shared.descUniform,
@@ -224,7 +224,7 @@ void recordSSRStage(int i){
 
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
     renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(target.pipeline,i);
+    renderer.drBindGraphicsPipeline(target.pipeline,i);
 
     AnthemDescriptorSetEntry samplerNormal = {
         .descPool = offscreenPass.descPoolNormal,
@@ -417,7 +417,7 @@ int main(){
         updateOffscrUniform(currentFrame);
         uint32_t imgIdx;
         shared.renderer.drPrepareFrame(currentFrame,&imgIdx);
-        shared.renderer.drSubmitBuffer(currentFrame);
+        shared.renderer.drSubmitBufferPrimaryCall(currentFrame);
         shared.renderer.drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

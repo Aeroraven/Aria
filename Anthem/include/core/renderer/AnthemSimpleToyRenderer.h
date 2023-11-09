@@ -17,7 +17,12 @@
 
 #include "../pipeline/AnthemRenderPass.h"
 #include "../pipeline/AnthemGraphicsPipeline.h"
+#include "../pipeline/AnthemComputePipeline.h"
 #include "../drawing/AnthemDrawingCommandHelper.h"
+
+#include "../drawing/synchronization/AnthemFence.h"
+#include "../drawing/synchronization/AnthemSemaphore.h"
+
 
 namespace Anthem::Core{
     
@@ -49,6 +54,7 @@ namespace Anthem::Core{
         std::vector<AnthemVertexBuffer*> vertexBuffers;
         std::vector<AnthemIndexBuffer*> indexBuffers;
         std::vector<AnthemUniformBuffer*> uniformBuffers;
+        std::vector<AnthemShaderStorageBuffer*> ssboBuffers;
 
         std::vector<AnthemSwapchainFramebuffer*> framebufferListObjs;
         std::vector<AnthemFramebuffer*> simpleFramebuffers;
@@ -56,6 +62,8 @@ namespace Anthem::Core{
         std::vector<AnthemDescriptorPool*> descriptorPools;
 
         std::vector<AnthemGraphicsPipeline*> graphicsPipelines;
+        std::vector<AnthemComputePipeline*> computePipelines;
+
 
         uint32_t uniformDescPoolIdx = -1;
         uint32_t imageDescPoolIdx = -1;
@@ -83,7 +91,6 @@ namespace Anthem::Core{
         bool startDrawLoopDemo();
         bool setDrawFunction(std::function<void()> drawLoopHandler);
 
-        bool drPrepareFrame(uint32_t currentFrame, uint32_t* avaImageIdx);
         bool presentFrameDemo(uint32_t currentFrame, AnthemRenderPass* renderPass, 
             AnthemGraphicsPipeline* pipeline, AnthemSwapchainFramebuffer* framebuffer,uint32_t avaImageIdx,
             AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf, AnthemDescriptorPool* descPool);
@@ -102,24 +109,37 @@ namespace Anthem::Core{
         bool createDescriptorPool(AnthemDescriptorPool** pDescriptorPool);
 
         bool registerPipelineSubComponents();
-        bool createPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
-        bool createPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer);
+        bool createGraphicsPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
+        bool createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer);
+        bool createComputePipelineCustomized(AnthemComputePipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemShaderModule* shaderModule);
+        
+        bool createSemaphore(AnthemSemaphore** pSemaphore);
+        bool createFence(AnthemFence** pFence);
 
-        bool drStartCommandRecording(uint32_t frameIdx);
-        bool drEndCommandRecording(uint32_t frameIdx);
-        bool drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebuffer* framebufferList ,uint32_t frameIdx,bool enableMsaa);
-        bool drEndRenderPass(uint32_t frameIdx);
+        bool drAllocateCommandBuffer(uint32_t* commandBufferId);
+        bool drGetCommandBufferForFrame(uint32_t* commandBufferId,uint32_t frameIdx);
+
+        bool drPrepareFrame(uint32_t currentFrame, uint32_t* avaImageIdx);
+        bool drStartCommandRecording(uint32_t cmdIdx);
+        bool drEndCommandRecording(uint32_t cmdIdx);
+        bool drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebuffer* framebufferList ,uint32_t cmdIdx,bool enableMsaa);
+        bool drEndRenderPass(uint32_t cmdIdx);
         bool drPresentFrame(uint32_t frameIdx, uint32_t avaImageIdx);
-        bool drSubmitBuffer(uint32_t frameIdx);
-        bool drClearCommands(uint32_t frameIdx);
+        bool drSubmitBufferPrimaryCall(uint32_t frameIdx,uint32_t cmdIdx);
+        bool drClearCommands(uint32_t cmdIdx);
 
-        bool drSetViewportScissor(uint32_t frameIdx);
-        bool drBindPipeline(AnthemGraphicsPipeline* pipeline,uint32_t frameIdx);
-        bool drBindVertexBuffer(AnthemVertexBuffer* vertexBuffer,uint32_t frameIdx);
-        bool drBindIndexBuffer(AnthemIndexBuffer* indexBuffer,uint32_t frameIdx);
-        bool drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx);
-        bool drBindDescriptorSetCustomized(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx);
-        bool drDraw(uint32_t vertices,uint32_t frameIdx);
+        bool drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal);
+
+        bool drSetViewportScissor(uint32_t cmdIdx);
+        bool drBindGraphicsPipeline(AnthemGraphicsPipeline* pipeline,uint32_t cmdIdx);
+        bool drBindComputePipeline(AnthemComputePipeline* pipeline,uint32_t cmdIdx);
+
+        bool drBindVertexBuffer(AnthemVertexBuffer* vertexBuffer,uint32_t cmdIdx);
+        bool drBindIndexBuffer(AnthemIndexBuffer* indexBuffer,uint32_t cmdIdx);
+        bool drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx,uint32_t cmdIdx);
+        bool drBindDescriptorSetCustomized(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx);
+        bool drDraw(uint32_t vertices,uint32_t cmdIdx);
+        
 
         bool exGetWindowSize(int& height,int& width);
 
@@ -150,7 +170,20 @@ namespace Anthem::Core{
             return true;
         }
 
-        
+        template< template <typename Tp,uint32_t MatDim,uint32_t VecSz,uint32_t ArrSz> class... DescTp, 
+            typename... Tp,uint32_t... MatDim,uint32_t... VecSz,uint32_t... ArrSz>
+        bool createShaderStorageBuffer(AnthemShaderStorageBufferImpl<DescTp<Tp,MatDim,VecSz,ArrSz>...>** pSsbo, uint32_t bindLoc, AnthemDescriptorPool* descPool){
+            auto ssbo = new AnthemShaderStorageBufferImpl<DescTp<Tp,MatDim,VecSz,ArrSz>...>();
+            ssbo->specifyLogicalDevice(this->logicalDevice.get());
+            ssbo->specifyPhyDevice(this->phyDevice.get());
+            ssbo->specifyNumCopies(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
+            ssbo->createShaderStorageBuffer();
+
+            descPool->addShaderStorageBuffer(ssbo,bindLoc,descPool);
+            *pSsbo = ssbo;
+            this->ssboBuffers.push_back(ssbo);
+            return true;
+        }
 
     };
 }

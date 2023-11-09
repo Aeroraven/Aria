@@ -90,5 +90,5 @@
         "condition_variable": "cpp",
         "semaphore": "cpp"
     },
-    "workbench.colorTheme": "Visual Studio 2017 Dark - C++"
+    "workbench.colorTheme": "Visual Studio Dark - C++"
 }

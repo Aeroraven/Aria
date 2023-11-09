@@ -109,7 +109,7 @@ void preparStage(StagePass& target, AnthemSimpleToyRenderer& renderer){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline};
 
-    renderer.createPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffers[0]);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -117,7 +117,7 @@ void recordCommandsStage(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, St
     //Prepare Command
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
     renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(target.pipeline,i);
+    renderer.drBindGraphicsPipeline(target.pipeline,i);
     for(int j=0;j<target.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
             .descPool = target.descPoolUniform,
@@ -195,7 +195,7 @@ int main(){
         updateOffscrUniform(target,*renderer.get(),currentFrame);
         uint32_t imgIdx;
         renderer->drPrepareFrame(currentFrame,&imgIdx);
-        renderer->drSubmitBuffer(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

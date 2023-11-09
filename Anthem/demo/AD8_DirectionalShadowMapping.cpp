@@ -125,7 +125,7 @@ void prepareDebug(){
     };
 
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition};
-    renderer.createPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
     ANTH_LOGI("Done");
 }
 
@@ -176,7 +176,7 @@ void prepareTarget(){
     
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerShadowDepthInfo};
 
-    renderer.createPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,shadow.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,shadow.vxBuffers[0]);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -272,7 +272,7 @@ void prepareOffscreen(){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline};
 
-    renderer.createPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffers[0]);
     ANTH_LOGI("Pipeline Created");
 
 }
@@ -284,7 +284,7 @@ void recordCommandsShadowCalcStage(int i){
     //Prepare Command
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer),i,false);
     renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(target.pipeline,i);
+    renderer.drBindGraphicsPipeline(target.pipeline,i);
     for(int j=0;j<target.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
             .descPool = target.descPoolUniform,
@@ -308,7 +308,7 @@ void recordCommandMainStage(int i){
     auto& cfg = shared.config;
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
     renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(target.pipeline,i);
+    renderer.drBindGraphicsPipeline(target.pipeline,i);
     for(int j=0;j<shadow.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
             .descPool = target.descPoolUniform,
@@ -337,7 +337,7 @@ void recordCommandDebugStage(int i){
     auto& cfg = shared.config;
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
     renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(target.pipeline,i);
+    renderer.drBindGraphicsPipeline(target.pipeline,i);
 
     AnthemDescriptorSetEntry samplerShadowDepthInfo = {
         .descPool = shadow.descPoolDepth,
@@ -456,7 +456,7 @@ int main(){
         updateOffscrUniform(currentFrame);
         uint32_t imgIdx;
         shared.renderer.drPrepareFrame(currentFrame,&imgIdx);
-        shared.renderer.drSubmitBuffer(currentFrame);
+        shared.renderer.drSubmitBufferPrimaryCall(currentFrame);
         shared.renderer.drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

@@ -142,6 +142,90 @@ namespace Anthem::AcStage::Usability{
         }
     }
 
+    decltype(auto) catMeow1(){
+        static int&& p = 1;
+        return std::move(p);
+    }
+
+    auto catMeow2(){
+        static int&& p = 1;
+        return p;
+    }
+
+    template<typename U>
+    decltype(auto) catSleep(U first){
+        return first;
+    }
+
+    template<typename U, typename... T>
+    decltype(auto) catSleep(U first, T... args){
+        return first + catSleep(args...);
+    }
+
+    template<typename U>
+    void catWake(U first){
+        PRINT("U");
+    }
+
+    template<typename U>
+    void catWake(U first, U second){
+        PRINT("U,U");
+    }
+
+    template<typename U,typename T>
+    void catWake(U first, T second){
+        PRINT("U,T");
+    }
+
+    template<typename U,typename... T>
+    void catWake(U first, T... args){
+        PRINT("U,T...");
+    }
+
+    class IMammal{
+    public:
+        IMammal(){
+            PRINT("IMammal constructor fired");
+        }
+        ~IMammal(){
+            PRINT("IMammal destructor fired");
+        }
+    };
+    class ICarnivore{
+    public:
+        ICarnivore(){
+            PRINT("ICarnivore constructor fired");
+        }
+        ~ICarnivore(){
+            PRINT("ICarnivore destructor fired");
+        }
+    };
+
+    class Lynx:public IMammal,public ICarnivore{};
+    class Wolf:public IMammal,public ICarnivore{
+    public:
+        Wolf():IMammal(),ICarnivore(){
+        }
+    };
+
+    class Leopard:public IMammal,public ICarnivore{
+    public:
+        Leopard(){
+            PRINT("Leopard constructor fired");
+        }
+        Leopard(int x):Leopard(){
+            PRINT("Leopard:",x);
+        }
+
+    };
+
+    class CatType1{
+    public:
+        CatType1() = default;
+        CatType1(const CatType1& p) = delete;
+        const CatType1& operator=(const CatType1& p) = delete;
+    };
+
     void demoEntry(){
 
         BEGIN_EXAMPLE("nullptr")
@@ -168,10 +252,10 @@ namespace Anthem::AcStage::Usability{
         BEGIN_EXAMPLE("constexpr 1");
             int a[sumFrom1ToN(5)];
             EVAL_EXPRESSION(sizeof(a));
-            int b[sumFrom1ToN_2(6)];
-            EVAL_EXPRESSION(sizeof(b));
-            int c[sumFrom1ToN_3(7)];
-            EVAL_EXPRESSION(sizeof(c));
+            //int b[sumFrom1ToN_2(6)];  Illegal
+            //EVAL_EXPRESSION(sizeof(b)); Illegal
+            //int c[sumFrom1ToN_3(7)]; Illegal
+            //EVAL_EXPRESSION(sizeof(c)); Illegal
 
             int d = 5050;
             switch (d){
@@ -340,11 +424,6 @@ namespace Anthem::AcStage::Usability{
         END_EXAMPLE();
 
         BEGIN_EXAMPLE("Range-based Loop");
-            std::array<int,3> a = {1,2,3};
-            for(const auto& x:a){
-                PRINT(x);
-            }
-
             int b[] = {4,5,6};
             for(const auto& x:b){
                 PRINT(x);
@@ -360,7 +439,7 @@ namespace Anthem::AcStage::Usability{
         END_EXAMPLE();
 
         BEGIN_EXAMPLE("Type Alias & Alias Template I: typedef 1");
-            typedef struct {
+            typedef struct CatComplex_T {
                 int real = 4;
                 int imag = 2;
             } CatComplex, *CatComplexPtr, &CatComplexLRef, &&CatComplexRRef;
@@ -416,6 +495,77 @@ namespace Anthem::AcStage::Usability{
             JUDGE_EXPRESSION((std::is_same_v<decltype(pp2),const int*>));
             JUDGE_EXPRESSION((std::is_same_v<decltype(pp2),int* const>));
             JUDGE_EXPRESSION((std::is_same_v<decltype(pp2),const int* const>));
+        END_EXAMPLE();
+
+        BEGIN_EXAMPLE("decltype(auto)");
+            decltype(auto) a = catMeow1();
+            JUDGE_EXPRESSION((std::is_same_v<decltype(a),int>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(a),int&>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(a),int&&>));
+            EVAL_EXPRESSION((++a));
+            EVAL_EXPRESSION(catMeow1());
+
+            auto b = catMeow1();
+            JUDGE_EXPRESSION((std::is_same_v<decltype(b),int>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(b),int&>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(b),int&&>));
+            EVAL_EXPRESSION(b);
+            EVAL_EXPRESSION((++b));
+            EVAL_EXPRESSION(catMeow1());
+
+            decltype(auto) c = catMeow2();
+            JUDGE_EXPRESSION((std::is_same_v<decltype(c),int>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(c),int&>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(c),int&&>));
+            EVAL_EXPRESSION((++c));
+            EVAL_EXPRESSION(catMeow2());
+
+            auto d = catMeow2();
+            JUDGE_EXPRESSION((std::is_same_v<decltype(d),int>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(d),int&>));
+            JUDGE_EXPRESSION((std::is_same_v<decltype(d),int&&>));
+            EVAL_EXPRESSION((++d));
+            EVAL_EXPRESSION(catMeow2());
+        END_EXAMPLE();
+
+        BEGIN_EXAMPLE("Parameter Pack & VA");
+            auto w = catSleep(1,2.3,3,4,5);
+            PRINT(w);
+            RUN_EXPRESSION(catWake(1));
+            RUN_EXPRESSION(catWake(1,2));
+            RUN_EXPRESSION(catWake(1,2.0));
+            RUN_EXPRESSION(catWake(1,2,3,4));
+        END_EXAMPLE();
+
+        BEGIN_EXAMPLE("Delegate constructor");
+            PRINT("->Lynx");
+            {Lynx lynx;}
+            PRINT("->Wolf");
+            {Wolf wolf;}
+            PRINT("->Leopard");
+            {Leopard leopard(5);}
+        END_EXAMPLE();
+
+        BEGIN_EXAMPLE("default & delete");
+            CatType1 cat1;
+            CatType1 cat2;
+            //cat1 = cat2; // Illegal
+        END_EXAMPLE();
+
+        BEGIN_EXAMPLE("For loop");
+            std::map<int,std::string> a = {{1,"a"},{2,"b"},{3,"cd"}};
+            for(auto&& [key,value]:a){
+                value += "x";
+                a[key]+="y";
+            }
+            PRINT("####");
+            for(auto b=std::move(a);auto&& [key,value]:b){
+                PRINT(key,"->",value);
+            }
+            PRINT("####");
+            for(auto&& [key,value]:a){
+                PRINT(key,"->",value);
+            }
         END_EXAMPLE();
 
     }

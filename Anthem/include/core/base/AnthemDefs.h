@@ -17,6 +17,12 @@
 #include <cstring>
 #include <GLFW/glfw3.h>
 #include <random>
+#include <array>
+#include <map>
+#include <unordered_map>
+#include <set>
+#include <variant>
+#include <unordered_set>
 #include <chrono>
 
 // Pointerrs
@@ -27,9 +33,16 @@
 #define ANTH_UNSAFE_PTR(T) T*
 #define ANTH_MAKE_UNSAFE(T) new T
 
+// Math Constants
+#define AT_PI 3.1415926535897934384626
+
 // Sugars
 #define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
+#ifdef _MSC_VER
+#define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().className(__FUNCSIG__).c_str())
+#else
 #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().className(__PRETTY_FUNCTION__).c_str())
+#endif
 
 // Logger
 #define ANTH_ENABLE_LOG

@@ -42,6 +42,9 @@ namespace Anthem::Core{
             this->cmdBufs->startCommandRecording(commandBufferIdx[frameIdx]);
             return true;
         }
+        uint32_t virtual getFrameCmdBufIdx(uint32_t frameIdx){
+            return commandBufferIdx[frameIdx];
+        }
         
     };
 }

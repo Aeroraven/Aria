@@ -168,7 +168,7 @@ namespace Anthem::Core{
             auto lastOffset = dynamicOffsetReq.back()+elemSize.back();
             auto padding = bmaGetPaddingBeforeNextDynElement();
             auto totlPad = lastOffset+padding;
-            return idx*totlPad
+            return idx*totlPad;
         }
 
     public:
@@ -184,6 +184,9 @@ namespace Anthem::Core{
                 memcpy(buffer+idxOffset,ptrs.at(i)+basePads,elemSize.at(i));
             }
             return true;
+        }
+        IdxType bmaCalcRequiredSpaceForDynInput(IdxType numElements){
+            return bmaGetIthElementPrePadding(numElements+1);
         }
     };
 }

@@ -75,6 +75,7 @@ namespace Anthem::Core{
         logicalDevice->specifyDevice(this->logicalDevice);
         logicalDevice->specifyGraphicsQueue(this->graphicsQueue);
         logicalDevice->specifyPresentQueue(this->presentationQueue);
+        logicalDevice->specifyComputeQueue(this->computeQueue);
         return true;
     }
 }   

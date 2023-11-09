@@ -1,0 +1,32 @@
+#version 450
+
+//Referenced from: https://vulkan-tutorial.com/Compute_Shader#page_Preparing-the-shader-storage-buffers
+
+layout(set = 0,binding = 0) uniform UniformBufferObject{
+    float deltaTime;
+}ubo;
+
+struct Particle{
+    vec2 pos;
+    vec2 vel;
+    vec4 col;
+};
+
+layout(std140, set = 1,binding = 0) readonly buffer ssboIn{
+    Particle particleIn[];
+};
+
+layout(std140, set = 2,binding = 0) buffer ssboOut{
+    Particle particleOut[];
+};
+
+layout(local_size_x = 256,local_size_y=1,local_size_z=1) in;
+
+void main(){
+    uint idx = gl_GlobalInvocationID.x;
+    Particle pIn = particleIn[idx];
+
+    particleOut[idx].pos = pIn.pos + ubo.deltaTime * pIn.vel;
+    particleOut[idx].vel = pIn.vel;
+    particleOut[idx].col = pIn.col;
+}

@@ -14,3 +14,4 @@ assets/*.obj
 *.png
 lib/
 *.gltf
+.vs/

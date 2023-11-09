@@ -241,8 +241,8 @@ namespace Anthem::Core::Math{
         template<typename T>
         requires ALinAlgIsNumericTp<T>
         inline static ALinAlgVec<T,3> randomVector3(){
-            const auto a = atUniformNumber(0.0f,2.0f*static_cast<float>(M_PI));
-            const auto b = atUniformNumber(0.0f,2.0f*static_cast<float>(M_PI));
+            const auto a = atUniformNumber(0.0f,2.0f*static_cast<float>(AT_PI));
+            const auto b = atUniformNumber(0.0f,2.0f*static_cast<float>(AT_PI));
             const auto x = std::cos(a)*std::cos(b);
             const auto z = std::cos(a)*std::sin(b);
             const auto y = std::sin(b);

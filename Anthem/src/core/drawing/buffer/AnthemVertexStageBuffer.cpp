@@ -31,6 +31,8 @@ namespace Anthem::Core{
         this->cmdBufs->endCommandRecording(cmdBufIdx);
 
         ANTH_LOGI("Command buffer recording ended");
+
+        
         //Submit Command
         this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx,true);
         this->cmdBufs->freeCommandBuffer(cmdBufIdx);

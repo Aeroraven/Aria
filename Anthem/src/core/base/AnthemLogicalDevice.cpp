@@ -21,6 +21,10 @@ namespace Anthem::Core{
         this->graphicsQueue = queue;
         return true;
     }
+    bool AnthemLogicalDevice::specifyComputeQueue(VkQueue queue) {
+        this->computeQueue = queue;
+        return true;
+    }
     VkQueue AnthemLogicalDevice::getGraphicsQueue() const{
         ANTH_ASSERT(this->graphicsQueue != VK_NULL_HANDLE,"Graphics queue not specified");
         return this->graphicsQueue;
@@ -32,6 +36,10 @@ namespace Anthem::Core{
     VkQueue AnthemLogicalDevice::getPresentQueue() const{
         ANTH_ASSERT(this->presentQueue != VK_NULL_HANDLE,"Present queue not specified");
         return this->presentQueue;
+    }
+    VkQueue AnthemLogicalDevice::getComputeQueue() const {
+        ANTH_ASSERT(this->computeQueue != VK_NULL_HANDLE, "Present queue not specified");
+        return this->computeQueue;
     }
     bool AnthemLogicalDevice::waitForIdle() const{
         vkDeviceWaitIdle(this->logicalDevice);

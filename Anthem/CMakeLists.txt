@@ -13,12 +13,12 @@ message(CMAKE_RUNTIME_OUTPUT_DIRECTORY=${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 message(CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR})
 message(CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
 
-set(Vulkan_LIBRARY C:/VulkanSDK/1.3.261.1/Lib32/vulkan-1.lib)
+set(Vulkan_LIBRARY C:/VulkanSDK/1.3.261.1/Lib/vulkan-1.lib)
 set(Vulkan_INCLUDE_DIR C:/VulkanSDK/1.3.261.1/Include)
 find_package(Vulkan REQUIRED)
 
 set(glfw3_DIR "C:/Program Files (x86)/GLFW/lib/cmake/glfw3/")
-set(glfw3_LIB "C:/Program Files (x86)/GLFW/lib/libglfw3.a")
+set(glfw3_LIB "C:/Program Files (x86)/GLFW/lib/glfw3.lib")
 find_package(glfw3 3.3 REQUIRED)
 
 include_directories("C:/Program Files (x86)/GLFW/include")

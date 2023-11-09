@@ -154,7 +154,7 @@ namespace Anthem::Core{
         this->setupState = true;
         return true;
     }
-
+    
     bool AnthemSimpleToyRenderer::createDescriptorPool(AnthemDescriptorPool** pDescPool){
         auto descriptorPool = new AnthemDescriptorPool();
         descriptorPool->specifyLogicalDevice(this->logicalDevice.get());
@@ -268,7 +268,7 @@ namespace Anthem::Core{
         this->shaders.push_back(shaderModule);
         return true;
     }
-    bool AnthemSimpleToyRenderer::createPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer){
+    bool AnthemSimpleToyRenderer::createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer){
         auto graphicsPipeline = new AnthemGraphicsPipeline();
         graphicsPipeline->specifyLogicalDevice(this->logicalDevice.get());
         graphicsPipeline->specifyViewport(this->viewport.get());
@@ -286,7 +286,46 @@ namespace Anthem::Core{
         *pPipeline = graphicsPipeline;
         return true;
     }
-    bool AnthemSimpleToyRenderer::createPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer){
+    bool AnthemSimpleToyRenderer::createComputePipelineCustomized(AnthemComputePipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemShaderModule* shaderModule){
+        auto compPipeline = new AnthemComputePipeline();
+        compPipeline->specifyLogicalDevice(this->logicalDevice.get());
+        compPipeline->specifyShaderModule(shaderModule);
+        compPipeline->createPipelineLayoutCustomized(descSetEntries);
+        compPipeline->createPipeline();
+
+        this->computePipelines.push_back(compPipeline);
+        *pPipeline = compPipeline;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createSemaphore(AnthemSemaphore** pSemaphore){
+        auto sp = new AnthemSemaphore();
+        sp->specifyLogicalDevice(this->logicalDevice.get());
+        sp->createSemaphore();
+        *pSemaphore = sp;
+        return true;
+    }
+
+    bool AnthemSimpleToyRenderer::createFence(AnthemFence** pFence){
+        auto sp = new AnthemFence();
+        sp->specifyLogicalDevice(this->logicalDevice.get());
+        sp->createFence();
+        *pFence = sp;
+        return true;
+    }
+
+    bool AnthemSimpleToyRenderer::drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal){
+        if(semaphoreToWait!=nullptr){
+            ANTH_LOGE("not supported now, todo");
+        }
+        VkSubmitInfo submitInfo;
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        //submitInfo.pCommandBuffers = &this->commandBuffers->getCommandBuffer(cmdIdx);
+        
+        //vkQueueSubmit(this->logicalDevice->getComputeQueue(),1,)
+        return true;
+    }
+
+    bool AnthemSimpleToyRenderer::createGraphicsPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer){
         auto graphicsPipeline = new AnthemGraphicsPipeline();
         graphicsPipeline->specifyLogicalDevice(this->logicalDevice.get());
         graphicsPipeline->specifyViewport(this->viewport.get());
@@ -361,11 +400,18 @@ namespace Anthem::Core{
         ANTH_LOGW("Recreating Swapchain, done");
         return true;
     }
-    bool AnthemSimpleToyRenderer::drClearCommands(uint32_t frameIdx){
-        this->commandBuffers->resetCommandBuffer(frameIdx);
+    bool AnthemSimpleToyRenderer::drAllocateCommandBuffer(uint32_t* commandBufferId){
+        this->commandBuffers->createCommandBuffer(commandBufferId);
         return true;
     }
-
+    bool AnthemSimpleToyRenderer:: drGetCommandBufferForFrame(uint32_t* commandBufferId,uint32_t frameIdx){
+        *commandBufferId = this->drawingCommandHelper->getFrameCmdBufIdx(frameIdx);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drClearCommands(uint32_t cmdIdx){
+        this->commandBuffers->resetCommandBuffer(cmdIdx);
+        return true;
+    }
     bool AnthemSimpleToyRenderer::drPrepareFrame(uint32_t currentFrame, uint32_t* avaImageIdx){
         ANTH_LOGV("Preparing Frame");
         this->mainLoopSyncer->waitForPrevFrame(currentFrame);
@@ -381,18 +427,18 @@ namespace Anthem::Core{
         ANTH_LOGV("Presenting Frame, Done");
         return true;
     }
-    bool AnthemSimpleToyRenderer::drEndCommandRecording(uint32_t frameIdx){
-        this->drawingCommandHelper->endCommandBuffer(frameIdx);
+    bool AnthemSimpleToyRenderer::drEndCommandRecording(uint32_t cmdIdx){
+        this->commandBuffers->endCommandRecording(cmdIdx);
+        //this->drawingCommandHelper->endCommandBuffer(frameIdx);
         return true;
     }
-    bool AnthemSimpleToyRenderer::drStartCommandRecording(uint32_t frameIdx){
-        ANTH_LOGI("Record starts");
-        this->drawingCommandHelper->startCommandBuffer(frameIdx);
-        ANTH_LOGI("Record starts, done");
+    bool AnthemSimpleToyRenderer::drStartCommandRecording(uint32_t cmdIdx){
+        this->commandBuffers->startCommandRecording(cmdIdx);
+        //this->drawingCommandHelper->startCommandBuffer(frameIdx);
         return true;
     }
-    bool AnthemSimpleToyRenderer::drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebuffer* framebuffer ,uint32_t frameIdx,bool enableMsaa){
-        AnthemCommandManagerRenderPassStartInfo beginInfo = {
+    bool AnthemSimpleToyRenderer::drStartRenderPass(AnthemRenderPass* renderPass,AnthemFramebuffer* framebuffer ,uint32_t cmdIdx,bool enableMsaa){
+        AnthemCommandManagerRenderPassStartInfo startInfo = {
             .renderPass = renderPass,
             .framebufferList = framebuffer,
             .framebufferIdx = 0,
@@ -400,15 +446,35 @@ namespace Anthem::Core{
             .depthClearValue = {{1.0f, 0}},
             .usingMsaa = enableMsaa
         };
-        this->drawingCommandHelper->startRenderPass(&beginInfo,frameIdx);
+        //this->drawingCommandHelper->startRenderPass(&startInfo,frameIdx);
+        ANTH_LOGI("Cmdbuf binds");
+        ANTH_ASSERT(swapChain != nullptr,"Swap chain not specified");
+        
+        VkRenderPassBeginInfo renderPassBeginInfo = {};
+        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassBeginInfo.renderPass = *(startInfo.renderPass->getRenderPass());
+        renderPassBeginInfo.framebuffer = *(startInfo.framebufferList->getFramebuffer());
+        renderPassBeginInfo.renderArea.offset = {0,0};
+        renderPassBeginInfo.renderArea.extent = *(swapChain->getSwapChainExtent());
+        
+        auto renderPassClearValue = startInfo.renderPass->getDefaultClearValue();
+        renderPassBeginInfo.clearValueCount = renderPassClearValue->size();
+        renderPassBeginInfo.pClearValues = renderPassClearValue->data();
+
+        ANTH_LOGV("Starting render pass");
+        auto cmdBuf = commandBuffers->getCommandBuffer(cmdIdx);
+        vkCmdBeginRenderPass(*cmdBuf,&renderPassBeginInfo,VK_SUBPASS_CONTENTS_INLINE);
+        ANTH_LOGV("Render pass started");
         return true;
     }
-    bool AnthemSimpleToyRenderer::drEndRenderPass(uint32_t frameIdx){
-        this->drawingCommandHelper->endRenderPass(frameIdx);
+    bool AnthemSimpleToyRenderer::drEndRenderPass(uint32_t cmdIdx){
+        //this->drawingCommandHelper->endRenderPass(frameIdx);
+        auto cmdBuf = commandBuffers->getCommandBuffer(cmdIdx);
+        vkCmdEndRenderPass(*cmdBuf);
         return true;
     }
-    bool AnthemSimpleToyRenderer::drSubmitBuffer(uint32_t frameIdx){
-        this->mainLoopSyncer->submitCommandBuffer(this->commandBuffers->getCommandBuffer(frameIdx),frameIdx);
+    bool AnthemSimpleToyRenderer::drSubmitBufferPrimaryCall(uint32_t frameIdx,uint32_t cmdIdx){
+        this->mainLoopSyncer->submitCommandBuffer(this->commandBuffers->getCommandBuffer(cmdIdx),frameIdx);
         return true;
     }
     bool AnthemSimpleToyRenderer::drPresentFrame(uint32_t frameIdx, uint32_t avaImageIdx){
@@ -428,26 +494,30 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::drSetViewportScissor(uint32_t frameIdx){
-        vkCmdSetViewport(*this->commandBuffers->getCommandBuffer(frameIdx),0,1,viewport->getViewport());
-        vkCmdSetScissor(*this->commandBuffers->getCommandBuffer(frameIdx),0,1,viewport->getScissor());
+    bool AnthemSimpleToyRenderer::drSetViewportScissor(uint32_t cmdIdx){
+        vkCmdSetViewport(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,viewport->getViewport());
+        vkCmdSetScissor(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,viewport->getScissor());
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::drBindPipeline(AnthemGraphicsPipeline* pipeline,uint32_t frameIdx){
-        vkCmdBindPipeline(*this->commandBuffers->getCommandBuffer(frameIdx),VK_PIPELINE_BIND_POINT_GRAPHICS,*(pipeline->getPipeline()));
+    bool AnthemSimpleToyRenderer::drBindGraphicsPipeline(AnthemGraphicsPipeline* pipeline,uint32_t cmdIdx){
+        vkCmdBindPipeline(*this->commandBuffers->getCommandBuffer(cmdIdx),VK_PIPELINE_BIND_POINT_GRAPHICS,*(pipeline->getPipeline()));
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drBindComputePipeline(AnthemComputePipeline* pipeline,uint32_t cmdIdx){
+        vkCmdBindPipeline(*this->commandBuffers->getCommandBuffer(cmdIdx),VK_PIPELINE_BIND_POINT_COMPUTE,*(pipeline->getPipeline()));
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::drBindVertexBuffer(AnthemVertexBuffer* vertexBuffer,uint32_t frameIdx){
-        vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(frameIdx),0,1,(vertexBuffer->getDestBufferObject()),emptyOffsetPlaceholder);
+    bool AnthemSimpleToyRenderer::drBindVertexBuffer(AnthemVertexBuffer* vertexBuffer,uint32_t cmdIdx){
+        vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,(vertexBuffer->getDestBufferObject()),emptyOffsetPlaceholder);
         return true;
     }
-    bool AnthemSimpleToyRenderer::drBindIndexBuffer(AnthemIndexBuffer* indexBuffer,uint32_t frameIdx){
-        vkCmdBindIndexBuffer(*this->commandBuffers->getCommandBuffer(frameIdx), *(indexBuffer->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
+    bool AnthemSimpleToyRenderer::drBindIndexBuffer(AnthemIndexBuffer* indexBuffer,uint32_t cmdIdx){
+        vkCmdBindIndexBuffer(*this->commandBuffers->getCommandBuffer(cmdIdx), *(indexBuffer->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
         return true;
     }
-    bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomized(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx){
+    bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomized(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx){
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
         for(const auto& p:descSetEntries){
             if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER){
@@ -458,21 +528,21 @@ namespace Anthem::Core{
                 ANTH_LOGE("Unknown Descriptor Set Type");
             }
         }
-        vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(frameIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
+        vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
             descSets->size(),descSets->data() , 0, nullptr);
         delete descSets;
         return true;
     }
-    bool AnthemSimpleToyRenderer::drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx){
+    bool AnthemSimpleToyRenderer::drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx, uint32_t cmdIdx){
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
         descPool->getAllDescriptorSets(frameIdx,descSets);
-        vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(frameIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
+        vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
             descSets->size(),descSets->data() , 0, nullptr);
         delete descSets;
         return true;
     }
-    bool AnthemSimpleToyRenderer::drDraw(uint32_t vertices,uint32_t frameIdx){
-        vkCmdDrawIndexed(*this->commandBuffers->getCommandBuffer(frameIdx), vertices, 1, 0, 0, 0);
+    bool AnthemSimpleToyRenderer::drDraw(uint32_t vertices,uint32_t cmdIdx){
+        vkCmdDrawIndexed(*this->commandBuffers->getCommandBuffer(cmdIdx), vertices, 1, 0, 0, 0);
         return true;
     }
 
@@ -533,4 +603,6 @@ namespace Anthem::Core{
             this->finalize();
         }
     }
+
+
 }

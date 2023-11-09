@@ -149,7 +149,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerDescEntryRegPipeline};
 
-    renderer.createPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline,offscreen.pass,offscreen.shader,offscreen.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline,offscreen.pass,offscreen.shader,offscreen.vxBuffers[0]);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -160,7 +160,7 @@ void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer
     //Prepare Command
     renderer.drStartRenderPass(offscreen.pass,(AnthemFramebuffer *)(offscreen.framebuffer->getFramebufferObject(i)),i,true);
     renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(offscreen.pipeline,i);
+    renderer.drBindGraphicsPipeline(offscreen.pipeline,i);
     for(int j=0;j<offscreen.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
             .descPool = offscreen.descPool[0],
@@ -228,7 +228,7 @@ int main(){
         updateOffscrUniform(offscr,*renderer.get(),currentFrame);
         uint32_t imgIdx;
         renderer->drPrepareFrame(currentFrame,&imgIdx);
-        renderer->drSubmitBuffer(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

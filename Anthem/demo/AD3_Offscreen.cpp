@@ -87,7 +87,7 @@ void prepareTarget(TargetPass& target,AnthemSimpleToyRenderer& renderer){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerDescEntryRegPipeline};
 
-    renderer.createPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
     ANTH_LOGI("Done");
 }
 void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer){
@@ -211,7 +211,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerDescEntryRegPipeline};
 
-    renderer.createPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline,offscreen.pass,offscreen.shader,offscreen.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline,offscreen.pass,offscreen.shader,offscreen.vxBuffers[0]);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -220,7 +220,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
 void recordCommandsTarget(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, TargetPass& target, OffscreenPass& offscreen ,int i){
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
     renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(target.pipeline,i);
+    renderer.drBindGraphicsPipeline(target.pipeline,i);
     AnthemDescriptorSetEntry samplerDescEntryRegPipeline = {
         .descPool = offscreen.descPoolColorAtt,
         .descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER,
@@ -238,7 +238,7 @@ void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer
     //Prepare Command
     renderer.drStartRenderPass(offscreen.pass,(AnthemFramebuffer *)(offscreen.framebuffer),i,false);
     renderer.drSetViewportScissor(i);
-    renderer.drBindPipeline(offscreen.pipeline,i);
+    renderer.drBindGraphicsPipeline(offscreen.pipeline,i);
     for(int j=0;j<offscreen.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
             .descPool = offscreen.descPool[0],
@@ -318,7 +318,7 @@ int main(){
         updateOffscrUniform(offscr,*renderer.get(),currentFrame);
         uint32_t imgIdx;
         renderer->drPrepareFrame(currentFrame,&imgIdx);
-        renderer->drSubmitBuffer(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         currentFrame++;
         currentFrame %= 2;

@@ -94,7 +94,7 @@ int main(){
 
     //Assemble Pipeline
     AnthemGraphicsPipeline* pipeline;
-    renderer->createPipeline(&pipeline,descPool,pass,shader,vxBuffer,ubuf);
+    renderer->createGraphicsPipeline(&pipeline,descPool,pass,shader,vxBuffer,ubuf);
     ANTH_LOGI("Pipeline Created");
 
     //Start Loop
@@ -113,14 +113,14 @@ int main(){
         renderer->drStartCommandRecording(currentFrame);
         renderer->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(currentFrame)),currentFrame,false);
         renderer->drSetViewportScissor(currentFrame);
-        renderer->drBindPipeline(pipeline,currentFrame);
+        renderer->drBindGraphicsPipeline(pipeline,currentFrame);
         renderer->drBindVertexBuffer(vxBuffer,currentFrame);
         renderer->drBindIndexBuffer(ixBuffer,currentFrame);
         renderer->drBindDescriptorSet(descPool,pipeline,currentFrame);
         renderer->drDraw(ixBuffer->getIndexCount(),currentFrame);
         renderer->drEndRenderPass(currentFrame);
         renderer->drEndCommandRecording(currentFrame);
-        renderer->drSubmitBuffer(currentFrame);
+        renderer->drSubmitBufferPrimaryCall(currentFrame);
         renderer->drPresentFrame(currentFrame,imgIdx);
         
         currentFrame++;
