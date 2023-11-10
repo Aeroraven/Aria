@@ -108,7 +108,7 @@ namespace Anthem::Core{
                 ANTH_LOGE("Failed to create descriptor set layout");
                 return false;
             }
-
+            return true;
         }
         bool addSampler(AnthemImageContainer* imageSampler,uint32_t bindLoc, uint32_t descPoolId){
             this->samplersDesc.push_back({});

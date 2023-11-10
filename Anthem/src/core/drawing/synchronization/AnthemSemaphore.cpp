@@ -15,4 +15,8 @@ namespace Anthem::Core{
     const VkSemaphore* AnthemSemaphore::getSemaphore() const{
         return &this->semaphore;
     }
+    bool AnthemSemaphore::destroySemaphore() {
+        vkDestroySemaphore(this->logicalDevice->getLogicalDevice(), this->semaphore, nullptr);
+        return true;
+    }
 }

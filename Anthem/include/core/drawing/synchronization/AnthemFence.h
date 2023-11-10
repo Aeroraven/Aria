@@ -11,5 +11,6 @@ namespace Anthem::Core{
         const VkFence* getFence() const;
         bool resetFence();
         bool waitForFence();
+        bool destroyFence();
     };
 }

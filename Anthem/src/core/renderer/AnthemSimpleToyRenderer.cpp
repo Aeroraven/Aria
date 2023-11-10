@@ -26,6 +26,22 @@ namespace Anthem::Core{
         }
         ANTH_LOGI("Uniform Buffers Destroyed");
 
+        for (const auto& p : this->extFences) {
+            p->destroyFence();
+        }
+        ANTH_LOGI("Fences Destroyed");
+
+        for (const auto& p : this->extSemaphores) {
+            p->destroySemaphore();
+        }
+        ANTH_LOGI("Semaphores Destroyed");
+
+        for (const auto& p : this->ssboBuffers) {
+            p->destroyStagingBuffer();
+            p->destroySSBO();
+        }
+        ANTH_LOGI("SSBO Destroyed");
+
         for(const auto& p:this->textures){
             p->destroyImage();
             delete p;
@@ -53,6 +69,12 @@ namespace Anthem::Core{
             p->destroyPipelineLayout();
             delete p;
         }
+        for (const auto& p : this->computePipelines) {
+            p->destroyPipeline();
+            p->destroyPipelineLayout();
+            delete p;
+        }
+
         ANTH_LOGI("Pipelines Destroyed");
 
         for(const auto& p:this->shaders){
@@ -245,9 +267,10 @@ namespace Anthem::Core{
         for(const auto& p:indexBuffers){
             p->createBuffer();
         }
-        for (const auto& p : ssboBuffers) {
-            p->createShaderStorageBuffer();
-        }
+        //for (const auto& p : ssboBuffers) {
+        //    p->createShaderStorageBuffer();
+        //}
+        
         //Prepare Descriptor Sets
         for(const auto& p:descriptorPools){
             p->createDescriptorSet(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
@@ -308,6 +331,7 @@ namespace Anthem::Core{
         auto sp = new AnthemSemaphore();
         sp->specifyLogicalDevice(this->logicalDevice.get());
         sp->createSemaphore();
+        extSemaphores.push_back(sp);
         *pSemaphore = sp;
         return true;
     }
@@ -316,6 +340,7 @@ namespace Anthem::Core{
         auto sp = new AnthemFence();
         sp->specifyLogicalDevice(this->logicalDevice.get());
         sp->createFence();
+        extFences.push_back(sp);
         *pFence = sp;
         return true;
     }

@@ -9,5 +9,6 @@ namespace Anthem::Core{
     public:
         bool createSemaphore();
         const VkSemaphore* getSemaphore() const;
+        bool destroySemaphore();
     };
 }

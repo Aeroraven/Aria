@@ -32,6 +32,9 @@ struct ComputePipeline {
     AnthemShaderFilePaths shaderFile;
     AnthemShaderModule* shader;
     AnthemComputePipeline* pipeline;
+
+    AnthemFence** computeInFlight;
+    AnthemSemaphore** computeFinish;
 }comp;
 
 struct DrawPipeline {
@@ -87,15 +90,22 @@ void prepareCompute() {
     renderer.createDescriptorPool(&comp.descPoolSsbo);
     renderer.createDescriptorPool(&comp.descPoolUniform);
 
+    ANTH_LOGI("Creating Sync Fence");
+    comp.computeInFlight = new std::remove_pointer_t<decltype(comp.computeInFlight)>[shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT];
+    comp.computeFinish = new std::remove_pointer_t<decltype(comp.computeFinish)>[shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT];
+    for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+        renderer.createFence(&comp.computeInFlight[i]);
+        renderer.createSemaphore(&comp.computeFinish[i]);
+    }
+    
     ANTH_LOGI("Creating SSBO");
     std::function<void(decltype(comp.ssbo))> wFunc = [&](auto* p) {
         ANTH_LOGI("Invoked");
     };
-
     renderer.createShaderStorageBuffer(&comp.ssbo,4096, 0, comp.descPoolSsbo,std::make_optional(wFunc));
-
-
-    ANTH_LOGI("Creating SSBO Done");
+    
+    
+    ANTH_LOGI("Creating Uniform");
     renderer.createUniformBuffer(&comp.ubuf, 0, comp.descPoolUniform);
 
     comp.shaderFile.computeShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\computeShaderCompStage\\shader.comp.spv";

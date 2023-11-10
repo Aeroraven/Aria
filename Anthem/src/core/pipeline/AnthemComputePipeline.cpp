@@ -59,4 +59,15 @@ namespace Anthem::Core{
         ANTH_LOGI("Pipeline layout created");
         return true;
     }
+    bool AnthemComputePipeline::destroyPipeline() {
+        ANTH_LOGI("Destroying compute pipeline");
+        vkDestroyPipeline(this->logicalDevice->getLogicalDevice(), this->pipeline, nullptr);
+        this->pipelineCreated = false;
+        return true;
+    }
+    bool AnthemComputePipeline::destroyPipelineLayout() {
+        ANTH_LOGI("Destroying pipeline layout");
+        vkDestroyPipelineLayout(this->logicalDevice->getLogicalDevice(), this->pipelineLayout, nullptr);
+        return true;
+    }
 }

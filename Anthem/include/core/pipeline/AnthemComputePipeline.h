@@ -25,5 +25,8 @@ namespace Anthem::Core{
         bool createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry);
         bool createPipeline();
         const VkPipeline* getPipeline() const;
+
+        bool destroyPipeline();
+        bool destroyPipelineLayout();
     };
 }

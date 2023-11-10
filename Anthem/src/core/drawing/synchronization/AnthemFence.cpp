@@ -34,4 +34,9 @@ namespace Anthem::Core{
         }
         return true;
     }
+
+    bool AnthemFence::destroyFence() {
+        vkDestroyFence(this->logicalDevice->getLogicalDevice(), this->fence, nullptr);
+        return true;
+    }
 }

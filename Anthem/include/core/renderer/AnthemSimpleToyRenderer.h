@@ -64,6 +64,9 @@ namespace Anthem::Core{
         std::vector<AnthemGraphicsPipeline*> graphicsPipelines;
         std::vector<AnthemComputePipeline*> computePipelines;
 
+        std::vector<AnthemFence*> extFences;
+        std::vector<AnthemSemaphore*> extSemaphores;
+
 
         uint32_t uniformDescPoolIdx = -1;
         uint32_t imageDescPoolIdx = -1;
@@ -187,11 +190,11 @@ namespace Anthem::Core{
                 auto w = dataPrepareProc.value();
                 w(ssbo);
             }
-            ssbo->createShaderStorageBuffer();
-
-            descPool->addShaderStorageBuffer(ssbo,bindLoc,this->ssboDescPoolIdx);
             *pSsbo = ssbo;
+            
+            ssbo->createShaderStorageBuffer();
             this->ssboBuffers.push_back(ssbo);
+            descPool->addShaderStorageBuffer(ssbo,bindLoc,this->ssboDescPoolIdx);
             return true;
         }
 

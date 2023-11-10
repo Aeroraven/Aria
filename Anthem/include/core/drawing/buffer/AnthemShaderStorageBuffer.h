@@ -53,6 +53,7 @@ namespace Anthem::Core{
         }
         bool prepareStagingBuffer(){
             this->createBufferInternal(&this->bufferProp.staging,VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            ANTH_LOGI("Creating Staging:", this->bufferProp.staging.buffer);
             vkMapMemory(this->logicalDevice->getLogicalDevice(), this->bufferProp.staging.bufferMem, 0, getBufferSize(), 0, &this->bufferProp.staging.mappedMem);
             memcpy(this->bufferProp.staging.mappedMem, this->bufferData, (size_t)getBufferSize());
             vkUnmapMemory(this->logicalDevice->getLogicalDevice(), this->bufferProp.staging.bufferMem);
@@ -75,7 +76,8 @@ namespace Anthem::Core{
         }
         bool createShaderStorageBuffer(){
             prepareStagingBuffer();
-            return prepareSSBO();
+            prepareSSBO();
+            return true;
         }
         bool destroyStagingBuffer(){
             vkFreeMemory(this->logicalDevice->getLogicalDevice(),bufferProp.staging.bufferMem,nullptr);
