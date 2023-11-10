@@ -17,6 +17,7 @@ namespace Anthem::Core{
             ANTH_LOGE("Failed to create compute pipeline");
         }
         ANTH_LOGI("Compute pipeline created");
+        pipelineCreated = true;
         return true;
     }
     bool AnthemComputePipeline::specifyShaderModule(const AnthemShaderModule* shaderModule){

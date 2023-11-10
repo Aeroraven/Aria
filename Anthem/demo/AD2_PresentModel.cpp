@@ -163,7 +163,7 @@ int main(){
             std::vector<AnthemDescriptorSetEntry> descSetEntries = {uniformBufferDescEntryRdw,samplerDescEntryRdw};
             renderer->drBindVertexBuffer(vxBuffers[j],i);
             renderer->drBindIndexBuffer(ixBuffers[j],i);
-            renderer->drBindDescriptorSetCustomized(descSetEntries,pipeline,i);
+            renderer->drBindDescriptorSetCustomizedGraphics(descSetEntries,pipeline,i);
             renderer->drDraw(ixBuffers[j]->getIndexCount(),i);
         }
         renderer->drEndRenderPass(i);

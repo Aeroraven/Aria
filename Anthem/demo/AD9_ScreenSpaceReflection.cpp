@@ -212,7 +212,7 @@ void recordOffscreenStage(int i){
         std::vector<AnthemDescriptorSetEntry> descSetEntries =  {samplerDescEntryRegPipeline,uniformBufferDescEntryRdw};
         renderer.drBindVertexBuffer(meshes.vxBuffers[j],i);
         renderer.drBindIndexBuffer(meshes.ixBuffers[j],i);
-        renderer.drBindDescriptorSetCustomized(descSetEntries,offscreenPass.pipeline,i);
+        renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries,offscreenPass.pipeline,i);
         renderer.drDraw(meshes.ixBuffers[j]->getIndexCount(),i);
     }
     renderer.drEndRenderPass(i);
@@ -254,7 +254,7 @@ void recordSSRStage(int i){
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition,samplerColor,samplerNormal,samplerSpecular,uniformCam};
     renderer.drBindVertexBuffer(target.vxBuffer,i);
     renderer.drBindIndexBuffer(target.ixBuffer,i);
-    renderer.drBindDescriptorSetCustomized(descSetEntriesRegPipeline,target.pipeline,i);
+    renderer.drBindDescriptorSetCustomizedGraphics(descSetEntriesRegPipeline,target.pipeline,i);
     renderer.drDraw(target.ixBuffer->getIndexCount(),i);
     renderer.drEndRenderPass(i);
 }

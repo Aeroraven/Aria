@@ -295,7 +295,7 @@ void recordCommandsShadowCalcStage(int i){
         std::vector<AnthemDescriptorSetEntry> descSetEntries = {uniformBufferDescEntryRdw};
         renderer.drBindVertexBuffer(target.vxBuffers[j],i);
         renderer.drBindIndexBuffer(target.ixBuffers[j],i);
-        renderer.drBindDescriptorSetCustomized(descSetEntries,target.pipeline,i);
+        renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries,target.pipeline,i);
         renderer.drDraw(target.ixBuffers[j]->getIndexCount(),i);
     }
     renderer.drEndRenderPass(i);
@@ -324,7 +324,7 @@ void recordCommandMainStage(int i){
         std::vector<AnthemDescriptorSetEntry> descSetEntries = {uniformBufferDescEntryRdw,samplerShadowDepthInfo};
         renderer.drBindVertexBuffer(shadow.vxBuffers[j],i);
         renderer.drBindIndexBuffer(shadow.ixBuffers[j],i);
-        renderer.drBindDescriptorSetCustomized(descSetEntries,target.pipeline,i);
+        renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries,target.pipeline,i);
         renderer.drDraw(shadow.ixBuffers[j]->getIndexCount(),i);
     }
     renderer.drEndRenderPass(i);
@@ -347,7 +347,7 @@ void recordCommandDebugStage(int i){
     std::vector<AnthemDescriptorSetEntry> descSetEntries = {samplerShadowDepthInfo};
     renderer.drBindVertexBuffer(target.vxBuffer,i);
     renderer.drBindIndexBuffer(target.ixBuffer,i);
-    renderer.drBindDescriptorSetCustomized(descSetEntries,target.pipeline,i);
+    renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries,target.pipeline,i);
     renderer.drDraw(target.ixBuffer->getIndexCount(),i);
     renderer.drEndRenderPass(i);
 }

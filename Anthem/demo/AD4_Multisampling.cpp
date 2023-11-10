@@ -175,7 +175,7 @@ void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer
         std::vector<AnthemDescriptorSetEntry> descSetEntries = {uniformBufferDescEntryRdw,samplerDescEntryRdw};
         renderer.drBindVertexBuffer(offscreen.vxBuffers[j],i);
         renderer.drBindIndexBuffer(offscreen.ixBuffers[j],i);
-        renderer.drBindDescriptorSetCustomized(descSetEntries,offscreen.pipeline,i);
+        renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries,offscreen.pipeline,i);
         renderer.drDraw(offscreen.ixBuffers[j]->getIndexCount(),i);
     }
     renderer.drEndRenderPass(i);

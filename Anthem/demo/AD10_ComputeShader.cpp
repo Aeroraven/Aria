@@ -35,6 +35,8 @@ struct ComputePipeline {
 
     AnthemFence** computeInFlight;
     AnthemSemaphore** computeFinish;
+
+    uint32_t* allocCmdBuf;
 }comp;
 
 struct DrawPipeline {
@@ -90,6 +92,12 @@ void prepareCompute() {
     renderer.createDescriptorPool(&comp.descPoolSsbo);
     renderer.createDescriptorPool(&comp.descPoolUniform);
 
+    ANTH_LOGI("Allocating Command Buffer");
+    comp.allocCmdBuf = new std::remove_pointer_t<decltype(comp.allocCmdBuf)>[shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT];
+    for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+        renderer.drAllocateCommandBuffer(&comp.allocCmdBuf[i]);
+    }
+
     ANTH_LOGI("Creating Sync Fence");
     comp.computeInFlight = new std::remove_pointer_t<decltype(comp.computeInFlight)>[shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT];
     comp.computeFinish = new std::remove_pointer_t<decltype(comp.computeFinish)>[shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT];
@@ -142,6 +150,38 @@ void recordCommandBufferDrw(int i) {
     renderer.drEndRenderPass(i);
 }
 
+void recordCommandBufferComp(int i) {
+    auto& renderer = shared.renderer;
+    renderer.drBindComputePipeline(comp.pipeline, comp.allocCmdBuf[i]);
+    AnthemDescriptorSetEntry dseUniform = {
+        .descPool = comp.descPoolUniform,
+        .descSetType = AT_ACDS_UNIFORM_BUFFER,
+        .inTypeIndex = 0
+    };
+    AnthemDescriptorSetEntry dseSsboIn = {
+        .descPool = comp.descPoolSsbo,
+        .descSetType = AT_ACDS_SHADER_STORAGE_BUFFER,
+        .inTypeIndex = 0
+    };
+    AnthemDescriptorSetEntry dseSsboOut = {
+        .descPool = comp.descPoolSsbo,
+        .descSetType = AT_ACDS_SHADER_STORAGE_BUFFER,
+        .inTypeIndex = 0
+    };
+    std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { dseUniform,dseSsboIn,dseSsboOut };
+    renderer.drBindDescriptorSetCustomizedCompute(descSetEntriesRegPipeline, comp.pipeline, comp.allocCmdBuf[i]);
+    renderer.drComputeDispatch(comp.allocCmdBuf[i], 256, 1, 1);
+}
+
+void recordCommandBufferCompAll() {
+    auto& renderer = shared.renderer;
+    for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+        renderer.drStartCommandRecording(comp.allocCmdBuf[i]);
+        recordCommandBufferComp(i);
+        renderer.drEndCommandRecording(comp.allocCmdBuf[i]);
+    }
+}
+
 void recordCommandBufferAll() {
     auto& renderer = shared.renderer;
     for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
@@ -151,6 +191,27 @@ void recordCommandBufferAll() {
     }
 }
 
+void drawLoop(int& currentFrame) {
+    uint32_t imgIdx;
+    shared.renderer.drPrepareFrame(currentFrame, &imgIdx);
+
+    // Compute Task
+    comp.computeInFlight[currentFrame]->waitForFence();
+    comp.computeInFlight[currentFrame]->resetFence();
+
+    std::vector<const AnthemSemaphore*> semaphoreToSignal = { comp.computeFinish[currentFrame] };
+    std::vector<AtSyncSemaphoreWaitStage> waitStage = { AtSyncSemaphoreWaitStage::AT_SSW_VERTEX_INPUT };
+    shared.renderer.drSubmitCommandBufferCompQueueGeneral(comp.allocCmdBuf[currentFrame], nullptr, &semaphoreToSignal, comp.computeInFlight[currentFrame]);
+
+
+    // Graphics Drawing
+    //shared.renderer.drSubmitBufferPrimaryCall(currentFrame, currentFrame);
+    shared.renderer.drSubmitCommandBufferGraphicsQueueGeneral(currentFrame, imgIdx, &semaphoreToSignal, &waitStage);
+    shared.renderer.drPresentFrame(currentFrame, imgIdx);
+    currentFrame++;
+    currentFrame %= 2;
+}
+
 int main() {
     prepareShared();
     prepareDraw();
@@ -158,16 +219,12 @@ int main() {
 
     shared.renderer.registerPipelineSubComponents();
     recordCommandBufferAll();
+    recordCommandBufferCompAll();
 
     int currentFrame = 0;
     shared.renderer.setDrawFunction([&]() {
-        uint32_t imgIdx;
-        shared.renderer.drPrepareFrame(currentFrame, &imgIdx);
-        shared.renderer.drSubmitBufferPrimaryCall(currentFrame, currentFrame);
-        shared.renderer.drPresentFrame(currentFrame, imgIdx);
-        currentFrame++;
-        currentFrame %= 2;
-        });
+        drawLoop(currentFrame);
+    });
     shared.renderer.startDrawLoopDemo();
     shared.renderer.finalize();
 

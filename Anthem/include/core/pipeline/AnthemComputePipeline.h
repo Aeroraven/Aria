@@ -28,5 +28,9 @@ namespace Anthem::Core{
 
         bool destroyPipeline();
         bool destroyPipelineLayout();
+        const VkPipelineLayout* getPipelineLayout() const {
+            ANTH_ASSERT(this->pipelineCreated, "Invalid pipeline");
+            return &(this->pipelineLayout);
+        }
     };
 }

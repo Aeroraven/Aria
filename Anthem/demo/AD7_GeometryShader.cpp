@@ -127,7 +127,7 @@ void recordCommandsStage(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, St
         std::vector<AnthemDescriptorSetEntry> descSetEntries = {uniformBufferDescEntryRdw};
         renderer.drBindVertexBuffer(target.vxBuffers[j],i);
         renderer.drBindIndexBuffer(target.ixBuffers[j],i);
-        renderer.drBindDescriptorSetCustomized(descSetEntries,target.pipeline,i);
+        renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries,target.pipeline,i);
         renderer.drDraw(target.ixBuffers[j]->getIndexCount(),i);
     }
     renderer.drEndRenderPass(i);

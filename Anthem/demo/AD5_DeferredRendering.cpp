@@ -298,7 +298,7 @@ void recordCommandsTarget(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, T
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerAlbedo,samplerNormal,samplerPosition,uniformCamera};
     renderer.drBindVertexBuffer(target.vxBuffer,i);
     renderer.drBindIndexBuffer(target.ixBuffer,i);
-    renderer.drBindDescriptorSetCustomized(descSetEntriesRegPipeline,target.pipeline,i);
+    renderer.drBindDescriptorSetCustomizedGraphics(descSetEntriesRegPipeline,target.pipeline,i);
     renderer.drDraw(target.ixBuffer->getIndexCount(),i);
     renderer.drEndRenderPass(i);
 }
@@ -323,7 +323,7 @@ void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer
         std::vector<AnthemDescriptorSetEntry> descSetEntries = {uniformBufferDescEntryRdw,samplerDescEntryRdw};
         renderer.drBindVertexBuffer(offscreen.vxBuffers[j],i);
         renderer.drBindIndexBuffer(offscreen.ixBuffers[j],i);
-        renderer.drBindDescriptorSetCustomized(descSetEntries,offscreen.pipeline,i);
+        renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries,offscreen.pipeline,i);
         renderer.drDraw(offscreen.ixBuffers[j]->getIndexCount(),i);
     }
     renderer.drEndRenderPass(i);

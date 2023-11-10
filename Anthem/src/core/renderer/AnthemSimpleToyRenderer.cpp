@@ -465,8 +465,7 @@ namespace Anthem::Core{
         submitInfo.pCommandBuffers = this->commandBuffers->getCommandBuffer(cmdIdx);
         submitInfo.signalSemaphoreCount = static_cast<decltype(submitInfo.signalSemaphoreCount)>(semToSignal.size());
         submitInfo.pSignalSemaphores = semToSignal.data();
-
-        //vkQueueSubmit(this->logicalDevice->getComputeQueue(),1,)
+        ANTH_LOGI("Prepare to submit");
         if (vkQueueSubmit(this->logicalDevice->getComputeQueue(), 1, &submitInfo, *fenceToSignal->getFence()) != VK_SUCCESS) {
             ANTH_LOGE("failed to submit compute command buffer!");
         };
@@ -562,7 +561,28 @@ namespace Anthem::Core{
         vkCmdBindIndexBuffer(*this->commandBuffers->getCommandBuffer(cmdIdx), *(indexBuffer->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
         return true;
     }
-    bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomized(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx){
+    bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomizedCompute(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemComputePipeline* pipeline, uint32_t cmdIdx) {
+        std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
+        for (const auto& p : descSetEntries) {
+            if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER) {
+                p.descPool->appendDescriptorSetSampler(p.inTypeIndex, descSets);
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER) {
+                p.descPool->appendDescriptorSetUniform(p.inTypeIndex, descSets);
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SHADER_STORAGE_BUFFER) {
+                p.descPool->appendDescriptorSetSsbo(p.inTypeIndex, descSets);
+            }
+            else {
+                ANTH_LOGE("Unknown Descriptor Set Type");
+            }
+        }
+        vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_PIPELINE_BIND_POINT_COMPUTE, *(pipeline->getPipelineLayout()), 0,
+            static_cast<uint32_t>(descSets->size()), descSets->data(), 0, nullptr);
+        delete descSets;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomizedGraphics(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx){
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
         for(const auto& p:descSetEntries){
             if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER){
@@ -578,6 +598,7 @@ namespace Anthem::Core{
         delete descSets;
         return true;
     }
+
     bool AnthemSimpleToyRenderer::drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx, uint32_t cmdIdx){
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
         descPool->getAllDescriptorSets(frameIdx,descSets);
@@ -636,6 +657,10 @@ namespace Anthem::Core{
         this->depthBuffers.push_back(depthBuffer);
         
         *pDepthBuffer = depthBuffer;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ) {
+        vkCmdDispatch(*this->commandBuffers->getCommandBuffer(cmdIdx), workgroupX, workgroupY, workgroupZ);
         return true;
     }
     bool AnthemSimpleToyRenderer::exGetWindowSize(int& height,int& width){
