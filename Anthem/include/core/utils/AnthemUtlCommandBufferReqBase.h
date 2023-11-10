@@ -5,7 +5,7 @@ namespace Anthem::Core::Util{
     
     class AnthemUtlCommandBufferReqBase{
     protected:
-        AnthemCommandBuffers* cmdBufs;
+        AnthemCommandBuffers* cmdBufs = nullptr;
     public:
         bool virtual specifyCommandBuffers(AnthemCommandBuffers* cmdBufs);
         const AnthemCommandBuffers* getCommandBuffer() const;

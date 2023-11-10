@@ -15,7 +15,7 @@ namespace Anthem::Core{
     class AnthemFramebuffer{
     private:
         const AnthemLogicalDevice* logicalDevice = nullptr;
-        VkFramebuffer framebuffer;
+        VkFramebuffer framebuffer = nullptr;
         std::vector<const AnthemImage*> colorAttachment = {};
         AnthemDepthBuffer* depthBuffer = nullptr;
         const AnthemRenderPass* ctRenderPass = nullptr;

@@ -28,7 +28,9 @@ namespace Anthem::Core{
         const std::vector<AnthemGeneralBufferProp>* getBuffers(){
             return &(this->bufferProp.ssbo);
         }
-        uint32_t virtual getBufferSize() = 0;
+        uint32_t virtual getBufferSize() {
+            return this->calculateBufferSize();
+        }
         bool specifyNumCopies(uint32_t numCopies){
             this->numCopies = numCopies;
             this->bufferProp.ssbo.resize(numCopies);
@@ -101,7 +103,7 @@ namespace Anthem::Core{
         uint32_t numElements = 0;
         uint32_t totlBufferSize = 0;
     public:
-        uint32_t virtual getBufferSize() override{
+        uint32_t virtual calculateBufferSize() override{
             return this->totlBufferSize;
         }
         bool setTotalElements(uint32_t totalElements){
@@ -110,6 +112,7 @@ namespace Anthem::Core{
             this->bufferData = new char[reqSize];
             this->bmaBindBuffer(this->bufferData);
             this->totlBufferSize = reqSize;
+            ANTH_LOGI("totlBufferSize=", totlBufferSize);
             return true;
         }
         bool setInput(uint32_t idx, std::array<Tp,VecSz>... args){

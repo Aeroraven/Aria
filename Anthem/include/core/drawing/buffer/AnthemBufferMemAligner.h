@@ -68,6 +68,21 @@ namespace Anthem::Core{
     template<uint32_t ArrSz= 1>
     using AtBufMat4f = AnthemBufferVarDef<float,2,4,ArrSz>;
 
+    template<uint32_t ArrSz = 1>
+    using AtBufVecdFloat = AnthemBufferVarDynamicDef<float, 1, 1, ArrSz>;
+
+    template<uint32_t ArrSz = 1>
+    using AtBufVecd2f = AnthemBufferVarDynamicDef<float, 1, 2, ArrSz>;
+
+    template<uint32_t ArrSz = 1>
+    using AtBufVecd3f = AnthemBufferVarDynamicDef<float, 1, 3, ArrSz>;
+
+    template<uint32_t ArrSz = 1>
+    using AtBufVecd4f = AnthemBufferVarDynamicDef<float, 1, 4, ArrSz>;
+
+    template<uint32_t ArrSz = 1>
+    using AtBufMatd4f = AnthemBufferVarDynamicDef<float, 2, 4, ArrSz>;
+
     template<typename... Desc>
     class AnthemBufferMemAlignerImpl;
 
@@ -99,10 +114,12 @@ namespace Anthem::Core{
         constexpr static bool legalityAssertion(){
             int numVertexStageVars = 0;
             if constexpr(numArgs==0) return false;
-            for(auto i=0;i<numArgs;i++)
-                if(!validType.at(i)) return false;
-            for(auto i=dynVarStart;i<numArgs;i++)
-                if(!dynamicSize.at(i)||arrayElements.at(i)!=1) return false;
+            for (auto i = 0; i < numArgs; i++) {
+                if (!validType.at(i)) return false;
+            }
+            for (auto i = dynVarStart; i < numArgs; i++) {
+                if (!dynamicSize.at(i) || arrayElements.at(i) != 1) return false;
+            }
             return true;
         }
         static_assert(legalityAssertion());

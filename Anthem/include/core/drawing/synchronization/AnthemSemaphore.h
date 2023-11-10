@@ -5,7 +5,7 @@
 namespace Anthem::Core{
     class AnthemSemaphore:public virtual Util::AnthemUtlLogicalDeviceReqBase{
     private:
-        VkSemaphore semaphore;
+        VkSemaphore semaphore = nullptr;
     public:
         bool createSemaphore();
         const VkSemaphore* getSemaphore() const;

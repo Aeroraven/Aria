@@ -29,7 +29,10 @@ namespace Anthem::Core{
         this->descriptorPool = pool;
         return true;
     }
-
+    bool AnthemGraphicsPipeline::specifyProps(AnthemGraphicsPipelineCreateProps* props){
+        this->extraProps = *props;
+        return true;
+    }
     bool AnthemGraphicsPipeline::preparePreqPipelineCreateInfo(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->viewport != nullptr,"Viewport not specified");
@@ -63,7 +66,16 @@ namespace Anthem::Core{
         this->inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         this->inputAssemblyStateCreateInfo.pNext = nullptr;
         this->inputAssemblyStateCreateInfo.flags = 0;
-        this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        using topoEnum = std::remove_cvref<decltype(extraProps.inputTopo)>::type;
+        if (extraProps.inputTopo == topoEnum::AT_AIAT_TRIANGLE_LIST) {
+            this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        }else if (extraProps.inputTopo == topoEnum::AT_AIAT_POINT_LIST) {
+            this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        }else {
+            ANTH_LOGE("Unknown topology");
+        }
+
+        
         this->inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
         //Specify Viewport Info

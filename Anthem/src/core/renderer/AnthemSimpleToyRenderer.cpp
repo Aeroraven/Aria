@@ -160,6 +160,7 @@ namespace Anthem::Core{
         descriptorPool->specifyLogicalDevice(this->logicalDevice.get());
         descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&(this->uniformDescPoolIdx));
         descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ,&(this->imageDescPoolIdx));
+        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &(this->ssboDescPoolIdx));
         *pDescPool = descriptorPool;
         this->descriptorPools.push_back(descriptorPool);
         return true;
@@ -244,6 +245,9 @@ namespace Anthem::Core{
         for(const auto& p:indexBuffers){
             p->createBuffer();
         }
+        for (const auto& p : ssboBuffers) {
+            p->createShaderStorageBuffer();
+        }
         //Prepare Descriptor Sets
         for(const auto& p:descriptorPools){
             p->createDescriptorSet(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
@@ -268,7 +272,7 @@ namespace Anthem::Core{
         this->shaders.push_back(shaderModule);
         return true;
     }
-    bool AnthemSimpleToyRenderer::createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer){
+    bool AnthemSimpleToyRenderer::createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer, AnthemGraphicsPipelineCreateProps* createProps){
         auto graphicsPipeline = new AnthemGraphicsPipeline();
         graphicsPipeline->specifyLogicalDevice(this->logicalDevice.get());
         graphicsPipeline->specifyViewport(this->viewport.get());
@@ -277,7 +281,10 @@ namespace Anthem::Core{
         graphicsPipeline->specifyVertexBuffer(vertexBuffer);
         graphicsPipeline->specifyUniformBuffer(nullptr); 
         ANTH_TODO("Remove nullptr");
-        graphicsPipeline->specifyDescriptor(descSetEntries.at(0).descPool);
+        //graphicsPipeline->specifyDescriptor(descSetEntries.at(0).descPool);
+        if (createProps != nullptr) {
+            graphicsPipeline->specifyProps(createProps);
+        }
 
         graphicsPipeline->preparePreqPipelineCreateInfo();
         graphicsPipeline->createPipelineLayoutCustomized(descSetEntries);
@@ -312,18 +319,7 @@ namespace Anthem::Core{
         *pFence = sp;
         return true;
     }
-
-    bool AnthemSimpleToyRenderer::drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal){
-        if(semaphoreToWait!=nullptr){
-            ANTH_LOGE("not supported now, todo");
-        }
-        VkSubmitInfo submitInfo;
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        //submitInfo.pCommandBuffers = &this->commandBuffers->getCommandBuffer(cmdIdx);
-        
-        //vkQueueSubmit(this->logicalDevice->getComputeQueue(),1,)
-        return true;
-    }
+    
 
     bool AnthemSimpleToyRenderer::createGraphicsPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer){
         auto graphicsPipeline = new AnthemGraphicsPipeline();
@@ -425,6 +421,30 @@ namespace Anthem::Core{
         }
         *avaImageIdx = imageIdx;
         ANTH_LOGV("Presenting Frame, Done");
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages) {
+        return this->mainLoopSyncer->submitCommandBufferGeneral(this->commandBuffers->getCommandBuffer(cmdIdx), frameIdx, semaphoreToWait, semaphoreWaitStages);
+    }
+    bool AnthemSimpleToyRenderer::drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx, const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<const AnthemSemaphore*>* semaphoreToSignal, const AnthemFence* fenceToSignal) {
+        if (semaphoreToWait != nullptr) {
+            ANTH_LOGE("not supported now, todo");
+        }
+        VkSubmitInfo submitInfo;
+        std::vector<VkSemaphore> semToSignal;
+        for (const auto& p : *semaphoreToSignal) {
+            semToSignal.push_back(*p->getSemaphore());
+        }
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = this->commandBuffers->getCommandBuffer(cmdIdx);
+        submitInfo.signalSemaphoreCount = static_cast<decltype(submitInfo.signalSemaphoreCount)>(semToSignal.size());
+        submitInfo.pSignalSemaphores = semToSignal.data();
+
+        //vkQueueSubmit(this->logicalDevice->getComputeQueue(),1,)
+        if (vkQueueSubmit(this->logicalDevice->getComputeQueue(), 1, &submitInfo, *fenceToSignal->getFence()) != VK_SUCCESS) {
+            ANTH_LOGE("failed to submit compute command buffer!");
+        };
         return true;
     }
     bool AnthemSimpleToyRenderer::drEndCommandRecording(uint32_t cmdIdx){

@@ -16,7 +16,7 @@ namespace Anthem::Core{
         if(res!=VK_SUCCESS){
             ANTH_LOGE("Failed to create compute pipeline");
         }
-        ANTH_LOGE("Compute pipeline created");
+        ANTH_LOGI("Compute pipeline created");
         return true;
     }
     bool AnthemComputePipeline::specifyShaderModule(const AnthemShaderModule* shaderModule){

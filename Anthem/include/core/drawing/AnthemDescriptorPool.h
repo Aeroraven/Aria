@@ -236,7 +236,7 @@ namespace Anthem::Core{
             ANTH_LOGI("Preparing Descriptor Update: SSBO");
             for(uint32_t i=0;i<numSets;i++){
                 for(uint32_t j=0;j<static_cast<uint32_t>(this->ssboDesc.size());j++){
-                    ANTH_LOGI("Buffer Copies =",uniformBuffers.at(j).buffer->size());
+                    ANTH_LOGI("Buffer Copies =", ssboDesc.at(j).buffer->size());
                     ssboDesc.at(j).bufferInfo.buffer = ssboDesc.at(j).buffer->at(i).buffer;
                     ssboDesc.at(j).bufferInfo.offset = 0;
                     ssboDesc.at(j).bufferInfo.range = ssboDesc.at(j).size;
@@ -248,7 +248,7 @@ namespace Anthem::Core{
                     descCp.dstBinding = ssboDesc.at(j).bindLoc;
                     descCp.dstArrayElement = 0;
                     descCp.descriptorCount = 1;
-                    descCp.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                    descCp.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                     descCp.pImageInfo = nullptr;
                     descCp.pBufferInfo = &ssboDesc.at(j).bufferInfo;
                     descCp.pTexelBufferView = nullptr;

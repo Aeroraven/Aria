@@ -24,10 +24,10 @@ namespace Anthem::Core{
     public AnthemDescriptorPoolReqBase{
     private:
         char* rawImageData = nullptr;
-        uint32_t width,height,channels;
-        AnthemGeneralBufferProp stagingBuffer;
+        uint32_t width = 0,height = 0,channels = 0;
+        AnthemGeneralBufferProp stagingBuffer{};
         bool msaaOn = false;
-        AnthemImageUsage definedUsage;
+        AnthemImageUsage definedUsage = AT_IU_UNDEFINED;
         AnthemImageFormat desiredFormat = AT_IF_UNDEFINED;
         
 

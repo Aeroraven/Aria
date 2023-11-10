@@ -10,6 +10,15 @@
 #include "./AnthemDescriptorSetEntry.h"
 
 namespace Anthem::Core{
+    enum class AnthemInputAssemblerTopology {
+        AT_AIAT_UNDEFINED = 0,
+        AT_AIAT_TRIANGLE_LIST = 1,
+        AT_AIAT_POINT_LIST = 2,
+    };
+    struct AnthemGraphicsPipelineCreateProps {
+        AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
+    };
+
     class AnthemGraphicsPipeline{     
     private:
         const AnthemLogicalDevice* logicalDevice = nullptr;
@@ -20,6 +29,7 @@ namespace Anthem::Core{
         AnthemVertexBuffer* vertexBuffer = nullptr;
         AnthemUniformBuffer* uniformBuffer = nullptr;
         AnthemDescriptorPool* descriptorPool = nullptr;
+        AnthemGraphicsPipelineCreateProps extraProps = {};
 
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
         std::vector<VkDynamicState> reqiredDynamicStates={
@@ -58,6 +68,7 @@ namespace Anthem::Core{
         bool specifyVertexBuffer(AnthemVertexBuffer* vertexBuffer);
         bool specifyUniformBuffer(AnthemUniformBuffer* uniformBuffer);
         bool specifyDescriptor(AnthemDescriptorPool* pool);
+        bool specifyProps(AnthemGraphicsPipelineCreateProps* props);
 
 
         bool preparePreqPipelineCreateInfo();

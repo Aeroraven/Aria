@@ -67,6 +67,7 @@ namespace Anthem::Core{
 
         uint32_t uniformDescPoolIdx = -1;
         uint32_t imageDescPoolIdx = -1;
+        uint32_t ssboDescPoolIdx = -1;
 
         VkDeviceSize emptyOffsetPlaceholder[1] = {0};
 
@@ -110,7 +111,7 @@ namespace Anthem::Core{
 
         bool registerPipelineSubComponents();
         bool createGraphicsPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
-        bool createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer);
+        bool createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemGraphicsPipelineCreateProps* createProps);
         bool createComputePipelineCustomized(AnthemComputePipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemShaderModule* shaderModule);
         
         bool createSemaphore(AnthemSemaphore** pSemaphore);
@@ -128,7 +129,8 @@ namespace Anthem::Core{
         bool drSubmitBufferPrimaryCall(uint32_t frameIdx,uint32_t cmdIdx);
         bool drClearCommands(uint32_t cmdIdx);
 
-        bool drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal);
+        bool drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages);
+        bool drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal,const AnthemFence* fenceToSignal);
 
         bool drSetViewportScissor(uint32_t cmdIdx);
         bool drBindGraphicsPipeline(AnthemGraphicsPipeline* pipeline,uint32_t cmdIdx);
@@ -172,14 +174,22 @@ namespace Anthem::Core{
 
         template< template <typename Tp,uint32_t MatDim,uint32_t VecSz,uint32_t ArrSz> class... DescTp, 
             typename... Tp,uint32_t... MatDim,uint32_t... VecSz,uint32_t... ArrSz>
-        bool createShaderStorageBuffer(AnthemShaderStorageBufferImpl<DescTp<Tp,MatDim,VecSz,ArrSz>...>** pSsbo, uint32_t bindLoc, AnthemDescriptorPool* descPool){
+        bool createShaderStorageBuffer(AnthemShaderStorageBufferImpl<DescTp<Tp,MatDim,VecSz,ArrSz>...>** pSsbo,uint32_t totSize, uint32_t bindLoc, AnthemDescriptorPool* descPool,
+            std::optional<std::function<void(AnthemShaderStorageBufferImpl<DescTp<Tp, MatDim, VecSz, ArrSz>...>*)>> dataPrepareProc) {
             auto ssbo = new AnthemShaderStorageBufferImpl<DescTp<Tp,MatDim,VecSz,ArrSz>...>();
+            ssbo->specifyCommandBuffers(this->commandBuffers.get());
             ssbo->specifyLogicalDevice(this->logicalDevice.get());
             ssbo->specifyPhyDevice(this->phyDevice.get());
             ssbo->specifyNumCopies(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
+            ssbo->setTotalElements(totSize);
+            ssbo->specifyUsage(AnthemSSBOUsage::AT_ASBU_VERTEX);
+            if (dataPrepareProc.has_value()) {
+                auto w = dataPrepareProc.value();
+                w(ssbo);
+            }
             ssbo->createShaderStorageBuffer();
 
-            descPool->addShaderStorageBuffer(ssbo,bindLoc,descPool);
+            descPool->addShaderStorageBuffer(ssbo,bindLoc,this->ssboDescPoolIdx);
             *pSsbo = ssbo;
             this->ssboBuffers.push_back(ssbo);
             return true;

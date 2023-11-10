@@ -11,7 +11,7 @@ namespace Anthem::Core{
         public Util::AnthemUtlConfigReqBase{
     private:
         VkCommandPoolCreateInfo poolCreateInfo = {};
-        VkCommandPool commandPool;
+        VkCommandPool commandPool = nullptr;
 
         std::vector<VkCommandBuffer*> commandBuffer;
 

@@ -5,7 +5,7 @@
 namespace Anthem::Core{
     class AnthemFence:public virtual Util::AnthemUtlLogicalDeviceReqBase{
     private:
-        VkFence fence;
+        VkFence fence = nullptr;
     public:
         bool createFence();
         const VkFence* getFence() const;

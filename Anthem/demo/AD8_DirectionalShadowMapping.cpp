@@ -125,7 +125,7 @@ void prepareDebug(){
     };
 
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition};
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer,nullptr);
     ANTH_LOGI("Done");
 }
 

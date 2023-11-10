@@ -15,7 +15,7 @@ namespace Anthem::Core{
         VkPipelineLayout pipelineLayout = {};
         std::vector<VkDescriptorSetLayout> layouts;
 
-        VkPipeline pipeline;
+        VkPipeline pipeline = nullptr;
         VkComputePipelineCreateInfo pipelineCreateInfo = {};
         const AnthemShaderModule* shaderModule = nullptr;
 

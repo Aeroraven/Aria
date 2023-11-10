@@ -22,7 +22,7 @@ namespace Anthem::Core{
     public Util::AnthemUtlCommandBufferReqBase{
     protected:
         AnthemImageProp image = {};
-        VkSampler sampler;
+        VkSampler sampler = nullptr;
     protected:
         bool createImageInternal(VkImageUsageFlags usage, VkFormat format, uint32_t width, uint32_t height);
         bool createImageViewInternal(VkImageAspectFlags aspectFlags);

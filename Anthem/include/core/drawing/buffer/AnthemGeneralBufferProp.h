@@ -3,9 +3,9 @@
 
 namespace Anthem::Core{
     struct AnthemGeneralBufferProp{
-        VkBuffer buffer;
+        VkBuffer buffer = nullptr;
         VkBufferCreateInfo bufferCreateInfo = {};
-        VkDeviceMemory bufferMem;
-        void* mappedMem;
+        VkDeviceMemory bufferMem = nullptr;
+        void* mappedMem = nullptr;
     };
 }
