@@ -176,7 +176,7 @@ void prepareTarget(){
     
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerShadowDepthInfo};
 
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,shadow.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,shadow.vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -272,7 +272,7 @@ void prepareOffscreen(){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline};
 
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 
 }

@@ -191,7 +191,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerDescEntryRegPipeline};
 
-    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline,offscreen.pass,offscreen.shader,offscreen.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline,offscreen.pass,offscreen.shader,offscreen.vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -267,7 +267,7 @@ void prepareTarget(TargetPass& target, OffscreenPass& offscr, AnthemSimpleToyRen
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerAlbedo,samplerNormal,samplerPosition,uniformCamera};
 
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer, nullptr);
     ANTH_LOGI("Done");
 }
 void recordCommandsTarget(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, TargetPass& target,OffscreenPass& offscreen,int i){

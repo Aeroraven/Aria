@@ -130,7 +130,7 @@ void prepareOffscreenPass(){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerDescEntryRegPipeline,uniformBufferDescEntryRegPipeline};
 
-    renderer.createGraphicsPipelineCustomized(&offscreenPass.pipeline,descSetEntriesRegPipeline,offscreenPass.pass,offscreenPass.shader,meshes.vxBuffers[0]);
+    renderer.createGraphicsPipelineCustomized(&offscreenPass.pipeline,descSetEntriesRegPipeline,offscreenPass.pass,offscreenPass.shader,meshes.vxBuffers[0],nullptr);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -189,7 +189,7 @@ void prepareSSRPass(){
         .inTypeIndex = 0
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition,samplerColor,samplerNormal,samplerSpecular,uniformCam};
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer,nullptr);
     ANTH_LOGI("Done");
 }
 
