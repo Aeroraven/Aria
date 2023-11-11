@@ -75,7 +75,7 @@ namespace Anthem{
             void loge2(const char* func, std::tuple<_Args...> args){
                 std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
                 this->log_wrapper(func,"ERROR",f,args);
-                exit(1);
+                throw;
             }
             template<typename... _Args>
             void log_assert2(const char* func, bool cond, std::tuple<_Args...> args){

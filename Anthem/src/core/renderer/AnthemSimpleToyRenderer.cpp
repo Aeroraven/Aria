@@ -295,7 +295,7 @@ namespace Anthem::Core{
         this->shaders.push_back(shaderModule);
         return true;
     }
-    bool AnthemSimpleToyRenderer::createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer, AnthemGraphicsPipelineCreateProps* createProps){
+    bool AnthemSimpleToyRenderer::createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule, IAnthemVertexBufferAttrLayout* vertexBuffer, AnthemGraphicsPipelineCreateProps* createProps){
         auto graphicsPipeline = new AnthemGraphicsPipeline();
         graphicsPipeline->specifyLogicalDevice(this->logicalDevice.get());
         graphicsPipeline->specifyViewport(this->viewport.get());
@@ -346,7 +346,7 @@ namespace Anthem::Core{
     }
     
 
-    bool AnthemSimpleToyRenderer::createGraphicsPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule,AnthemVertexBuffer* vertexBuffer,AnthemUniformBuffer* uniformBuffer){
+    bool AnthemSimpleToyRenderer::createGraphicsPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule, IAnthemVertexBufferAttrLayout* vertexBuffer,AnthemUniformBuffer* uniformBuffer){
         auto graphicsPipeline = new AnthemGraphicsPipeline();
         graphicsPipeline->specifyLogicalDevice(this->logicalDevice.get());
         graphicsPipeline->specifyViewport(this->viewport.get());
@@ -455,7 +455,7 @@ namespace Anthem::Core{
         if (semaphoreToWait != nullptr) {
             ANTH_LOGE("not supported now, todo");
         }
-        VkSubmitInfo submitInfo;
+        VkSubmitInfo submitInfo{};
         std::vector<VkSemaphore> semToSignal;
         for (const auto& p : *semaphoreToSignal) {
             semToSignal.push_back(*p->getSemaphore());
@@ -465,7 +465,6 @@ namespace Anthem::Core{
         submitInfo.pCommandBuffers = this->commandBuffers->getCommandBuffer(cmdIdx);
         submitInfo.signalSemaphoreCount = static_cast<decltype(submitInfo.signalSemaphoreCount)>(semToSignal.size());
         submitInfo.pSignalSemaphores = semToSignal.data();
-        ANTH_LOGI("Prepare to submit");
         if (vkQueueSubmit(this->logicalDevice->getComputeQueue(), 1, &submitInfo, *fenceToSignal->getFence()) != VK_SUCCESS) {
             ANTH_LOGE("failed to submit compute command buffer!");
         };
@@ -557,6 +556,10 @@ namespace Anthem::Core{
         vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,(vertexBuffer->getDestBufferObject()),emptyOffsetPlaceholder);
         return true;
     }
+    bool AnthemSimpleToyRenderer::drBindVertexBufferFromSsbo(AnthemShaderStorageBuffer* vertexBuffer, uint32_t copyId, uint32_t cmdIdx) {
+        vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(cmdIdx), 0, 1, (vertexBuffer->getDestBufferObject(copyId)), emptyOffsetPlaceholder);
+        return true;
+    }
     bool AnthemSimpleToyRenderer::drBindIndexBuffer(AnthemIndexBuffer* indexBuffer,uint32_t cmdIdx){
         vkCmdBindIndexBuffer(*this->commandBuffers->getCommandBuffer(cmdIdx), *(indexBuffer->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
         return true;
@@ -572,6 +575,7 @@ namespace Anthem::Core{
             }
             else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SHADER_STORAGE_BUFFER) {
                 p.descPool->appendDescriptorSetSsbo(p.inTypeIndex, descSets);
+                ANTH_LOGI("AcqIdx:", p.inTypeIndex);
             }
             else {
                 ANTH_LOGE("Unknown Descriptor Set Type");

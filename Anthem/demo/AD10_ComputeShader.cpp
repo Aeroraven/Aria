@@ -28,7 +28,7 @@ struct ComputePipeline {
     AnthemDescriptorPool* descPoolUniform;
 
     AnthemUniformBufferImpl<uniformDelta>* ubuf;
-    AnthemShaderStorageBufferImpl<AnthemBufferVarDynamicDef<float, 1, 4, 1>>* ssbo;
+    AnthemShaderStorageBufferImpl<ssboPos,ssboVelocity,ssboColor>* ssbo;
     AnthemShaderFilePaths shaderFile;
     AnthemShaderModule* shader;
     AnthemComputePipeline* pipeline;
@@ -37,6 +37,8 @@ struct ComputePipeline {
     AnthemSemaphore** computeFinish;
 
     uint32_t* allocCmdBuf;
+
+    using ssboType = decltype(ssbo);
 }comp;
 
 struct DrawPipeline {
@@ -50,6 +52,8 @@ struct DrawPipeline {
     AnthemGraphicsPipeline* pipeline;
     AnthemShaderModule* shader;
     AnthemSwapchainFramebuffer* framebuffer;
+    AnthemGraphicsPipelineCreateProps cprop;
+
 }drw;
 
 void prepareShared() {
@@ -58,19 +62,31 @@ void prepareShared() {
     renderer.initialize();
 }
 
+void prepareDrawLegacy() {
+    auto& renderer = shared.renderer;
+
+    renderer.createVertexBuffer(&drw.vxBuffer);
+    drw.vxBuffer->setTotalVertices(4);
+    float scaler = 0.5f;
+    drw.vxBuffer->insertData(0, { -1.0f * scaler, -1.0f * scaler }, { 1.0f, 0.0f });
+    drw.vxBuffer->insertData(1, { 1.0f * scaler, -1.0f * scaler }, { 0.0f, 0.0f });
+    drw.vxBuffer->insertData(2, { 1.0f * scaler, 1.0f * scaler }, { 0.0f, 1.0f });
+    drw.vxBuffer->insertData(3, { -1.0f * scaler, 1.0f * scaler }, { 1.0f, 1.0f });
+
+    renderer.createIndexBuffer(&drw.ixBuffer);
+    drw.ixBuffer->setIndices({ 0,1,2,2,3,0 });
+}
+
 void prepareDraw() {
     auto& renderer = shared.renderer;
     renderer.createDepthBuffer(&drw.depthBuffer, false);
 
-    renderer.createVertexBuffer(&drw.vxBuffer);
-    drw.vxBuffer->setTotalVertices(4);
-    drw.vxBuffer->insertData(0, { -1.0f, -1.0f }, { 1.0f, 0.0f });
-    drw.vxBuffer->insertData(1, { 1.0f, -1.0f }, { 0.0f, 0.0f });
-    drw.vxBuffer->insertData(2, { 1.0f, 1.0f }, { 0.0f, 1.0f });
-    drw.vxBuffer->insertData(3, { -1.0f, 1.0f }, { 1.0f, 1.0f });
-
     renderer.createIndexBuffer(&drw.ixBuffer);
-    drw.ixBuffer->setIndices({ 0,1,2,2,3,0 });
+    std::vector<uint32_t> indexList = {};
+    for (uint32_t i = 0; i < 4096; i++) {
+        indexList.push_back(i);
+    }
+    drw.ixBuffer->setIndices(indexList);
 
     //Create Pass
     renderer.setupDemoRenderPass(&drw.pass, drw.depthBuffer);
@@ -82,9 +98,28 @@ void prepareDraw() {
     };
     renderer.createShader(&drw.shader, &shaderFile);
 
+
+    drw.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_POINT_LIST;
+
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { };
-    renderer.createGraphicsPipelineCustomized(&drw.pipeline, descSetEntriesRegPipeline, drw.pass, drw.shader, drw.vxBuffer, nullptr);
+    renderer.createGraphicsPipelineCustomized(&drw.pipeline, descSetEntriesRegPipeline, drw.pass, drw.shader, comp.ssbo, &drw.cprop);
     ANTH_LOGI("Done");
+}
+
+void prepareSsboData(ComputePipeline::ssboType p) {
+    for (int i = 0; i < 4096; i++) {
+        float w = AnthemLinAlg::randomNumber<float>() * AT_PI * 2;
+        float v = AnthemLinAlg::randomNumber<float>() * AT_PI * 2;
+        float r = AnthemLinAlg::randomNumber<float>();
+        float g = AnthemLinAlg::randomNumber<float>();
+        float b = AnthemLinAlg::randomNumber<float>();
+
+        p->setInput(i,
+            { std::cos(w),std::sin(w) },
+            { std::cos(v),std::sin(v) },
+            { r,g,b,1.0f }
+        );
+    }
 }
 
 void prepareCompute() {
@@ -107,14 +142,21 @@ void prepareCompute() {
     }
     
     ANTH_LOGI("Creating SSBO");
-    std::function<void(decltype(comp.ssbo))> wFunc = [&](auto* p) {
+    std::function<void(decltype(comp.ssbo))> wFunc = [&](decltype(comp.ssbo) p) {
         ANTH_LOGI("Invoked");
+        prepareSsboData(p);
     };
     renderer.createShaderStorageBuffer(&comp.ssbo,4096, 0, comp.descPoolSsbo,std::make_optional(wFunc));
     
     
     ANTH_LOGI("Creating Uniform");
     renderer.createUniformBuffer(&comp.ubuf, 0, comp.descPoolUniform);
+    float ubufData = 0.0005;
+    comp.ubuf->specifyUniforms(&ubufData);
+    for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT;i++) {
+        comp.ubuf->updateBuffer(i);
+    }
+    
 
     comp.shaderFile.computeShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\computeShaderCompStage\\shader.comp.spv";
     renderer.createShader(&comp.shader, &comp.shaderFile);
@@ -143,7 +185,7 @@ void recordCommandBufferDrw(int i) {
     renderer.drStartRenderPass(drw.pass, (AnthemFramebuffer*)(drw.framebuffer->getFramebufferObject(i)), i, false);
     renderer.drSetViewportScissor(i);
     renderer.drBindGraphicsPipeline(drw.pipeline, i);
-    renderer.drBindVertexBuffer(drw.vxBuffer, i);
+    renderer.drBindVertexBufferFromSsbo(comp.ssbo,0, i);
     renderer.drBindIndexBuffer(drw.ixBuffer, i);
 
     renderer.drDraw(drw.ixBuffer->getIndexCount(), i);
@@ -161,12 +203,12 @@ void recordCommandBufferComp(int i) {
     AnthemDescriptorSetEntry dseSsboIn = {
         .descPool = comp.descPoolSsbo,
         .descSetType = AT_ACDS_SHADER_STORAGE_BUFFER,
-        .inTypeIndex = 0
+        .inTypeIndex = static_cast<uint32_t>(i)
     };
     AnthemDescriptorSetEntry dseSsboOut = {
         .descPool = comp.descPoolSsbo,
         .descSetType = AT_ACDS_SHADER_STORAGE_BUFFER,
-        .inTypeIndex = 0
+        .inTypeIndex = (static_cast<uint32_t>(i) + 1) % 2
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { dseUniform,dseSsboIn,dseSsboOut };
     renderer.drBindDescriptorSetCustomizedCompute(descSetEntriesRegPipeline, comp.pipeline, comp.allocCmdBuf[i]);
@@ -177,6 +219,7 @@ void recordCommandBufferCompAll() {
     auto& renderer = shared.renderer;
     for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
         renderer.drStartCommandRecording(comp.allocCmdBuf[i]);
+        ANTH_LOGI("Start Recording:", comp.allocCmdBuf[i]);
         recordCommandBufferComp(i);
         renderer.drEndCommandRecording(comp.allocCmdBuf[i]);
     }
@@ -192,6 +235,7 @@ void recordCommandBufferAll() {
 }
 
 void drawLoop(int& currentFrame) {
+
     uint32_t imgIdx;
     shared.renderer.drPrepareFrame(currentFrame, &imgIdx);
 
@@ -203,7 +247,6 @@ void drawLoop(int& currentFrame) {
     std::vector<AtSyncSemaphoreWaitStage> waitStage = { AtSyncSemaphoreWaitStage::AT_SSW_VERTEX_INPUT };
     shared.renderer.drSubmitCommandBufferCompQueueGeneral(comp.allocCmdBuf[currentFrame], nullptr, &semaphoreToSignal, comp.computeInFlight[currentFrame]);
 
-
     // Graphics Drawing
     //shared.renderer.drSubmitBufferPrimaryCall(currentFrame, currentFrame);
     shared.renderer.drSubmitCommandBufferGraphicsQueueGeneral(currentFrame, imgIdx, &semaphoreToSignal, &waitStage);
@@ -214,8 +257,8 @@ void drawLoop(int& currentFrame) {
 
 int main() {
     prepareShared();
-    prepareDraw();
     prepareCompute();
+    prepareDraw();
 
     shared.renderer.registerPipelineSubComponents();
     recordCommandBufferAll();

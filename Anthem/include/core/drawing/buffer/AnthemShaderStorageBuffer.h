@@ -74,6 +74,9 @@ namespace Anthem::Core{
             }
             return true;
         }
+        const VkBuffer* getDestBufferObject(uint32_t copyId) const {
+            return &(this->bufferProp.ssbo.at(copyId).buffer);
+        }
         bool createShaderStorageBuffer(){
             prepareStagingBuffer();
             prepareSSBO();
@@ -94,37 +97,6 @@ namespace Anthem::Core{
         }
     };
 
-    template<typename... Desc>
-    class AnthemShaderStorageBufferImpl;
-
-    template< template <typename Tp,uint32_t MatDim,uint32_t VecSz,uint32_t ArrSz> class... DescTp, 
-        typename... Tp,uint32_t... MatDim,uint32_t... VecSz,uint32_t... ArrSz>
-    class AnthemShaderStorageBufferImpl<DescTp<Tp,MatDim,VecSz,ArrSz>...>:
-    public virtual AnthemShaderStorageBuffer,protected virtual AnthemBufferMemAlignerImpl<DescTp<Tp,MatDim,VecSz,ArrSz>...>{
-    private:
-        uint32_t numElements = 0;
-        uint32_t totlBufferSize = 0;
-    public:
-        uint32_t virtual calculateBufferSize() override{
-            return this->totlBufferSize;
-        }
-        bool setTotalElements(uint32_t totalElements){
-            this->numElements = totalElements;
-            auto reqSize = this->bmaCalcRequiredSpaceForDynInput(totalElements);
-            this->bufferData = new char[reqSize];
-            this->bmaBindBuffer(this->bufferData);
-            this->totlBufferSize = reqSize;
-            ANTH_LOGI("totlBufferSize=", totlBufferSize);
-            return true;
-        }
-        bool setInput(uint32_t idx, std::array<Tp,VecSz>... args){
-            return this->bmaSetDynamicInput(idx,args...);
-        }
-        ~AnthemShaderStorageBufferImpl(){
-            if(this->bufferData!=nullptr){
-                delete[] this->bufferData;
-            }
-        }
-    };
+    
 
 }

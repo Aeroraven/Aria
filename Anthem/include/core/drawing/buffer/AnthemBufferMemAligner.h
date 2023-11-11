@@ -102,6 +102,13 @@ namespace Anthem::Core{
         constexpr static std::array<IdxType,numArgs> elemSize = {(DescTp<Tp,MatDim,VecSz,ArrSz>::dataLength)...};
         constexpr static std::array<IdxType,numArgs> arrayElements = {ArrSz...};
 
+
+        constexpr static std::array<bool, numArgs> isFloatType = { std::is_floating_point<Tp>::value... };
+        constexpr static std::array<bool, numArgs> isIntType = { std::is_integral<Tp>::value... };
+        constexpr static std::array<bool, numArgs> isUnsignedType = { std::is_unsigned<Tp>::value... };
+        constexpr static std::array<IdxType, numArgs> attrTpSize = { sizeof(Tp)... };
+        constexpr static std::array<IdxType, numArgs> attrDims = { VecSz... };
+
         constexpr static IdxType getDynamicVarStartPos(){
             for(auto i=0;i<numArgs;i++){
                 if(dynamicSize.at(i)){
@@ -185,6 +192,7 @@ namespace Anthem::Core{
             auto lastOffset = dynamicOffsetReq.back()+elemSize.back();
             auto padding = bmaGetPaddingBeforeNextDynElement();
             auto totlPad = lastOffset+padding;
+            //ANTH_LOGI("Last off:", lastOffset, " Padding:", padding," Idx:",idx);
             return idx*totlPad;
         }
 
@@ -194,11 +202,11 @@ namespace Anthem::Core{
             return true;
         }
         bool bmaSetDynamicInput(IdxType idx, std::array<Tp,VecSz>... args){
-            std::vector<void*> ptrs = {(args.data())...};
+            std::vector<char*> ptrs = {(reinterpret_cast<char*>(args.data()))...};
             auto basePads = bmaGetIthElementPrePadding(idx);
             for(int i=0;i<numArgs;i++){
                 auto idxOffset = dynamicOffsetReq.at(i);
-                memcpy(buffer+idxOffset,ptrs.at(i)+basePads,elemSize.at(i));
+                memcpy(buffer+basePads+idxOffset,ptrs.at(i),elemSize.at(i));
             }
             return true;
         }

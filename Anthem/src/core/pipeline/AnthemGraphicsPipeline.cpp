@@ -17,7 +17,7 @@ namespace Anthem::Core{
         this->shaderModule = shaderModule;
         return true;
     }
-    bool AnthemGraphicsPipeline::specifyVertexBuffer(AnthemVertexBuffer* vertexBuffer){
+    bool AnthemGraphicsPipeline::specifyVertexBuffer(IAnthemVertexBufferAttrLayout* vertexBuffer){
         this->vertexBuffer = vertexBuffer;
         return true;
     }

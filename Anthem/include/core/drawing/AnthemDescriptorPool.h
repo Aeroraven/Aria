@@ -31,12 +31,13 @@ namespace Anthem::Core{
     struct AnthemShaderStorageBufferDescriptorInfo{
         const std::vector<AnthemGeneralBufferProp>* buffer;
         uint32_t size;
-        VkDescriptorBufferInfo bufferInfo = {};
+        VkDescriptorBufferInfo* bufferInfo = nullptr;
         uint32_t bindLoc;
         VkDescriptorSetLayoutBinding layoutBindingDesc = {};
         VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
         VkDescriptorSetLayout layout = VK_NULL_HANDLE;
         uint32_t descPoolId;
+        
     };
 
 
@@ -67,6 +68,7 @@ namespace Anthem::Core{
             return true;
         }
         const bool appendDescriptorSetSsbo(uint32_t idx,std::vector<VkDescriptorSet>* outRef) const{
+            ANTH_LOGI("Requested Desc W:", idx);
             outRef->push_back(descriptorSetsSsbo.at(idx));
             return true;
         }
@@ -234,12 +236,16 @@ namespace Anthem::Core{
                 }
             }
             ANTH_LOGI("Preparing Descriptor Update: SSBO");
+            for (uint32_t j = 0; j < static_cast<uint32_t>(this->ssboDesc.size()); j++) {
+                ssboDesc.at(j).bufferInfo = new VkDescriptorBufferInfo[numSets];
+            }
             for(uint32_t i=0;i<numSets;i++){
                 for(uint32_t j=0;j<static_cast<uint32_t>(this->ssboDesc.size());j++){
-                    ANTH_LOGI("Buffer Copies =", ssboDesc.at(j).buffer->size());
-                    ssboDesc.at(j).bufferInfo.buffer = ssboDesc.at(j).buffer->at(i).buffer;
-                    ssboDesc.at(j).bufferInfo.offset = 0;
-                    ssboDesc.at(j).bufferInfo.range = ssboDesc.at(j).size;
+                    ANTH_LOGI("Buffer Copies =", ssboDesc.at(j).buffer->size(),",",i,",", ssboDesc.at(j).buffer->at(i).buffer);
+                    ssboDesc.at(j).bufferInfo[i].buffer = ssboDesc.at(j).buffer->at(i).buffer;
+                    ssboDesc.at(j).bufferInfo[i].offset = 0;
+                    ssboDesc.at(j).bufferInfo[i].range = ssboDesc.at(j).size;
+
 
                     VkWriteDescriptorSet descCp = {};
                     descCp.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -250,15 +256,13 @@ namespace Anthem::Core{
                     descCp.descriptorCount = 1;
                     descCp.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                     descCp.pImageInfo = nullptr;
-                    descCp.pBufferInfo = &ssboDesc.at(j).bufferInfo;
+                    descCp.pBufferInfo = &ssboDesc.at(j).bufferInfo[i];
                     descCp.pTexelBufferView = nullptr;
 
                     descWriteSsbo.push_back(descCp);
                 }
-                
-                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteSsbo.size()),descWriteSsbo.data(),0,nullptr);
             }
-
+            vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteSsbo.size()), descWriteSsbo.data(), 0, nullptr);
             return true;
         }
         bool createDescriptorSet(uint32_t numSets){

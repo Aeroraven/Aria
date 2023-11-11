@@ -29,4 +29,11 @@ void main(){
     particleOut[idx].pos = pIn.pos + ubo.deltaTime * pIn.vel;
     particleOut[idx].vel = pIn.vel;
     particleOut[idx].col = pIn.col;
+
+    if(particleOut[idx].pos.x<-1.0||particleOut[idx].pos.x>1.0){
+        particleOut[idx].vel.x = -particleOut[idx].vel.x;
+    }
+    if(particleOut[idx].pos.y<-1.0||particleOut[idx].pos.y>1.0){
+        particleOut[idx].vel.y = -particleOut[idx].vel.y;
+    }
 }

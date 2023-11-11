@@ -26,7 +26,7 @@ namespace Anthem::Core{
         const AnthemViewport* viewport = nullptr;
         const AnthemRenderPass* renderPass = nullptr;
     
-        AnthemVertexBuffer* vertexBuffer = nullptr;
+        IAnthemVertexBufferAttrLayout* vertexBuffer = nullptr;
         AnthemUniformBuffer* uniformBuffer = nullptr;
         AnthemDescriptorPool* descriptorPool = nullptr;
         AnthemGraphicsPipelineCreateProps extraProps = {};
@@ -65,7 +65,7 @@ namespace Anthem::Core{
         bool specifyViewport(const AnthemViewport* viewport);
         bool specifyRenderPass(const AnthemRenderPass* renderPass);
         bool specifyShaderModule(const AnthemShaderModule* shaderModule);
-        bool specifyVertexBuffer(AnthemVertexBuffer* vertexBuffer);
+        bool specifyVertexBuffer(IAnthemVertexBufferAttrLayout* vertexBuffer);
         bool specifyUniformBuffer(AnthemUniformBuffer* uniformBuffer);
         bool specifyDescriptor(AnthemDescriptorPool* pool);
         bool specifyProps(AnthemGraphicsPipelineCreateProps* props);
