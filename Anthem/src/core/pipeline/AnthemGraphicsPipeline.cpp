@@ -33,6 +33,10 @@ namespace Anthem::Core{
         this->extraProps = *props;
         return true;
     }
+    bool AnthemGraphicsPipeline::loadCustomizedVertexStageLayout() {
+
+    }
+    
     bool AnthemGraphicsPipeline::preparePreqPipelineCreateInfo(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->viewport != nullptr,"Viewport not specified");
@@ -46,7 +50,13 @@ namespace Anthem::Core{
         this->dynamicStateCreateInfo.pDynamicStates = this->reqiredDynamicStates.data();
         
         //Specify Vertex Shader Input Info
-        if(this->vertexBuffer==nullptr){
+        if (this->extraProps.vertStageLayout.has_value()) {
+            this->vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            this->vertexInputStateCreateInfo.pNext = nullptr;
+            this->vertexInputStateCreateInfo.flags = 0;
+
+        }
+        else if(this->vertexBuffer==nullptr){
             ANTH_LOGW("Vertex buffer not specified, using default vertex input state");
             this->vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
             this->vertexInputStateCreateInfo.pNext = nullptr;
@@ -119,7 +129,6 @@ namespace Anthem::Core{
              this->colorBlendAttachmentState[i].blendEnable = VK_FALSE;
              this->colorBlendAttachmentState[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         }
-        
 
         this->colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         this->colorBlendStateCreateInfo.pNext = nullptr;

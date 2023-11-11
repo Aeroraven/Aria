@@ -7,6 +7,7 @@
 #include "../drawing/AnthemDescriptorPool.h"
 #include "../drawing/buffer/AnthemVertexBuffer.h"
 #include "../drawing/buffer/AnthemUniformBuffer.h"
+#include "../drawing/buffer/AnthemVertexStageLayoutSpec.h"
 #include "./AnthemDescriptorSetEntry.h"
 
 namespace Anthem::Core{
@@ -17,6 +18,7 @@ namespace Anthem::Core{
     };
     struct AnthemGraphicsPipelineCreateProps {
         AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
+        std::optional<AnthemVertexStageLayoutSpec> vertStageLayout = std::nullopt;
     };
 
     class AnthemGraphicsPipeline{     
@@ -59,6 +61,8 @@ namespace Anthem::Core{
         VkPipeline pipeline;
         VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
         std::vector<VkDescriptorSetLayout> layouts;
+    protected:
+        bool loadCustomizedVertexStageLayout();
 
     public:
         bool specifyLogicalDevice(const AnthemLogicalDevice* device);

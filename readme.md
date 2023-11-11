@@ -4,6 +4,12 @@ This repository is here for **PERSONAL PURPOSE**. It serves as the record for th
 
 
 
+## 0. Clarification
+
+The rectified WebGL ray-tracing is here: https://github.com/Aeroraven/Aria/blob/main/Aria-v2/src/examples/AriaStagePathTracing.ts. This implementation corrects https://github.com/Aeroraven/Ray-tracing.
+
+
+
 ## I. Running Instruction
 
 ### 1. Native Examples

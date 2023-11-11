@@ -140,7 +140,23 @@ class ClassAB: virtual public ClassA, virtual public ClassB{
 };
 
 class Country{
+public:
+    void virtual create() {
+        ANTH_LOGI("WWW");
+    }
+    void expand() {
+        ANTH_LOGI("XXX");
+    }
+};
 
+class France:public Country {
+public:
+    void virtual create() {
+        ANTH_LOGI("WWW2");
+    }
+    void expand() {
+        ANTH_LOGI("XXX2");
+    }
 };
 
 void meowNya(int& a){
@@ -420,6 +436,13 @@ int main(){
             ANTH_LOGI(unf(generator));
         }
 
+    }
+    ANTH_LOGI("=============");
+    ANTH_LOGI("21=============");
+    {
+        Country* p = new France();
+        p->create();
+        p->expand();
     }
     ANTH_LOGI("=============");
     return 0;

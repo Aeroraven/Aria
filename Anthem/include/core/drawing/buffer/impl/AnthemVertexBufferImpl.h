@@ -59,7 +59,7 @@ namespace Anthem::Core {
             }
             return true;
         }
-        bool getInputBindingDescriptionInternal(VkVertexInputBindingDescription* desc) override {
+        bool virtual getInputBindingDescriptionInternal(VkVertexInputBindingDescription* desc) override {
             ANTH_ASSERT(desc, "Description is nullptr");
             desc->binding = 0;
             desc->stride = this->singleVertexSize;

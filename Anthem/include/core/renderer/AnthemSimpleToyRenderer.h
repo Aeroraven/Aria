@@ -26,6 +26,7 @@
 #include "../drawing/buffer/impl/AnthemShaderStorageBufferImpl.h"
 #include "../drawing/buffer/impl/AnthemUniformBufferImpl.h"
 #include "../drawing/buffer/impl/AnthemVertexBufferImpl.h"
+#include "../drawing/buffer/impl/AnthemInstancingVertexBufferImpl.h"
 
 
 
@@ -159,6 +160,17 @@ namespace Anthem::Core{
         template<typename... T,uint32_t... S>
         bool createVertexBuffer(AnthemVertexBufferImpl<AnthemVAOAttrDesc<T,S>...>** pVertexBuffer){
             auto vxBufferImpl = new AnthemVertexBufferImpl<AnthemVAOAttrDesc<T,S>...>();
+            vxBufferImpl->specifyLogicalDevice(this->logicalDevice.get());
+            vxBufferImpl->specifyPhyDevice(this->phyDevice.get());
+            vxBufferImpl->specifyCommandBuffers(this->commandBuffers.get());
+            *pVertexBuffer = vxBufferImpl;
+            this->vertexBuffers.push_back(vxBufferImpl);
+            return true;
+        }
+
+        template<typename... T, uint32_t... S>
+        bool createInstancingBuffer(AnthemInstancingVertexBufferImpl<AnthemVAOAttrDesc<T, S>...>** pInstancingBuffer) {
+            auto vxBufferImpl = new AnthemInstancingVertexBufferImpl<AnthemVAOAttrDesc<T, S>...>();
             vxBufferImpl->specifyLogicalDevice(this->logicalDevice.get());
             vxBufferImpl->specifyPhyDevice(this->phyDevice.get());
             vxBufferImpl->specifyCommandBuffers(this->commandBuffers.get());
