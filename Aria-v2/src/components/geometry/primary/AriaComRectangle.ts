@@ -22,25 +22,18 @@ export class AriaComRectangle extends AriaComGeometry{
           -1, -1,  -1,   
            1, -1,  -1,   
            1,  1,  -1,   
-           1,  1,  -1,   
-          -1,  1,  -1,   
-          -1, -1,  -1,   
+          -1,  1,  -1,     
         ])
 
         this.texBuf.setData([
             //Front
              0,  0,    
              1,  0,    
-             1,  1,     
-             1,  1,    
-             0,  1,   
-             0,  0,    
+             1,  1,        
+             0,  1,    
         ])
 
-        const eleData = []
-        for(let i=0;i<6;i++){
-            eleData.push(i)
-        }
+        const eleData = [0,1,2,2,3,0]
         this.eleBuf.setData(eleData)
     }
     public exportToShader(renderer: IAriaRendererCore): void {

@@ -10,10 +10,15 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
     private _status = ""
     private _docBody = document
     private el = this._docBody.createElement("div")
+
+    private _colWid2 = 150
+    private _colWid1 = 150
     
 
-    constructor(){
+    constructor(colWid1:number = 150,colWid2:number = 150){
         super("Aria/ParamPanel")
+        this._colWid2 = colWid2
+        this._colWid1 = colWid1
     }
     allocateId(){
         this._id++
@@ -33,7 +38,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         this.el.style.paddingLeft = "20px"
         this.el.style.paddingTop = "10px"
         this.el.style.paddingBottom = "10px"
-        this.el.style.backgroundColor = "#2f2f2f"
+        this.el.style.backgroundColor = "#2f2f2faf"
         this._docBody.body.appendChild(this.el)
     }
     addSlidebar(name:string,min_value:number,max_value:number,handler:(value:number)=>any){
@@ -54,7 +59,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         })
         const label = this._docBody.createElement("span")
         label.innerHTML = name
-        label.style.width = "150px"
+        label.style.width = this._colWid1+"px"
         label.style.display = "inline-block"
         label.style.fontFamily = "serif"
         const block = this._docBody.createElement("div")
@@ -83,7 +88,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         })
         const label = this._docBody.createElement("span")
         label.innerHTML = name
-        label.style.width = "150px"
+        label.style.width = this._colWid1+"px"
         label.style.display = "inline-block"
         label.style.fontFamily = "serif"
         const block = this._docBody.createElement("div")
@@ -110,13 +115,13 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
     addFPSMeter(name:string){
         const label = this._docBody.createElement("span")
         label.innerHTML = name
-        label.style.width = "150px"
+        label.style.width = this._colWid1+"px"
         label.style.display = "inline-block"
         label.style.fontFamily = "serif"
 
         const labelx = this._docBody.createElement("span")
         labelx.innerHTML = "-"
-        labelx.style.width = "150px"
+        labelx.style.width = this._colWid2+"px"
         labelx.style.display = "inline-block"
         labelx.style.fontFamily = "serif"
         labelx.id = "parampanel-aria-identifier-fps-"+this.allocateId()
@@ -130,19 +135,47 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         block.appendChild(labelx)
         this.el.appendChild(block)
     }
+
+    addDynamicText(name:string,call:()=>string,bold:boolean=false){
+        const label = this._docBody.createElement("span")
+        label.innerHTML = name
+        label.style.width = this._colWid1+"px"
+        label.style.display = "inline-block"
+        label.style.fontFamily = "serif"
+        if(bold){
+            label.style.fontWeight = "bold"
+        }
+
+        const labelx = this._docBody.createElement("span")
+        labelx.innerHTML = "-"
+        labelx.style.width = this._colWid2+"px"
+        labelx.style.display = "inline-block"
+        labelx.style.fontFamily = "serif"
+        labelx.id = "parampanel-aria-identifier-dyntext-"+this.allocateId()
+
+        setInterval(()=>{
+            labelx.innerHTML = call()
+        },200)
+
+        const block = this._docBody.createElement("div")
+        block.appendChild(label)
+        block.appendChild(labelx)
+        this.el.appendChild(block)
+    }
+
     setStatus(x:string){
         this._status = x
     }
     addStatusBar(name:string){
         const label = this._docBody.createElement("span")
         label.innerHTML = name
-        label.style.width = "150px"
+        label.style.width = this._colWid1+"px"
         label.style.display = "inline-block"
         label.style.fontFamily = "serif"
 
         const labelx = this._docBody.createElement("span")
         labelx.innerHTML = "-"
-        labelx.style.width = "150px"
+        labelx.style.width = this._colWid2+"px"
         labelx.style.display = "inline-block"
         labelx.style.fontFamily = "serif"
         labelx.id = "parampanel-aria-identifier-loading-bar-"+this.allocateId()

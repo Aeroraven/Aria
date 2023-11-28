@@ -15,7 +15,7 @@ export enum AriaGeometryVars{
 }
 
 export class AriaComGeometry extends AriaComponent implements IAriaShaderEmitter, IAriaGeometry, IAriaDynamicGeometry{
-    protected _localMat = mat4.create()
+    public _localMat = mat4.create()
     protected _valid = false
     protected _scaleRecord = [1,1,1]
     protected _position = [0,0,0]

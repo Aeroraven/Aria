@@ -49,6 +49,8 @@ module.exports={
             }
         ),
         new WebpackObfuscator ({
+            controlFlowFlattening: true,
+            controlFlowFlatteningThreshold: 0.2,
             rotateStringArray: true,
             compact: true,
             deadCodeInjection: true,
@@ -56,6 +58,8 @@ module.exports={
             stringArray: true,
             stringArrayEncoding: ['rc4','base64'],
             stringArrayThreshold: 1,
+            log: false,
+
         }, ['excluded_bundle_name.js']),
         new UglifyJsPlugin({
             extractComments: {

@@ -7,6 +7,7 @@ import { AriaStageSpringMassCloth as AriaStageMassSpringCloth } from "./examples
 import { AriaStageVolumetricCloud } from "./examples/AriaStageVolCloud";
 import { AriaStagePathTracing } from "./examples/AriaStagePathTracing";
 import { AriaStageWasm } from "./examples/AriaStageWasm";
+import { AriaStageRectangleReproj } from "./examples/AriaStageRectangleReproj";
 
 function addEntry(name:string, description:string, redirect:string){
     const w = document.createElement("div")
@@ -53,6 +54,8 @@ async function main(){
         {name:"Rectified Path Tracer",redir:"pathtracing",cl:AriaStagePathTracing,desc:"Some thing done as my course project seems to be wrong. Here I made it right."}, 
         //{name:"Pending",redir:"flsim",cl:AriaStageFLSim,desc:"flsim"},
         //{name:"Pending",redir:"matmul",cl:AriaStageMatrixMul,desc:"matmul"},
+        {name:"",redir:"rectreproj",cl:AriaStageRectangleReproj,desc:"",hidden:true}, 
+        
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false
@@ -66,6 +69,9 @@ async function main(){
     if(!goRedirect){
         helperPageReady()
         for(let value of px){
+            if(value.hidden && value.hidden===true){
+                continue;
+            }
             addEntry(value.name,value.desc,value.redir)
         }
     }
