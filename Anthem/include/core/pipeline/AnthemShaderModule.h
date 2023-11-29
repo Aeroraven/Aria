@@ -8,12 +8,16 @@ namespace Anthem::Core{
     struct AnthemShaderFilePaths{
         std::optional<std::string> vertexShader;
         std::optional<std::string> fragmentShader;
+        std::optional<std::string> geometryShader;
+        std::optional<std::string> computeShader;
     };
 
     struct AnthemShaderModulesGroup{
         bool vertexShaderModuleCreated = false;
-        std::optional<VkShaderModule> vertexShaderModule = std::make_optional<VkShaderModule>();
-        std::optional<VkShaderModule> fragmentShaderModule =  std::make_optional<VkShaderModule>();
+        std::optional<VkShaderModule> vertexShaderModule = std::nullopt;
+        std::optional<VkShaderModule> fragmentShaderModule = std::nullopt;
+        std::optional<VkShaderModule> geometryShaderModule = std::nullopt;
+        std::optional<VkShaderModule> computeShaderModule = std::nullopt;
     };
 
     class AnthemShaderModule: private Util::AnthemUtlFileReaderBase{

@@ -7,12 +7,14 @@ namespace Anthem::Core::Tool{
     private:
         T data;
         bool dirty;
-        std::optional<std::function<T()>> updater;
+        std::optional<std::function<void(T&)>> updater;
     public:
         T get_(){
             if(dirty){
                 if(updater.has_value()){
-                    data = updater.value()();
+                    updater.value()(this->data);
+                }else{
+                    ANTH_LOGE("");
                 }
                 dirty = false;
             }
@@ -21,7 +23,9 @@ namespace Anthem::Core::Tool{
         const T& get(){
             if(dirty){
                 if(updater.has_value()){
-                    data = updater.value()();
+                    updater.value()(this->data);
+                }else{
+                    ANTH_LOGE("");
                 }
                 dirty = false;
             }
@@ -32,10 +36,13 @@ namespace Anthem::Core::Tool{
             dirty = false;
             return *this;
         }
-        bool setUpdater(std::function<T()> updater){
+        bool setUpdater(std::function<void(T&)> updater){
             this->updater = updater;
             return true;
         }
-        
+        bool markDirty(){
+            this->dirty = true;
+            return true;
+        }
     };
 }

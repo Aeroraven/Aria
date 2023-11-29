@@ -38,8 +38,9 @@ namespace Anthem::Core{
             if(presentSupport){
                 indices->presentFamily = i;
             }
-            if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT){
+            if((queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)){
                 indices->graphicsFamily = i;
+                indices->computeFamily = i;
             }
             if(indices->graphicsFamily.has_value() && presentSupport){
                 break;
@@ -77,7 +78,7 @@ namespace Anthem::Core{
             auto famQueueIdx = this->findQueueFamilies(device,surface);
             auto swapChainSupportAssert = !scDetails.formats.empty() && !scDetails.presentModes.empty();
 
-            for(auto i=0;i<deviceMemoryProperties.memoryHeapCount;i++){
+            for(uint32_t i=0;i<deviceMemoryProperties.memoryHeapCount;i++){
                 rating += 1;
                 ANTH_LOGI("Heap ",i,":",deviceMemoryProperties.memoryHeaps[i].size,",",deviceMemoryProperties.memoryHeaps[i].flags);
             }

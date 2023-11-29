@@ -14,6 +14,7 @@ namespace Anthem::Core{
         VkDeviceCreateInfo createInfo = {};
         VkQueue graphicsQueue;
         VkQueue presentationQueue;
+        VkQueue computeQueue;
         VkPhysicalDeviceFeatures creatingFeats;
     public:
         AnthemLogicalDeviceSelector(AnthemPhyDevice* phyDevice);

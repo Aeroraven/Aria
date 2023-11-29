@@ -102,6 +102,7 @@ namespace Anthem::Core{
         return true;
     }
     std::vector<const char*> AnthemInstance::getRequiredExtensions(){
+            
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions;
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);

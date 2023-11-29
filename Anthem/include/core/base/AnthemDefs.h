@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <GLFW/glfw3.h>
 #include <algorithm>
 #include <optional>
 #include <set>
@@ -15,6 +14,16 @@
 #include <regex>
 #include <concepts>
 #include <cmath>
+#include <cstring>
+#include <GLFW/glfw3.h>
+#include <random>
+#include <array>
+#include <map>
+#include <unordered_map>
+#include <set>
+#include <variant>
+#include <unordered_set>
+#include <chrono>
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>
@@ -24,9 +33,24 @@
 #define ANTH_UNSAFE_PTR(T) T*
 #define ANTH_MAKE_UNSAFE(T) new T
 
+// Compiler Config
+#ifdef _MSC_VER
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#endif
+
+
+// Math Constants
+#define AT_PI 3.1415926535897934384626
+
 // Sugars
 #define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
+#ifdef _MSC_VER
+#define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().className(__FUNCSIG__).c_str())
+#else
 #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().className(__PRETTY_FUNCTION__).c_str())
+#endif
 
 // Logger
 #define ANTH_ENABLE_LOG
@@ -64,6 +88,9 @@ namespace Anthem::Core::TmplDefs{
     template<class T,class... U>
     concept ATpdAllAre = (std::same_as<T,U> && ...);
 
+    template<typename T,T d,T x,T y>
+    concept ATpdValueInRange = (d>=x) && (d<=y);
+
     //Attributes Templates
     template<class SrcTp,int SrcSz, class DstTp, int DstSz>
     concept ATpdIsdAttrEquals = (std::same_as<SrcTp,DstTp> && (SrcSz==DstSz));
@@ -86,4 +113,7 @@ namespace Anthem::Core::TmplDefs{
 
     template<class SrcTp,int SrcDm,int SrcSz>
     concept ATpIsdValidUniform = ATpIsdUniMatVecf<SrcTp,SrcDm,SrcSz>;
+
+    template<class SrcTp,int SrcDm,int SrcSz,int SrcArrSz>
+    concept ATpIsdValidUniformWithArr = ATpIsdUniMatVecf<SrcTp,SrcDm,SrcSz> && (SrcArrSz>0);
 }

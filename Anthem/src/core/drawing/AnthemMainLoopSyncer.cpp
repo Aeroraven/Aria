@@ -73,7 +73,8 @@ namespace Anthem::Core{
         }
         return imageIndex;
     }
-    bool AnthemMainLoopSyncer::submitCommandBuffer(const VkCommandBuffer* commandBuffer,uint32_t frameIdx){
+
+    bool AnthemMainLoopSyncer::submitCommandBuffer(const VkCommandBuffer* commandBuffer, uint32_t frameIdx) {
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -86,6 +87,49 @@ namespace Anthem::Core{
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = commandBuffer;
+
+        VkSemaphore signalSemaphores[] = {
+            this->drawFinishedSp[frameIdx]
+        };
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+        if (vkQueueSubmit(this->logicalDevice->getGraphicsQueue(), 1, &submitInfo, this->inFlightFence[frameIdx]) != VK_SUCCESS) {
+            ANTH_LOGE("Failed to submit draw command buffer");
+            return false;
+        }
+        ANTH_LOGV("Draw command buffer submitted");
+        return true;
+    }
+
+
+    bool AnthemMainLoopSyncer::submitCommandBufferGeneral(const VkCommandBuffer* commandBuffer, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* prerequisiteSemaphores, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages){
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        std::vector<VkSemaphore> waitSemaphores;
+        waitSemaphores.push_back(this->imageAvailableSp[frameIdx]);
+        for (const auto& p : *prerequisiteSemaphores) {
+            waitSemaphores.push_back(*p->getSemaphore());
+        }
+        std::vector<VkPipelineStageFlags> waitStages;
+        waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        for (const auto& p : *semaphoreWaitStages) {
+            using tp = std::remove_cvref<decltype(p)>::type;
+            if (p == tp::AT_SSW_VERTEX_INPUT) {
+                waitStages.push_back(VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+            }else if (p == tp::AT_SSW_COLOR_ATTACH_OUTPUT) {
+                waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+            }else {
+                ANTH_LOGE("Invalid wait stage");
+            }
+        }
+
+        submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
+        submitInfo.pWaitSemaphores = waitSemaphores.data();
+        submitInfo.pWaitDstStageMask = waitStages.data();
+
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = commandBuffer;
         
@@ -101,6 +145,8 @@ namespace Anthem::Core{
         ANTH_LOGV("Draw command buffer submitted");
         return true;
     }
+
+
     bool AnthemMainLoopSyncer::presentFrame(uint32_t imageIndex,uint32_t frameIdx,std::function<void()> swapChainOutdatedHandler){
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;

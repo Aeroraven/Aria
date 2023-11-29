@@ -7,18 +7,20 @@
 #include "../drawing/AnthemDescriptorPool.h"
 #include "../drawing/buffer/AnthemVertexBuffer.h"
 #include "../drawing/buffer/AnthemUniformBuffer.h"
+#include "../drawing/buffer/AnthemVertexStageLayoutSpec.h"
+#include "./AnthemDescriptorSetEntry.h"
 
 namespace Anthem::Core{
-    enum AnthemDescriptorSetEntrySourceType{
-        AT_ACDS_UNDEFINED = 0,
-        AT_ACDS_UNIFORM_BUFFER = 1,
-        AT_ACDS_SAMPLER = 2,
+    enum class AnthemInputAssemblerTopology {
+        AT_AIAT_UNDEFINED = 0,
+        AT_AIAT_TRIANGLE_LIST = 1,
+        AT_AIAT_POINT_LIST = 2,
     };
-    struct AnthemDescriptorSetEntry{
-        AnthemDescriptorPool* descPool = nullptr;
-        AnthemDescriptorSetEntrySourceType descSetType = AT_ACDS_UNDEFINED;
-        uint32_t inTypeIndex = 0;
+    struct AnthemGraphicsPipelineCreateProps {
+        AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
+        std::optional<AnthemVertexStageLayoutSpec> vertStageLayout = std::nullopt;
     };
+
     class AnthemGraphicsPipeline{     
     private:
         const AnthemLogicalDevice* logicalDevice = nullptr;
@@ -26,14 +28,15 @@ namespace Anthem::Core{
         const AnthemViewport* viewport = nullptr;
         const AnthemRenderPass* renderPass = nullptr;
     
-        AnthemVertexBuffer* vertexBuffer = nullptr;
+        IAnthemVertexBufferAttrLayout* vertexBuffer = nullptr;
         AnthemUniformBuffer* uniformBuffer = nullptr;
         AnthemDescriptorPool* descriptorPool = nullptr;
+        AnthemGraphicsPipelineCreateProps extraProps = {};
 
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
         std::vector<VkDynamicState> reqiredDynamicStates={
             VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_SCISSOR
+            VK_DYNAMIC_STATE_SCISSOR,
         };
         VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};
@@ -43,7 +46,7 @@ namespace Anthem::Core{
         VkPipelineRasterizationStateCreateInfo rasterizerStateCreateInfo = {};
         VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = {};
         
-        VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
+        std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentState = {};
         VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
 
         VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = {};
@@ -58,15 +61,18 @@ namespace Anthem::Core{
         VkPipeline pipeline;
         VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
         std::vector<VkDescriptorSetLayout> layouts;
+    protected:
+        bool loadCustomizedVertexStageLayout();
 
     public:
         bool specifyLogicalDevice(const AnthemLogicalDevice* device);
         bool specifyViewport(const AnthemViewport* viewport);
         bool specifyRenderPass(const AnthemRenderPass* renderPass);
         bool specifyShaderModule(const AnthemShaderModule* shaderModule);
-        bool specifyVertexBuffer(AnthemVertexBuffer* vertexBuffer);
+        bool specifyVertexBuffer(IAnthemVertexBufferAttrLayout* vertexBuffer);
         bool specifyUniformBuffer(AnthemUniformBuffer* uniformBuffer);
         bool specifyDescriptor(AnthemDescriptorPool* pool);
+        bool specifyProps(AnthemGraphicsPipelineCreateProps* props);
 
 
         bool preparePreqPipelineCreateInfo();

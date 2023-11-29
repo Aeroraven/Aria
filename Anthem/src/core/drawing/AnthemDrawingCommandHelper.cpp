@@ -14,28 +14,20 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemDrawingCommandHelper::startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx){
-        this->cmdBufs->startCommandRecording(commandBufferIdx[frameIdx]);
+        //this->cmdBufs->startCommandRecording(commandBufferIdx[frameIdx]);
+        ANTH_LOGI("Cmdbuf binds");
         ANTH_ASSERT(swapChain != nullptr,"Swap chain not specified");
         
         VkRenderPassBeginInfo renderPassBeginInfo = {};
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassBeginInfo.renderPass = *(startInfo->renderPass->getRenderPass());
-        renderPassBeginInfo.framebuffer = *(startInfo->framebufferList->getFramebuffer(startInfo->framebufferIdx));
+        renderPassBeginInfo.framebuffer = *(startInfo->framebufferList->getFramebuffer());
         renderPassBeginInfo.renderArea.offset = {0,0};
         renderPassBeginInfo.renderArea.extent = *(swapChain->getSwapChainExtent());
         
-        if(startInfo->depthClearValue.has_value()){
-            renderPassBeginInfo.clearValueCount = 2;
-            
-            clearValuesTmpX[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-            clearValuesTmpX[1].depthStencil = {1.0f, 0};
-
-            renderPassBeginInfo.pClearValues = clearValuesTmpX.data();;
-        }else{
-            ANTH_LOGW("Depth clear value not specified");
-            renderPassBeginInfo.clearValueCount = 1;
-            renderPassBeginInfo.pClearValues = &(startInfo->clearValue);
-        }
+        auto renderPassClearValue = startInfo->renderPass->getDefaultClearValue();
+        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(renderPassClearValue->size());
+        renderPassBeginInfo.pClearValues = renderPassClearValue->data();
 
         ANTH_LOGV("Starting render pass");
         auto cmdBuf = cmdBufs->getCommandBuffer(commandBufferIdx[frameIdx]);
@@ -47,7 +39,7 @@ namespace Anthem::Core{
     bool AnthemDrawingCommandHelper::endRenderPass(uint32_t frameIdx){
         auto cmdBuf = cmdBufs->getCommandBuffer(commandBufferIdx[frameIdx]);
         vkCmdEndRenderPass(*cmdBuf);
-        this->cmdBufs->endCommandRecording(commandBufferIdx[frameIdx]);
+        //this->cmdBufs->endCommandRecording(commandBufferIdx[frameIdx]);
         return true;
     }
     bool AnthemDrawingCommandHelper::demoDrawCommand(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,uint32_t frameIdx){
@@ -104,7 +96,7 @@ namespace Anthem::Core{
         std::vector<VkDescriptorSet> descSets = {};
         descPool->getAllDescriptorSets(frameIdx,&descSets);
         vkCmdBindDescriptorSets(*cmdBuf, VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
-            descSets.size(),descSets.data() , 0, nullptr);
+            static_cast<uint32_t>(descSets.size()),descSets.data() , 0, nullptr);
         vkCmdDrawIndexed(*cmdBuf, static_cast<uint32_t>(ibuf->getIndexCount()), 1, 0, 0, 0);
         return true;
     }

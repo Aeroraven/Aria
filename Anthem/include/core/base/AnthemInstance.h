@@ -5,10 +5,10 @@
 namespace Anthem::Core{
     class AnthemInstance:public Util::AnthemUtlConfigReqBase{
     private:
-        GLFWwindow* window;
+        GLFWwindow* window = nullptr;
         VkApplicationInfo appInfo = {};
         VkInstanceCreateInfo createInfo = {};
-        VkInstance instance;
+        VkInstance instance = nullptr;
 
         std::function<void(int,int)> resizeHandler = [](int,int){};
     public:
@@ -29,6 +29,6 @@ namespace Anthem::Core{
         bool virtual waitForFramebufferReady();
     private:
         std::vector<const char*> getRequiredExtensions();
-        
+   
     };
 }

@@ -22,12 +22,16 @@ namespace Anthem::Core{
         vkGetPhysicalDeviceProperties(device,&this->deviceProperties);
         this->queueFamilyIdx.graphicsFamily = queueFamilyIdx->graphicsFamily;
         this->queueFamilyIdx.presentFamily = queueFamilyIdx->presentFamily;
-
+        this->queueFamilyIdx.computeFamily = queueFamilyIdx->computeFamily;
         return true;
     }
     std::optional<uint32_t> AnthemPhyDevice::getPhyQueueGraphicsFamilyIndice() const{
         ANTH_ASSERT(this->physicalDevice != VK_NULL_HANDLE,"Physical device not specified");
         return this->queueFamilyIdx.graphicsFamily;
+    }
+    std::optional<uint32_t> AnthemPhyDevice::getPhyQueueComputeFamilyIndice() const{
+        ANTH_ASSERT(this->physicalDevice != VK_NULL_HANDLE,"Physical device not specified");
+        return this->queueFamilyIdx.computeFamily;
     }
     std::optional<uint32_t> AnthemPhyDevice::getPhyQueuePresentFamilyIndice() const{
         ANTH_ASSERT(this->physicalDevice != VK_NULL_HANDLE,"Physical device not specified");
@@ -49,6 +53,17 @@ namespace Anthem::Core{
             }
         }
         ANTH_LOGE("Failed to find suitable memory type!");
+        return 0;
+    }
+    VkSampleCountFlags AnthemPhyDevice::getMaxSampleCount() const{
+        auto& property = this->deviceProperties;
+        VkSampleCountFlags flags = property.limits.framebufferDepthSampleCounts & property.limits.sampledImageDepthSampleCounts;
+        for(int i=64;i>=1;(i>>=1)){
+            if(flags & i){
+                return i;
+            }
+        }
+        ANTH_LOGE("Failed to find available count");
         return 0;
     }
 }

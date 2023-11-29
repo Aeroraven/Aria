@@ -22,7 +22,7 @@ namespace Anthem::Core{
         int32_t mipWidth = texWidth;
         int32_t mipHeight = texHeight;
 
-        for (uint32_t i = 1; i < this->image.mipmapLodLevels; i++) {
+        for (uint32_t i = 1u; i < this->image.mipmapLodLevels; i++) {
             ANTH_LOGI("MipLvl:",i," Wid=",(signed)mipWidth, " Hei=",(signed) mipHeight);
             barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -167,6 +167,35 @@ namespace Anthem::Core{
         ANTH_LOGI("Image pipeline barrier created, transition done");
         return true;
     }
+    bool AnthemImageContainer::createSampler(){
+        VkSamplerCreateInfo samplerInfo = {};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.anisotropyEnable = VK_TRUE;
+        auto maxAnisotropy =  (this->phyDevice->getDeviceProperties()).limits.maxSamplerAnisotropy;
+        samplerInfo.maxAnisotropy = maxAnisotropy;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerInfo.mipLodBias = 0.0f;
+        samplerInfo.minLod = 0.0f;
+        if(this->image.mipmapLodLevels > 1){
+            samplerInfo.maxLod = 1.0f*this->image.mipmapLodLevels;
+        }else{
+            samplerInfo.maxLod = 1.0f;
+        }
+        ANTH_LOGI("Sampler Max LOD:",this->image.mipmapLodLevels);
+        this->samplerCreated = true;
+        auto samplerResult = vkCreateSampler(this->logicalDevice->getLogicalDevice(),&samplerInfo,nullptr,&(this->sampler));
+        ANTH_ASSERT(samplerResult==VK_SUCCESS,"Failed to create sampler");
+        return true;
+    }
     bool AnthemImageContainer::createImageInternal(VkImageUsageFlags usage,  VkFormat format, uint32_t width, uint32_t height){
         //Filling Image Info
         this->image.imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -181,7 +210,7 @@ namespace Anthem::Core{
         this->image.imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         this->image.imageInfo.usage = usage;
         this->image.imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        this->image.imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        this->image.imageInfo.samples = (decltype(this->image.imageInfo.samples)) this->image.msaaCount;
         this->image.imageInfo.flags = 0;
 
         ANTH_LOGI("Image Mip Lvls:", this->image.imageInfo.mipLevels);
@@ -203,6 +232,12 @@ namespace Anthem::Core{
         vkBindImageMemory(this->logicalDevice->getLogicalDevice(),this->image.image, this->image.memory,0);
         ANTH_LOGI("Image created");
         return true;
+    }
+    uint32_t AnthemImageContainer::getImageWidth(){
+        return this->image.imageInfo.extent.width;
+    }
+    uint32_t AnthemImageContainer::getImageHeight(){
+        return this->image.imageInfo.extent.height;
     }
     const VkImageView* AnthemImageContainer::getImageView() const{
         return &(this->image.imageView);

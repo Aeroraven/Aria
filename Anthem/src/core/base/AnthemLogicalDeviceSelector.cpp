@@ -22,8 +22,8 @@ namespace Anthem::Core{
         ANTH_LOGI("Creating Queue");
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.pQueueCreateInfos = this->queueCreateInfo.data();
-        createInfo.queueCreateInfoCount = this->queueCreateInfo.size();
-        createInfo.enabledExtensionCount = deviceSupportExtensions->size();
+        createInfo.queueCreateInfoCount = static_cast<uint32_t>(this->queueCreateInfo.size());
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceSupportExtensions->size());
         createInfo.ppEnabledExtensionNames = deviceSupportExtensions->data();
         createInfo.enabledLayerCount = 0;
         createInfo.pEnabledFeatures = &(this->creatingFeats);
@@ -46,6 +46,7 @@ namespace Anthem::Core{
     bool AnthemLogicalDeviceSelector::retrieveQueues(){
         vkGetDeviceQueue(logicalDevice, phyDevice->getPhyQueueGraphicsFamilyIndice().value(), 0, &graphicsQueue);
         vkGetDeviceQueue(logicalDevice, phyDevice->getPhyQueuePresentFamilyIndice().value(), 0, &presentationQueue);
+        vkGetDeviceQueue(logicalDevice, phyDevice->getPhyQueueComputeFamilyIndice().value(), 0, &computeQueue);
         return true;
     }
     bool AnthemLogicalDeviceSelector::registerQueueCreateInfo(std::optional<uint32_t> familyIdx,float priority){
@@ -74,6 +75,7 @@ namespace Anthem::Core{
         logicalDevice->specifyDevice(this->logicalDevice);
         logicalDevice->specifyGraphicsQueue(this->graphicsQueue);
         logicalDevice->specifyPresentQueue(this->presentationQueue);
+        logicalDevice->specifyComputeQueue(this->computeQueue);
         return true;
     }
 }   

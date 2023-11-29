@@ -3,7 +3,7 @@
 #include "../utils/AnthemUtlAppConfigReqBase.h"
 #include "../utils/AnthemUtlCommandBufferReqBase.h"
 #include "../utils/AnthemUtlSwapChainReqBase.h"
-#include "../drawing/AnthemFramebufferList.h"
+#include "../drawing/AnthemFramebuffer.h"
 #include "../pipeline/AnthemRenderPass.h"
 #include "../pipeline/AnthemGraphicsPipeline.h"
 #include "../drawing/buffer/AnthemIndexBuffer.h"
@@ -13,17 +13,18 @@
 namespace Anthem::Core{
     struct AnthemCommandManagerRenderPassStartInfo{
         AnthemRenderPass* renderPass;
-        AnthemFramebufferList* framebufferList;
+        AnthemFramebuffer* framebufferList;
         uint32_t framebufferIdx;
         VkClearValue clearValue;
         std::optional<VkClearValue> depthClearValue;
+        bool usingMsaa = false;
     };
 
     class AnthemDrawingCommandHelper: public Util::AnthemUtlConfigReqBase,
         public Util::AnthemUtlCommandBufferReqBase,public Util::AnthemUtlSwapChainReqBase{
     private:
         std::vector<uint32_t> commandBufferIdx;
-        std::array<VkClearValue, 2> clearValuesTmpX{};
+        std::array<VkClearValue, 3> clearValuesTmpX{};
     public:
         bool virtual initializeHelper();
         bool virtual startRenderPass(AnthemCommandManagerRenderPassStartInfo* startInfo,uint32_t frameIdx);
@@ -32,5 +33,18 @@ namespace Anthem::Core{
         bool virtual demoDrawCommand3(AnthemGraphicsPipeline* pipeline,AnthemViewport* viewport,AnthemVertexBuffer* vbuf,AnthemIndexBuffer* ibuf,AnthemUniformBuffer* ubuf ,
             AnthemDescriptorPool* descPool,uint32_t frameIdx);
         bool virtual endRenderPass(uint32_t frameIdx);
+
+        bool virtual endCommandBuffer(uint32_t frameIdx){
+            this->cmdBufs->endCommandRecording(commandBufferIdx[frameIdx]);
+            return true;
+        }
+        bool virtual startCommandBuffer(uint32_t frameIdx){
+            this->cmdBufs->startCommandRecording(commandBufferIdx[frameIdx]);
+            return true;
+        }
+        uint32_t virtual getFrameCmdBufIdx(uint32_t frameIdx){
+            return commandBufferIdx[frameIdx];
+        }
+        
     };
 }

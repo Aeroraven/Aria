@@ -139,6 +139,29 @@ class ClassAB: virtual public ClassA, virtual public ClassB{
     }
 };
 
+class Country{
+public:
+    void virtual create() {
+        ANTH_LOGI("WWW");
+    }
+    void expand() {
+        ANTH_LOGI("XXX");
+    }
+};
+
+class France:public Country {
+public:
+    void virtual create() {
+        ANTH_LOGI("WWW2");
+    }
+    void expand() {
+        ANTH_LOGI("XXX2");
+    }
+};
+
+void meowNya(int& a){
+    a+=1;
+}
 
 int main(){
     ANTH_LOGI("1=============");
@@ -285,7 +308,7 @@ int main(){
         constexpr int h = 8;
         feedCat(g);
         feedCat(static_cast<const int>(g));
-        feedCat(reinterpret_cast<const int>(g));
+        //feedCat(reinterpret_cast<const int>(g)); illegal
         feedCat(const_cast<const int&>(g));
         feedCat(const_cast<const int&&>(g));
         feedCat(std::move(const_cast<const int&>(g)));
@@ -370,6 +393,56 @@ int main(){
         constexpr int* g = &a01;
         auto f = e;
         auto h = &a01;
+    }
+    ANTH_LOGI("=============");
+
+    ANTH_LOGI("19=============");
+    {
+        auto meow = [](int& a){
+            a+=1;
+        };
+        int a = 0;
+        meow(a);
+
+        int b = 0;
+        std::function<void(int&)> meowBind;
+        meowBind = std::bind(meow,std::placeholders::_1);
+        meowBind(b);
+
+        int c = 0;
+        std::function<void()> meowBind2;
+        meowBind2 = std::bind(meow,c);
+        meowBind2();
+
+        int d = 0;
+        std::function<void()> meowBind3;
+        meowBind3 = std::bind(meow,std::ref(d));
+        meowBind3();
+
+
+        ANTH_LOGI("A=",a);
+        ANTH_LOGI("B=",b);
+        ANTH_LOGI("C=",c);
+        ANTH_LOGI("D=",d);
+    }
+    ANTH_LOGI("=============");
+
+    ANTH_LOGI("20=============");
+    {
+        std::random_device rd;
+        std::mt19937 generator(rd());
+        std::uniform_real_distribution<float> unf(0.0f,1.0f);
+        for(int i=0;i<10;i++){
+            ANTH_LOGI(unf(generator));
+        }
+
+    }
+    ANTH_LOGI("=============");
+    ANTH_LOGI("21=============");
+    {
+        Country* p = new France();
+        p->create();
+        p->expand();
     }
     ANTH_LOGI("=============");
     return 0;

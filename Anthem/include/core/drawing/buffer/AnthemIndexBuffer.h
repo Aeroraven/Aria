@@ -10,6 +10,6 @@ namespace Anthem::Core{
         bool virtual createBuffer() override;
         uint32_t virtual calculateBufferSize() override;
         void virtual getRawBufferData(void** dataDst) override;
-        size_t getIndexCount();
+        uint32_t getIndexCount();
     };
 }

@@ -17,7 +17,7 @@ namespace Anthem::Core{
         this->shaderModule = shaderModule;
         return true;
     }
-    bool AnthemGraphicsPipeline::specifyVertexBuffer(AnthemVertexBuffer* vertexBuffer){
+    bool AnthemGraphicsPipeline::specifyVertexBuffer(IAnthemVertexBufferAttrLayout* vertexBuffer){
         this->vertexBuffer = vertexBuffer;
         return true;
     }
@@ -29,22 +29,34 @@ namespace Anthem::Core{
         this->descriptorPool = pool;
         return true;
     }
+    bool AnthemGraphicsPipeline::specifyProps(AnthemGraphicsPipelineCreateProps* props){
+        this->extraProps = *props;
+        return true;
+    }
+    bool AnthemGraphicsPipeline::loadCustomizedVertexStageLayout() {
 
+    }
+    
     bool AnthemGraphicsPipeline::preparePreqPipelineCreateInfo(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->viewport != nullptr,"Viewport not specified");
         ANTH_ASSERT(this->renderPass != nullptr,"Render pass not specified");
 
-
         //Specify Dynamic States
         this->dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         this->dynamicStateCreateInfo.pNext = nullptr;
         this->dynamicStateCreateInfo.flags = 0;
-        this->dynamicStateCreateInfo.dynamicStateCount = this->reqiredDynamicStates.size();
+        this->dynamicStateCreateInfo.dynamicStateCount = static_cast<uint32_t>(this->reqiredDynamicStates.size());
         this->dynamicStateCreateInfo.pDynamicStates = this->reqiredDynamicStates.data();
         
         //Specify Vertex Shader Input Info
-        if(this->vertexBuffer==nullptr){
+        if (this->extraProps.vertStageLayout.has_value()) {
+            this->vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+            this->vertexInputStateCreateInfo.pNext = nullptr;
+            this->vertexInputStateCreateInfo.flags = 0;
+
+        }
+        else if(this->vertexBuffer==nullptr){
             ANTH_LOGW("Vertex buffer not specified, using default vertex input state");
             this->vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
             this->vertexInputStateCreateInfo.pNext = nullptr;
@@ -60,12 +72,20 @@ namespace Anthem::Core{
             this->vertexBuffer->prepareVertexInputInfo(&(this->vertexInputStateCreateInfo));
         }
 
-
         //Specify Input Assembly Info
         this->inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         this->inputAssemblyStateCreateInfo.pNext = nullptr;
         this->inputAssemblyStateCreateInfo.flags = 0;
-        this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        using topoEnum = std::remove_cvref<decltype(extraProps.inputTopo)>::type;
+        if (extraProps.inputTopo == topoEnum::AT_AIAT_TRIANGLE_LIST) {
+            this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        }else if (extraProps.inputTopo == topoEnum::AT_AIAT_POINT_LIST) {
+            this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        }else {
+            ANTH_LOGE("Unknown topology");
+        }
+
+        
         this->inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
         //Specify Viewport Info
@@ -91,7 +111,11 @@ namespace Anthem::Core{
         this->multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         this->multisampleStateCreateInfo.pNext = nullptr;
         this->multisampleStateCreateInfo.flags = 0;
-        this->multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        if(renderPass->getSetupOption().msaaType != AT_ARPMT_MSAA){
+            this->multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        }else{
+            this->multisampleStateCreateInfo.rasterizationSamples = renderPass->getSetupOption().msaaSamples;
+        }
         this->multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
         this->multisampleStateCreateInfo.minSampleShading = 1.0f;
         this->multisampleStateCreateInfo.pSampleMask = nullptr;
@@ -99,15 +123,21 @@ namespace Anthem::Core{
         this->multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
 
         //Specify Color Blending Info
-        this->colorBlendAttachmentState.blendEnable = VK_FALSE;
-        this->colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        auto numColorAttachments = renderPass->getFilteredAttachmentCnt(AT_ARPCA_COLOR);
+        this->colorBlendAttachmentState.resize(numColorAttachments);
+        for(uint32_t i=0;i<numColorAttachments;i++){
+             this->colorBlendAttachmentState[i].blendEnable = VK_FALSE;
+             this->colorBlendAttachmentState[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        }
+
         this->colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
         this->colorBlendStateCreateInfo.pNext = nullptr;
         this->colorBlendStateCreateInfo.flags = 0;
         this->colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
-        this->colorBlendStateCreateInfo.attachmentCount = 1;
-        this->colorBlendStateCreateInfo.pAttachments = &(this->colorBlendAttachmentState);
+        this->colorBlendStateCreateInfo.attachmentCount = static_cast<uint32_t>(colorBlendAttachmentState.size());
+        this->colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentState.data();
 
+        //ANTH_ASSERT( colorBlendAttachmentState.size()>0, "Color blend attachment should not be empty");
 
         //Specify Depth & Stencil Info
         this->depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -135,8 +165,10 @@ namespace Anthem::Core{
         for(const auto& p:entry){
             if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER){
                 p.descPool->appendSamplerDescriptorLayoutIdx(&layouts,p.inTypeIndex);
+                ANTH_LOGI("Sampler:",p.inTypeIndex);
             }else if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER){
                 p.descPool->appendUniformDescriptorLayoutIdx(&layouts,p.inTypeIndex);
+                ANTH_LOGI("Uniform:",p.inTypeIndex);
             }else{
                 ANTH_LOGE("Invalid layout type");
             }
@@ -147,8 +179,8 @@ namespace Anthem::Core{
         }
 
         this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-        this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-        ANTH_LOGI("Specified pipeline layout");
+        this->pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+        ANTH_LOGI("Specified pipeline layout",layouts.size());
 
         //Create Layout
         auto result = vkCreatePipelineLayout(this->logicalDevice->getLogicalDevice(),&(this->pipelineLayoutCreateInfo),nullptr,&(this->pipelineLayout));
@@ -162,25 +194,18 @@ namespace Anthem::Core{
     bool AnthemGraphicsPipeline::createPipelineLayout(){
         //Specify Pipeline Layout Creation Info
         
-        if(this->uniformBuffer == nullptr){
-            this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            this->pipelineLayoutCreateInfo.pNext = nullptr;
-            this->pipelineLayoutCreateInfo.flags = 0;
-            ANTH_LOGW("Uniform buffer not specified, using default pipeline layout");
-        }else{
-            this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-            this->pipelineLayoutCreateInfo.pNext = nullptr;
-            this->pipelineLayoutCreateInfo.flags = 0;
-            
-            ANTH_LOGI("Here");
-            this->descriptorPool->getAllDescriptorLayouts(&layouts);
-            for(auto x:layouts){
-                ANTH_LOGI("Layouts Are:",(long long)(x));
-            }
-            this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
-            this->pipelineLayoutCreateInfo.setLayoutCount = layouts.size();
-            ANTH_LOGI("Specified pipeline layout");
+        this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        this->pipelineLayoutCreateInfo.pNext = nullptr;
+        this->pipelineLayoutCreateInfo.flags = 0;
+        
+        ANTH_LOGI("Here");
+        this->descriptorPool->getAllDescriptorLayouts(&layouts);
+        for(auto x:layouts){
+            ANTH_LOGI("Layouts Are:",(long long)(x));
         }
+        this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
+        this->pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+        ANTH_LOGI("Specified pipeline layout");
         
         //Create Layout
         auto result = vkCreatePipelineLayout(this->logicalDevice->getLogicalDevice(),&(this->pipelineLayoutCreateInfo),nullptr,&(this->pipelineLayout));
@@ -206,8 +231,12 @@ namespace Anthem::Core{
         this->pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         this->pipelineCreateInfo.pNext = nullptr;
         this->pipelineCreateInfo.flags = 0;
-        this->pipelineCreateInfo.stageCount = shaderStageCreateInfo.size();
+
+        ANTH_LOGI("www");
+        this->pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStageCreateInfo.size());
         this->pipelineCreateInfo.pStages = shaderStageCreateInfo.data();
+
+        ANTH_LOGI("www");
         this->pipelineCreateInfo.pVertexInputState = &(this->vertexInputStateCreateInfo);
         this->pipelineCreateInfo.pInputAssemblyState = &(this->inputAssemblyStateCreateInfo);
         this->pipelineCreateInfo.pTessellationState = nullptr;

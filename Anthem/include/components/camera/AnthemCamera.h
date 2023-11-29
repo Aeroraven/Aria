@@ -18,8 +18,12 @@ namespace Anthem::Components::Camera{
 
     class AnthemCamera{
     private:
+        AnthemCameraProjectionType projType;
         AtVecf3 pos;
+        AtVecf3 up = AtVecf3(0.0f,1.0f,0.0f);
+        AtVecf3 frontDirection = AtVecf3(0.0f,0.0f,1.0f);
         float frustumFov,frustumNearDepth,frustumFarDepth,frustumAspectRatio;
+        float csHalfHeight;
         float rotPch,rotYaw;
         bool negateYAxis = true;
 
@@ -27,13 +31,15 @@ namespace Anthem::Components::Camera{
         AnthemDirtyFlag<AtMatf4> viewMatrix;
     
     protected:
-        AtMatf4 calculateProjectionMatrix();
-        AtMatf4 calculateViewMatrix();
+        void calculateProjectionMatrix(AtMatf4& out);
+        void calculateViewMatrix(AtMatf4& out);
 
     public:
-        AnthemCamera();
+        AnthemCamera(AnthemCameraProjectionType projTp);
         bool specifyFrustum(float fov,float nearDepth,float farDepth,float aspectRatio);
+        bool specifyOrthoClipSpace(float nearDepth,float farDepth, float aspectRatio,float clipSpaceHalfHeight);
         bool specifyPosition(float x,float y,float z);
+        bool specifyFrontEyeRay(float x,float y,float z);
         bool specifyRotation(float pitch,float yaw);
 
         bool getProjectionMatrix(AtMatf4& out);

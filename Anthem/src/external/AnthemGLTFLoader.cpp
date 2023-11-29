@@ -15,7 +15,7 @@ namespace Anthem::External{
             return false;
         }
         this->modelPath = path;
-        auto end = this->modelPath.rfind("/");
+        auto end = this->modelPath.rfind("\\");
         this->modelDirectory = this->modelPath.substr(0,end);
         ANTH_LOGI("Model Dir=",this->modelDirectory);
         return true;

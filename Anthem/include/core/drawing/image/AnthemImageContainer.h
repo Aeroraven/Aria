@@ -11,7 +11,9 @@ namespace Anthem::Core{
         VkDeviceMemory memory;
         VkImageCreateInfo imageInfo = {};
         VkImageView imageView;
-        int mipmapLodLevels = 1;
+        uint32_t mipmapLodLevels = 1;
+        VkSampleCountFlags msaaCount = VK_SAMPLE_COUNT_1_BIT;
+        VkImageLayout desiredLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     };
 
     class AnthemImageContainer:
@@ -20,14 +22,31 @@ namespace Anthem::Core{
     public Util::AnthemUtlCommandBufferReqBase{
     protected:
         AnthemImageProp image = {};
+        VkSampler sampler = nullptr;
     protected:
         bool createImageInternal(VkImageUsageFlags usage, VkFormat format, uint32_t width, uint32_t height);
         bool createImageViewInternal(VkImageAspectFlags aspectFlags);
         bool createImageTransitionLayout(VkImageLayout oldLayout,VkImageLayout newLayout);
+        bool createSampler();
         bool destroyImageInternal();
         bool destroyImageViewInternal();
         bool generateMipmap(uint32_t texWidth,uint32_t texHeight);
+        
+        bool samplerCreated=false;
+        
     public:
+        uint32_t virtual getImageWidth();
+        uint32_t virtual getImageHeight();
         const VkImageView* getImageView() const;
+        const VkSampleCountFlags getSampleCount() const{
+            return this->image.msaaCount;
+        }
+        const VkSampler* getSampler() const{
+            ANTH_ASSERT(this->samplerCreated,"Sampler not created");
+            return &(this->sampler);
+        }
+        const VkImageLayout getDesiredLayout() const{
+            return this->image.desiredLayout;
+        }
     };
 }
