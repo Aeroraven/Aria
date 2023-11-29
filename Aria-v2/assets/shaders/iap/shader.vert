@@ -4,6 +4,7 @@ precision highp float;
 uniform mat4 uProj;
 uniform mat4 uViewOrtho;
 uniform mat4 uModelView;
+uniform mat4 uLocalMat;
 in vec3 aPos;
 
 uniform vec3 uLT;
@@ -15,11 +16,15 @@ uniform float uFocalX;
 uniform float uFocalY;
 uniform vec3 uTranslation;
 
+uniform float uRotLb;
+uniform float uRotRb;
+uniform vec3 uRotAxis;
+uniform float pSize;
 out vec4 vLT;
 out vec4 vLB;
 out vec4 vRT;
 out vec4 vRB;
-
+out vec4 vPos;
 mat4 rotationMatrix(vec3 axis, float angle){
     axis = normalize(axis);
     float s = sin(angle);
@@ -46,10 +51,17 @@ void main(){
     float dx = cos(rotv.x)*cos(rotv.y);
     float dy = sin(rotv.x)*cos(rotv.y);
     float dz = sin(rotv.y);
+
+    float lb=uRotLb;
+    float rb=uRotRb;
+    float rotAngle = (aPos.z*(rb-lb)+lb)/180.0*3.1415926;
     vec3 axis = vec3(dx,dy,dz); 
 
-    float angle = aPos.z;
-    mat4 rotation = rotationMatrix(axis, angle);
+    if(uRotAxis.x>1e-2||uRotAxis.y>1e-2||uRotAxis.z>1e-2){
+        axis = normalize(uRotAxis);
+    }
+
+    mat4 rotation = rotationMatrix(axis, rotAngle);
 
     vec4 pLT = rotation * vec4(uLT, 1.0) + vec4(uTranslation, 0.0);
     vec4 pLB = rotation * vec4(uLB, 1.0) + vec4(uTranslation, 0.0);
@@ -66,8 +78,9 @@ void main(){
     float iC = getAng(rRT.xy,rLB.xy, rRB.xy);
 
     vec4 v = vec4(iA,iB,iC,1.0);
-    gl_Position = uProj*uModelView * v;
-    gl_PointSize = 2.0;
+    vPos = v;
+    gl_Position = uProj*uModelView*uLocalMat*v;
+    gl_PointSize = pSize;
 
     vLT = rLT;
     vLB = rLB;

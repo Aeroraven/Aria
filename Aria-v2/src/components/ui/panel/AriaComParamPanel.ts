@@ -52,6 +52,8 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         attrMax.value = ""+max_value
         const attrValue = this._docBody.createAttribute("value")
         attrValue.value = ""+initValue
+
+        element.style.width = "200px"
         
         const idv = this._docBody.createElement("span")
         idv.innerHTML = ""+initValue

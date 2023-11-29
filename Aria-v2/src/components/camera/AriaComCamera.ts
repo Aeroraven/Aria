@@ -28,7 +28,7 @@ export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, 
     constructor(){
         super("AriaCom/Camera")
         this.winListenerEnable = true
-        this.roleStep=0.15
+        this.roleStep=0.05
         this.camPitch = 0
         this.camYaw = 0
         this.winWidth = window.innerWidth
@@ -84,6 +84,7 @@ export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, 
 
         //Emitter
         renderer.defineUniform("uModelView", AriaShaderUniformTp.ASU_MAT4, modelview)
+        renderer.defineUniform("uModel", AriaShaderUniformTp.ASU_MAT4, modelview)
         renderer.defineUniform("uModel3", AriaShaderUniformTp.ASU_MAT4, model3)
         renderer.defineUniform("uProj", AriaShaderUniformTp.ASU_MAT4, projectionMatrix)
         renderer.defineUniform("uViewOrtho", AriaShaderUniformTp.ASU_MAT4, viewportOrtho)

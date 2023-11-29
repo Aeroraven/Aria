@@ -141,8 +141,10 @@ class AriaWGL2RendererRenderOps extends AriaObject{
     public setDrawingShape(shape: AriaRenderEnumDrawingShape) {
         if(shape == AriaRenderEnumDrawingShape.POINT){
             this.drawingShape = this.env.POINTS
-        }else{
+        }else if(shape == AriaRenderEnumDrawingShape.TRIANGLE){
             this.drawingShape = this.env.TRIANGLES
+        }else{
+            this.drawingShape = this.env.LINES
         }
     }
     public getTextureBufferData(id: WebGLTexture, dataType: number, format: number, w: number, h: number): unknown {

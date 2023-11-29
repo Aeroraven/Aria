@@ -8,7 +8,7 @@ import { AriaStageVolumetricCloud } from "./examples/AriaStageVolCloud";
 import { AriaStagePathTracing } from "./examples/AriaStagePathTracing";
 import { AriaStageWasm } from "./examples/AriaStageWasm";
 import { AriaStageRectangleReproj } from "./examples/AriaStageRectangleReproj";
-import { AriaStageIAP } from "./examples/AriaStageInternalAngleReproj";
+import { AriaStageInternalAngleReprojection } from "./examples/AriaStageInternalAngleReproj";
 
 function addEntry(name:string, description:string, redirect:string){
     const w = document.createElement("div")
@@ -27,23 +27,29 @@ function addEntry(name:string, description:string, redirect:string){
 
 function addTitle(){
     const title = document.createElement("h2")
-    title.innerHTML = "List of Available Scenes <small style='font-size:12px'>Aria v2</small>"
-    title.style.borderBottom = "1px solid black"
+    title.innerHTML = "List of Available Scenes <small style='font-size:12px'></small>"
+    title.style.borderBottom = "1px solid #efefef"
     document.body.appendChild(title)
+
+    
 }
 
 function helperPageReady(){
-    document.body.style.backgroundColor = "#ffffff"
+    document.body.style.backgroundColor = "#232323"
+    document.body.style.color = "#efefef"
     document.body.style.marginLeft = "30px"
     document.body.style.marginRight = "30px"
     document.body.style.marginTop = "30px"
     document.getElementById("webgl_displayer")!.style.display = "none"
     addTitle()
+
+    const p = document.createElement("p")
+    p.innerHTML = "*.The production code is severely mangled and obfuscated in purpose. Performance will be negatively affected. Ask the author or check the open-source repository for the source code."
+    document.body.appendChild(p)
 }
 
 async function main(){
     const px = [
-        {name:"Testing",redir:"wasm",cl:AriaStageWasm,desc:"Pending"}, 
         {name:"Mass Spring Cloth",redir:"smcloth",cl:AriaStageMassSpringCloth,desc:"Cloth simulation based on mass spring model"},
         {name:"Antialiasing",redir:"antialiasing",cl:AriaStageAntialiasing,desc:"Implementation of postprocessing antialiasing algorithms"},
         {name:"Blurring",redir:"blur",cl:AriaStageBlur,desc:"Implementation of some blurring algorithms like gaussian blurs"},
@@ -56,7 +62,7 @@ async function main(){
         //{name:"Pending",redir:"flsim",cl:AriaStageFLSim,desc:"flsim"},
         //{name:"Pending",redir:"matmul",cl:AriaStageMatrixMul,desc:"matmul"},
         {name:"",redir:"rectreproj",cl:AriaStageRectangleReproj,desc:"",hidden:true}, 
-        {name:"",redir:"ianglereproj",cl:AriaStageIAP,desc:"",hidden:true}, 
+        {name:"",redir:"ianglereproj",cl:AriaStageInternalAngleReprojection,desc:"",hidden:true}, 
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false
@@ -76,6 +82,8 @@ async function main(){
             addEntry(value.name,value.desc,value.redir)
         }
     }
+
+    
 }
 
 main()

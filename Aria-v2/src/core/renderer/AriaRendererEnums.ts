@@ -1,4 +1,5 @@
 export enum AriaRenderEnumDrawingShape{
     TRIANGLE,
-    POINT
+    POINT,
+    LINE
 };
