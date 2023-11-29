@@ -83,7 +83,7 @@ export class AriaComCamera extends AriaComponent implements IAriaShaderEmitter, 
         mat4.transpose(modelIT,modelIT2)
 
         //Emitter
-        renderer.defineUniform("uModel", AriaShaderUniformTp.ASU_MAT4, modelview)
+        renderer.defineUniform("uModelView", AriaShaderUniformTp.ASU_MAT4, modelview)
         renderer.defineUniform("uModel3", AriaShaderUniformTp.ASU_MAT4, model3)
         renderer.defineUniform("uProj", AriaShaderUniformTp.ASU_MAT4, projectionMatrix)
         renderer.defineUniform("uViewOrtho", AriaShaderUniformTp.ASU_MAT4, viewportOrtho)

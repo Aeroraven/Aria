@@ -41,7 +41,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         this.el.style.backgroundColor = "#2f2f2faf"
         this._docBody.body.appendChild(this.el)
     }
-    addSlidebar(name:string,min_value:number,max_value:number,handler:(value:number)=>any){
+    addSlidebar(name:string,min_value:number,max_value:number,handler:(value:number)=>any,initValue:number=0){
         const element = this._docBody.createElement("input")
         element.id = "parampanel-aria-identifier-"+this.allocateId()
         const attrType = this._docBody.createAttribute("type")
@@ -50,12 +50,21 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         attrMin.value = ""+min_value
         const attrMax = this._docBody.createAttribute("max")
         attrMax.value = ""+max_value
+        const attrValue = this._docBody.createAttribute("value")
+        attrValue.value = ""+initValue
+        
+        const idv = this._docBody.createElement("span")
+        idv.innerHTML = ""+initValue
+        idv.style.paddingLeft = "10px"
+
         element.setAttributeNode(attrType)
         element.setAttributeNode(attrMin)
         element.setAttributeNode(attrMax)
+        element.setAttributeNode(attrValue)
         element.addEventListener("change",(e)=>{
             const value = parseInt((<HTMLInputElement>document.getElementById(element.id)).value)
             handler(value)
+            idv.innerHTML = ""+value
         })
         const label = this._docBody.createElement("span")
         label.innerHTML = name
@@ -65,6 +74,7 @@ export class AriaComParamPanel extends AriaComponent implements IAriaInteractive
         const block = this._docBody.createElement("div")
         block.appendChild(label)
         block.appendChild(element)
+        block.appendChild(idv)
         this.el.appendChild(block)
         this._id++
     }

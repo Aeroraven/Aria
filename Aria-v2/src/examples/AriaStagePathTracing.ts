@@ -11,7 +11,6 @@ import { AriaComCanvas } from "../components/canvas/AriaComCanvas";
 import { AriaComRTPingPongTexturePass } from "../components/pathtracing/AriaComRTPingPongTexturePass";
 import { AriaPostFxFXAA } from "../presets/postprocess/AriaPostFxFXAA";
 import { AriaComRTSpecularMaterial } from "../components/pathtracing/material/AriaComRTSpecularMaterial";
-import { AriaComRTRefractiveMaterial } from "../components/pathtracing/material/AriaComRTRefractiveMaterial";
 import { AriaPostFxIdentity } from "../presets/postprocess/AriaPostFxIdentity";
 import { IAriaRenderable } from "../components/base/interface/IAriaRenderable";
 import { AriaPostFxMLAA } from "../presets/postprocess/AriaPostFxMLAA";

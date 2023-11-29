@@ -11,6 +11,7 @@ import { IAriaShader } from "../interface/IAriaShader";
 import { IAriaTexture } from "../interface/IAriaTexture";
 import { AriaRendererCore } from "./AriaRendererCore";
 import { mat4, vec3 } from "gl-matrix-ts";
+import { AriaRenderEnumDrawingShape } from "./AriaRendererEnums";
 
 class AriaWGL2RendererFramebufferManager extends AriaObject{
     private activeFramebuffer:IAriaFramebuffer[] = []
@@ -129,11 +130,20 @@ class AriaWGL2RendererRenderOps extends AriaObject{
     parent:IAriaRendererCore
     camManager:AriaWGL2RendererCameraPositionManager = new AriaWGL2RendererCameraPositionManager()
     fbManager:AriaWGL2RendererFramebufferManager = new AriaWGL2RendererFramebufferManager()
+    drawingShape:number
 
     constructor(parent:IAriaRendererCore, renderingContext:WebGL2RenderingContext){
         super("AriaWGL2RendererRenderOps")
         this.env = renderingContext
         this.parent = parent
+        this.drawingShape = this.env.TRIANGLES
+    }
+    public setDrawingShape(shape: AriaRenderEnumDrawingShape) {
+        if(shape == AriaRenderEnumDrawingShape.POINT){
+            this.drawingShape = this.env.POINTS
+        }else{
+            this.drawingShape = this.env.TRIANGLES
+        }
     }
     public getTextureBufferData(id: WebGLTexture, dataType: number, format: number, w: number, h: number): unknown {
         let gl = this.env
@@ -248,7 +258,7 @@ class AriaWGL2RendererRenderOps extends AriaObject{
     }
     public renderInstancedImpl(num:number, instances:number = 1){
         const gl = this.env
-        gl.drawElementsInstanced(gl.TRIANGLES, num, gl.UNSIGNED_SHORT, 0, instances)
+        gl.drawElementsInstanced(this.drawingShape, num, gl.UNSIGNED_SHORT, 0, instances)
     }
     public fboUnbind(){
         const gl = this.env
@@ -791,5 +801,8 @@ export class AriaWGL2RendererCore extends AriaRendererCore{
     }
     setFramebufferTextureCubic(texture: IAriaCoreTexture<any>) {
         return this.renderOps.setFramebufferTextureCubic(texture)
+    }
+    setDrawingShape(shape: AriaRenderEnumDrawingShape) {
+        return this.renderOps.setDrawingShape(shape)
     }
 }

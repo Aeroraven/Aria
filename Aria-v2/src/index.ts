@@ -8,6 +8,7 @@ import { AriaStageVolumetricCloud } from "./examples/AriaStageVolCloud";
 import { AriaStagePathTracing } from "./examples/AriaStagePathTracing";
 import { AriaStageWasm } from "./examples/AriaStageWasm";
 import { AriaStageRectangleReproj } from "./examples/AriaStageRectangleReproj";
+import { AriaStageIAP } from "./examples/AriaStageInternalAngleReproj";
 
 function addEntry(name:string, description:string, redirect:string){
     const w = document.createElement("div")
@@ -55,7 +56,7 @@ async function main(){
         //{name:"Pending",redir:"flsim",cl:AriaStageFLSim,desc:"flsim"},
         //{name:"Pending",redir:"matmul",cl:AriaStageMatrixMul,desc:"matmul"},
         {name:"",redir:"rectreproj",cl:AriaStageRectangleReproj,desc:"",hidden:true}, 
-        
+        {name:"",redir:"ianglereproj",cl:AriaStageIAP,desc:"",hidden:true}, 
     ]
     const stageParam = (new URLSearchParams(window.location.href.replace(/(.|\s)*\?/i,""))).get("stage") 
     let goRedirect = false

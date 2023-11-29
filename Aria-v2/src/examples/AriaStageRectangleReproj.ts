@@ -30,9 +30,9 @@ export class AriaStageRectangleReproj extends AriaStage{
         scene.addChild(mesh)
 
         const panel =  new AriaComParamPanel(200,270)
-        panel.addTitle("空间法向恢复")
-        panel.addFPSMeter("帧率")
-        panel.addSlidebar("视场角 (Y轴)",10.0,170.0,(x)=>{
+        panel.addTitle("Recover Normals")
+        panel.addFPSMeter("FPS")
+        panel.addSlidebar("FoV Y",10.0,170.0,(x)=>{
             camera.setFov(x)
         })
         panel.initInteraction()
@@ -40,10 +40,10 @@ export class AriaStageRectangleReproj extends AriaStage{
         camera.initInteraction();
 
         (<any>(window)).localMat = geometry._localMat;
-        panel.addDynamicText("模型矩阵",()=>"在F12控制台中修改变量 `localMat` ")
-        panel.addDynamicText("相机转角",()=>"鼠标移动")
-        panel.addDynamicText("相机位置",()=>"键盘:AD-X轴，WS-Z轴，QE-Y轴")
-        panel.addDynamicText("冻结相机",()=>"键盘:ESC")
+        panel.addDynamicText("Model Matrix",()=>"Modify `localMat` in Console")
+        panel.addDynamicText("Camera Rotation",()=>"Mouse")
+        panel.addDynamicText("Camera Position",()=>"AD-X，WS-Z，QE-Y")
+        panel.addDynamicText("Freeze Camera",()=>"ESC")
 
         // Tracking Vertex Points (Projection Procedure)
         const ptsRaw = [[-1, -1, -1, 1], [1, -1, -1, 1], [1,  1, -1, 1], [-1,  1, -1, 1]]
@@ -77,44 +77,44 @@ export class AriaStageRectangleReproj extends AriaStage{
             return ret;
         }
         panel.addDynamicText("&nbsp;",()=>"",true)
-        panel.addDynamicText("相机空间坐标",()=>"",true)
-        panel.addDynamicText("左下顶点",()=>{return  f32VecToString(cameraSpaceCoords[0])})
-        panel.addDynamicText("右下顶点",()=>{return  f32VecToString(cameraSpaceCoords[1])})
-        panel.addDynamicText("右上顶点",()=>{return  f32VecToString(cameraSpaceCoords[2])})
-        panel.addDynamicText("左上顶点",()=>{return  f32VecToString(cameraSpaceCoords[3])})
+        panel.addDynamicText("Viewspace Coords",()=>"",true)
+        panel.addDynamicText("Left Bottom",()=>{return  f32VecToString(cameraSpaceCoords[0])})
+        panel.addDynamicText("Right Bottom",()=>{return  f32VecToString(cameraSpaceCoords[1])})
+        panel.addDynamicText("Right Top",()=>{return  f32VecToString(cameraSpaceCoords[2])})
+        panel.addDynamicText("Left Top",()=>{return  f32VecToString(cameraSpaceCoords[3])})
 
-        panel.addDynamicText("邻边点积",()=>{return  vsDotV+""})
-
-        panel.addDynamicText("&nbsp;",()=>"",true)
-        panel.addDynamicText("标准化设备空间坐标NDC",()=>"",true)
-        panel.addDynamicText("左下顶点",()=>{return  f32VecToString(screenSpaceCoords[0])})
-        panel.addDynamicText("右下顶点",()=>{return  f32VecToString(screenSpaceCoords[1])})
-        panel.addDynamicText("右上顶点",()=>{return  f32VecToString(screenSpaceCoords[2])})
-        panel.addDynamicText("左上顶点",()=>{return  f32VecToString(screenSpaceCoords[3])})
+        panel.addDynamicText("Dot Prod",()=>{return  vsDotV+""})
 
         panel.addDynamicText("&nbsp;",()=>"",true)
-        panel.addDynamicText("恢复后归一化平面坐标",()=>"",true)
-        panel.addDynamicText("左下顶点",()=>{return  f32VecToString(retinaSpaceCoords[0])})
-        panel.addDynamicText("右下顶点",()=>{return  f32VecToString(retinaSpaceCoords[1])})
-        panel.addDynamicText("右上顶点",()=>{return  f32VecToString(retinaSpaceCoords[2])})
-        panel.addDynamicText("左上顶点",()=>{return  f32VecToString(retinaSpaceCoords[3])})
+        panel.addDynamicText("NDC Space Coords",()=>"",true)
+        panel.addDynamicText("Left-Bottom",()=>{return  f32VecToString(screenSpaceCoords[0])})
+        panel.addDynamicText("Right-Bottom",()=>{return  f32VecToString(screenSpaceCoords[1])})
+        panel.addDynamicText("Right-Top",()=>{return  f32VecToString(screenSpaceCoords[2])})
+        panel.addDynamicText("Left-Top",()=>{return  f32VecToString(screenSpaceCoords[3])})
 
         panel.addDynamicText("&nbsp;",()=>"",true)
-        panel.addDynamicText("可行空间矩形顶点",()=>"",true)
-        panel.addDynamicText("左下顶点",()=>{return  f32VecToString(recoveredCoords[0])})
-        panel.addDynamicText("右下顶点",()=>{return  f32VecToString(recoveredCoords[1])})
-        panel.addDynamicText("左上顶点",()=>{return  f32VecToString(recoveredCoords[3])})
+        panel.addDynamicText("Recovered Retina Coords",()=>"",true)
+        panel.addDynamicText("Left-Bottom",()=>{return  f32VecToString(retinaSpaceCoords[0])})
+        panel.addDynamicText("Right-Bottom",()=>{return  f32VecToString(retinaSpaceCoords[1])})
+        panel.addDynamicText("Right-Top",()=>{return  f32VecToString(retinaSpaceCoords[2])})
+        panel.addDynamicText("Left-Top",()=>{return  f32VecToString(retinaSpaceCoords[3])})
+
+        panel.addDynamicText("&nbsp;",()=>"",true)
+        panel.addDynamicText("Recovered Rectangle",()=>"",true)
+        panel.addDynamicText("Left-Bottom",()=>{return  f32VecToString(recoveredCoords[0])})
+        panel.addDynamicText("Right-Bottom",()=>{return  f32VecToString(recoveredCoords[1])})
+        panel.addDynamicText("Left-Top",()=>{return  f32VecToString(recoveredCoords[3])})
         
         panel.addDynamicText("&nbsp;",()=>"",true)
-        panel.addDynamicText("法向量",()=>"",true)
-        panel.addDynamicText("原始法向量",()=>{return  f32VecToString(vsNormal)})
-        panel.addDynamicText("恢复法向量",()=>{return  f32VecToString(rsNormal)})
+        panel.addDynamicText("Normals",()=>"",true)
+        panel.addDynamicText("Org Normal",()=>{return  f32VecToString(vsNormal)})
+        panel.addDynamicText("Recovered Normal",()=>{return  f32VecToString(rsNormal)})
 
 
         panel.addDynamicText("&nbsp;",()=>"",true)
-        panel.addDynamicText("参数",()=>"",true)
-        panel.addDynamicText("宽高比",()=>{return  camera.aspectRatio+""})
-        panel.addDynamicText("Y焦距",()=>{
+        panel.addDynamicText("Parameters",()=>"",true)
+        panel.addDynamicText("Apsect Ratio",()=>{return  camera.aspectRatio+""})
+        panel.addDynamicText("Focal Length Y",()=>{
             let fovY = camera.fovAngle / 180 * Math.PI;
             return 1.0/ Math.tan(fovY/2)+""
         })
@@ -204,8 +204,8 @@ export class AriaStageRectangleReproj extends AriaStage{
             rsDotV = vec3.dot(vsNa,vsNb)
 
         }
-        panel.addDynamicText("可行解S0",()=>{return  s0+""})
-        panel.addDynamicText("可行解T0",()=>{return  t0+""})
+        panel.addDynamicText("Solution S0",()=>{return  s0+""})
+        panel.addDynamicText("Solution T0",()=>{return  t0+""})
 
         const renderCall = ()=>{
             updateCameraSpaceCoords()

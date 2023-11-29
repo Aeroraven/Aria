@@ -49,6 +49,7 @@ export class AriaComMesh extends AriaComponent implements IAriaRenderable, IAria
                 el(renderer)
             })
         }
+        renderer.setDrawingShape(this._geometry.getRenderShape())
         renderer.renderInstancedEntry(this._geometry.getVertexNumber())
     }
 }

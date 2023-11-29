@@ -7,11 +7,15 @@ import { IAriaGeneralBuffer } from "../interface/IAriaGeneralBuffer";
 import { IAriaRendererCore } from "../interface/IAriaRendererCore";
 import { IAriaShader } from "../interface/IAriaShader";
 import { IAriaTexture } from "../interface/IAriaTexture";
+import { AriaRenderEnumDrawingShape } from "./AriaRendererEnums";
 
 export abstract class AriaRendererCore extends AriaObject implements IAriaRendererCore{
     defaultDisplayId:string = "webgl_displayer"
     constructor(){
         super("AriaRenderer")
+    }
+    setDrawingShape(shape: AriaRenderEnumDrawingShape) {
+        throw new Error("Method not implemented.");
     }
     setFramebufferTexture(texture: IAriaCoreTexture<any>) {
         throw new Error("Method not implemented.");

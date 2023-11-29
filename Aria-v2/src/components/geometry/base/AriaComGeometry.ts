@@ -5,6 +5,7 @@ import { IAriaShaderEmitter } from "../../../core/interface/IAriaShaderEmitter";
 import { IAriaDynamicGeometry } from "../../base/interface/IAriaDynamicGeometry";
 import { IAriaGeometry } from "../../base/interface/IAriaGeometry";
 import { IAriaRendererCore } from "../../../core/interface/IAriaRendererCore";
+import { AriaRenderEnumDrawingShape } from "../../../core/renderer/AriaRendererEnums";
 
 export enum AriaGeometryVars{
     AGV_POSITION = "aPos",
@@ -19,10 +20,14 @@ export class AriaComGeometry extends AriaComponent implements IAriaShaderEmitter
     protected _valid = false
     protected _scaleRecord = [1,1,1]
     protected _position = [0,0,0]
+    protected _drawingShape = AriaRenderEnumDrawingShape.TRIANGLE
 
     constructor(name:string){
         super(name)
         mat4.identity(this._localMat)
+    }
+    getRenderShape(): AriaRenderEnumDrawingShape {
+        return this._drawingShape
     }
     getLocalPosition(): number[] {
         return [this._position[0],this._position[1],this._position[2]]
