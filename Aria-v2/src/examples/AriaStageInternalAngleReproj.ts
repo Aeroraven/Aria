@@ -54,7 +54,6 @@ class CoordinateAxis extends AriaComGeometry{
         renderer.defineAttribute("aCol",this.colBuf,3)
         this.eleBuf.bind(renderer)
     }
-
 }
 class SamplingCandidateCollection extends AriaComGeometry{
     private _numCands:number
@@ -68,11 +67,21 @@ class SamplingCandidateCollection extends AriaComGeometry{
     public localMat:Float32Array = mat4.create()
     public rotY:number = 0.0
 
-    public rotLb:number = -89.0
-    public rotRb:number = 89.0;
+    public rotLb:number = -180.0
+    public rotRb:number = 180.0;
 
     public rotAxis:number[] = [0.0,0.0,0.0]
     public pSize:number = 2.0
+
+    public disturbX:number = 0.0
+    public disturbY:number = 0.0
+
+    public outputNormal:number=0.0
+    public preNormal:number[] = [0.0,0.0,0.0]
+    public sortVertex:number = 1.0
+    public fccn:number = 1.0
+
+    public useUniformDist:number = 1.0
 
     constructor(){
         super("SamplingCandidateCollection")
@@ -87,14 +96,8 @@ class SamplingCandidateCollection extends AriaComGeometry{
     prepare(){
         let p=[],e=[]
         for(let i=0;i<this._numCands;i++){
-            let a = Math.random()*Math.PI*2.0
-            let b = Math.random()*Math.PI*2.0
-
-
-            let ub = 89
-            let lb = -89
-            let u = Math.random()*(ub-lb)+lb
-            let ru = u/180.0*Math.PI
+            let a = Math.random()
+            let b = Math.random()
             p.push(a,b,Math.random())
 
             e.push(i)
@@ -126,6 +129,16 @@ class SamplingCandidateCollection extends AriaComGeometry{
         renderer.defineUniform("pSize",tpf,this.pSize)
         
         renderer.defineUniform("uRotAxis",tp,this.rotAxis)
+
+        renderer.defineUniform("disturbX",tpf,this.disturbX)
+        renderer.defineUniform("disturbY",tpf,this.disturbY)
+        renderer.defineUniform("outputNormal",tpf,this.outputNormal)
+        renderer.defineUniform("preNormal",tp,this.preNormal)
+
+        renderer.defineUniform("sortVertex",tpf,this.sortVertex)
+        renderer.defineUniform("useUniformDist",tpf,this.useUniformDist)
+        renderer.defineUniform("forceCounterClockwiseNormal",tpf,this.fccn)
+
         //Create RotY
         const rotY = mat4.create()
         mat4.identity(this.localMat)
@@ -174,36 +187,39 @@ export class AriaStageInternalAngleReprojection extends AriaStage{
 
 
         const panel = new AriaComParamPanel(200,250)
-        panel.addTitle("Internal Angle Projection")
+        //panel.addTitle("矩形内角投影")
         panel.addFPSMeter("FPS")
         panel.initInteraction()
 
         
         panel.addDynamicText("&nbsp;",()=>"")
-        panel.addDynamicText("Visualization Controls",()=>"",true)
+        panel.addDynamicText("可视化控制",()=>"",true)
+        /*
         panel.addDynamicText("Deactivate Camera",()=>"Key ESC")
         panel.addDynamicText("Activate Camera",()=>"Key ESC")
         panel.addDynamicText("Camera Position X",()=>"Key A/D (After Activation)")
         
         panel.addDynamicText("Camera Position Z",()=>"Key W/S (After Activation)")
         panel.addDynamicText("Camera Position Y",()=>"Key Q/E (After Activation)")
-        panel.addDynamicText("Camera Rotation",()=>"Mouse (After Activation)")
-        panel.addSlidebar("Vis Rotation Y",0.0,2000.0,(x)=>{
+        panel.addDynamicText("Camera Rotation",()=>"Mouse (After Activation)")*/
+
+        panel.addSlidebar("可视化结果旋转 Y",0.0,2000.0,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].rotY = x/2000.0*Math.PI*2.0;
             }
             
         },0.0)
-        panel.addSlidebar("Point Size",1.0,15.0,(x)=>{
+        panel.addSlidebar("点大小",1.0,15.0,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].pSize = x;
             }
         },2.0)
         panel.addSelector("Color Map",[
-            {key:"pos",value:"Position"},
-            {key:"norm",value:"Normal"},
-            {key:"norma",value:"Abs(Normal)"},
-            {key:"normz",value:"Dot(Normal,Z)"},
+            {key:"pos",value:"位置"},
+            {key:"norm",value:"法线"},
+            {key:"norma",value:"法线,取绝对值"},
+            {key:"normz",value:"Z轴与法线的点积"},
+            {key:"ndiff",value:"NDIFF"},
         ],"pos",(x)=>{
             if(x=="norm"){
                 for(let i=0;i<pointCollection.length;i++){
@@ -217,63 +233,153 @@ export class AriaStageInternalAngleReprojection extends AriaStage{
                 for(let i=0;i<pointCollection.length;i++){
                     pointCollection[i].useDot=0.3;
                 }
+            }else if(x=="ndiff"){
+                for(let i=0;i<pointCollection.length;i++){
+                    pointCollection[i].useDot=0.8;
+                }
             }
             else{
                 for(let i=0;i<pointCollection.length;i++){
                     pointCollection[i].useDot=0.6
                 }
             }
+            
         })
 
         panel.addDynamicText("&nbsp;",()=>"")
-        panel.addDynamicText("Parameters (Experiment)",()=>"",true)
-        panel.addSlidebar("Translation X",-100.0,100.0,(x)=>{
+        panel.addDynamicText("实验参数",()=>"",true)
+        panel.addSlidebar("矩形中心平移 X",-100.0,100.0,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].tX=x;
             }
         },0.0) 
-        panel.addSlidebar("Translation Y",-100.0,100.0,(x)=>{
+        panel.addSlidebar("矩形中心平移 Y",-100.0,100.0,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].tY=x;
             }
         },0.0)
-        panel.addSlidebar("Translation Z",2.0,100.0,(x)=>{
+        panel.addSlidebar("矩形中心平移 Z",2.0,100.0,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].tZ=x;
             }
         },5.0)
-        panel.addSlidebar("Focal Length (x100)",1.0,10000.0,(x)=>{
+        panel.addSlidebar("焦距 (x100)",1.0,10000.0,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].focal=x/100;
             }
         },100.0)
-        panel.addSlidebar("Rotation Angle Lower Bound",-89,89,(x)=>{
+        panel.addSlidebar("旋转角度下限",-180,180,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].rotLb=x;
             }
-        },-89)
-        panel.addSlidebar("Rotation Angle Upper Bound",-89,89,(x)=>{
+        },-180)
+        panel.addSlidebar("旋转角度上限",-180,180,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].rotRb=x;
             }
-        },89)
+        },180)
         
-        panel.addSlidebar("Rotation Axis X (x100)",0,100,(x)=>{
+        panel.addSlidebar("转轴 X (x100)",0,100,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].rotAxis[0]=x/100;
             }
         },0)
-        panel.addSlidebar("Rotation Axis Y (x100)",0,100,(x)=>{
+        panel.addSlidebar("转轴 Y (x100)",0,100,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].rotAxis[1]=x/100;
             }
         },0)
-        panel.addSlidebar("Rotation Axis Z (x100)",0,100,(x)=>{
+        panel.addSlidebar("转轴 Z (x100)",0,100,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
                 pointCollection[i].rotAxis[2]=x/100;
             }
         },0)
+        panel.addSlidebar("扰动 X",-1000,1000,(x)=>{
+            for(let i=0;i<pointCollection.length;i++){
+                pointCollection[i].disturbX=x/1000;
+            }
+        },0)
+        panel.addSlidebar("扰动 Y",-1000,1000,(x)=>{
+            for(let i=0;i<pointCollection.length;i++){
+                pointCollection[i].disturbY=x/1000;
+            }
+        },0)
+        panel.addSlidebar("预设法向 X (x100)",-100,100,(x)=>{
+            for(let i=0;i<pointCollection.length;i++){
+                pointCollection[i].preNormal[0]=x/100;
+            }
+        },0)
+        panel.addSlidebar("预设法向 Y (x100)",-100,100,(x)=>{
+            for(let i=0;i<pointCollection.length;i++){
+                pointCollection[i].preNormal[1]=x/100;
+            }
+        },0)
+        panel.addSlidebar("预设法向 Z (x100)",-100,100,(x)=>{
+            for(let i=0;i<pointCollection.length;i++){
+                pointCollection[i].preNormal[2]=x/100;
+            }
+        },0)
+        panel.addSelector("顶点表示",[
+            {key:"normal",value:"法向量"},
+            {key:"angle",value:"内角值"},
+        ],"angle",(x)=>{
+            if(x=="normal"){
+                for(let i=0;i<pointCollection.length;i++){
+                    pointCollection[i].outputNormal=1.0;
+                }
+            }else{
+                for(let i=0;i<pointCollection.length;i++){
+                    pointCollection[i].outputNormal=0.0;
+                }
+            }
+        })
 
+        panel.addSelector("排序顶点",[
+            {key:"ena",value:"启用"},
+            {key:"dis",value:"禁用"},
+        ],"ena",(x)=>{
+            if(x=="ena"){
+                for(let i=0;i<pointCollection.length;i++){
+                    pointCollection[i].sortVertex=1.0;
+                }
+            }else{
+                for(let i=0;i<pointCollection.length;i++){
+                    pointCollection[i].sortVertex=0.0;
+                }
+            }
+        })
+
+        panel.addSelector("随机算法",[
+            {key:"rso3",value:"均匀随机SO(3) [部分选项失效]"},
+            {key:"raxs",value:"均匀转轴与均匀转角(非均匀SO(3))"},
+            
+        ],"rso3",(x)=>{
+            if(x=="rso3"){
+                for(let i=0;i<pointCollection.length;i++){
+                    pointCollection[i].useUniformDist=1.0;
+                }
+            }else{
+                for(let i=0;i<pointCollection.length;i++){
+                    pointCollection[i].useUniformDist=0.0;
+                }
+            }
+        })
+
+        panel.addSelector("法向方向规范化",[
+            {key:"ena",value:"强制按逆时针排序"},
+            {key:"dis",value:"保持原定点顺序"},
+            
+        ],"ena",(x)=>{
+            if(x=="ena"){
+                for(let i=0;i<pointCollection.length;i++){
+                    pointCollection[i].fccn=1.0;
+                }
+            }else{
+                for(let i=0;i<pointCollection.length;i++){
+                    pointCollection[i].fccn=0.0;
+                }
+            }
+        })
         camera.disableInteraction()
         const drawCall = ()=>{
             renderer.renderScene(camera,scene)
