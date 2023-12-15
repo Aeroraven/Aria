@@ -172,13 +172,12 @@ export class AriaStageInternalAngleReprojection extends AriaStage{
             pointCollection.push(p)
 
             const collection = new AriaComMesh(procedure,p)
-            const axisMesh = new AriaComMesh(axisMaterial,axis)
-
-
+            
             scene.addChild(collection)
-            scene.addChild(axisMesh)
+            
         }
-        
+        const axisMesh = new AriaComMesh(axisMaterial,axis)
+        scene.addChild(axisMesh)
         
         const camera = new AriaComCamera()
         camera.setPos(0,0,2)
@@ -194,14 +193,6 @@ export class AriaStageInternalAngleReprojection extends AriaStage{
         
         panel.addDynamicText("&nbsp;",()=>"")
         panel.addDynamicText("可视化控制",()=>"",true)
-        /*
-        panel.addDynamicText("Deactivate Camera",()=>"Key ESC")
-        panel.addDynamicText("Activate Camera",()=>"Key ESC")
-        panel.addDynamicText("Camera Position X",()=>"Key A/D (After Activation)")
-        
-        panel.addDynamicText("Camera Position Z",()=>"Key W/S (After Activation)")
-        panel.addDynamicText("Camera Position Y",()=>"Key Q/E (After Activation)")
-        panel.addDynamicText("Camera Rotation",()=>"Mouse (After Activation)")*/
 
         panel.addSlidebar("可视化结果旋转 Y",0.0,2000.0,(x)=>{
             for(let i=0;i<pointCollection.length;i++){
