@@ -34,7 +34,18 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemGraphicsPipeline::loadCustomizedVertexStageLayout() {
-
+        auto w = this->extraProps.vertStageLayout.value();
+        for (int i = 0; i < w.size(); i++) {
+            w[i]->updateLayoutSpecification(&this->vxLayoutSpec, i);
+        }
+        for (auto& [key, value] : vxLayoutSpec.registeredDesc) {
+            vxLayoutSpec.attributeDesc.push_back(value);
+        }
+        this->vertexInputStateCreateInfo.vertexBindingDescriptionCount = vxLayoutSpec.bindingDesc.size();
+        this->vertexInputStateCreateInfo.pVertexBindingDescriptions = vxLayoutSpec.bindingDesc.data();
+        this->vertexInputStateCreateInfo.vertexAttributeDescriptionCount = vxLayoutSpec.attributeDesc.size();
+        this->vertexInputStateCreateInfo.pVertexAttributeDescriptions = vxLayoutSpec.attributeDesc.data();
+        return true;
     }
     
     bool AnthemGraphicsPipeline::preparePreqPipelineCreateInfo(){
@@ -54,7 +65,7 @@ namespace Anthem::Core{
             this->vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
             this->vertexInputStateCreateInfo.pNext = nullptr;
             this->vertexInputStateCreateInfo.flags = 0;
-
+            loadCustomizedVertexStageLayout();
         }
         else if(this->vertexBuffer==nullptr){
             ANTH_LOGW("Vertex buffer not specified, using default vertex input state");
@@ -69,7 +80,7 @@ namespace Anthem::Core{
             this->vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
             this->vertexInputStateCreateInfo.pNext = nullptr;
             this->vertexInputStateCreateInfo.flags = 0;
-            this->vertexBuffer->prepareVertexInputInfo(&(this->vertexInputStateCreateInfo));
+            this->vertexBuffer->prepareVertexInputInfo(&(this->vertexInputStateCreateInfo),0);
         }
 
         //Specify Input Assembly Info

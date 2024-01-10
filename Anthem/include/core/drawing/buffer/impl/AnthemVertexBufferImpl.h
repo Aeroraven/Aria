@@ -25,6 +25,8 @@ namespace Anthem::Core {
         std::array<bool, sizeof...(AttrTp)> isIntType = { std::is_integral<AttrTp>::value... };
         std::array<bool, sizeof...(AttrTp)> isUnsignedType = { std::is_unsigned<AttrTp>::value... };
 
+        uint32_t attrBindPoint[sizeof...(AttrTp)];
+
     public:
         AnthemVertexBufferImpl() {
             this->singleVertexSize = 0;
@@ -32,6 +34,7 @@ namespace Anthem::Core {
             for (auto i = 0; i < sizeof...(AttrSz); i++) {
                 ANTH_LOGI("Param Size=", this->attrDims[i] * this->attrTpSize[i]);
                 this->singleVertexSize += this->attrDims[i] * this->attrTpSize[i];
+                attrBindPoint[i] = i;
             }
             ANTH_LOGI("Total Size=", this->singleVertexSize);
         }
@@ -40,6 +43,12 @@ namespace Anthem::Core {
             this->totalVertices = vertexNum;
             this->rawBufferData = new char[this->calculateBufferSize()];
             ANTH_LOGI("Allocated:", this->calculateBufferSize());
+            return true;
+        }
+        bool setAttrBindingPoint(std::array<uint32_t,sizeof...(AttrTp)> data) {
+            for (int i = 0; i < data.size(); i++) {
+                this->attrBindPoint[i] = data.at(i);
+            }
             return true;
         }
         bool insertData(int idx, std::array<AttrTp, AttrSz>... data) {
@@ -59,9 +68,9 @@ namespace Anthem::Core {
             }
             return true;
         }
-        bool virtual getInputBindingDescriptionInternal(VkVertexInputBindingDescription* desc) override {
+        bool virtual getInputBindingDescriptionInternal(VkVertexInputBindingDescription* desc, uint32_t bindLoc) override {
             ANTH_ASSERT(desc, "Description is nullptr");
-            desc->binding = 0;
+            desc->binding = bindLoc;
             desc->stride = this->singleVertexSize;
             desc->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
             return true;
@@ -190,14 +199,14 @@ namespace Anthem::Core {
             }
             return VK_FORMAT_UNDEFINED;
         }
-        bool getInputAttrDescriptionInternal(std::vector<VkVertexInputAttributeDescription>* desc) override {
+        bool virtual getInputAttrDescriptionInternal(std::vector<VkVertexInputAttributeDescription>* desc, uint32_t bindLoc) override {
             ANTH_ASSERT(desc, "Description is nullptr");
             uint32_t offset = 0;
             desc->clear();
             for (auto i = 0; i < sizeof...(AttrSz); i++) {
                 VkVertexInputAttributeDescription attrDesc = {};
-                attrDesc.binding = 0;
-                attrDesc.location = i;
+                attrDesc.binding = bindLoc;
+                attrDesc.location = attrBindPoint[i];
                 attrDesc.format = this->getFormatFromTypeInfo(i);
                 attrDesc.offset = offset;
                 desc->push_back(attrDesc);
@@ -205,6 +214,20 @@ namespace Anthem::Core {
             }
             return true;
         }
+
+        bool virtual updateLayoutSpecification(AnthemVertexStageLayoutSpec* spec, uint32_t bindLoc) override {
+            VkVertexInputBindingDescription ibDesc = {};
+            std::vector<VkVertexInputAttributeDescription> atDesc = {};
+            getInputBindingDescriptionInternal(&ibDesc,bindLoc);
+            getInputAttrDescriptionInternal(&atDesc, bindLoc);
+
+            spec->bindingDesc.push_back(ibDesc);
+            for (int i = 0; i < atDesc.size(); i++) {
+                spec->registeredDesc[attrBindPoint[i]] = atDesc[i];
+            }
+            return true;
+        }
+
         uint32_t calculateBufferSize() override {
             return this->singleVertexSize * this->totalVertices;
         }

@@ -1,5 +1,40 @@
 #include "../include/core/base/AnthemBaseImports.h"
+#include <ranges>
+
+#ifdef _HAS_CXX23
+#include <stacktrace>
+#endif
+
 using namespace Anthem::Core;
+
+#ifdef _HAS_CXX23
+class Fantasy {
+public:
+    void Ciao() {
+        
+        Hello();
+    }
+    void Hello() {
+        std::function<void()> wrapper;
+        ANTH_LOGI("Hello");
+        auto goodbye = []()->void {
+            ANTH_LOGI("Goodbye");
+            auto runtimeStack = std::stacktrace::current();
+            for (auto& w : runtimeStack) {
+                ANTH_LOGI("Desc:", w.description());
+                ANTH_LOGI("SrcFile:", w.source_file());
+                ANTH_LOGI("SrcLine:", w.source_line());
+            }
+        };
+        auto greet = [&]()->void {
+            ANTH_LOGI("Greet");
+            wrapper();
+        };
+        wrapper = goodbye;
+        greet();
+    }
+};
+#endif
 
 class Cat{
 public:
@@ -445,5 +480,25 @@ int main(){
         p->expand();
     }
     ANTH_LOGI("=============");
+
+
+    ANTH_LOGI("22=============");
+    {
+        auto p = std::ranges::views::iota(1, 20);
+        for (auto x : p) {
+            std::cout << x << std::endl;
+        }
+    }
+    ANTH_LOGI("=============");
+
+
+#ifdef _HAS_CXX23
+    ANTH_LOGI("23=============");
+    {
+        auto w = Fantasy();
+        w.Ciao();
+    }
+    ANTH_LOGI("=============");
+#endif
     return 0;
 }

@@ -174,7 +174,7 @@ namespace Anthem::Core{
             vxBufferImpl->specifyLogicalDevice(this->logicalDevice.get());
             vxBufferImpl->specifyPhyDevice(this->phyDevice.get());
             vxBufferImpl->specifyCommandBuffers(this->commandBuffers.get());
-            *pVertexBuffer = vxBufferImpl;
+            *pInstancingBuffer = vxBufferImpl;
             this->vertexBuffers.push_back(vxBufferImpl);
             return true;
         }

@@ -18,7 +18,7 @@ namespace Anthem::Core{
     };
     struct AnthemGraphicsPipelineCreateProps {
         AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
-        std::optional<AnthemVertexStageLayoutSpec> vertStageLayout = std::nullopt;
+        std::optional<std::vector<IAnthemVertexBufferAttrLayout*>> vertStageLayout = std::nullopt;
     };
 
     class AnthemGraphicsPipeline{     
@@ -61,6 +61,8 @@ namespace Anthem::Core{
         VkPipeline pipeline;
         VkGraphicsPipelineCreateInfo pipelineCreateInfo = {};
         std::vector<VkDescriptorSetLayout> layouts;
+
+        AnthemVertexStageLayoutSpec vxLayoutSpec = {};
     protected:
         bool loadCustomizedVertexStageLayout();
 

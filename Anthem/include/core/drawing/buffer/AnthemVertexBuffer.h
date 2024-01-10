@@ -17,8 +17,8 @@ namespace Anthem::Core{
             *dataDst = this->rawBufferData;
         }
     protected:
-        bool virtual getInputBindingDescriptionInternal(VkVertexInputBindingDescription* desc) = 0;
-        bool virtual getInputAttrDescriptionInternal(std::vector<VkVertexInputAttributeDescription>* desc) = 0;
+        bool virtual getInputBindingDescriptionInternal(VkVertexInputBindingDescription* desc, uint32_t bindLoc) = 0;
+        bool virtual getInputAttrDescriptionInternal(std::vector<VkVertexInputAttributeDescription>* desc, uint32_t bindLoc) = 0;
     public:
         uint32_t virtual getOffsets() = 0;
         const VkVertexInputBindingDescription* getVertexInputBindingDescription() const{
@@ -27,12 +27,12 @@ namespace Anthem::Core{
         const std::vector<VkVertexInputAttributeDescription>* getVertexInputAttributeDescription() const{
             return &(this->vertexInputAttributeDescription);
         }
-        bool virtual prepareVertexInputInfo(VkPipelineVertexInputStateCreateInfo* info){
-            if(!this->getInputBindingDescriptionInternal(&vertexInputBindingDescription)){
+        bool virtual prepareVertexInputInfo(VkPipelineVertexInputStateCreateInfo* info, uint32_t bindLoc){
+            if(!this->getInputBindingDescriptionInternal(&vertexInputBindingDescription,bindLoc)){
                 ANTH_LOGE("Failed to get input binding description");
                 return false;
             }
-            if(!this->getInputAttrDescriptionInternal(&vertexInputAttributeDescription)){
+            if(!this->getInputAttrDescriptionInternal(&vertexInputAttributeDescription,bindLoc)){
                 ANTH_LOGE("Failed to get input attribute description");
                 return false;
             }

@@ -12,6 +12,6 @@ using namespace Anthem::External;
 using namespace Anthem::Components::Camera;
 
 int main() {
-	ANTH_LOGI("Eliminating Bias and Discrimination");
+
 	return 0;
 }

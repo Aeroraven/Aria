@@ -1,0 +1,29 @@
+#version 450
+
+
+layout(set = 0,binding = 0) uniform UniformBufferObject{
+    vec4 translation;
+    vec4 param;
+}ubo;
+
+struct Particle{
+    vec4 rnd;
+    vec4 pos;
+};
+
+layout(std140, set = 1,binding = 0) readonly buffer ssboIn{
+    Particle particleIn[];
+};
+
+layout(std140, set = 2,binding = 0) buffer ssboOut{
+    Particle particleOut[];
+};
+
+layout(local_size_x = 256,local_size_y=1,local_size_z=1) in;
+
+void main(){
+    uint idx = gl_GlobalInvocationID.x;
+    Particle pIn = particleIn[idx];
+
+    particleOut[idx].pos = vec4(1.0);
+}

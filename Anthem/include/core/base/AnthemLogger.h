@@ -37,6 +37,10 @@ namespace Anthem{
 
             }
 
+            inline std::string classNameTrack(const std::string& prettyFunction) {
+                size_t colons = prettyFunction.find("!") + 1;
+                return prettyFunction.substr(colons,prettyFunction.size()-colons);
+            }
             void log_prefix(const char* level){
                 auto timestamp = std::time(nullptr);
                 auto formattedTime = std::asctime(std::localtime(&timestamp));

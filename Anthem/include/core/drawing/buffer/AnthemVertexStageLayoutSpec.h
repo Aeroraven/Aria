@@ -3,8 +3,9 @@
 
 namespace Anthem::Core {
 	struct AnthemVertexStageLayoutSpec {
-		std::vector<VkVertexInputAttributeDescription> attributeDesc = {}
+		std::vector<VkVertexInputAttributeDescription> attributeDesc = {};
+		std::vector<VkVertexInputBindingDescription> bindingDesc = {};
 		VkPipelineVertexInputStateCreateInfo createInfo = {};
-		map<int, VkVertexInputAttributeDescription> registeredDesc = {};
+		std::map<int, VkVertexInputAttributeDescription> registeredDesc = {};
 	};
 }

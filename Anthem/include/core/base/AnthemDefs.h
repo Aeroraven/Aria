@@ -24,6 +24,14 @@
 #include <variant>
 #include <unordered_set>
 #include <chrono>
+#include <ranges>
+
+#ifdef _HAS_CXX23
+#include <stacktrace>
+#endif
+
+// WorkDir
+#define ANTH_SHADER_DIR "C:\\WR\\Aria\\Anthem\\shader\\glsl\\"
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>
@@ -40,16 +48,20 @@
 #endif
 #endif
 
-
 // Math Constants
 #define AT_PI 3.1415926535897934384626
 
 // Sugars
 #define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
-#ifdef _MSC_VER
-#define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().className(__FUNCSIG__).c_str())
+
+#ifdef _HAS_CXX23
+    #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().classNameTrack(std::stacktrace::current().at(0).description()).c_str())
 #else
-#define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().className(__PRETTY_FUNCTION__).c_str())
+    #ifdef _MSC_VER
+        #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().className(__FUNCSIG__).c_str())
+    #else
+        #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().className(__PRETTY_FUNCTION__).c_str())
+    #endif
 #endif
 
 // Logger
