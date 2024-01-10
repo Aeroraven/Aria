@@ -82,6 +82,7 @@ export class AriaComRenderPass extends AriaComponent implements IAriaRenderable{
                 el(renderer)
             })
         }
+        renderer.setDrawingShape(this._geometry.getRenderShape())
         renderer.renderInstancedEntry(this._geometry.getVertexNumber())
     }
 }

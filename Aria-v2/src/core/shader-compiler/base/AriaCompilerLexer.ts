@@ -276,10 +276,10 @@ export class AriaShaderCompilerLexerBase extends AriaObject{
 
     public static readonly AGL_END_SIGN = "\x00"
     public static readonly AGL_NUMERIC = "0-9"
-    public static readonly AGL_ANY = "\x00-\xff"
-    public static readonly AGL_NON_NUMERIC = "\x00-\x2f|\x3a-\xff"
+    public static readonly AGL_ANY = "\u0000-\uffff"
+    public static readonly AGL_NON_NUMERIC = "\x00-\x2f|\x3a-\uffff"
     public static readonly AGL_ALPHABETIC = "A-Z|a-z"
-    public static readonly AGL_NON_ALPHABETIC = "\x00-\x3f|\x5b-\x60|\x7b-\xff"
+    public static readonly AGL_NON_ALPHABETIC = "\x00-\x3f|\x5b-\x60|\x7b-\uffff"
     constructor(){
         super("AriaShaderCompiler/LexerBase")
     }

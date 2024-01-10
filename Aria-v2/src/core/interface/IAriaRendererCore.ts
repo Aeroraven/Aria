@@ -1,6 +1,7 @@
 import { AriaCallable } from "../base/AriaBaseDefs";
 import { IAriaCoreBuffer, IAriaCoreData, IAriaCoreRenderingContext, IAriaCoreShaderProgram, IAriaCoreTexture } from "../base/AriaRendererCompatDef";
 import { AriaShaderUniformTp } from "../graphics/AriaShaderOps";
+import { AriaRenderEnumDrawingShape } from "../renderer/AriaRendererEnums";
 import { IAriaFramebuffer } from "./IAriaFramebuffer";
 import { IAriaGeneralBuffer } from "./IAriaGeneralBuffer";
 import { IAriaShader } from "./IAriaShader";
@@ -55,4 +56,6 @@ export interface IAriaRendererCore{
     setFramebufferRenderBuffer(renderbuffer:IAriaCoreBuffer):any
     setFramebufferTexture(texture:IAriaCoreTexture):any
     setFramebufferTextureCubic(texture:IAriaCoreTexture):any
+
+    setDrawingShape(shape:AriaRenderEnumDrawingShape):any
 }

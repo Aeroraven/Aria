@@ -19,6 +19,7 @@ export enum AriaGacLexerTokenTypes{
     AGLT_MUL = "agl_mul",
     AGLT_DIV = "agl_div",
     AGLT_LAND = "agl_land",
+    AGLT_MOD = "agl_mod",
     AGLT_LOR = "agl_lor",
     AGLT_LNOT = "agl_lnot",
     AGLT_LEQ = "agl_leq",
@@ -47,7 +48,8 @@ export enum AriaGacLexerTokenTypes{
     AGLT_INC = "agl_inc",
     AGLT_DEC = "agl_dec",
 
-    AGLT_END_SIGN= "agl_ends"
+    AGLT_END_SIGN= "agl_ends",
+    AGLT_MISC = "agl_misc"
 }
 
 
@@ -67,7 +69,7 @@ export class AriaGacLexer extends AriaShaderCompilerLexerBase{
 
         //numbers
         this.addRule([recursive(tp.AGL_NUMERIC),".",recursive(tp.AGL_NUMERIC),tp.AGL_NON_NUMERIC],en.AGLT_FLOAT,1)
-        this.addRule([recursive(tp.AGL_NUMERIC),"\x00-\\x2d|\x2f|\x3a-\xff"],en.AGLT_INT,1)
+        this.addRule([recursive(tp.AGL_NUMERIC),"\x00-\\x2d|\x2f|\x3a-\uffff"],en.AGLT_INT,1)
         
         //brackets
         this.addRule(["[",tp.AGL_ANY],en.AGLT_LEFT_BRACKET,1)
@@ -78,17 +80,18 @@ export class AriaGacLexer extends AriaShaderCompilerLexerBase{
         this.addRule([")",tp.AGL_ANY],en.AGLT_RIGHT_PARE,1)
 
         //words
-        this.addRule(["_|a-z|A-z","\x00-\x2f|\x3a-\x40|\x5b-\x5e|\x60|\x7b-\xff"],en.AGLT_WORD,1)
-        this.addRule(["_|a-z|A-z",recursive("_|a-z|A-Z|0-9"),"\x00-\x2f|\x3a-\x40|\x5b-\x5e|\x60|\x7b-\xff"],en.AGLT_WORD,1)
+        this.addRule(["_|a-z|A-z","\x00-\x2f|\x3a-\x40|\x5b-\x5e|\x60|\x7b-\uffff"],en.AGLT_WORD,1)
+        this.addRule(["_|a-z|A-z",recursive("_|a-z|A-Z|0-9"),"\x00-\x2f|\x3a-\x40|\x5b-\x5e|\x60|\x7b-\uffff"],en.AGLT_WORD,1)
 
         //note starts
         this.addRule(["/","/",tp.AGL_ANY],en.AGLT_GLSL_NOTE_SL,1)
 
         //other ops
-        this.addRule(["+","\x00-\x2a|\x2c-\x3c|\x3e-\xff"],en.AGLT_ADD,1)
-        this.addRule(["\\--\\-","\x00-\x2c|\x2e-\x3c|\x3e-\xff"],en.AGLT_SUB,1)
-        this.addRule(["*","\x00-\x3c|\x3e-\xff"],en.AGLT_MUL,1)
-        this.addRule(["/","\x00-\x3c|\x3e-\xff"],en.AGLT_DIV,1)
+        this.addRule(["+","\x00-\x2a|\x2c-\x3c|\x3e-\uffff"],en.AGLT_ADD,1)
+        this.addRule(["%",tp.AGL_ANY],en.AGLT_MOD,1)
+        this.addRule(["\\--\\-","\x00-\x2c|\x2e-\x3c|\x3e-\uffff"],en.AGLT_SUB,1)
+        this.addRule(["*","\x00-\x3c|\x3e-\uffff"],en.AGLT_MUL,1)
+        this.addRule(["/","\x00-\x3c|\x3e-\uffff"],en.AGLT_DIV,1)
         this.addRule(["&","&",tp.AGL_ANY],en.AGLT_LAND,1)
         this.addRule(["\\|-\\|","\\|-\\|",tp.AGL_ANY],en.AGLT_LOR,1)
         this.addRule(["=","=",tp.AGL_ANY],en.AGLT_LEQ,1)
@@ -96,8 +99,8 @@ export class AriaGacLexer extends AriaShaderCompilerLexerBase{
         this.addRule([".",tp.AGL_ANY],en.AGLT_DOT,1)
         this.addRule([";",tp.AGL_ANY],en.AGLT_SEP,1)
         this.addRule([",",tp.AGL_ANY],en.AGLT_COMMA,1)
-        this.addRule(["<","\x00-\x3c|\x3e-\xff"],en.AGLT_LESS,1)
-        this.addRule([">","\x00-\x3c|\x3e-\xff"],en.AGLT_GREATER,1)
+        this.addRule(["<","\x00-\x3c|\x3e-\uffff"],en.AGLT_LESS,1)
+        this.addRule([">","\x00-\x3c|\x3e-\uffff"],en.AGLT_GREATER,1)
 
         this.addRule(["<","="],en.AGLT_LESS_EQ,1)
         this.addRule([">","="],en.AGLT_GREATER_EQ,1)
@@ -106,14 +109,14 @@ export class AriaGacLexer extends AriaShaderCompilerLexerBase{
         this.addRule(["\\--\\-","\\--\\-",tp.AGL_ANY],en.AGLT_DEC,1)
 
         //assigns
-        this.addRule(["=","\x00-\x3c|\x3e-\xff"],en.AGLT_ASSIGN,1)
+        this.addRule(["=","\x00-\x3c|\x3e-\uffff"],en.AGLT_ASSIGN,1)
         this.addRule(["+","="],en.AGLT_ADD_ASSIGN,0)
         this.addRule(["\\--\\-","="],en.AGLT_SUB_ASSIGN,0)
         this.addRule(["*","="],en.AGLT_MUL_ASSIGN,0)
         this.addRule(["/","="],en.AGLT_DIV_ASSIGN,0)
 
         //spacings & change line
-        this.addRule([recursive(" |\t"),"\x00-\x08|\x0a-\x1f|\x21-\xff"],en.AGLT_SPACING,1)
+        this.addRule([recursive(" |\t"),"\x00-\x08|\x0a-\x1f|\x21-\uffff"],en.AGLT_SPACING,1)
         this.addRule(["\n",tp.AGL_ANY],en.AGLT_CHANGE_LINE,1)
         this.addRule(["\r","\n",tp.AGL_ANY],en.AGLT_CHANGE_LINE,1)
 
@@ -123,5 +126,7 @@ export class AriaGacLexer extends AriaShaderCompilerLexerBase{
         //misc
         this.addRule([":",tp.AGL_ANY],en.AGLT_COLON,1)
         this.addRule(["\x00"],en.AGLT_END_SIGN,0)
+
+        this.addRule(["\u0000-\uffff",tp.AGL_ANY],en.AGLT_MISC,1)
     }
 }
