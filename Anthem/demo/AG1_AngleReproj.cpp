@@ -311,18 +311,15 @@ void drawLoop(int& currentFrame) {
 	core.renderer.drSubmitCommandBufferCompQueueGeneral(comp.computeCmdBufIdx[0], nullptr, &semaphoreToSignal, comp.computeProgress[0]);
 
 	// Graphics Drawing
-	//shared.renderer.drSubmitBufferPrimaryCall(currentFrame, currentFrame);
 	std::vector<const AnthemSemaphore*> firstStageDone = { vis.firstStageDone[currentFrame]};
 	ANTH_ASSERT((vis.firstStageDone[currentFrame] != nullptr),"No");
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(currentFrame, imgIdx, &semaphoreToSignal, &waitStage,nullptr,&firstStageDone);
-
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral(axis.axisCmdBuf[currentFrame], imgIdx, &firstStageDone,
 		&waitStageAxis);
 
 	core.renderer.drPresentFrame(currentFrame, imgIdx);
 	currentFrame++;
 	currentFrame %= 2;
-	ANTH_LOGI("23333");
 }
 
 
