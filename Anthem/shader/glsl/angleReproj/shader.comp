@@ -1,9 +1,8 @@
 #version 450
 
-
 layout(set = 0,binding = 0) uniform UniformBufferObject{
     vec4 translation;
-    vec4 param;
+    vec4 rotAxis;
 }ubo;
 
 struct Particle{
@@ -21,9 +20,49 @@ layout(std140, set = 2,binding = 0) buffer ssboOut{
 
 layout(local_size_x = 256,local_size_y=1,local_size_z=1) in;
 
+mat4 generateRotationMatrix(vec3 axis, float angle){
+    float c = cos(angle);
+    float s = sin(angle);
+    float oc = 1.0 - c;
+
+    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                0.0,                                0.0,                                0.0,                                1.0);
+}
+
+
 void main(){
     uint idx = gl_GlobalInvocationID.x;
     Particle pIn = particleIn[idx];
 
-    particleOut[idx].pos = vec4(1.0);
+
+    vec4 rectVertices[4];
+    float interiorAngles[4];
+    rectVertices[0] = vec4(-1.0,1.0,0.0,1.0);
+    rectVertices[1] = vec4(1.0,1.0,0.0,1.0);
+    rectVertices[2] = vec4(1.0,-1.0,0.0,1.0);
+    rectVertices[3] = vec4(-1.0,-1.0,0.0,1.0);
+    float rotAng = pIn.rnd.x * 3.14159;
+    mat4 rotMat = generateRotationMatrix(vec3(1.0,0.0,0.0),rotAng);
+    for(int i=0;i<4;i++){
+        rectVertices[i] = rotMat * rectVertices[i] + vec4(0.0,0.0,5.0,0.0);
+    }
+    for(int i=0;i<4;i++){
+        vec4 v1 = rectVertices[i];
+        vec4 v2 = rectVertices[(i+1)%4];
+        vec4 v3 = rectVertices[(i-1)%4];
+
+        vec2 a1 = v1.xy/v1.z;
+        vec2 a2 = v2.xy/v2.z;
+        vec2 a3 = v3.xy/v3.z;
+
+        vec2 d1 = normalize(a2-a1);
+        vec2 d2 = normalize(a3-a1);
+
+        float angle = acos(dot(d1,d2));
+        interiorAngles[i] = mix(-1.0,1.0,angle/3.1415926);
+    }
+
+    particleOut[idx].pos = vec4(pIn.rnd.x,interiorAngles[0],0.0,0.0);
 }

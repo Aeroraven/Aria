@@ -1,4 +1,5 @@
 #include "../include/core/base/AnthemBaseImports.h"
+#include "../include/components/base/AnthemComponentBase.h"
 #include <ranges>
 
 #ifdef _HAS_CXX23
@@ -500,5 +501,20 @@ int main(){
     }
     ANTH_LOGI("=============");
 #endif
+    ANTH_LOGI("24=============");
+    {
+        auto w = 1;
+        const std::type_info& s = typeid(int);
+    }
+    ANTH_LOGI("=============");
+    ANTH_LOGI("25=============");
+    {
+        using namespace Anthem::Component;
+        AnthemEntity entity;
+        auto w = entity.addComponent<AnthemComponent>();
+        auto s = entity.getComponents<AnthemComponent>();
+        ANTH_LOGI(s.size());
+    }
+    ANTH_LOGI("=============");
     return 0;
 }

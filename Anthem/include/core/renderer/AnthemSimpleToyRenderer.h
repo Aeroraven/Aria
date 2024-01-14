@@ -105,7 +105,7 @@ namespace Anthem::Core{
             AnthemGraphicsPipeline* pipeline, AnthemSwapchainFramebuffer* framebuffer,uint32_t avaImageIdx,
             AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf, AnthemDescriptorPool* descPool);
 
-        bool setupDemoRenderPass(AnthemRenderPass** pRenderPass, AnthemDepthBuffer* depthBuffer);
+        bool setupDemoRenderPass(AnthemRenderPass** pRenderPass, AnthemDepthBuffer* depthBuffer, bool retain=false);
         bool setupRenderPass(AnthemRenderPass** pRenderPass, AnthenRenderPassSetupOption* setupOption, AnthemDepthBuffer* depthBuffer);
         bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa);
         bool createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa);
@@ -138,10 +138,18 @@ namespace Anthem::Core{
         bool drSubmitBufferPrimaryCall(uint32_t frameIdx,uint32_t cmdIdx);
         bool drClearCommands(uint32_t cmdIdx);
 
-        bool drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages);
+        bool drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx,
+            const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,
+            AnthemFence* customFence=nullptr, bool customImageAvailableSemaphore=false);
+        bool drSubmitCommandBufferGraphicsQueueGeneral2(uint32_t cmdIdx, uint32_t frameIdx,
+            const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,
+            AnthemFence* customFence, const std::vector<const AnthemSemaphore*>* semaphoreToSignal);
+
+
         bool drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal,const AnthemFence* fenceToSignal);
 
         bool drSetViewportScissor(uint32_t cmdIdx);
+        bool drSetLineWidth(float lineWidth, uint32_t cmdIdx);
         bool drBindGraphicsPipeline(AnthemGraphicsPipeline* pipeline,uint32_t cmdIdx);
         bool drBindComputePipeline(AnthemComputePipeline* pipeline,uint32_t cmdIdx);
 
@@ -154,6 +162,7 @@ namespace Anthem::Core{
         bool drDraw(uint32_t vertices,uint32_t cmdIdx);
         bool drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ);
         
+
 
         bool exGetWindowSize(int& height,int& width);
 

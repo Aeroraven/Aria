@@ -75,18 +75,37 @@ namespace Anthem{
                 std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
                 this->log_wrapper(func,"WARN",f,args);
             }
+
+            void exceptionTrigger() {
+#ifdef _HAS_CXX23
+                std::cout << std::endl;
+                std::cout << ANTH_LOGGER_RED << "Traceback Stack:" << ANTH_LOGGER_RESET << std::endl;
+                auto stacktrace = std::stacktrace::current();
+                for (auto& p : stacktrace) {
+                    std::string src = p.source_file();
+                    if (src.length() == 0) {
+                        src = "<Unknown Source>";
+                    }
+                    std::cout << "-> " << ANTH_LOGGER_CYAN << src << ANTH_LOGGER_GREEN << " Line:" << p.source_line() << ANTH_LOGGER_RESET << std::endl;
+                    std::cout << "    " << p.description() << std::endl;
+                }
+#endif
+                throw;
+            }
             template<typename... _Args>
             void loge2(const char* func, std::tuple<_Args...> args){
                 std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
                 this->log_wrapper(func,"ERROR",f,args);
-                throw;
+                exceptionTrigger();
             }
+
+            
             template<typename... _Args>
             void log_assert2(const char* func, bool cond, std::tuple<_Args...> args){
                 if(!cond){
                     std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
                     this->log_wrapper(func,"ASSERT",f,args);
-                    exit(1);
+                    exceptionTrigger();
                 }
             }
 

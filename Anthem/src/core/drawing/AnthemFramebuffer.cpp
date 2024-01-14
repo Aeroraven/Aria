@@ -15,6 +15,7 @@ namespace Anthem::Core{
                 this->colorAttachment.push_back(p);
             }
         }
+
         std::vector<VkImageView> framebufferAttachment;
         int colorImageCur = 0;
         auto totalRenderPassAttachments = renderPass->getTotalAttachmentCnt();

@@ -90,8 +90,12 @@ namespace Anthem::Core{
         using topoEnum = std::remove_cvref<decltype(extraProps.inputTopo)>::type;
         if (extraProps.inputTopo == topoEnum::AT_AIAT_TRIANGLE_LIST) {
             this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        }else if (extraProps.inputTopo == topoEnum::AT_AIAT_POINT_LIST) {
+        }
+        else if (extraProps.inputTopo == topoEnum::AT_AIAT_POINT_LIST) {
             this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        }
+        else if (extraProps.inputTopo == topoEnum::AT_AIAT_LINE) {
+            this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
         }else {
             ANTH_LOGE("Unknown topology");
         }

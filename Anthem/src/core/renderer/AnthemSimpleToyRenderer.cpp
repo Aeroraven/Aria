@@ -198,12 +198,12 @@ namespace Anthem::Core{
         *pRenderPass = newRenderPass;
         return true;
     }
-    bool AnthemSimpleToyRenderer::setupDemoRenderPass(AnthemRenderPass** pRenderPass,AnthemDepthBuffer* depthBuffer){
+    bool AnthemSimpleToyRenderer::setupDemoRenderPass(AnthemRenderPass** pRenderPass,AnthemDepthBuffer* depthBuffer,bool retain){
         auto newRenderPass = new AnthemRenderPass();
         newRenderPass->specifyLogicalDevice(this->logicalDevice.get());
         newRenderPass->specifySwapChain(this->swapChain.get());
         newRenderPass->setDepthBuffer(depthBuffer);
-        newRenderPass->createDemoRenderPass();
+        newRenderPass->createDemoRenderPass(retain);
         this->renderPasses.push_back(newRenderPass);
         *pRenderPass = newRenderPass;
         return true;
@@ -448,9 +448,29 @@ namespace Anthem::Core{
         ANTH_LOGV("Presenting Frame, Done");
         return true;
     }
-    bool AnthemSimpleToyRenderer::drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages) {
-        return this->mainLoopSyncer->submitCommandBufferGeneral(this->commandBuffers->getCommandBuffer(cmdIdx), frameIdx, semaphoreToWait, semaphoreWaitStages);
+    bool AnthemSimpleToyRenderer::drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx,
+        const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,
+        AnthemFence* customFence, bool customImageAvailableSemaphore) {
+        VkFence* vf = nullptr;
+        if (customFence) {
+            vf = (VkFence * )customFence->getFence();
+        }
+        return this->mainLoopSyncer->submitCommandBufferGeneral(this->commandBuffers->getCommandBuffer(cmdIdx), frameIdx,
+            semaphoreToWait, semaphoreWaitStages,vf,customImageAvailableSemaphore);
     }
+    bool AnthemSimpleToyRenderer::drSubmitCommandBufferGraphicsQueueGeneral2(uint32_t cmdIdx, uint32_t frameIdx,
+        const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,
+        AnthemFence* customFence, const std::vector<const AnthemSemaphore*>* semaphoreToSignal) {
+        VkFence vf = nullptr;
+        if (customFence) {
+            vf = *customFence->getFence();
+        }
+        ANTH_LOGI((long long)(semaphoreToSignal[0])[0]->getSemaphore());
+        return this->mainLoopSyncer->submitCommandBufferGeneral2(this->commandBuffers->getCommandBuffer(cmdIdx), frameIdx,
+            semaphoreToWait, semaphoreWaitStages, &vf, semaphoreToSignal);
+    }
+
+
     bool AnthemSimpleToyRenderer::drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx, const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<const AnthemSemaphore*>* semaphoreToSignal, const AnthemFence* fenceToSignal) {
         if (semaphoreToWait != nullptr) {
             ANTH_LOGE("not supported now, todo");
@@ -540,6 +560,10 @@ namespace Anthem::Core{
     bool AnthemSimpleToyRenderer::drSetViewportScissor(uint32_t cmdIdx){
         vkCmdSetViewport(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,viewport->getViewport());
         vkCmdSetScissor(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,viewport->getScissor());
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drSetLineWidth(float lineWidth, uint32_t cmdIdx) {
+        vkCmdSetLineWidth(*this->commandBuffers->getCommandBuffer(cmdIdx), lineWidth);
         return true;
     }
 

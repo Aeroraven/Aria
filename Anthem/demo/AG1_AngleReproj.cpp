@@ -5,10 +5,14 @@
 #include "../include/core/math/AnthemLinAlg.h"
 #include "../include/components/camera/AnthemCamera.h"
 
+#include <chrono>
+
 using namespace Anthem::Core;
 using namespace Anthem::Core::Math;
 using namespace Anthem::Core::Math::Abbr;
 using namespace Anthem::Components::Camera;
+
+using namespace std::chrono;
 
 
 struct ExpParams {
@@ -16,9 +20,12 @@ struct ExpParams {
 	static AtVecf4 centerTranslation;
 	static AtVecf4 rotationAxis;
 
-	// Running configurations
-	static constexpr int sampleCounts = 4096;
-	static constexpr int parallelsX = 256;
+	// Parallel configurations
+	static constexpr int sampleCounts = 1048576;
+	static constexpr int parallelsX = 8192;
+
+	// Visualization
+	static constexpr float lineWidth = 2;
 };
 
 struct ExpCore {
@@ -28,7 +35,7 @@ struct ExpCore {
 }core;
 
 struct ComputePipeline {
-	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* samples = nullptr;
+	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>, AtBufVecd4f<1>>* samples = nullptr;
 	AnthemUniformBufferImpl<AnthemUniformVecf<4>, AnthemUniformVecf<4>>* uniform = nullptr;
 
 	AnthemDescriptorPool* descPoolUniform = nullptr;
@@ -55,8 +62,22 @@ struct VisualizationPipeline {
 	AnthemRenderPass* renderPass = nullptr;
 
 	AnthemGraphicsPipelineCreateProps cprop;
+	AnthemSemaphore** firstStageDone = nullptr;
 }vis;
 
+struct CoordAxisVisPipeline {
+	AnthemVertexBufferImpl<AnthemVAOAttrDesc<float, 4>, AnthemVAOAttrDesc<float, 4>>* vxBuf;
+	AnthemIndexBuffer* ixBuf;
+	AnthemShaderFilePaths shaderFile;
+	AnthemShaderModule* shader = nullptr;
+	AnthemGraphicsPipeline* pipeline = nullptr;
+	AnthemRenderPass* renderPass = nullptr;
+
+	uint32_t* axisCmdBuf = nullptr;
+	AnthemFence** drawProgress = nullptr;
+	AnthemSemaphore** drawAvailable = nullptr;
+	AnthemGraphicsPipelineCreateProps cprop;
+}axis;
 
 inline std::string getShader(auto x) {
 	std::string st(ANTH_SHADER_DIR);
@@ -88,14 +109,14 @@ void prepareComputePipeline() {
 			auto fy = AnthemLinAlg::randomNumber<float>();
 			fx = 2.0f * (fx - 0.5f);
 			fy = 2.0f * (fy - 0.5f);
-			w->setInput(i, { fx, fy,0.0f,0.0f });
+			w->setInput(i, { fx, fy, 1.0f, 0.0f }, { fx, fy, 1.0f, 0.0f });
 		}
-		};
+	};
 	core.renderer.createShaderStorageBuffer(&comp.samples, ExpParams::sampleCounts, 0, comp.descPoolSsbo, std::make_optional(ssboCreateFunc));
 
 	// Create Uniform Buffer
 	core.renderer.createUniformBuffer(&comp.uniform, 0, comp.descPoolUniform);
-	float temp1[4] = { 0,0,0,0 };
+	float temp1[4] = { 0,0,5,0 };
 	float temp2[4] = { 0,0,0,0 };
 	comp.uniform->specifyUniforms(temp1, temp2);
 
@@ -155,7 +176,62 @@ void prepareVisualization() {
 	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { };
 	core.renderer.createGraphicsPipelineCustomized(&vis.pipeline, descSetEntriesRegPipeline, vis.renderPass, vis.shader,
 		comp.samples, &vis.cprop);
+
+	// Create Sync
+	vis.firstStageDone = new AnthemSemaphore * [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
+	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+		core.renderer.createSemaphore(&vis.firstStageDone[i]);
+	}
 }
+
+void prepareAxisVis() {
+	// Create req bufs
+	core.renderer.createVertexBuffer(&axis.vxBuf);
+	axis.vxBuf->setTotalVertices(2);
+	axis.vxBuf->insertData(0, { -0.5f, 0.5f, 0.5f,1.0f }, { -0.5f, 0.5f, 0.5f,1.0f });
+	axis.vxBuf->insertData(1, { -0.5f, -0.5f, 0.5f,1.0f }, { -0.5f, -0.5f, 0.5f,1.0f });
+
+	core.renderer.createIndexBuffer(&axis.ixBuf);
+	axis.ixBuf->setIndices({ 0, 1 });
+
+	// Load shaders
+	axis.shaderFile.vertexShader = getShader("axis.vert");
+	axis.shaderFile.fragmentShader = getShader("axis.frag");
+	core.renderer.createShader(&axis.shader, &axis.shaderFile);
+
+	core.renderer.setupDemoRenderPass(&axis.renderPass, vis.depthBuffer,true);
+
+	axis.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_LINE;
+	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { };
+	core.renderer.createGraphicsPipelineCustomized(&axis.pipeline, descSetEntriesRegPipeline, axis.renderPass, axis.shader,
+		axis.vxBuf, &axis.cprop);
+
+	axis.drawProgress = new AnthemFence * [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
+	axis.drawAvailable = new AnthemSemaphore* [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
+	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+		core.renderer.createFence(&axis.drawProgress[i]);
+		core.renderer.createSemaphore(&axis.drawAvailable[i]);
+	}
+
+	// Allocate Command Buffers
+	axis.axisCmdBuf = new uint32_t[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
+	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+		core.renderer.drAllocateCommandBuffer(&axis.axisCmdBuf[i]);
+	}
+}
+
+void recordCommandBufferDrwAxis(int i) {
+	auto& renderer = core.renderer;
+	renderer.drStartRenderPass(axis.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), axis.axisCmdBuf[i], false);
+	renderer.drSetViewportScissor(axis.axisCmdBuf[i]);
+	renderer.drBindGraphicsPipeline(axis.pipeline, axis.axisCmdBuf[i]);
+	renderer.drBindVertexBuffer(axis.vxBuf, axis.axisCmdBuf[i]);
+	renderer.drBindIndexBuffer(axis.ixBuf, axis.axisCmdBuf[i]);
+	renderer.drSetLineWidth(ExpParams::lineWidth, axis.axisCmdBuf[i]);
+	renderer.drDraw(axis.ixBuf->getIndexCount(), axis.axisCmdBuf[i]);
+	renderer.drEndRenderPass(axis.axisCmdBuf[i]);
+}
+
 
 void recordCommandBufferDrw(int i) {
 	auto& renderer = core.renderer;
@@ -181,12 +257,12 @@ void recordCommandBufferComp(int i) {
 	AnthemDescriptorSetEntry dseSsboIn = {
 		.descPool = comp.descPoolSsbo,
 		.descSetType = AT_ACDS_SHADER_STORAGE_BUFFER,
-		.inTypeIndex = static_cast<uint32_t>(i)
+		.inTypeIndex = 1
 	};
 	AnthemDescriptorSetEntry dseSsboOut = {
 		.descPool = comp.descPoolSsbo,
 		.descSetType = AT_ACDS_SHADER_STORAGE_BUFFER,
-		.inTypeIndex = (static_cast<uint32_t>(i) + 1) % 2
+		.inTypeIndex = 0
 	};
 	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { dseUniform,dseSsboIn,dseSsboOut };
 	renderer.drBindDescriptorSetCustomizedCompute(descSetEntriesRegPipeline, comp.pipeline, comp.computeCmdBufIdx[i]);
@@ -211,44 +287,75 @@ void recordCommandBufferAll() {
 		renderer.drStartCommandRecording(i);
 		recordCommandBufferDrw(i);
 		renderer.drEndCommandRecording(i);
+		renderer.drStartCommandRecording(axis.axisCmdBuf[i]);
+		recordCommandBufferDrwAxis(i);
+		renderer.drEndCommandRecording(axis.axisCmdBuf[i]);
 	}
 }
 
 void drawLoop(int& currentFrame) {
-
+	
 	uint32_t imgIdx;
+	
 	core.renderer.drPrepareFrame(currentFrame, &imgIdx);
 
 	// Compute Task
-	comp.computeProgress[currentFrame]->waitForFence();
-	comp.computeProgress[currentFrame]->resetFence();
+	comp.computeProgress[0]->waitForFence();
+	comp.computeProgress[0]->resetFence();
 
-	std::vector<const AnthemSemaphore*> semaphoreToSignal = { comp.computeDone[currentFrame] };
+	std::vector<const AnthemSemaphore*> semaphoreToSignal = { comp.computeDone[0] };
 	std::vector<AtSyncSemaphoreWaitStage> waitStage = { AtSyncSemaphoreWaitStage::AT_SSW_VERTEX_INPUT };
-	core.renderer.drSubmitCommandBufferCompQueueGeneral(comp.computeCmdBufIdx[currentFrame], nullptr, &semaphoreToSignal, comp.computeProgress[currentFrame]);
+	std::vector<const AnthemSemaphore*> semaphoreToSignalAxis = { axis.drawAvailable[currentFrame] };
+	std::vector<AtSyncSemaphoreWaitStage> waitStageAxis = { AtSyncSemaphoreWaitStage::AT_SSW_COLOR_ATTACH_OUTPUT };
+
+	core.renderer.drSubmitCommandBufferCompQueueGeneral(comp.computeCmdBufIdx[0], nullptr, &semaphoreToSignal, comp.computeProgress[0]);
 
 	// Graphics Drawing
 	//shared.renderer.drSubmitBufferPrimaryCall(currentFrame, currentFrame);
-	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral(currentFrame, imgIdx, &semaphoreToSignal, &waitStage);
+	std::vector<const AnthemSemaphore*> firstStageDone = { vis.firstStageDone[currentFrame]};
+	ANTH_ASSERT((vis.firstStageDone[currentFrame] != nullptr),"No");
+	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(currentFrame, imgIdx, &semaphoreToSignal, &waitStage,nullptr,&firstStageDone);
+
+	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral(axis.axisCmdBuf[currentFrame], imgIdx, &firstStageDone,
+		&waitStageAxis);
+
 	core.renderer.drPresentFrame(currentFrame, imgIdx);
 	currentFrame++;
 	currentFrame %= 2;
+	ANTH_LOGI("23333");
 }
 
 
 int main() {
 	prepareCore();
+	std::once_flag p1;
+	auto startGenTime = std::chrono::steady_clock().now();
 	prepareComputePipeline();
 	prepareVisualization();
-
+	prepareAxisVis();
+	
 	core.renderer.registerPipelineSubComponents();
 	recordCommandBufferAll();
 	recordCommandBufferCompAll();
 
 	int currentFrame = 0;
+	auto startTime = std::chrono::steady_clock().now();
+
 	core.renderer.setDrawFunction([&]() {
 		drawLoop(currentFrame);
+		std::call_once(p1, [&]() {
+			//comp.computeProgress[0]->waitForFence();
+			//comp.computeProgress[0]->resetFence();
+
+			auto endTime = std::chrono::steady_clock().now();
+			auto durationGen = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startGenTime);
+			auto durationCalc = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+			ANTH_LOGI("Time elapsed:");
+			ANTH_LOGI("w/o Init:", durationCalc.count()," ms");
+			ANTH_LOGI("w/ Init:", durationGen.count(), " ms");
+			ANTH_LOGI("");
 		});
+	});
 	core.renderer.startDrawLoopDemo();
 	core.renderer.finalize();
 

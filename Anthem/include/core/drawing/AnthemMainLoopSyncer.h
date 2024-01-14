@@ -27,7 +27,12 @@ namespace Anthem::Core{
         bool resetFence(uint32_t frameIdx);
         uint32_t acquireNextFrame(uint32_t frameIdx,std::function<void()> swapChainOutdatedHandler = ANTH_ERROR_RAISE_DEFAULT_FUNC);
         bool submitCommandBuffer(const VkCommandBuffer* commandBuffer,uint32_t frameIdx);
-        bool submitCommandBufferGeneral(const VkCommandBuffer* commandBuffer, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* prerequisiteSemaphores, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages);
+        bool submitCommandBufferGeneral(const VkCommandBuffer* commandBuffer, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* prerequisiteSemaphores,
+            const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages, VkFence* signalFence = nullptr, bool removeDefaultWaitSemaphore=false);
+
+        bool submitCommandBufferGeneral2(const VkCommandBuffer* commandBuffer, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* prerequisiteSemaphores,
+            const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages, VkFence* signalFence, const std::vector<const AnthemSemaphore*>* semaphoreToSignal);
+
         bool presentFrame(uint32_t imageIndex,uint32_t frameIdx,std::function<void()> swapChainOutdatedHandler = ANTH_ERROR_RAISE_DEFAULT_FUNC);
     };
 }

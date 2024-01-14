@@ -63,7 +63,7 @@ namespace Anthem::Core{
     public:
         bool virtual specifyLogicalDevice(AnthemLogicalDevice* device);
         bool virtual specifySwapChain(AnthemSwapChain* swapChain);
-        bool virtual createDemoRenderPass();
+        bool virtual createDemoRenderPass(bool retain=false);
         bool virtual createRenderPass(const AnthenRenderPassSetupOption& opt);
         bool virtual destroyRenderPass();
         bool virtual setDepthBuffer(AnthemDepthBuffer* depthBuffer);

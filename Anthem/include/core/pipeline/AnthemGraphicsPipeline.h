@@ -15,6 +15,7 @@ namespace Anthem::Core{
         AT_AIAT_UNDEFINED = 0,
         AT_AIAT_TRIANGLE_LIST = 1,
         AT_AIAT_POINT_LIST = 2,
+        AT_AIAT_LINE = 3,
     };
     struct AnthemGraphicsPipelineCreateProps {
         AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
@@ -37,6 +38,7 @@ namespace Anthem::Core{
         std::vector<VkDynamicState> reqiredDynamicStates={
             VK_DYNAMIC_STATE_VIEWPORT,
             VK_DYNAMIC_STATE_SCISSOR,
+            VK_DYNAMIC_STATE_LINE_WIDTH,
         };
         VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {};

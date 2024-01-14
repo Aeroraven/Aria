@@ -25,6 +25,7 @@
 #include <unordered_set>
 #include <chrono>
 #include <ranges>
+#include <typeinfo>
 
 #ifdef _HAS_CXX23
 #include <stacktrace>
@@ -129,3 +130,9 @@ namespace Anthem::Core::TmplDefs{
     template<class SrcTp,int SrcDm,int SrcSz,int SrcArrSz>
     concept ATpIsdValidUniformWithArr = ATpIsdUniMatVecf<SrcTp,SrcDm,SrcSz> && (SrcArrSz>0);
 }
+
+
+// External Modules
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#define AT_EXT_FREETYPE_ENABLED

@@ -21,7 +21,14 @@ set(glfw3_DIR "C:/Program Files (x86)/GLFW/lib/cmake/glfw3/")
 set(glfw3_LIB "C:/Program Files (x86)/GLFW/lib/glfw3.lib")
 find_package(glfw3 3.3 REQUIRED)
 
+
+set(FREETYPE_LIBRARY "C:/Program Files (x86)/freetype/lib/cmake/freetype/")
+set(FREETYPE_LIBRARY "C:/Program Files (x86)/freetype/lib/freetype.lib")
+set(FREETYPE_INCLUDE_DIRS "C:/Program Files (x86)/freetype/include")
+find_package(freetype REQUIRED)
+
 include_directories("C:/Program Files (x86)/GLFW/include")
+include_directories("C:/Program Files (x86)/freetype/include/freetype2")
 
 file(GLOB_RECURSE SOURCE_0 "include/*.h")
 file(GLOB_RECURSE SOURCE_1 "src/*.cpp")

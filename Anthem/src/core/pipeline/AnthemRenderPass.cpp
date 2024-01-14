@@ -39,7 +39,7 @@ namespace Anthem::Core{
     const AnthenRenderPassSetupOption& AnthemRenderPass::getSetupOption() const{
         return this->setupOption;
     }
-    bool AnthemRenderPass::createDemoRenderPass(){
+    bool AnthemRenderPass::createDemoRenderPass(bool retain){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->swapChain != nullptr,"Swap chain not specified"); 
         
@@ -49,9 +49,17 @@ namespace Anthem::Core{
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        if (retain) {
+            colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+            colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        }
+       
         colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        if (retain) {
+            colorAttachment.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        }
         colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         this->renderPassAttachments.push_back(colorAttachment);
 
@@ -63,10 +71,16 @@ namespace Anthem::Core{
             depthAttachment.format = this->depthBuffer->getDepthFormat();
             depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
             depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            if (retain) { // TODO:
+                depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            }
             depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            if (retain) {
+                depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            }
             depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             this->renderPassAttachments.push_back(depthAttachment);
 
@@ -80,9 +94,7 @@ namespace Anthem::Core{
         //Specify Tp (Compat)
         registerAttachmentType(AT_ARPCA_COLOR);
         registerAttachmentType(AT_ARPCA_DEPTH);
-        
 
-        
 
         //Create Attachment Reference
         VkAttachmentReference colorAttachmentReference = {};

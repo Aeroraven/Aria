@@ -104,7 +104,9 @@ namespace Anthem::Core{
     }
 
 
-    bool AnthemMainLoopSyncer::submitCommandBufferGeneral(const VkCommandBuffer* commandBuffer, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* prerequisiteSemaphores, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages){
+    bool AnthemMainLoopSyncer::submitCommandBufferGeneral(const VkCommandBuffer* commandBuffer, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* prerequisiteSemaphores, 
+        const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages, VkFence* signalFence, bool removeDefaultWaitSemaphore){
+
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -136,9 +138,68 @@ namespace Anthem::Core{
         VkSemaphore signalSemaphores[] = {
             this->drawFinishedSp[frameIdx]
         };
+
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
-        if(vkQueueSubmit(this->logicalDevice->getGraphicsQueue(),1,&submitInfo,this->inFlightFence[frameIdx])!=VK_SUCCESS){
+        
+        VkFence* sigFence = signalFence;
+        if (sigFence == nullptr) {
+            sigFence = &this->inFlightFence[frameIdx];
+        }
+        if(vkQueueSubmit(this->logicalDevice->getGraphicsQueue(),1,&submitInfo,*sigFence)!=VK_SUCCESS){
+            ANTH_LOGE("Failed to submit draw command buffer");
+            return false;
+        }
+        ANTH_LOGV("Draw command buffer submitted");
+        return true;
+    }
+
+    bool AnthemMainLoopSyncer::submitCommandBufferGeneral2(const VkCommandBuffer* commandBuffer, uint32_t frameIdx, const std::vector<const AnthemSemaphore*>* prerequisiteSemaphores,
+        const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages, VkFence* signalFence, const std::vector<const AnthemSemaphore*>* semaphoreToSignal) {
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        std::vector<VkSemaphore> waitSemaphores;
+
+        for (const auto& p : *prerequisiteSemaphores) {
+            waitSemaphores.push_back(*p->getSemaphore());
+        }
+        std::vector<VkPipelineStageFlags> waitStages;
+        for (const auto& p : *semaphoreWaitStages) {
+            using tp = std::remove_cvref<decltype(p)>::type;
+            if (p == tp::AT_SSW_VERTEX_INPUT) {
+                waitStages.push_back(VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+            }
+            else if (p == tp::AT_SSW_COLOR_ATTACH_OUTPUT) {
+                waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+            }
+            else {
+                ANTH_LOGE("Invalid wait stage");
+            }
+        }
+
+        submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
+        submitInfo.pWaitSemaphores = waitSemaphores.data();
+        submitInfo.pWaitDstStageMask = waitStages.data();
+
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = commandBuffer;
+
+
+        std::vector<VkSemaphore> signalSemaphores;
+        for (auto& w : *semaphoreToSignal) {
+            signalSemaphores.push_back(*w->getSemaphore());
+        }
+
+        submitInfo.signalSemaphoreCount = signalSemaphores.size();
+        submitInfo.pSignalSemaphores = signalSemaphores.data();
+
+        VkFence sigFence = VK_NULL_HANDLE;
+        if (signalFence != nullptr) {
+            sigFence = *signalFence;
+        }
+        if (vkQueueSubmit(this->logicalDevice->getGraphicsQueue(), 1, &submitInfo, sigFence) != VK_SUCCESS) {
             ANTH_LOGE("Failed to submit draw command buffer");
             return false;
         }

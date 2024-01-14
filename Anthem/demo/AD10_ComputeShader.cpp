@@ -212,7 +212,7 @@ void recordCommandBufferComp(int i) {
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { dseUniform,dseSsboIn,dseSsboOut };
     renderer.drBindDescriptorSetCustomizedCompute(descSetEntriesRegPipeline, comp.pipeline, comp.allocCmdBuf[i]);
-    renderer.drComputeDispatch(comp.allocCmdBuf[i], 256, 1, 1);
+    renderer.drComputeDispatch(comp.allocCmdBuf[i], 128, 1, 1);
 }
 
 void recordCommandBufferCompAll() {
