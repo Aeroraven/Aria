@@ -51,7 +51,7 @@ namespace Anthem::Core{
             this->copyStagingToVertexBuffer();
             return true;
         }
-        
+        virtual ~AnthemVertexBuffer() {};
     };
 
 }

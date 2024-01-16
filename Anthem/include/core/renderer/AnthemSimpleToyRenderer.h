@@ -110,7 +110,7 @@ namespace Anthem::Core{
         bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa);
         bool createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa);
         bool createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,uint32_t texHeight,
-             uint32_t texChannel, uint32_t bindLoc, bool generateMipmap, bool enableMsaa);
+             uint32_t texChannel, uint32_t bindLoc, bool generateMipmap, bool enableMsaa,AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8);
         bool createColorAttachmentImage(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint32_t bindLoc,  AnthemImageFormat format, bool enableMsaa);
         bool createIndexBuffer(AnthemIndexBuffer** pIndexBuffer);
         bool createShader(AnthemShaderModule** pShaderModule,AnthemShaderFilePaths* filename);

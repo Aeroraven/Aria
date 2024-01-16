@@ -19,9 +19,10 @@ struct ExpParams {
 	// Exp params
 	static AtVecf4 centerTranslation;
 	static AtVecf4 rotationAxis;
+	static int moveFocal;
 
 	// Parallel configurations
-	static constexpr int sampleCounts = 1048576;
+	static constexpr int sampleCounts = 262144*2;
 	static constexpr int parallelsX = 8192;
 
 	// Visualization
@@ -33,6 +34,18 @@ struct ExpCore {
 	AnthemConfig cfg;
 	AnthemCamera camera = AnthemCamera(AT_ACPT_PERSPECTIVE);
 }core;
+
+struct FontLib {
+	FT_Library ft;
+	FT_Face face;
+
+	AnthemImage** glyphTex;
+	AnthemDescriptorPool** glyphDescPool;
+	unsigned char** glyphBuffer;
+	int* glyphWidth;
+	int* glyphRows;
+
+}font;
 
 struct ComputePipeline {
 	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>, AtBufVecd4f<1>>* samples = nullptr;
@@ -63,6 +76,13 @@ struct VisualizationPipeline {
 
 	AnthemGraphicsPipelineCreateProps cprop;
 	AnthemSemaphore** firstStageDone = nullptr;
+
+
+	using uProjMat = AnthemUniformMatf<4>;
+	using uViewMat = AnthemUniformMatf<4>;
+	using uLocalMat = AnthemUniformMatf<4>;
+	AnthemDescriptorPool* descVisUniform;
+	AnthemUniformBufferImpl<uProjMat, uViewMat, uLocalMat>* visUniform;
 }vis;
 
 struct CoordAxisVisPipeline {
@@ -107,9 +127,10 @@ void prepareComputePipeline() {
 		for (auto i : std::ranges::views::iota(0,ExpParams::sampleCounts)) {
 			auto fx = AnthemLinAlg::randomNumber<float>();
 			auto fy = AnthemLinAlg::randomNumber<float>();
+			auto fz = AnthemLinAlg::randomNumber<float>();
 			fx = 2.0f * (fx - 0.5f);
 			fy = 2.0f * (fy - 0.5f);
-			w->setInput(i, { fx, fy, 1.0f, 0.0f }, { fx, fy, 1.0f, 0.0f });
+			w->setInput(i, { fx, fy, fz, 0.0f }, { fx, fy, fz, 0.0f });
 		}
 	};
 	core.renderer.createShaderStorageBuffer(&comp.samples, ExpParams::sampleCounts, 0, comp.descPoolSsbo, std::make_optional(ssboCreateFunc));
@@ -155,6 +176,32 @@ void prepareComputePipeline() {
 	}
 }
 
+void updateVisUniform() {
+	int rdH, rdW;
+	core.renderer.exGetWindowSize(rdH, rdW);
+	core.camera.specifyFrustum(AT_PI / 2, 0.1, 100, 1.0 * rdW / rdH);
+	core.camera.specifyPosition(0.0, 0.0, -2.5f);
+
+	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
+	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, (float)glfwGetTime() * 0.1);
+
+	AtMatf4 proj, view, model;
+	float projRaw[16], viewRaw[16], modelRaw[16];
+	core.camera.getProjectionMatrix(proj);
+	core.camera.getViewMatrix(view);
+	model = local.multiply(Math::AnthemLinAlg::eye<float, 4>());
+
+	proj.columnMajorVectorization(projRaw);
+	view.columnMajorVectorization(viewRaw);
+	model.columnMajorVectorization(modelRaw);
+
+	vis.visUniform->specifyUniforms(projRaw, viewRaw, modelRaw);
+	for (auto i : std::ranges::views::iota(0, 2)) {
+		vis.visUniform->updateBuffer(i);
+	}
+
+}
+
 void prepareVisualization() {
 	// Create required buffers
 	core.renderer.createIndexBuffer(&vis.ix);
@@ -167,13 +214,25 @@ void prepareVisualization() {
 	vis.shaderFile.fragmentShader = getShader("frag");
 	core.renderer.createShader(&vis.shader, &vis.shaderFile);
 
+	// Create Uniform Buffer
+	core.renderer.createDescriptorPool(&vis.descVisUniform);
+	core.renderer.createUniformBuffer(&vis.visUniform, 0, vis.descVisUniform);
+	updateVisUniform();
+
 	// Create Pipeline
 	core.renderer.setupDemoRenderPass(&vis.renderPass, vis.depthBuffer);
 	core.renderer.createSwapchainImageFramebuffers(&vis.framebuffer, vis.renderPass, vis.depthBuffer);
 	
 	vis.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_POINT_LIST;
 
-	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { };
+	// Assemble Pipeline
+	AnthemDescriptorSetEntry uniformBufferDescEntryRegPipeline = {
+		.descPool = vis.descVisUniform,
+		.descSetType = AT_ACDS_UNIFORM_BUFFER,
+		.inTypeIndex = 0
+	};
+	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { uniformBufferDescEntryRegPipeline };
+
 	core.renderer.createGraphicsPipelineCustomized(&vis.pipeline, descSetEntriesRegPipeline, vis.renderPass, vis.shader,
 		comp.samples, &vis.cprop);
 
@@ -182,17 +241,30 @@ void prepareVisualization() {
 	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
 		core.renderer.createSemaphore(&vis.firstStageDone[i]);
 	}
+
+
 }
 
 void prepareAxisVis() {
 	// Create req bufs
 	core.renderer.createVertexBuffer(&axis.vxBuf);
-	axis.vxBuf->setTotalVertices(2);
-	axis.vxBuf->insertData(0, { -0.5f, 0.5f, 0.5f,1.0f }, { -0.5f, 0.5f, 0.5f,1.0f });
-	axis.vxBuf->insertData(1, { -0.5f, -0.5f, 0.5f,1.0f }, { -0.5f, -0.5f, 0.5f,1.0f });
+	axis.vxBuf->setTotalVertices(6);
+	float axisCrd = 1.0f;
+	float baseZCrd = -1.0f, extZCrd = 1.0f;
+
+	// X Axis
+	axis.vxBuf->insertData(0, { -axisCrd, axisCrd, baseZCrd,1.0f }, { -axisCrd, axisCrd, baseZCrd,1.0f });
+	axis.vxBuf->insertData(1, { -axisCrd, -axisCrd, baseZCrd,1.0f }, { -axisCrd, -axisCrd,baseZCrd,1.0f });
+
+	// Y Axis
+	axis.vxBuf->insertData(2, { -axisCrd, -axisCrd, baseZCrd,1.0f }, { -axisCrd, -axisCrd, baseZCrd,1.0f });
+	axis.vxBuf->insertData(3, { axisCrd, -axisCrd, baseZCrd,1.0f }, { axisCrd, -axisCrd,baseZCrd,1.0f });
+	
+	axis.vxBuf->insertData(4, { -axisCrd, -axisCrd, baseZCrd,1.0f }, { -axisCrd, -axisCrd, baseZCrd,1.0f });
+	axis.vxBuf->insertData(5, { -axisCrd, -axisCrd, extZCrd,1.0f }, { -axisCrd, -axisCrd, extZCrd,1.0f });
 
 	core.renderer.createIndexBuffer(&axis.ixBuf);
-	axis.ixBuf->setIndices({ 0, 1 });
+	axis.ixBuf->setIndices({ 0, 1 , 2 , 3, 4,5 });
 
 	// Load shaders
 	axis.shaderFile.vertexShader = getShader("axis.vert");
@@ -202,7 +274,13 @@ void prepareAxisVis() {
 	core.renderer.setupDemoRenderPass(&axis.renderPass, vis.depthBuffer,true);
 
 	axis.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_LINE;
-	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { };
+	AnthemDescriptorSetEntry uniformBufferDescEntryRegPipeline = {
+		.descPool = vis.descVisUniform,
+		.descSetType = AT_ACDS_UNIFORM_BUFFER,
+		.inTypeIndex = 0
+	};
+	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { uniformBufferDescEntryRegPipeline };
+
 	core.renderer.createGraphicsPipelineCustomized(&axis.pipeline, descSetEntriesRegPipeline, axis.renderPass, axis.shader,
 		axis.vxBuf, &axis.cprop);
 
@@ -228,6 +306,16 @@ void recordCommandBufferDrwAxis(int i) {
 	renderer.drBindVertexBuffer(axis.vxBuf, axis.axisCmdBuf[i]);
 	renderer.drBindIndexBuffer(axis.ixBuf, axis.axisCmdBuf[i]);
 	renderer.drSetLineWidth(ExpParams::lineWidth, axis.axisCmdBuf[i]);
+
+	AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
+		.descPool = vis.descVisUniform,
+		.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
+		.inTypeIndex = 0
+	};
+	std::vector<AnthemDescriptorSetEntry> descSetEntries = { uniformBufferDescEntryRdw };
+	renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries, axis.pipeline, axis.axisCmdBuf[i]);
+
+
 	renderer.drDraw(axis.ixBuf->getIndexCount(), axis.axisCmdBuf[i]);
 	renderer.drEndRenderPass(axis.axisCmdBuf[i]);
 }
@@ -240,6 +328,14 @@ void recordCommandBufferDrw(int i) {
 	renderer.drBindGraphicsPipeline(vis.pipeline, i);
 	renderer.drBindVertexBufferFromSsbo(comp.samples, 0, i);
 	renderer.drBindIndexBuffer(vis.ix, i);
+
+	AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
+			.descPool = vis.descVisUniform,
+			.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
+			.inTypeIndex = 0
+	};
+	std::vector<AnthemDescriptorSetEntry> descSetEntries = { uniformBufferDescEntryRdw };
+	renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries, vis.pipeline, i);
 
 	renderer.drDraw(vis.ix->getIndexCount(), i);
 	renderer.drEndRenderPass(i);
@@ -322,11 +418,52 @@ void drawLoop(int& currentFrame) {
 	currentFrame %= 2;
 }
 
+void initFont() {
+	ANTH_ASSERT(!FT_Init_FreeType(&font.ft), "Cannot init font lib");
+	ANTH_ASSERT(!FT_New_Face(font.ft, R"(C:\WR\Aria\Anthem\assets\times.ttf)", 0, &font.face), "Cannot init font face");
+	FT_Set_Pixel_Sizes(font.face, 0, 48);
+	font.glyphBuffer = new unsigned char* [128];
+	font.glyphTex = new AnthemImage * [128];
+	font.glyphRows = new int[128];
+	font.glyphWidth = new int[128];
+	font.glyphDescPool = new AnthemDescriptorPool * [128];
+
+	std::vector<std::vector<char>> goals = {
+		std::ranges::views::iota('a', 'z' + 1) | std::ranges::to<std::vector>(),
+		std::ranges::views::iota('A', 'Z' + 1) | std::ranges::to<std::vector>(),
+		std::ranges::views::iota('0', '9' + 1) | std::ranges::to<std::vector>(),
+	};
+	auto goalsRange = std::ranges::join_view(goals);
+	for (auto i : goalsRange) {
+		ANTH_LOGI("Generating Character:", i);
+		core.renderer.createDescriptorPool(&(font.glyphDescPool[i]));
+		ANTH_ASSERT(!FT_Load_Char(font.face, i, FT_LOAD_RENDER), "Cannot load glyph, ascii=", i);
+		size_t bufferSize = font.face->glyph->bitmap.width * font.face->glyph->bitmap.rows;
+		using bufferType = std::remove_pointer_t<decltype(font.face->glyph->bitmap.buffer)>;
+		if (!bufferSize) {
+			font.glyphBuffer[i] = nullptr;
+			std::tie(font.glyphRows[i], font.glyphWidth[i]) = std::make_tuple(0, 0);
+			ANTH_LOGI("Ignored character:", i);
+			continue;
+		}
+		font.glyphBuffer[i] = new unsigned char[sizeof(bufferType) * bufferSize];
+		font.glyphRows[i] = font.face->glyph->bitmap.rows;
+		font.glyphWidth[i] = font.face->glyph->bitmap.width;
+		ANTH_LOGI("Allocated buf:", sizeof(bufferType) * bufferSize, "@", (long long)(font.glyphBuffer[i]));
+		auto v = font.glyphBuffer[i];
+		ANTH_LOGI("Addr:", (void*)v);
+		memcpy(font.glyphBuffer[i], font.face->glyph->bitmap.buffer, sizeof(bufferType) * bufferSize);
+		core.renderer.createTexture(&font.glyphTex[i], font.glyphDescPool[i], font.glyphBuffer[i], font.glyphWidth[i],
+			font.glyphRows[i], 1, 0, false, false,AT_IF_R_UINT8);
+		 
+	}
+}
 
 int main() {
 	prepareCore();
 	std::once_flag p1;
 	auto startGenTime = std::chrono::steady_clock().now();
+	initFont();
 	prepareComputePipeline();
 	prepareVisualization();
 	prepareAxisVis();
@@ -339,6 +476,7 @@ int main() {
 	auto startTime = std::chrono::steady_clock().now();
 
 	core.renderer.setDrawFunction([&]() {
+		updateVisUniform();
 		drawLoop(currentFrame);
 		std::call_once(p1, [&]() {
 			//comp.computeProgress[0]->waitForFence();

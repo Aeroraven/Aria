@@ -15,7 +15,8 @@ namespace Anthem::Core{
         AT_IF_UNDEFINED,
         AT_IF_SRGB_UINT8,
         AT_IF_SRGB_FLOAT32,
-        AT_IF_SBGR_UINT8
+        AT_IF_SBGR_UINT8,
+        AT_IF_R_UINT8,
     };
 
     class AnthemImage:

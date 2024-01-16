@@ -55,6 +55,8 @@ namespace Anthem::Core{
             memcpy(uniformBuffers.at(idx).mappedMem,data,this->getBufferSize());
             return true;
         }
+
+        virtual ~AnthemUniformBuffer() {}
     };
     
    

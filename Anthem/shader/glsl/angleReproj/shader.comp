@@ -19,7 +19,7 @@ layout(std140, set = 2,binding = 0) buffer ssboOut{
 };
 
 layout(local_size_x = 256,local_size_y=1,local_size_z=1) in;
-
+const float mvFocal = 1.0;
 mat4 generateRotationMatrix(vec3 axis, float angle){
     float c = cos(angle);
     float s = sin(angle);
@@ -44,7 +44,12 @@ void main(){
     rectVertices[2] = vec4(1.0,-1.0,0.0,1.0);
     rectVertices[3] = vec4(-1.0,-1.0,0.0,1.0);
     float rotAng = pIn.rnd.x * 3.14159;
+    float transX = mvFocal*sin(pIn.rnd.y*3.14159*2.0);
+    float transY = mvFocal*cos(pIn.rnd.y*3.14159*2.0);
     mat4 rotMat = generateRotationMatrix(vec3(1.0,0.0,0.0),rotAng);
+    for(int i=0;i<4;i++){
+        rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0);
+    }
     for(int i=0;i<4;i++){
         rectVertices[i] = rotMat * rectVertices[i] + vec4(0.0,0.0,5.0,0.0);
     }
@@ -64,5 +69,5 @@ void main(){
         interiorAngles[i] = mix(-1.0,1.0,angle/3.1415926);
     }
 
-    particleOut[idx].pos = vec4(pIn.rnd.x,interiorAngles[0],0.0,0.0);
+    particleOut[idx].pos = vec4(pIn.rnd.x,interiorAngles[0],pIn.rnd.y,0.0);
 }

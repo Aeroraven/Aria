@@ -3,14 +3,14 @@
 namespace Anthem::Core{
     bool AnthemImage::loadImageData(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels){
         this->rawImageData = new char[width*height*channels];
-        ANTH_LOGV("Before Memcpy Sz=", width*height*channels, " PTR=",(long long)(data));
+        ANTH_LOGI("Before Memcpy Sz=", width*height*channels, " PTR=",(long long)(data));
         memcpy(this->rawImageData,data,width*height*channels);
         ANTH_LOGV("After Memcpy");
         this->width = width;
         this->height = height;
         this->channels = channels;
         ANTH_TODO("Check if image is 4 channel");
-        ANTH_ASSERT(this->channels==4,"Image channels must be 4");
+        //ANTH_ASSERT(this->channels==4,"Image channels must be 4");
         return true;
     }
     bool AnthemImage::setImageFormat(AnthemImageFormat format){
@@ -33,6 +33,8 @@ namespace Anthem::Core{
             pendingFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
         }else if(this->desiredFormat == AT_IF_SBGR_UINT8){
             pendingFormat = VK_FORMAT_B8G8R8A8_SRGB;
+        }else if (this->desiredFormat == AT_IF_R_UINT8) {
+            pendingFormat = VK_FORMAT_R8_UINT;
         }
         if (this->definedUsage == AT_IU_TEXTURE2D){
             this->createStagingBuffer();

@@ -24,6 +24,7 @@ namespace Anthem::Component {
 
 		template<typename T,typename... U> T* addComponent(U... args){
 			attachedComponents[curId++] = std::make_unique<T>(args...);
+			(attachedComponents[curId - 1]).get()->entity = this;
 			return attachedComponents[curId-1].get();
 		}
 		template<typename T> std::vector<T*> getComponents() {

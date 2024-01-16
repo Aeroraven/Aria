@@ -20,41 +20,42 @@ namespace Anthem::Core{
         }
         ANTH_LOGI("Desc Pools Destroyed");
 
-        for(const auto& p:this->uniformBuffers){
+        for(auto& p:this->uniformBuffers){
             p->destroyBuffers();
+            ANTH_LOGI("Preparing to delete uniform buffer");
             delete p;
         }
         ANTH_LOGI("Uniform Buffers Destroyed");
 
-        for (const auto& p : this->extFences) {
+        for (auto& p : this->extFences) {
             p->destroyFence();
         }
         ANTH_LOGI("Fences Destroyed");
 
-        for (const auto& p : this->extSemaphores) {
+        for (auto& p : this->extSemaphores) {
             p->destroySemaphore();
         }
         ANTH_LOGI("Semaphores Destroyed");
 
-        for (const auto& p : this->ssboBuffers) {
+        for (auto& p : this->ssboBuffers) {
             p->destroyStagingBuffer();
             p->destroySSBO();
         }
         ANTH_LOGI("SSBO Destroyed");
 
-        for(const auto& p:this->textures){
+        for(auto& p:this->textures){
             p->destroyImage();
             delete p;
         }
         ANTH_LOGI("Textures Destroyed");
 
-        for(const auto& p:this->vertexBuffers){
+        for(auto& p:this->vertexBuffers){
             p->destroyBuffer();
             delete p;
         }
         ANTH_LOGI("Vertex Buffers Destroyed");
 
-        for(const auto& p:this->indexBuffers){
+        for(auto& p:this->indexBuffers){
             p->destroyBuffer();
             delete p;
         }
@@ -64,12 +65,12 @@ namespace Anthem::Core{
         this->commandBuffers->destroyCommandPool();
         ANTH_LOGI("Synchronization Objects & Command Pools Destroyed");
 
-        for(const auto& p:this->graphicsPipelines){
+        for(auto& p:this->graphicsPipelines){
             p->destroyPipeline();
             p->destroyPipelineLayout();
             delete p;
         }
-        for (const auto& p : this->computePipelines) {
+        for (auto& p : this->computePipelines) {
             p->destroyPipeline();
             p->destroyPipelineLayout();
             delete p;
@@ -77,13 +78,13 @@ namespace Anthem::Core{
 
         ANTH_LOGI("Pipelines Destroyed");
 
-        for(const auto& p:this->shaders){
+        for(auto& p:this->shaders){
             p->destroyShaderModules(this->logicalDevice.get());
             delete p;
         }
         ANTH_LOGI("Shaders Destroyed");
 
-        for(const auto& p:this->renderPasses){
+        for(auto& p:this->renderPasses){
             p->destroyRenderPass();
             delete p;
         }
@@ -210,8 +211,8 @@ namespace Anthem::Core{
     }
 
     bool AnthemSimpleToyRenderer::createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
-        uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap, bool enableMsaa){
-            
+        uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap, bool enableMsaa, AnthemImageFormat imageFmt){
+        ANTH_LOGI("Addr2:", (void*)texData);
         //Allocate Image
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
@@ -225,7 +226,7 @@ namespace Anthem::Core{
         if(enableMsaa){
             textureImage->enableMsaa();
         }
-        textureImage->setImageFormat(AT_IF_SRGB_UINT8);
+        textureImage->setImageFormat(imageFmt);
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
@@ -465,7 +466,6 @@ namespace Anthem::Core{
         if (customFence) {
             vf = *customFence->getFence();
         }
-        ANTH_LOGI((long long)(semaphoreToSignal[0])[0]->getSemaphore());
         return this->mainLoopSyncer->submitCommandBufferGeneral2(this->commandBuffers->getCommandBuffer(cmdIdx), frameIdx,
             semaphoreToWait, semaphoreWaitStages, &vf, semaphoreToSignal);
     }
