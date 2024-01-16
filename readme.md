@@ -14,9 +14,11 @@ The rectified WebGL ray-tracing is here: https://github.com/Aeroraven/Aria/blob/
 
 ### 1. Native Examples
 
-Native examples use Vulkan as backend. Use following instruction to build the project. Note that your compiler should be `g++` or `msvc` and at least supports partial `C++20` standard. `$SELECTED_TARGETS` can be chosen from `demo` subdirectory.
+Native examples use Vulkan as backend. Use following instruction to build the project. Note that your compiler should be `g++` or `msvc` and at least supports partial `C++23` standard. `$SELECTED_TARGETS` can be chosen from `demo` subdirectory.
 
-Before build the project, install `glfw3` and `Vulkan SDK`. Then use `cmake` to build the project.
+Before build the project, install `glfw3` 、`freetype`、`OpenCV`and `Vulkan SDK`. Then use `cmake` to build the project.
+
+NOTE: Change paths in CMake configuration file before the compilation! (I am too lazy to make them compatible with different envs)
 
 ```bash
 cd Anthem
@@ -24,9 +26,11 @@ cmake -S . -B ./build
 cmake --build ./build --config Debug --target $SELECTED_TARGETS
 ```
 
-Only supports `g++` and `msvc` compilers. (Other compilers like `clang` will not be taken into consideration)
+Only supports `g++` (14+, `mingw` included), and `msvc` compilers. (Other compilers like `clang` will not be taken into consideration)
 
 Edit `CMakeLists.txt` before changing compiler.
+
+**Note:** Running the code in `WSL` is not recommended!
 
 ### 2. Browser-based Examples
 

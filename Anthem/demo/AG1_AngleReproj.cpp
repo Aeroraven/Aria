@@ -22,11 +22,12 @@ struct ExpParams {
 	static int moveFocal;
 
 	// Parallel configurations
-	static constexpr int sampleCounts = 262144*2;
+	static constexpr int sampleCounts = 262144/2;
 	static constexpr int parallelsX = 8192;
 
 	// Visualization
 	static constexpr float lineWidth = 2;
+	static constexpr float fontSize = 64;
 };
 
 struct ExpCore {
@@ -42,8 +43,15 @@ struct FontLib {
 	AnthemImage** glyphTex;
 	AnthemDescriptorPool** glyphDescPool;
 	unsigned char** glyphBuffer;
+	unsigned char** glyphBufferUni;
 	int* glyphWidth;
 	int* glyphRows;
+	int* glyphBearingX;
+	int* glyphBearingY;
+	int* advance;
+
+	AnthemImage* tableTex;
+	AnthemDescriptorPool* tableDescPool;
 
 }font;
 
@@ -99,6 +107,30 @@ struct CoordAxisVisPipeline {
 	AnthemGraphicsPipelineCreateProps cprop;
 }axis;
 
+struct StringDataBuffer {
+	using uProj = AnthemUniformMatf<4>;
+	using uView = AnthemUniformMatf<4>;
+	using uLocal = AnthemUniformMatf<4>;
+	AnthemDescriptorPool* descPool;
+	AnthemUniformBufferImpl<uProj, uView, uLocal>* uBuf;
+	AnthemVertexBufferImpl<AnthemVAOAttrDesc<float, 4>, AnthemVAOAttrDesc<float, 2>>* vxBuf;
+	AnthemIndexBuffer* ixBuf;
+};
+
+struct FontVisPipeline {
+	std::vector<StringDataBuffer> strings;
+
+	AnthemShaderFilePaths shaderFile;
+	AnthemShaderModule* shader = nullptr;
+	AnthemGraphicsPipeline* pipeline = nullptr;
+	AnthemRenderPass* renderPass = nullptr;
+
+	uint32_t* fontCmdBuf = nullptr;
+	AnthemFence** drawProgress = nullptr;
+	AnthemSemaphore** drawAvailable = nullptr;
+	AnthemGraphicsPipelineCreateProps cprop;
+}textPipe;
+
 inline std::string getShader(auto x) {
 	std::string st(ANTH_SHADER_DIR);
 	st += "angleReproj\\shader.";
@@ -111,6 +143,54 @@ void prepareCore() {
 	core.renderer.setConfig(&core.cfg);
 	core.renderer.initialize();
 }
+
+
+void insertString(std::string strs, float scale) {
+	StringDataBuffer sdb;
+	int stringLength = strs.length();
+	core.renderer.createDescriptorPool(&sdb.descPool);
+	core.renderer.createUniformBuffer(&sdb.uBuf, 0, sdb.descPool);
+	core.renderer.createVertexBuffer(&sdb.vxBuf);
+	core.renderer.createIndexBuffer(&sdb.ixBuf);
+
+	// Set locations
+	float curX = 0.0f, curY = 0.0f;
+	int idx = 0;
+	std::vector<unsigned int> indices;
+	sdb.vxBuf->setTotalVertices(6 * stringLength);
+	for (const auto& ch : strs) {
+		float xp = curX + (font.glyphBearingX[ch]) * scale;
+		float yp = curY - (font.glyphRows[ch] - font.glyphBearingY[ch]) * scale;
+		float w = font.glyphWidth[ch] * scale, h = font.glyphRows[ch] * scale;
+
+		float lutStX = (ch % 8 * 16) / 1024.0;
+		float lutStY = (ch / 8 * 16) / 1024.0;
+		float lutEdX = lutStX + 16.0 / 1024.0;
+		float lutEdY = lutStY + 16.0 / 1024.0;
+
+		lutStX = 0;
+		lutStY = 0;
+		lutEdX = 1;
+		lutEdY = 1;
+
+		sdb.vxBuf->insertData(idx + 0, { xp,yp + h,0,1 }, { lutStX,lutStY });
+		sdb.vxBuf->insertData(idx + 1, { xp,yp,0,1 }, { lutStX,lutEdY });
+		sdb.vxBuf->insertData(idx + 2, { xp + w,yp,0,1 }, { lutEdX,lutEdY });
+		sdb.vxBuf->insertData(idx + 3, { xp,yp + h,0,1 }, { lutStX,lutStY });
+		sdb.vxBuf->insertData(idx + 4, { xp + w,yp,0,1 }, { lutEdX,lutEdY });
+		sdb.vxBuf->insertData(idx + 5, { xp + w,yp + h,0,1 }, { lutEdX,lutStY });
+		for (auto i : std::ranges::views::iota(idx, idx + 6)) {
+			indices.push_back(i);
+		}
+		curX += (font.advance[ch] >> 6) * scale;
+		idx += 6;
+
+		ANTH_LOGI("LP:", xp, " ", yp);
+	}
+	sdb.ixBuf->setIndices(indices);
+	textPipe.strings.push_back(std::move(sdb));
+}
+
 
 void prepareComputePipeline() {
 	// Create descriptors
@@ -241,6 +321,49 @@ void prepareVisualization() {
 	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
 		core.renderer.createSemaphore(&vis.firstStageDone[i]);
 	}
+}
+
+void prepareTextVis() {
+	// Demo string
+	insertString("HelloWorld",0.008);
+
+	// Prepare comps
+	textPipe.shaderFile.vertexShader = getShader("text.vert");
+	textPipe.shaderFile.fragmentShader = getShader("text.frag");
+	core.renderer.createShader(&textPipe.shader, &textPipe.shaderFile);
+
+	AnthenRenderPassSetupOption opt;
+	opt.renderPassUsage = AT_ARPAA_FINAL_PASS;
+	opt.msaaType = AT_ARPMT_NO_MSAA;
+	opt.clearColorAttachmentOnLoad[0] = false;
+	opt.clearDepthAttachmentOnLoad = false;
+	core.renderer.setupRenderPass(&textPipe.renderPass, &opt, vis.depthBuffer);
+
+	// Setup Pipeline
+	vis.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
+
+	AnthemDescriptorSetEntry uniformBufferDescEntryRegPipeline = {
+		.descPool = textPipe.strings[0].descPool,
+		.descSetType = AT_ACDS_UNIFORM_BUFFER,
+		.inTypeIndex = 0
+	};
+	AnthemDescriptorSetEntry samplerReg = {
+		.descPool = font.tableDescPool,
+		.descSetType = AT_ACDS_SAMPLER,
+		.inTypeIndex = 0
+	};
+	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { uniformBufferDescEntryRegPipeline,samplerReg };
+
+	core.renderer.createGraphicsPipelineCustomized(&textPipe.pipeline, descSetEntriesRegPipeline, textPipe.renderPass, textPipe.shader,
+		textPipe.strings[0].vxBuf, &textPipe.cprop);
+
+	// Create Sync
+	textPipe.fontCmdBuf = new uint32_t[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
+	textPipe.drawAvailable = new AnthemSemaphore*[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
+	for (auto i : std::ranges::views::iota(0,core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+		core.renderer.drAllocateCommandBuffer(&textPipe.fontCmdBuf[i]);
+		core.renderer.createSemaphore(&textPipe.drawAvailable[i]);
+	}
 
 
 }
@@ -298,6 +421,7 @@ void prepareAxisVis() {
 	}
 }
 
+
 void recordCommandBufferDrwAxis(int i) {
 	auto& renderer = core.renderer;
 	renderer.drStartRenderPass(axis.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), axis.axisCmdBuf[i], false);
@@ -320,6 +444,30 @@ void recordCommandBufferDrwAxis(int i) {
 	renderer.drEndRenderPass(axis.axisCmdBuf[i]);
 }
 
+void recordCommandBufferDrwText(int i) {
+	auto& renderer = core.renderer;
+	renderer.drStartRenderPass(textPipe.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), textPipe.fontCmdBuf[i], false);
+	renderer.drSetViewportScissor(textPipe.fontCmdBuf[i]);
+	renderer.drBindGraphicsPipeline(textPipe.pipeline, textPipe.fontCmdBuf[i]);
+	renderer.drBindVertexBuffer(textPipe.strings[0].vxBuf, textPipe.fontCmdBuf[i]);
+	renderer.drBindIndexBuffer(textPipe.strings[0].ixBuf, textPipe.fontCmdBuf[i]);
+
+	AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
+		.descPool = textPipe.strings[0].descPool,
+		.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
+		.inTypeIndex = 0
+	};
+	AnthemDescriptorSetEntry samplerRdw = {
+		.descPool = font.tableDescPool,
+		.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER,
+		.inTypeIndex = 0
+	};
+	std::vector<AnthemDescriptorSetEntry> descSetEntries = { uniformBufferDescEntryRdw,samplerRdw };
+	renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries, textPipe.pipeline, textPipe.fontCmdBuf[i]);
+
+	renderer.drDraw(textPipe.strings[0].ixBuf->getIndexCount(), textPipe.fontCmdBuf[i]);
+	renderer.drEndRenderPass(textPipe.fontCmdBuf[i]);
+}
 
 void recordCommandBufferDrw(int i) {
 	auto& renderer = core.renderer;
@@ -366,7 +514,6 @@ void recordCommandBufferComp(int i) {
 
 }
 
-
 void recordCommandBufferCompAll() {
 	auto& renderer = core.renderer;
 	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
@@ -380,12 +527,19 @@ void recordCommandBufferCompAll() {
 void recordCommandBufferAll() {
 	auto& renderer = core.renderer;
 	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+
 		renderer.drStartCommandRecording(i);
 		recordCommandBufferDrw(i);
 		renderer.drEndCommandRecording(i);
+
 		renderer.drStartCommandRecording(axis.axisCmdBuf[i]);
 		recordCommandBufferDrwAxis(i);
 		renderer.drEndCommandRecording(axis.axisCmdBuf[i]);
+
+
+		renderer.drStartCommandRecording(textPipe.fontCmdBuf[i]);
+		recordCommandBufferDrwText(i);
+		renderer.drEndCommandRecording(textPipe.fontCmdBuf[i]);
 	}
 }
 
@@ -401,16 +555,20 @@ void drawLoop(int& currentFrame) {
 
 	std::vector<const AnthemSemaphore*> semaphoreToSignal = { comp.computeDone[0] };
 	std::vector<AtSyncSemaphoreWaitStage> waitStage = { AtSyncSemaphoreWaitStage::AT_SSW_VERTEX_INPUT };
+
 	std::vector<const AnthemSemaphore*> semaphoreToSignalAxis = { axis.drawAvailable[currentFrame] };
 	std::vector<AtSyncSemaphoreWaitStage> waitStageAxis = { AtSyncSemaphoreWaitStage::AT_SSW_COLOR_ATTACH_OUTPUT };
+	std::vector<const AnthemSemaphore*> firstStageDone = { vis.firstStageDone[currentFrame] };
+	std::vector<const AnthemSemaphore*> secondStageDone = { textPipe.drawAvailable[currentFrame] };
 
 	core.renderer.drSubmitCommandBufferCompQueueGeneral(comp.computeCmdBufIdx[0], nullptr, &semaphoreToSignal, comp.computeProgress[0]);
 
 	// Graphics Drawing
-	std::vector<const AnthemSemaphore*> firstStageDone = { vis.firstStageDone[currentFrame]};
+
 	ANTH_ASSERT((vis.firstStageDone[currentFrame] != nullptr),"No");
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(currentFrame, imgIdx, &semaphoreToSignal, &waitStage,nullptr,&firstStageDone);
-	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral(axis.axisCmdBuf[currentFrame], imgIdx, &firstStageDone,
+	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(textPipe.fontCmdBuf[currentFrame], imgIdx, &firstStageDone, &waitStage, nullptr, &secondStageDone);
+	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral(axis.axisCmdBuf[currentFrame], imgIdx, &secondStageDone,
 		&waitStageAxis);
 
 	core.renderer.drPresentFrame(currentFrame, imgIdx);
@@ -427,6 +585,10 @@ void initFont() {
 	font.glyphRows = new int[128];
 	font.glyphWidth = new int[128];
 	font.glyphDescPool = new AnthemDescriptorPool * [128];
+	font.glyphBufferUni = new unsigned char* [128];
+	font.glyphBearingX = new int[128];
+	font.glyphBearingY = new int[128];
+	font.advance = new int[128];
 
 	std::vector<std::vector<char>> goals = {
 		std::ranges::views::iota('a', 'z' + 1) | std::ranges::to<std::vector>(),
@@ -434,9 +596,10 @@ void initFont() {
 		std::ranges::views::iota('0', '9' + 1) | std::ranges::to<std::vector>(),
 	};
 	auto goalsRange = std::ranges::join_view(goals);
+	cv::Mat fontTable(1024, 1024, CV_8UC1);
 	for (auto i : goalsRange) {
 		ANTH_LOGI("Generating Character:", i);
-		core.renderer.createDescriptorPool(&(font.glyphDescPool[i]));
+		
 		ANTH_ASSERT(!FT_Load_Char(font.face, i, FT_LOAD_RENDER), "Cannot load glyph, ascii=", i);
 		size_t bufferSize = font.face->glyph->bitmap.width * font.face->glyph->bitmap.rows;
 		using bufferType = std::remove_pointer_t<decltype(font.face->glyph->bitmap.buffer)>;
@@ -446,17 +609,32 @@ void initFont() {
 			ANTH_LOGI("Ignored character:", i);
 			continue;
 		}
+
+		// Filling in font data
 		font.glyphBuffer[i] = new unsigned char[sizeof(bufferType) * bufferSize];
 		font.glyphRows[i] = font.face->glyph->bitmap.rows;
 		font.glyphWidth[i] = font.face->glyph->bitmap.width;
+		font.glyphBearingX[i] = font.face->glyph->bitmap_left;
+		font.glyphBearingY[i] = font.face->glyph->bitmap_top;
+		font.advance[i] = font.face->glyph->advance.x;
+
 		ANTH_LOGI("Allocated buf:", sizeof(bufferType) * bufferSize, "@", (long long)(font.glyphBuffer[i]));
-		auto v = font.glyphBuffer[i];
-		ANTH_LOGI("Addr:", (void*)v);
 		memcpy(font.glyphBuffer[i], font.face->glyph->bitmap.buffer, sizeof(bufferType) * bufferSize);
-		core.renderer.createTexture(&font.glyphTex[i], font.glyphDescPool[i], font.glyphBuffer[i], font.glyphWidth[i],
-			font.glyphRows[i], 1, 0, false, false,AT_IF_R_UINT8);
-		 
+
+		// Resize
+		cv::Mat glyphMat(font.glyphRows[i], font.glyphWidth[i], CV_8UC1, font.glyphBuffer[i]);
+		cv::Mat dst;
+		cv::resize(glyphMat, dst, cv::Size(ExpParams::fontSize, ExpParams::fontSize));
+		font.glyphBufferUni[i] = new unsigned char[sizeof(bufferType) * ExpParams::fontSize * ExpParams::fontSize];
+		memcpy(font.glyphBufferUni[i], dst.data, sizeof(bufferType) * ExpParams::fontSize * ExpParams::fontSize);
+
+		// Integrate
+		int lutX = i % 8, lutY = i / 8;
+		cv::Mat rect(fontTable, cv::Rect(lutX * 64, lutY * 64, 64, 64));
+		dst.copyTo(rect);
 	}
+	core.renderer.createDescriptorPool(&(font.tableDescPool));
+	core.renderer.createTexture(&font.tableTex, font.tableDescPool, fontTable.data, 1024, 1024, 1, 0, false, false, AT_IF_R_UINT8);
 }
 
 int main() {
@@ -467,6 +645,7 @@ int main() {
 	prepareComputePipeline();
 	prepareVisualization();
 	prepareAxisVis();
+	prepareTextVis();
 	
 	core.renderer.registerPipelineSubComponents();
 	recordCommandBufferAll();
@@ -479,8 +658,6 @@ int main() {
 		updateVisUniform();
 		drawLoop(currentFrame);
 		std::call_once(p1, [&]() {
-			//comp.computeProgress[0]->waitForFence();
-			//comp.computeProgress[0]->resetFence();
 
 			auto endTime = std::chrono::steady_clock().now();
 			auto durationGen = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startGenTime);

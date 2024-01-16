@@ -136,3 +136,8 @@ namespace Anthem::Core::TmplDefs{
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #define AT_EXT_FREETYPE_ENABLED
+
+#include <opencv2/core/core.hpp>          
+#include <opencv2/imgcodecs/imgcodecs.hpp>    
+#include <opencv2/imgproc.hpp>
+#define AT_EXT_OPENCV_ENABLED

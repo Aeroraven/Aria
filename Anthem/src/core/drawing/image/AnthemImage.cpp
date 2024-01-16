@@ -34,7 +34,7 @@ namespace Anthem::Core{
         }else if(this->desiredFormat == AT_IF_SBGR_UINT8){
             pendingFormat = VK_FORMAT_B8G8R8A8_SRGB;
         }else if (this->desiredFormat == AT_IF_R_UINT8) {
-            pendingFormat = VK_FORMAT_R8_UINT;
+            pendingFormat = VK_FORMAT_R8_SRGB;
         }
         if (this->definedUsage == AT_IU_TEXTURE2D){
             this->createStagingBuffer();

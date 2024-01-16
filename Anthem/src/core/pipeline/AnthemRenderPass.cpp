@@ -179,11 +179,18 @@ namespace Anthem::Core{
                 colorAttachment.format = (this->swapChain->getSwapChainSurfaceFormat())->format;
             }
             colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-            colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            if (opt.clearColorAttachmentOnLoad[i] == false) {
+                colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                colorAttachment.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+            }
+            else {
+                colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+                colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            }
             colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            
             if(opt.msaaType == AT_ARPMT_MSAA){
                 colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             }
@@ -232,11 +239,19 @@ namespace Anthem::Core{
             }else{
                 depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
             }
-            depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            if (opt.clearDepthAttachmentOnLoad) {
+                depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            }
+            else {
+                depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            }
+            
             depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            //depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             if(opt.renderPassUsage == AT_ARPAA_DEPTH_STENCIL_ONLY_PASS){
                 depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;

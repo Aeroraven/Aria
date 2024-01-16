@@ -8,7 +8,9 @@ Refer to the parent directory for more information about the project.
 ### Requirements 
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 - [GLFW](https://www.glfw.org/)
-- [MinGW](https://sourceforge.net/projects/mingw-w64/) (Requires partial C++20 Supports)
+- C++ Compiler
+	- [MinGW](https://sourceforge.net/projects/mingw-w64/) (Requires partial C++23 Supports)
+	- MSVC (Requires partial C++23 Supports)
 - [CMake](https://cmake.org/)
 
 

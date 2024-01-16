@@ -26,8 +26,11 @@ set(FREETYPE_LIBRARY "C:/Program Files (x86)/freetype/lib/freetype.lib")
 set(FREETYPE_INCLUDE_DIRS "C:/Program Files (x86)/freetype/include")
 find_package(freetype REQUIRED)
 
+find_package(OpenCV REQUIRED PATHS "C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install" )
+
 include_directories("C:/Program Files (x86)/GLFW/include")
 include_directories("C:/Program Files (x86)/freetype/include/freetype2")
+include_directories("C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install/include")
 
 file(GLOB_RECURSE SOURCE_0 "include/*.h")
 file(GLOB_RECURSE SOURCE_1 "src/*.cpp")
@@ -42,5 +45,5 @@ endif()
 foreach( SRC_FILE_NAME ${SOURCE_STAGES} )
     get_filename_component( SRC_FILE_NAME_SHORT ${SRC_FILE_NAME} NAME_WE )
     add_executable( ${SRC_FILE_NAME_SHORT} ${SRC_FILE_NAME} ${SOURCE_0} ${SOURCE_1})
-    target_link_libraries( ${SRC_FILE_NAME_SHORT} Vulkan::Vulkan ${glfw3_LIB} ${FREETYPE_LIBRARY})
+    target_link_libraries( ${SRC_FILE_NAME_SHORT} Vulkan::Vulkan ${glfw3_LIB} ${FREETYPE_LIBRARY} ${OpenCV_LIBS})
 endforeach( SRC_FILE_NAME ${SOURCE_STAGES} )

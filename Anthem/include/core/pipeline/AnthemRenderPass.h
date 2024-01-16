@@ -33,6 +33,10 @@ namespace Anthem::Core{
         //Objects
         AnthemImage* msaaColorAttachment = nullptr;
         VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_16_BIT;
+
+        //Clear attachments
+        std::vector<bool> clearColorAttachmentOnLoad = { true };
+        bool clearDepthAttachmentOnLoad = true;
     };
 
     class AnthemRenderPass{
