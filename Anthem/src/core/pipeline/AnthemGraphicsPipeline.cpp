@@ -140,9 +140,24 @@ namespace Anthem::Core{
         //Specify Color Blending Info
         auto numColorAttachments = renderPass->getFilteredAttachmentCnt(AT_ARPCA_COLOR);
         this->colorBlendAttachmentState.resize(numColorAttachments);
+
+
         for(uint32_t i=0;i<numColorAttachments;i++){
-             this->colorBlendAttachmentState[i].blendEnable = VK_FALSE;
-             this->colorBlendAttachmentState[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+            if (this->extraProps.blendPreset == AnthemBlendPreset::AT_ABP_NO_BLEND) {
+                this->colorBlendAttachmentState[i].blendEnable = VK_FALSE;
+            }
+            else if(this->extraProps.blendPreset == AnthemBlendPreset::AT_ABP_DEFAULT_TRANSPARENCY){
+                this->colorBlendAttachmentState[i].blendEnable = VK_TRUE;
+                this->colorBlendAttachmentState[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+                this->colorBlendAttachmentState[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+                this->colorBlendAttachmentState[i].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+                this->colorBlendAttachmentState[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+                this->colorBlendAttachmentState[i].colorBlendOp = VK_BLEND_OP_ADD;
+            }
+            else {
+                ANTH_LOGE("Blend preset not available");
+            }
+            this->colorBlendAttachmentState[i].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         }
 
         this->colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -158,8 +173,14 @@ namespace Anthem::Core{
         this->depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         this->depthStencilStateCreateInfo.pNext = nullptr;  
         this->depthStencilStateCreateInfo.flags = 0;
-        this->depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-        this->depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+        if (this->extraProps.blendPreset == AnthemBlendPreset::AT_ABP_DEFAULT_TRANSPARENCY) {
+            this->depthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
+            this->depthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
+        }
+        else {
+            this->depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+            this->depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+        }
         this->depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
         this->depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
         this->depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
@@ -174,6 +195,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemGraphicsPipeline::createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry){
+        // Create Pipeline
         this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         this->pipelineLayoutCreateInfo.pNext = nullptr;
         this->pipelineLayoutCreateInfo.flags = 0;

@@ -158,20 +158,27 @@ void insertString(std::string strs, float scale) {
 	int idx = 0;
 	std::vector<unsigned int> indices;
 	sdb.vxBuf->setTotalVertices(6 * stringLength);
+
+	int rdW, rdH;
+	core.renderer.exGetWindowSize(rdH, rdW);
+	float aspect = 1.0 * rdW / rdH;
+
 	for (const auto& ch : strs) {
 		float xp = curX + (font.glyphBearingX[ch]) * scale;
-		float yp = curY - (font.glyphRows[ch] - font.glyphBearingY[ch]) * scale;
+		float yp = curY - (font.glyphRows[ch] ) * scale;
 		float w = font.glyphWidth[ch] * scale, h = font.glyphRows[ch] * scale;
 
-		float lutStX = (ch % 8 * 16) / 1024.0;
-		float lutStY = (ch / 8 * 16) / 1024.0;
-		float lutEdX = lutStX + 16.0 / 1024.0;
-		float lutEdY = lutStY + 16.0 / 1024.0;
+		float lutStX = (ch % 8 * 64) / 1024.0;
+		float lutStY = (ch / 8 * 64) / 1024.0;
+		float lutEdX = lutStX + 64.0 / 1024.0;
+		float lutEdY = lutStY + 64.0 / 1024.0;
 
-		lutStX = 0;
-		lutStY = 0;
-		lutEdX = 1;
-		lutEdY = 1;
+		auto tmp = lutEdY;
+		lutEdY = lutStY;
+		lutStY = tmp;
+
+		xp = xp / aspect;
+		w = w / aspect;
 
 		sdb.vxBuf->insertData(idx + 0, { xp,yp + h,0,1 }, { lutStX,lutStY });
 		sdb.vxBuf->insertData(idx + 1, { xp,yp,0,1 }, { lutStX,lutEdY });
@@ -325,7 +332,7 @@ void prepareVisualization() {
 
 void prepareTextVis() {
 	// Demo string
-	insertString("HelloWorld",0.008);
+	insertString("HelloWorld",0.0015);
 
 	// Prepare comps
 	textPipe.shaderFile.vertexShader = getShader("text.vert");
@@ -340,7 +347,8 @@ void prepareTextVis() {
 	core.renderer.setupRenderPass(&textPipe.renderPass, &opt, vis.depthBuffer);
 
 	// Setup Pipeline
-	vis.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
+	textPipe.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
+	textPipe.cprop.blendPreset = AnthemBlendPreset::AT_ABP_DEFAULT_TRANSPARENCY;
 
 	AnthemDescriptorSetEntry uniformBufferDescEntryRegPipeline = {
 		.descPool = textPipe.strings[0].descPool,
@@ -364,8 +372,6 @@ void prepareTextVis() {
 		core.renderer.drAllocateCommandBuffer(&textPipe.fontCmdBuf[i]);
 		core.renderer.createSemaphore(&textPipe.drawAvailable[i]);
 	}
-
-
 }
 
 void prepareAxisVis() {

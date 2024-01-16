@@ -17,9 +17,17 @@ namespace Anthem::Core{
         AT_AIAT_POINT_LIST = 2,
         AT_AIAT_LINE = 3,
     };
+
+    enum class AnthemBlendPreset {
+        AT_ABP_NO_BLEND = 0,
+        AT_ABP_MANUAL = 1,
+        AT_ABP_DEFAULT_TRANSPARENCY = 2
+    };
+
     struct AnthemGraphicsPipelineCreateProps {
         AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
         std::optional<std::vector<IAnthemVertexBufferAttrLayout*>> vertStageLayout = std::nullopt;
+        AnthemBlendPreset blendPreset = AnthemBlendPreset::AT_ABP_NO_BLEND;
     };
 
     class AnthemGraphicsPipeline{     
