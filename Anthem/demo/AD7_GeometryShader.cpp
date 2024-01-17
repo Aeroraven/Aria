@@ -83,7 +83,7 @@ void preparStage(StagePass& target, AnthemSimpleToyRenderer& renderer){
     renderer.createDepthBuffer(&target.depthBuffer,false);
 
     //Create Pass
-    AnthenRenderPassSetupOption setupOpt{
+    AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_FINAL_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
         .colorAttachmentFormats = { std::nullopt }

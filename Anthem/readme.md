@@ -12,7 +12,8 @@ Refer to the parent directory for more information about the project.
 	- [MinGW](https://sourceforge.net/projects/mingw-w64/) (Requires partial C++23 Supports)
 	- MSVC (Requires partial C++23 Supports)
 - [CMake](https://cmake.org/)
-
+- [OpenCV](https://opencv.org/releases/)
+- [FreeType](https://freetype.org/)
 
 ### Demo Explanation
 - Demo with prefix `AC` indicates that it is some thing about new C++ standards.

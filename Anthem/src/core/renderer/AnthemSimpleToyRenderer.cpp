@@ -188,7 +188,7 @@ namespace Anthem::Core{
         this->descriptorPools.push_back(descriptorPool);
         return true;
     }
-    bool AnthemSimpleToyRenderer::setupRenderPass(AnthemRenderPass** pRenderPass, AnthenRenderPassSetupOption* setupOption, AnthemDepthBuffer* depthBuffer){
+    bool AnthemSimpleToyRenderer::setupRenderPass(AnthemRenderPass** pRenderPass, AnthemRenderPassSetupOption* setupOption, AnthemDepthBuffer* depthBuffer){
         auto newRenderPass = new AnthemRenderPass();
         newRenderPass->specifyLogicalDevice(this->logicalDevice.get());
         newRenderPass->specifySwapChain(this->swapChain.get());

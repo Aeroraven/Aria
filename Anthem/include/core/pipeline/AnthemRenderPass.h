@@ -24,7 +24,7 @@ namespace Anthem::Core{
         AT_ARPCA_COLOR_MSAA
     };
 
-    struct AnthenRenderPassSetupOption{
+    struct AnthemRenderPassSetupOption{
         //Infos
         AnthemRenderPassUsageType renderPassUsage;
         AnthemRenderPassMultisampleType msaaType;
@@ -37,6 +37,7 @@ namespace Anthem::Core{
         //Clear attachments
         std::vector<bool> clearColorAttachmentOnLoad = { true };
         bool clearDepthAttachmentOnLoad = true;
+        std::optional<std::array<float, 4>> predefinedClearColor = std::nullopt;
     };
 
     class AnthemRenderPass{
@@ -50,15 +51,21 @@ namespace Anthem::Core{
         AnthemLogicalDevice* logicalDevice = nullptr;
         AnthemSwapChain* swapChain = nullptr;
         AnthemDepthBuffer* depthBuffer = nullptr;
-        AnthenRenderPassSetupOption setupOption;
+        AnthemRenderPassSetupOption setupOption;
         std::vector<AnthemRenderPassCreatedAttachmentType> createdAttachmentType = {};
         std::vector<VkClearValue> defaultClearValue = {};
     protected:
-        bool registerAttachmentType(AnthemRenderPassCreatedAttachmentType tp){
+        bool registerAttachmentType(AnthemRenderPassCreatedAttachmentType tp,std::optional<std::array<float,4>> clearColor=std::nullopt){
             this->createdAttachmentType.push_back(tp);
             defaultClearValue.push_back(VkClearValue());
             if(tp == AT_ARPCA_COLOR || tp == AT_ARPCA_COLOR_MSAA){
-                defaultClearValue.back().color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+                if (clearColor == std::nullopt) {
+                    defaultClearValue.back().color = { {0.0f, 0.0f, 0.0f, 0.0f} };
+                }
+                else {
+                    defaultClearValue.back().color = { {clearColor.value()[0],clearColor.value()[1],clearColor.value()[2],clearColor.value()[3]}};
+                }
+
             }else{
                 defaultClearValue.back().depthStencil = {1.0f, 0};
             }
@@ -68,11 +75,11 @@ namespace Anthem::Core{
         bool virtual specifyLogicalDevice(AnthemLogicalDevice* device);
         bool virtual specifySwapChain(AnthemSwapChain* swapChain);
         bool virtual createDemoRenderPass(bool retain=false);
-        bool virtual createRenderPass(const AnthenRenderPassSetupOption& opt);
+        bool virtual createRenderPass(const AnthemRenderPassSetupOption& opt);
         bool virtual destroyRenderPass();
         bool virtual setDepthBuffer(AnthemDepthBuffer* depthBuffer);
         const VkRenderPass* getRenderPass() const;
-        const AnthenRenderPassSetupOption& getSetupOption() const;
+        const AnthemRenderPassSetupOption& getSetupOption() const;
         const AnthemRenderPassCreatedAttachmentType getAttachmentType(uint32_t idx) const;
         const uint32_t getTotalAttachmentCnt() const;
         const uint32_t getFilteredAttachmentCnt(AnthemRenderPassCreatedAttachmentType tp) const;

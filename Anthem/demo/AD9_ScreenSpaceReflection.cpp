@@ -98,7 +98,7 @@ void prepareOffscreenPass(){
     renderer.createDepthBuffer(&offscreenPass.depthBuffer,false);
 
     // Prepare Pipeline
-    AnthenRenderPassSetupOption setupOpt{
+    AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
         .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 }

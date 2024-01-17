@@ -115,7 +115,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     renderer.createColorAttachmentImage(&offscreen.colorAttachment,offscreen.descPoolColorAtt,0,AT_IF_SBGR_UINT8,true);
 
     //Create Pass
-    AnthenRenderPassSetupOption setupOpt{
+    AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_FINAL_PASS,
         .msaaType = AT_ARPMT_MSAA,
         .msaaColorAttachment = offscreen.colorAttachment,

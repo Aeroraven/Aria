@@ -15,5 +15,5 @@ void main(){
     gl_PointSize = 2.0f;
     gl_Position = ubo.projMat*ubo.viewMat*ubo.localMat*vec4(inPosition.xyz,1.0);
 
-    outColor = vec4(1.0);
+    outColor = vec4(vec3(0.0),1.0);
 }

@@ -36,7 +36,7 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->renderPassCreated,"Render pass not created");
         return &(this->renderPass);
     }
-    const AnthenRenderPassSetupOption& AnthemRenderPass::getSetupOption() const{
+    const AnthemRenderPassSetupOption& AnthemRenderPass::getSetupOption() const{
         return this->setupOption;
     }
     bool AnthemRenderPass::createDemoRenderPass(bool retain){
@@ -92,7 +92,7 @@ namespace Anthem::Core{
         }
 
         //Specify Tp (Compat)
-        registerAttachmentType(AT_ARPCA_COLOR);
+        registerAttachmentType(AT_ARPCA_COLOR,this->setupOption.predefinedClearColor);
         registerAttachmentType(AT_ARPCA_DEPTH);
 
 
@@ -142,7 +142,7 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemRenderPass::createRenderPass(const AnthenRenderPassSetupOption& opt){
+    bool AnthemRenderPass::createRenderPass(const AnthemRenderPassSetupOption& opt){
         //Assertions
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->swapChain != nullptr,"Swap chain not specified"); 
@@ -219,11 +219,11 @@ namespace Anthem::Core{
         ANTH_LOGI("www");
         for(int i=0;i<opt.colorAttachmentFormats.size();i++){
             this->renderPassAttachments.push_back(colorAttachmentList[i]);
-            registerAttachmentType(AT_ARPCA_COLOR);
+            registerAttachmentType(AT_ARPCA_COLOR, this->setupOption.predefinedClearColor);
         }
         if(opt.msaaType == AT_ARPMT_MSAA){
             this->renderPassAttachments.push_back(colorAttachmentMsaa);
-            registerAttachmentType(AT_ARPCA_COLOR_MSAA);
+            registerAttachmentType(AT_ARPCA_COLOR_MSAA, this->setupOption.predefinedClearColor);
             colorAttachmentMsaaIndex = static_cast<uint32_t>(this->renderPassAttachments.size())-1;
         }
 

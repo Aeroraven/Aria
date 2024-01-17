@@ -1,5 +1,6 @@
 #pragma once
 #include "AnthemDefs.h"
+#include <mutex>
 
 #define ANTH_LOGGER_RED     "\033[31m"     
 #define ANTH_LOGGER_GREEN   "\033[32m"     
@@ -11,8 +12,11 @@ namespace Anthem{
         class AnthemLogger {
         private:
             const int logLevel = 1;
+            std::mutex lock;
             AnthemLogger();
         public:
+            AnthemLogger(const AnthemLogger& p) {};
+
             static auto getInstance(){
                 static AnthemLogger instance;
                 return instance;
@@ -62,18 +66,24 @@ namespace Anthem{
             template<typename... _Args>
             void logv2(const char* func, std::tuple<_Args...> args){
                 if(this->logLevel>=1) return;
+                lock.lock();
                 std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
                 this->log_wrapper(func,"DEBUG",f,args);
+                lock.unlock();
             }
             template<typename... _Args>
             void logi2(const char* func, std::tuple<_Args...> args){
+                lock.lock();
                 std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
                 this->log_wrapper(func,"INFO",f,args);
+                lock.unlock();
             }
             template<typename... _Args>
             void logw2(const char* func, std::tuple<_Args...> args){
+                lock.lock();
                 std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
                 this->log_wrapper(func,"WARN",f,args);
+                lock.unlock();
             }
 
             void exceptionTrigger() {
@@ -94,19 +104,23 @@ namespace Anthem{
             }
             template<typename... _Args>
             void loge2(const char* func, std::tuple<_Args...> args){
+                lock.lock();
                 std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
                 this->log_wrapper(func,"ERROR",f,args);
                 exceptionTrigger();
+                lock.unlock();
             }
 
             
             template<typename... _Args>
             void log_assert2(const char* func, bool cond, std::tuple<_Args...> args){
+                lock.lock();
                 if(!cond){
                     std::function<void(std::tuple<_Args...>)> f = std::bind(&ANTH_CLASSTP::log_content<_Args...>, this, std::placeholders::_1);
                     this->log_wrapper(func,"ASSERT",f,args);
                     exceptionTrigger();
                 }
+                lock.unlock();
             }
 
             template<typename Tt, typename Tf>

@@ -145,7 +145,7 @@ void prepareTarget(){
     renderer.createDepthBuffer(&target.depthBuffer,false);
 
     //Create Pass
-    AnthenRenderPassSetupOption setupOpt{
+    AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_FINAL_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
         .colorAttachmentFormats = { std::nullopt }
@@ -246,7 +246,7 @@ void prepareOffscreen(){
 
     //Create Pass
     ANTH_LOGI("Creating Render Pass");
-    AnthenRenderPassSetupOption setupOpt{
+    AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_DEPTH_STENCIL_ONLY_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
         .colorAttachmentFormats = { }

@@ -26,6 +26,7 @@
 #include <chrono>
 #include <ranges>
 #include <typeinfo>
+#include <sstream>
 
 #ifdef _HAS_CXX23
 #include <stacktrace>

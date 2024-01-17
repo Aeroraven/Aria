@@ -7,6 +7,9 @@
 
 #include <chrono>
 
+#include <thread>
+#include <mutex>
+
 using namespace Anthem::Core;
 using namespace Anthem::Core::Math;
 using namespace Anthem::Core::Math::Abbr;
@@ -22,8 +25,10 @@ struct ExpParams {
 	static int moveFocal;
 
 	// Parallel configurations
-	static constexpr int sampleCounts = 262144/2;
-	static constexpr int parallelsX = 8192;
+	static constexpr int sampleCounts = 524288; //4194304
+	static constexpr int parallelsXGpu = 16384; // For GPU kernels
+	static constexpr int parallelsXCpu = 16; // For CPU threads
+
 
 	// Visualization
 	static constexpr float lineWidth = 2;
@@ -148,7 +153,17 @@ struct FontVisPipeline {
 
 }textPipe;
 
+struct ColorRampLUT2D {
+	AnthemDescriptorPool* lutDesc;
+	AnthemImage* lutTex;
+}clut;
 
+template<typename T>
+std::string to_string_with_prec(T x, int prec) {
+	std::stringstream ss;
+	ss << std::setprecision(prec) << x;
+	return ss.str();
+}
 
 inline std::string getShader(auto x) {
 	std::string st(ANTH_SHADER_DIR);
@@ -211,9 +226,15 @@ int insertString(std::string strs, float scale) {
 	float aspect = 1.0 * rdW / rdH;
 
 	for (const auto& ch : strs) {
+		if (ch == ' ') {
+			curX += 16.0 * scale;
+			continue;
+		}
 		float xp = curX + (font.glyphBearingX[ch]) * scale;
-		float yp = curY - (font.glyphRows[ch] ) * scale;
+		float yp = curY - ( font.glyphBearingY[ch]) * scale;
 		float w = font.glyphWidth[ch] * scale, h = font.glyphRows[ch] * scale;
+
+		ANTH_LOGI("Rows", font.glyphRows[ch], " Bearing", font.glyphBearingY[ch], " Ch", ch, "Advance", font.advance[ch]);
 
 		float lutStX = (ch % 8 * 64) / 1024.0;
 		float lutStY = (ch / 8 * 64) / 1024.0;
@@ -244,6 +265,7 @@ int insertString(std::string strs, float scale) {
 	sdb.ixBuf->setIndices(indices);
 	sdb.totalWidth = curX;
 	textPipe.strings.push_back(std::move(sdb));
+	//throw;
 	return textPipe.strings.size() - 1;
 }
 
@@ -260,14 +282,26 @@ void prepareComputePipeline() {
 	// Filling experiment data
 	using ssboType = std::remove_cv_t<decltype(comp.samples)>;
 	std::function<void(ssboType)> ssboCreateFunc = [&](ssboType w) {
-		for (auto i : std::ranges::views::iota(0,ExpParams::sampleCounts)) {
-			auto fx = AnthemLinAlg::randomNumber<float>();
-			auto fy = AnthemLinAlg::randomNumber<float>();
-			auto fz = AnthemLinAlg::randomNumber<float>();
-			fx = 2.0f * (fx - 0.5f);
-			fy = 2.0f * (fy - 0.5f);
-			w->setInput(i, { fx, fy, fz, 0.0f }, { fx, fy, fz, 0.0f });
+		auto childJob = [&](int segment, int totalSegments)->void {
+			auto st = ExpParams::sampleCounts / totalSegments * segment;
+			auto ed = ExpParams::sampleCounts / totalSegments * (segment + 1);
+			for (auto i : std::ranges::views::iota(st, ed)) {
+				auto fx = AnthemLinAlg::randomNumber<float>();
+				auto fy = AnthemLinAlg::randomNumber<float>();
+				fx = 2.0f * (fx - 0.5f);
+				fy = 2.0f * (fy - 0.5f);
+				w->setInput(i, { fx, fy, 0.0f, 0.0f }, { fx, fy, 0.0f, 0.0f });
+			}
+		};
+		std::vector<std::thread> jobs;
+		for (auto i : std::views::iota(0, ExpParams::parallelsXCpu)) {
+			std::thread childExec(childJob, i, ExpParams::parallelsXCpu);
+			jobs.push_back(std::move(childExec));
 		}
+		for (auto& p : jobs) {
+			p.join();
+		}
+		ANTH_LOGI("Random numbers generated");
 	};
 	core.renderer.createShaderStorageBuffer(&comp.samples, ExpParams::sampleCounts, 0, comp.descPoolSsbo, std::make_optional(ssboCreateFunc));
 
@@ -311,15 +345,32 @@ void prepareComputePipeline() {
 		core.renderer.createSemaphore(&comp.computeDone[i]);
 	}
 }
+void prepareColorRamp() {
+	ANTH_LOGI("Preparing Color Map");
+	unsigned char* baseMap = new unsigned char[64 * 64];
+	for (int i = 0; i < 64; i++) {
+		for (int j = 0; j < 64; j++) {
+			baseMap[i*64+j] = i * 255 / 64;
+		}
+	}
+	cv::Mat srcMap(64, 64, CV_8UC1, baseMap);
+	cv::Mat destMap;
+	cv::applyColorMap(srcMap, destMap, cv::COLORMAP_JET);
+	cv::cvtColor(destMap, destMap, cv::COLOR_BGR2RGBA);
+
+	core.renderer.createDescriptorPool(&clut.lutDesc);
+	core.renderer.createTexture(&clut.lutTex, clut.lutDesc, destMap.data, 64, 64, 4, 0, false, false);
+}
 
 void updateVisUniform() {
 	int rdH, rdW;
 	core.renderer.exGetWindowSize(rdH, rdW);
 	core.camera.specifyFrustum(AT_PI / 3 * 1, 0.1, 100, 1.0 * rdW / rdH);
-	core.camera.specifyPosition(0.0, 0.0, -3.2f);
+	core.camera.specifyPosition(0.0, 1.5, -3.4f);
+	core.camera.specifyFrontEyeRay(0, -1.5, 3.4f);
 
 	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
-	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, (float)glfwGetTime() * 0.1);
+	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, (float)glfwGetTime() * 0.001);
 
 	AtMatf4 proj, view, model;
 	float projRaw[16], viewRaw[16], modelRaw[16];
@@ -357,9 +408,17 @@ void prepareVisualization() {
 
 	// Create Pipeline
 	core.renderer.setupDemoRenderPass(&vis.renderPass, vis.depthBuffer);
+	
+	AnthemRenderPassSetupOption opt;
+	opt.predefinedClearColor = { 1,1,1,1.0 };
+	opt.renderPassUsage = AT_ARPAA_FINAL_PASS;
+	opt.msaaType = AT_ARPMT_NO_MSAA;
+
+	core.renderer.setupRenderPass(&vis.renderPass, &opt, vis.depthBuffer);
 	core.renderer.createSwapchainImageFramebuffers(&vis.framebuffer, vis.renderPass, vis.depthBuffer);
 	
 	vis.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_POINT_LIST;
+
 
 	// Assemble Pipeline
 	AnthemDescriptorSetEntry uniformBufferDescEntryRegPipeline = {
@@ -367,7 +426,12 @@ void prepareVisualization() {
 		.descSetType = AT_ACDS_UNIFORM_BUFFER,
 		.inTypeIndex = 0
 	};
-	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { uniformBufferDescEntryRegPipeline };
+	AnthemDescriptorSetEntry cRamp = {
+		.descPool = clut.lutDesc,
+		.descSetType = AT_ACDS_SAMPLER,
+		.inTypeIndex = 0
+	};
+	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { uniformBufferDescEntryRegPipeline,cRamp };
 
 	core.renderer.createGraphicsPipelineCustomized(&vis.pipeline, descSetEntriesRegPipeline, vis.renderPass, vis.shader,
 		comp.samples, &vis.cprop);
@@ -381,14 +445,14 @@ void prepareVisualization() {
 
 void prepareTextVis() {
 	// Demo string
-	insertString("HelloWorld",0.0015);
+	insertString("Figure 1",0.0015);
 
 	// Prepare comps
 	textPipe.shaderFile.vertexShader = getShader("text.vert");
 	textPipe.shaderFile.fragmentShader = getShader("text.frag");
 	core.renderer.createShader(&textPipe.shader, &textPipe.shaderFile);
 
-	AnthenRenderPassSetupOption opt;
+	AnthemRenderPassSetupOption opt;
 	opt.renderPassUsage = AT_ARPAA_FINAL_PASS;
 	opt.msaaType = AT_ARPMT_NO_MSAA;
 	opt.clearColorAttachmentOnLoad[0] = false;
@@ -539,7 +603,12 @@ void recordCommandBufferDrw(int i) {
 			.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
 			.inTypeIndex = 0
 	};
-	std::vector<AnthemDescriptorSetEntry> descSetEntries = { uniformBufferDescEntryRdw };
+	AnthemDescriptorSetEntry cRamp = {
+		.descPool = clut.lutDesc,
+		.descSetType = AT_ACDS_SAMPLER,
+		.inTypeIndex = 0
+	};
+	std::vector<AnthemDescriptorSetEntry> descSetEntries = { uniformBufferDescEntryRdw,cRamp };
 	renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries, vis.pipeline, i);
 
 	renderer.drDraw(vis.ix->getIndexCount(), i);
@@ -567,7 +636,7 @@ void recordCommandBufferComp(int i) {
 	};
 	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { dseUniform,dseSsboIn,dseSsboOut };
 	renderer.drBindDescriptorSetCustomizedCompute(descSetEntriesRegPipeline, comp.pipeline, comp.computeCmdBufIdx[i]);
-	renderer.drComputeDispatch(comp.computeCmdBufIdx[i], ExpParams::parallelsX, 1, 1);
+	renderer.drComputeDispatch(comp.computeCmdBufIdx[i], ExpParams::parallelsXGpu, 1, 1);
 
 }
 
@@ -652,6 +721,7 @@ void initFont() {
 		std::ranges::views::iota('A', 'Z' + 1) | std::ranges::to<std::vector>(),
 		std::ranges::views::iota('0', '9' + 1) | std::ranges::to<std::vector>(),
 		std::ranges::views::iota('.', '.' + 1) | std::ranges::to<std::vector>(),
+		std::ranges::views::iota(' ', ' ' + 1) | std::ranges::to<std::vector>(),
 	};
 	auto goalsRange = std::ranges::join_view(goals);
 	cv::Mat fontTable(1024, 1024, CV_8UC1);
@@ -698,10 +768,10 @@ void initFont() {
 void initText() {
 	//Prepare ticks
 	int density = 5;
-	float scale = 0.0005;
+	float scale = 0.0010;
 
 	for (int i = 1; i < density; i++) {
-		std::string text = std::to_string(1.0 / density * i);
+		std::string text = to_string_with_prec(1.0 / density * i,2);
 
 		ANTH_LOGI(text);
 		textPipe.tickLabelX.push_back(insertString(text, scale));
@@ -721,13 +791,13 @@ void initText() {
 }
 
 void updateTextPositions() {
-	setStringPosition(0, 0, -0.95, true);
+	setStringPosition(0, 0, -0.75, true);
 	AtMatf4 proj, view;
 
 	core.camera.getProjectionMatrix(proj);
 	core.camera.getViewMatrix(view);
 	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
-	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, (float)glfwGetTime() * 0.1);
+	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, (float)glfwGetTime() * 0.001);
 	AtMatf4 transform = proj.multiply(view).multiply(local);
 
 	for (int i = 0; i < textPipe.tickLabelX.size(); i++) {
@@ -751,6 +821,8 @@ int main() {
 	initFont();
 
 	prepareComputePipeline();
+	prepareColorRamp();
+
 	prepareVisualization();
 	prepareAxisVis();
 	prepareTextVis();
