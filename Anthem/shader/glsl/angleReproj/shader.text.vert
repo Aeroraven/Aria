@@ -16,7 +16,7 @@ layout(location=1) out vec2 outTex;
 
 void main(){
     gl_PointSize = 2.0f;
-    gl_Position = vec4(inPosition.xyz,1.0);
+    gl_Position = ubo.projMat*vec4(inPosition.xyz,1.0);
 
     outColor = vec4(1.0);
     outTex = inTex;

@@ -28,6 +28,11 @@ struct ExpParams {
 	// Visualization
 	static constexpr float lineWidth = 2;
 	static constexpr float fontSize = 64;
+	static constexpr float axisOriginCrd = -1.0;
+	static constexpr float axisExtendCrd = 1.0;
+
+	static constexpr float axisOriginCrdZ = -1.0;
+	static constexpr float axisExtendCrdZ = 1.0;
 };
 
 struct ExpCore {
@@ -115,6 +120,9 @@ struct StringDataBuffer {
 	AnthemUniformBufferImpl<uProj, uView, uLocal>* uBuf;
 	AnthemVertexBufferImpl<AnthemVAOAttrDesc<float, 4>, AnthemVAOAttrDesc<float, 2>>* vxBuf;
 	AnthemIndexBuffer* ixBuf;
+	float translationX = 0.0f;
+	float translationY = 0.0f;
+	float totalWidth = 0.0f;
 };
 
 struct FontVisPipeline {
@@ -129,7 +137,18 @@ struct FontVisPipeline {
 	AnthemFence** drawProgress = nullptr;
 	AnthemSemaphore** drawAvailable = nullptr;
 	AnthemGraphicsPipelineCreateProps cprop;
+
+	std::vector<int> tickLabelX;
+	std::vector<int> tickLabelY;
+	std::vector<int> tickLabelZ;
+
+	std::vector<AtVecf4> tickPosX;
+	std::vector<AtVecf4> tickPosY;
+	std::vector<AtVecf4> tickPosZ;
+
 }textPipe;
+
+
 
 inline std::string getShader(auto x) {
 	std::string st(ANTH_SHADER_DIR);
@@ -144,8 +163,36 @@ void prepareCore() {
 	core.renderer.initialize();
 }
 
+void setStringPosition(int i, float tX, float tY, bool center=false) {
+	textPipe.strings.at(i).translationX = tX;
+	textPipe.strings.at(i).translationY = tY;
+	if (center) {
+		textPipe.strings.at(i).translationX -= textPipe.strings.at(i).totalWidth / 2;
+	}
+}
 
-void insertString(std::string strs, float scale) {
+void updateTextPipeUniform() {
+	for (auto i : std::ranges::views::iota(0, static_cast<int>(textPipe.strings.size()))) {
+		auto proj = AnthemLinAlg::eye<float, 4>();
+		auto view = AnthemLinAlg::eye<float, 4>();
+		auto local = AnthemLinAlg::eye<float, 4>();
+
+		proj[0][3] = textPipe.strings[i].translationX;
+		proj[1][3] = textPipe.strings[i].translationY;
+
+		float projRaw[16], viewRaw[16], localRaw[16];
+		proj.columnMajorVectorization(projRaw);
+		view.columnMajorVectorization(viewRaw);
+		local.columnMajorVectorization(localRaw);
+
+		textPipe.strings[i].uBuf->specifyUniforms(projRaw, viewRaw, localRaw);
+		for (auto j : std::ranges::iota_view(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+			textPipe.strings[i].uBuf->updateBuffer(j);
+		}
+	}
+}
+
+int insertString(std::string strs, float scale) {
 	StringDataBuffer sdb;
 	int stringLength = strs.length();
 	core.renderer.createDescriptorPool(&sdb.descPool);
@@ -195,7 +242,9 @@ void insertString(std::string strs, float scale) {
 		ANTH_LOGI("LP:", xp, " ", yp);
 	}
 	sdb.ixBuf->setIndices(indices);
+	sdb.totalWidth = curX;
 	textPipe.strings.push_back(std::move(sdb));
+	return textPipe.strings.size() - 1;
 }
 
 
@@ -266,8 +315,8 @@ void prepareComputePipeline() {
 void updateVisUniform() {
 	int rdH, rdW;
 	core.renderer.exGetWindowSize(rdH, rdW);
-	core.camera.specifyFrustum(AT_PI / 2, 0.1, 100, 1.0 * rdW / rdH);
-	core.camera.specifyPosition(0.0, 0.0, -2.5f);
+	core.camera.specifyFrustum(AT_PI / 3 * 1, 0.1, 100, 1.0 * rdW / rdH);
+	core.camera.specifyPosition(0.0, 0.0, -3.2f);
 
 	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
 	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, (float)glfwGetTime() * 0.1);
@@ -378,8 +427,8 @@ void prepareAxisVis() {
 	// Create req bufs
 	core.renderer.createVertexBuffer(&axis.vxBuf);
 	axis.vxBuf->setTotalVertices(6);
-	float axisCrd = 1.0f;
-	float baseZCrd = -1.0f, extZCrd = 1.0f;
+	float axisCrd = -ExpParams::axisOriginCrd;
+	float baseZCrd = ExpParams::axisOriginCrdZ, extZCrd = ExpParams::axisExtendCrdZ;
 
 	// X Axis
 	axis.vxBuf->insertData(0, { -axisCrd, axisCrd, baseZCrd,1.0f }, { -axisCrd, axisCrd, baseZCrd,1.0f });
@@ -455,23 +504,25 @@ void recordCommandBufferDrwText(int i) {
 	renderer.drStartRenderPass(textPipe.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), textPipe.fontCmdBuf[i], false);
 	renderer.drSetViewportScissor(textPipe.fontCmdBuf[i]);
 	renderer.drBindGraphicsPipeline(textPipe.pipeline, textPipe.fontCmdBuf[i]);
-	renderer.drBindVertexBuffer(textPipe.strings[0].vxBuf, textPipe.fontCmdBuf[i]);
-	renderer.drBindIndexBuffer(textPipe.strings[0].ixBuf, textPipe.fontCmdBuf[i]);
+	for (int j = 0; j < textPipe.strings.size(); j++) {
+		renderer.drBindVertexBuffer(textPipe.strings[j].vxBuf, textPipe.fontCmdBuf[i]);
+		renderer.drBindIndexBuffer(textPipe.strings[j].ixBuf, textPipe.fontCmdBuf[i]);
 
-	AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
-		.descPool = textPipe.strings[0].descPool,
-		.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
-		.inTypeIndex = 0
-	};
-	AnthemDescriptorSetEntry samplerRdw = {
-		.descPool = font.tableDescPool,
-		.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER,
-		.inTypeIndex = 0
-	};
-	std::vector<AnthemDescriptorSetEntry> descSetEntries = { uniformBufferDescEntryRdw,samplerRdw };
-	renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries, textPipe.pipeline, textPipe.fontCmdBuf[i]);
+		AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
+			.descPool = textPipe.strings[j].descPool,
+			.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
+			.inTypeIndex = 0
+		};
+		AnthemDescriptorSetEntry samplerRdw = {
+			.descPool = font.tableDescPool,
+			.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER,
+			.inTypeIndex = 0
+		};
+		std::vector<AnthemDescriptorSetEntry> descSetEntries = { uniformBufferDescEntryRdw,samplerRdw };
+		renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries, textPipe.pipeline, textPipe.fontCmdBuf[i]);
+		renderer.drDraw(textPipe.strings[j].ixBuf->getIndexCount(), textPipe.fontCmdBuf[i]);
+	}
 
-	renderer.drDraw(textPipe.strings[0].ixBuf->getIndexCount(), textPipe.fontCmdBuf[i]);
 	renderer.drEndRenderPass(textPipe.fontCmdBuf[i]);
 }
 
@@ -600,6 +651,7 @@ void initFont() {
 		std::ranges::views::iota('a', 'z' + 1) | std::ranges::to<std::vector>(),
 		std::ranges::views::iota('A', 'Z' + 1) | std::ranges::to<std::vector>(),
 		std::ranges::views::iota('0', '9' + 1) | std::ranges::to<std::vector>(),
+		std::ranges::views::iota('.', '.' + 1) | std::ranges::to<std::vector>(),
 	};
 	auto goalsRange = std::ranges::join_view(goals);
 	cv::Mat fontTable(1024, 1024, CV_8UC1);
@@ -643,15 +695,67 @@ void initFont() {
 	core.renderer.createTexture(&font.tableTex, font.tableDescPool, fontTable.data, 1024, 1024, 1, 0, false, false, AT_IF_R_UINT8);
 }
 
+void initText() {
+	//Prepare ticks
+	int density = 5;
+	float scale = 0.0005;
+
+	for (int i = 1; i < density; i++) {
+		std::string text = std::to_string(1.0 / density * i);
+
+		ANTH_LOGI(text);
+		textPipe.tickLabelX.push_back(insertString(text, scale));
+		textPipe.tickLabelY.push_back(insertString(text, scale));
+		textPipe.tickLabelZ.push_back(insertString(text, scale));
+
+		float st = ExpParams::axisOriginCrd, stz = ExpParams::axisOriginCrdZ;
+		float ed = ExpParams::axisExtendCrd, edz = ExpParams::axisExtendCrdZ;
+		auto mix = []<typename T>(T s, T t, T v)->T {
+			return v * t + (1 - v) * s;
+		};
+		float mx = mix(st, ed, 1.0f * i / density), mxz = mix(stz, edz, 1.0f * i / density);
+		textPipe.tickPosX.push_back({ mx,st,stz,1.0f });
+		textPipe.tickPosY.push_back({ st,mx,stz,1.0f });
+		textPipe.tickPosZ.push_back({ st,st,mxz,1.0f });
+	}
+}
+
+void updateTextPositions() {
+	setStringPosition(0, 0, -0.95, true);
+	AtMatf4 proj, view;
+
+	core.camera.getProjectionMatrix(proj);
+	core.camera.getViewMatrix(view);
+	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
+	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, (float)glfwGetTime() * 0.1);
+	AtMatf4 transform = proj.multiply(view).multiply(local);
+
+	for (int i = 0; i < textPipe.tickLabelX.size(); i++) {
+		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosX[i]);
+		setStringPosition(textPipe.tickLabelX[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3]);
+	}
+	for (int i = 0; i < textPipe.tickLabelY.size(); i++) {
+		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosY[i]);
+		setStringPosition(textPipe.tickLabelY[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3]);
+	}
+	for (int i = 0; i < textPipe.tickLabelZ.size(); i++) {
+		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosZ[i]);
+		setStringPosition(textPipe.tickLabelZ[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3]);
+	}
+}
+
 int main() {
 	prepareCore();
 	std::once_flag p1;
 	auto startGenTime = std::chrono::steady_clock().now();
 	initFont();
+
 	prepareComputePipeline();
 	prepareVisualization();
 	prepareAxisVis();
 	prepareTextVis();
+
+	initText();
 	
 	core.renderer.registerPipelineSubComponents();
 	recordCommandBufferAll();
@@ -661,7 +765,10 @@ int main() {
 	auto startTime = std::chrono::steady_clock().now();
 
 	core.renderer.setDrawFunction([&]() {
+		updateTextPositions();
 		updateVisUniform();
+		updateTextPipeUniform();
+
 		drawLoop(currentFrame);
 		std::call_once(p1, [&]() {
 
