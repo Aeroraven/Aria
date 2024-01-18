@@ -14,6 +14,7 @@ Refer to the parent directory for more information about the project.
 - [CMake](https://cmake.org/)
 - [OpenCV](https://opencv.org/releases/)
 - [FreeType](https://freetype.org/)
+- [ImGui](https://github.com/ocornut/imgui)
 
 ### Demo Explanation
 - Demo with prefix `AC` indicates that it is some thing about new C++ standards.

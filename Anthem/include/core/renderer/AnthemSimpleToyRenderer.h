@@ -313,6 +313,7 @@ namespace Anthem::Core{
         }
 
         bool exDestroyImgui() {
+            ImGui_ImplVulkan_Shutdown();
             vkDestroyRenderPass(this->logicalDevice->getLogicalDevice(), g_RenderPass, nullptr);
             vkDestroyDescriptorPool(this->logicalDevice->getLogicalDevice(), g_DescriptorPool, nullptr);
             return true;

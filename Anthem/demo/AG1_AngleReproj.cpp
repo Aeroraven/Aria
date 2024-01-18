@@ -21,14 +21,20 @@ using namespace std::chrono;
 
 struct ExpParams {
 
-	
 	// Exp params
 	static AtVecf4 centerTranslation;
 	static AtVecf4 rotationAxis;
-	static int moveFocal;
+	static float moveFocal;
+	static float moveDistance;
+	static float chosenAngle;
+	static bool translationFirst;
+
+	static constexpr const char* selectableAngle[4] = { "Angle 1","Angle 2","Angle 3","Angle 4" };
+	static const char* selectedAngleCh;
 
 	// Parallel configurations
-	static constexpr int sampleCounts = 524288/4; //4194304
+	static constexpr int sqrtSampleCounts = 1024;
+	static constexpr int sampleCounts = sqrtSampleCounts * sqrtSampleCounts; //
 	static constexpr int parallelsXGpu = 16384; // For GPU kernels
 	static constexpr int parallelsXCpu = 16; // For CPU threads
 
@@ -44,6 +50,14 @@ struct ExpParams {
 
 	static constexpr float visRot = 0.5;
 };
+
+float ExpParams::moveFocal = 1.0;
+AtVecf4 ExpParams::rotationAxis = { 1.0f,0.0f,0.0f,0.0f };
+AtVecf4 ExpParams::centerTranslation = { 1.0f,0.0f,0.0f,0.0f };
+const char* ExpParams::selectedAngleCh = ExpParams::selectableAngle[0];
+float ExpParams::chosenAngle = 1.0;
+bool ExpParams::translationFirst = true;
+float ExpParams::moveDistance = 10.0;
 
 struct ExpCore {
 	AnthemSimpleToyRenderer renderer;
@@ -67,12 +81,19 @@ struct FontLib {
 
 	AnthemImage* tableTex;
 	AnthemDescriptorPool* tableDescPool;
-
+	
 }font;
 
 struct ComputePipeline {
 	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>, AtBufVecd4f<1>>* samples = nullptr;
-	AnthemUniformBufferImpl<AnthemUniformVecf<4>, AnthemUniformVecf<4>>* uniform = nullptr;
+	AnthemUniformBufferImpl<
+		AnthemUniformVecf<4>, 
+		AnthemUniformVecf<4>,
+		AnthemUniformVecf<1>,
+		AnthemUniformVecf<1>,
+		AnthemUniformVecf<1>,
+		AnthemUniformVecf<1>
+	>* uniform = nullptr;
 
 	AnthemDescriptorPool* descPoolUniform = nullptr;
 	AnthemDescriptorPool* descPoolSsbo = nullptr;
@@ -163,6 +184,27 @@ struct ColorRampLUT2D {
 	AnthemDescriptorPool* lutDesc;
 	AnthemImage* lutTex;
 }clut;
+
+
+void bindParamsToImgui() {
+	ImGui::InputFloat3("Rotation Axis", &ExpParams::rotationAxis[0]);
+	ImGui::InputFloat("Offset", &ExpParams::moveFocal);
+	if (ImGui::BeginCombo("Angle", ExpParams::selectedAngleCh)) {
+		for (int i = 0; i < 4; i++) {
+			bool is_selected = (ExpParams::selectedAngleCh == ExpParams::selectableAngle[i]);
+			if (ImGui::Selectable(ExpParams::selectableAngle[i], is_selected)) {
+				ExpParams::selectedAngleCh = ExpParams::selectableAngle[i];
+			}
+			if (is_selected) {
+				ImGui::SetItemDefaultFocus();
+			}
+		}
+		ImGui::EndCombo();
+	}
+	ImGui::Checkbox("Translation First", &ExpParams::translationFirst);
+	ImGui::InputFloat("Z Distance", &ExpParams::moveDistance);
+}
+
 
 template<typename T>
 std::string to_string_with_prec(T x, int prec) {
@@ -299,11 +341,12 @@ void prepareComputePipeline() {
 			auto st = ExpParams::sampleCounts / totalSegments * segment;
 			auto ed = ExpParams::sampleCounts / totalSegments * (segment + 1);
 			for (auto i : std::ranges::views::iota(st, ed)) {
-				auto fx = AnthemLinAlg::randomNumber<float>();
-				auto fy = AnthemLinAlg::randomNumber<float>();
+				float fx = i % ExpParams::sqrtSampleCounts * 1.0 / ExpParams::sqrtSampleCounts;//AnthemLinAlg::randomNumber<float>();
+				float fy = (i / ExpParams::sqrtSampleCounts) * 1.0 / ExpParams::sqrtSampleCounts;
 				fx = 2.0f * (fx - 0.5f);
 				fy = 2.0f * (fy - 0.5f);
 				w->setInput(i, { fx, fy, 0.0f, 0.0f }, { fx, fy, 0.0f, 0.0f });
+				//ANTH_ASSERT((fx > -1.1 && fx < 1.1) && (fy > -1.1 && fy < 1.1), "Overflow",i);
 			}
 		};
 		std::vector<std::thread> jobs;
@@ -320,9 +363,6 @@ void prepareComputePipeline() {
 
 	// Create Uniform Buffer
 	core.renderer.createUniformBuffer(&comp.uniform, 0, comp.descPoolUniform);
-	float temp1[4] = { 0,0,5,0 };
-	float temp2[4] = { 0,0,0,0 };
-	comp.uniform->specifyUniforms(temp1, temp2);
 
 
 	// Create Pipeline
@@ -374,7 +414,17 @@ void prepareColorRamp() {
 	core.renderer.createDescriptorPool(&clut.lutDesc);
 	core.renderer.createTexture(&clut.lutTex, clut.lutDesc, destMap.data, 64, 64, 4, 0, false, false);
 }
-
+void updateCompUniform() {
+	float temp1[4] = { 0,0,5,0 };
+	std::string chosenAngle = ExpParams::selectedAngleCh;
+	float selAngleId = chosenAngle.back() - '0';
+	float translationFirst = ExpParams::translationFirst;
+	comp.uniform->specifyUniforms(temp1, &ExpParams::rotationAxis[0], &ExpParams::moveFocal, &selAngleId,&translationFirst,
+		&ExpParams::moveDistance);
+	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+		comp.uniform->updateBuffer(i);
+	}
+}
 void updateVisUniform() {
 	int rdH, rdW;
 	core.renderer.exGetWindowSize(rdH, rdW);
@@ -733,8 +783,9 @@ void prepareImguiFrame() {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::Begin("Hello, world!");                          
-	ImGui::Text("This is some useful text.");
+	ImGui::Begin("Control Panel");                          
+	ImGui::Text("Experiment Parameters");
+	bindParamsToImgui();
 	ImGui::End();
 }
 
@@ -774,7 +825,6 @@ void drawLoop(int& currentFrame) {
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(textPipe.fontCmdBuf[currentFrame], imgIdx, &imguiDone, &waitStage, nullptr, &secondStageDone);
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral(axis.axisCmdBuf[currentFrame], imgIdx, &secondStageDone,
 		&waitStageAxis);
-
 	core.renderer.drPresentFrame(currentFrame, imgIdx);
 	currentFrame++;
 	currentFrame %= 2;
@@ -849,7 +899,7 @@ void initText() {
 	float scale = 0.0010;
 
 	for (int i = 1; i < density; i++) {
-		std::string text = to_string_with_prec(1.0 / density * i,2);
+		std::string text = std::to_string((int)(1.0 / density * i * 180));  //to_string_with_prec(1.0 / density * i,2);
 		std::string textZ = std::to_string((int)(1.0 / density * i * 180));
 
 		ANTH_LOGI(text);
@@ -902,7 +952,7 @@ void setupImgui() {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	io.FontGlobalScale = 1.5;
+	io.FontGlobalScale = 1.7;
 	ImGui::StyleColorsDark();
 	core.renderer.exInitImGui();
 }
@@ -933,8 +983,7 @@ int main() {
 	auto startTime = std::chrono::steady_clock().now();
 
 	core.renderer.setDrawFunction([&]() {
-
-
+		updateCompUniform();
 		updateTextPositions();
 		updateVisUniform();
 		updateTextPipeUniform();

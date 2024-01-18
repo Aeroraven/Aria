@@ -3,6 +3,10 @@
 layout(set = 0,binding = 0) uniform UniformBufferObject{
     vec4 translation;
     vec4 rotAxis;
+    float moveFocal;
+    float chosenAngle;
+    float translationFirst;
+    float zDistance;
 }ubo;
 
 struct Particle{
@@ -44,14 +48,21 @@ void main(){
     rectVertices[2] = vec4(1.0,-1.0,0.0,1.0);
     rectVertices[3] = vec4(-1.0,-1.0,0.0,1.0);
     float rotAng = pIn.rnd.x * 3.14159;
-    float transX = mvFocal*sin(pIn.rnd.y*3.14159*2.0);
-    float transY = mvFocal*cos(pIn.rnd.y*3.14159*2.0);
-    mat4 rotMat = generateRotationMatrix(vec3(1.0,0.0,0.0),rotAng);
-    for(int i=0;i<4;i++){
-        rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0);
+    float transX = ubo.moveFocal*sin(pIn.rnd.y*3.14159*2.0);
+    float transY = ubo.moveFocal*cos(pIn.rnd.y*3.14159*2.0);
+    mat4 rotMat = generateRotationMatrix(normalize(vec3(ubo.rotAxis.xyz)),rotAng);
+    if(ubo.translationFirst>0.5){
+        for(int i=0;i<4;i++){
+            rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0);
+        }
     }
     for(int i=0;i<4;i++){
-        rectVertices[i] = rotMat * rectVertices[i] + vec4(0.0,0.0,5.0,0.0);
+        rectVertices[i] = rotMat * rectVertices[i] + vec4(0.0,0.0,ubo.zDistance,0.0);
+    }
+    if(ubo.translationFirst<0.5){
+        for(int i=0;i<4;i++){
+            rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0);
+        }
     }
     for(int i=0;i<4;i++){
         vec4 v1 = rectVertices[i];
@@ -68,6 +79,16 @@ void main(){
         float angle = acos(dot(d1,d2));
         interiorAngles[i] = mix(-1.0,1.0,angle/3.1415926);
     }
+    int displayId = 0;
+    if(ubo.chosenAngle>3.5){
+        displayId=3;
+    }else if(ubo.chosenAngle>2.5){
+        displayId=2;
+    }else if(ubo.chosenAngle>1.5){
+        displayId=1;
+    }else if(ubo.chosenAngle>0.5){
+        displayId=0;
+    }
 
-    particleOut[idx].pos = vec4(pIn.rnd.x,interiorAngles[0],pIn.rnd.y,0.0);
+    particleOut[idx].pos = vec4(pIn.rnd.x,interiorAngles[displayId],pIn.rnd.y,0.0);
 }
