@@ -42,6 +42,8 @@ namespace Anthem::Core{
         uint32_t virtual getSwapChainExtentHeight() const;
         const VkExtent2D* getSwapChainExtent() const;
         const VkSurfaceFormatKHR* getSwapChainSurfaceFormat() const;
+        const VkFormat* getFormat() const;
+
 
         const std::vector<VkImageView>* getSwapChainImageViews() const;
         const VkSwapchainKHR* getSwapChain() const;

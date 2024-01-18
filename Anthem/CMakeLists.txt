@@ -32,9 +32,15 @@ include_directories("C:/Program Files (x86)/GLFW/include")
 include_directories("C:/Program Files (x86)/freetype/include/freetype2")
 include_directories("C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install/include")
 
+include_directories("imgui/")
+
 file(GLOB_RECURSE SOURCE_0 "include/*.h")
 file(GLOB_RECURSE SOURCE_1 "src/*.cpp")
 file(GLOB_RECURSE SOURCE_2 "include/external_ref/*.h")
+
+file(GLOB_RECURSE SOURCE_IMGUI "imgui/*.h")
+file(GLOB_RECURSE SOURCE_IMGUI_2 "imgui/*.cpp")
+
 
 file(GLOB SOURCE_STAGES "demo/*.cpp")
 
@@ -44,6 +50,6 @@ endif()
 
 foreach( SRC_FILE_NAME ${SOURCE_STAGES} )
     get_filename_component( SRC_FILE_NAME_SHORT ${SRC_FILE_NAME} NAME_WE )
-    add_executable( ${SRC_FILE_NAME_SHORT} ${SRC_FILE_NAME} ${SOURCE_0} ${SOURCE_1})
+    add_executable( ${SRC_FILE_NAME_SHORT} ${SRC_FILE_NAME} ${SOURCE_0} ${SOURCE_1} ${SOURCE_IMGUI} ${SOURCE_IMGUI_2})
     target_link_libraries( ${SRC_FILE_NAME_SHORT} Vulkan::Vulkan ${glfw3_LIB} ${FREETYPE_LIBRARY} ${OpenCV_LIBS})
 endforeach( SRC_FILE_NAME ${SOURCE_STAGES} )

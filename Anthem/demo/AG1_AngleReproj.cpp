@@ -5,6 +5,7 @@
 #include "../include/core/math/AnthemLinAlg.h"
 #include "../include/components/camera/AnthemCamera.h"
 
+
 #include <chrono>
 
 #include <thread>
@@ -19,13 +20,15 @@ using namespace std::chrono;
 
 
 struct ExpParams {
+
+	
 	// Exp params
 	static AtVecf4 centerTranslation;
 	static AtVecf4 rotationAxis;
 	static int moveFocal;
 
 	// Parallel configurations
-	static constexpr int sampleCounts = 524288; //4194304
+	static constexpr int sampleCounts = 524288/4; //4194304
 	static constexpr int parallelsXGpu = 16384; // For GPU kernels
 	static constexpr int parallelsXCpu = 16; // For CPU threads
 
@@ -38,6 +41,8 @@ struct ExpParams {
 
 	static constexpr float axisOriginCrdZ = -1.0;
 	static constexpr float axisExtendCrdZ = 1.0;
+
+	static constexpr float visRot = 0.5;
 };
 
 struct ExpCore {
@@ -104,7 +109,7 @@ struct VisualizationPipeline {
 }vis;
 
 struct CoordAxisVisPipeline {
-	AnthemVertexBufferImpl<AnthemVAOAttrDesc<float, 4>, AnthemVAOAttrDesc<float, 4>>* vxBuf;
+	AnthemVertexBufferImpl<AnthemVAOAttrDesc<float, 4>, AnthemVAOAttrDesc<float, 4>, AnthemVAOAttrDesc<float, 1>>* vxBuf;
 	AnthemIndexBuffer* ixBuf;
 	AnthemShaderFilePaths shaderFile;
 	AnthemShaderModule* shader = nullptr;
@@ -128,6 +133,7 @@ struct StringDataBuffer {
 	float translationX = 0.0f;
 	float translationY = 0.0f;
 	float totalWidth = 0.0f;
+	float firstBearingY = 0.0f;
 };
 
 struct FontVisPipeline {
@@ -178,11 +184,17 @@ void prepareCore() {
 	core.renderer.initialize();
 }
 
-void setStringPosition(int i, float tX, float tY, bool center=false) {
+void setStringPosition(int i, float tX, float tY, bool center=false,bool right=false,bool alignYTop=false) {
 	textPipe.strings.at(i).translationX = tX;
 	textPipe.strings.at(i).translationY = tY;
 	if (center) {
 		textPipe.strings.at(i).translationX -= textPipe.strings.at(i).totalWidth / 2;
+	}
+	if (right) {
+		textPipe.strings.at(i).translationX -= textPipe.strings.at(i).totalWidth;
+	}
+	if (alignYTop) {
+		textPipe.strings.at(i).translationY += textPipe.strings.at(i).firstBearingY;
 	}
 }
 
@@ -261,6 +273,7 @@ int insertString(std::string strs, float scale) {
 		idx += 6;
 
 		ANTH_LOGI("LP:", xp, " ", yp);
+		sdb.firstBearingY = font.glyphBearingY[ch] * scale;
 	}
 	sdb.ixBuf->setIndices(indices);
 	sdb.totalWidth = curX;
@@ -370,7 +383,7 @@ void updateVisUniform() {
 	core.camera.specifyFrontEyeRay(0, -1.5, 3.4f);
 
 	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
-	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, (float)glfwGetTime() * 0.001);
+	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, ExpParams::visRot);
 
 	AtMatf4 proj, view, model;
 	float projRaw[16], viewRaw[16], modelRaw[16];
@@ -445,7 +458,7 @@ void prepareVisualization() {
 
 void prepareTextVis() {
 	// Demo string
-	insertString("Figure 1",0.0015);
+	insertString("Figure 1",0.0012);
 
 	// Prepare comps
 	textPipe.shaderFile.vertexShader = getShader("text.vert");
@@ -490,23 +503,69 @@ void prepareTextVis() {
 void prepareAxisVis() {
 	// Create req bufs
 	core.renderer.createVertexBuffer(&axis.vxBuf);
-	axis.vxBuf->setTotalVertices(6);
+	
 	float axisCrd = -ExpParams::axisOriginCrd;
 	float baseZCrd = ExpParams::axisOriginCrdZ, extZCrd = ExpParams::axisExtendCrdZ;
-
+	int density = 5;
+	int totl = 6 + 12 * (density );
+	axis.vxBuf->setTotalVertices(totl);
 	// X Axis
-	axis.vxBuf->insertData(0, { -axisCrd, axisCrd, baseZCrd,1.0f }, { -axisCrd, axisCrd, baseZCrd,1.0f });
-	axis.vxBuf->insertData(1, { -axisCrd, -axisCrd, baseZCrd,1.0f }, { -axisCrd, -axisCrd,baseZCrd,1.0f });
+	axis.vxBuf->insertData(0, { -axisCrd, axisCrd, baseZCrd,1.0f }, { -axisCrd, axisCrd, baseZCrd,1.0f }, { 0.0f });
+	axis.vxBuf->insertData(1, { -axisCrd, -axisCrd, baseZCrd,1.0f }, { -axisCrd, -axisCrd,baseZCrd,1.0f }, { 0.0f });
 
 	// Y Axis
-	axis.vxBuf->insertData(2, { -axisCrd, -axisCrd, baseZCrd,1.0f }, { -axisCrd, -axisCrd, baseZCrd,1.0f });
-	axis.vxBuf->insertData(3, { axisCrd, -axisCrd, baseZCrd,1.0f }, { axisCrd, -axisCrd,baseZCrd,1.0f });
+	axis.vxBuf->insertData(2, { -axisCrd, -axisCrd, baseZCrd,1.0f }, { -axisCrd, -axisCrd, baseZCrd,1.0f }, { 0.0f });
+	axis.vxBuf->insertData(3, { axisCrd, -axisCrd, baseZCrd,1.0f }, { axisCrd, -axisCrd,baseZCrd,1.0f }, { 0.0f });
 	
-	axis.vxBuf->insertData(4, { -axisCrd, -axisCrd, baseZCrd,1.0f }, { -axisCrd, -axisCrd, baseZCrd,1.0f });
-	axis.vxBuf->insertData(5, { -axisCrd, -axisCrd, extZCrd,1.0f }, { -axisCrd, -axisCrd, extZCrd,1.0f });
+	// Z Axis
+	axis.vxBuf->insertData(4, { axisCrd, -axisCrd, baseZCrd,1.0f }, { axisCrd, -axisCrd, baseZCrd,1.0f }, { 0.0f });
+	axis.vxBuf->insertData(5, { axisCrd, -axisCrd, extZCrd,1.0f }, { axisCrd, -axisCrd, extZCrd,1.0f }, { 0.0f });
+
+	// Back
+	auto mix = []<typename T>(T s, T t, T v)->T {
+		return v * t + (1 - v) * s;
+	};
+	for (int i = 0; i < density; i++) {
+		auto yp = mix(-axisCrd, axisCrd, (float)i / (float)density);
+		axis.vxBuf->insertData(6 + 2 * (i ), { yp, axisCrd, extZCrd,1.0f }, { yp, axisCrd, extZCrd,1.0f }, { 1.0f });
+		axis.vxBuf->insertData(6 + 2 * (i ) + 1, { yp, -axisCrd, extZCrd,1.0f }, { yp, -axisCrd,extZCrd,1.0f }, { 1.0f });
+	}
+
+	for (int i = 0; i < density; i++) {
+		auto yp = mix(-axisCrd, axisCrd, (float)i / (float)density);
+		axis.vxBuf->insertData(6 + 2 * (density ) + 2 * (i ), { -axisCrd, yp, extZCrd,1.0f }, { -axisCrd, yp, extZCrd,1.0f }, { 1.0f });
+		axis.vxBuf->insertData(6 + 2 * (density ) + 2 * (i ) + 1, { axisCrd, yp, extZCrd,1.0f }, { axisCrd,yp,extZCrd,1.0f }, { 1.0f });
+	}
+
+	// Z Sub Axis
+	for (int i = 0; i < density; i++) {
+		auto yp = mix(-axisCrd, axisCrd, (float)i / (float)density);
+		axis.vxBuf->insertData(6 + 4 * (density ) + 2 * (i ), { -axisCrd, yp, baseZCrd,1.0f }, { -axisCrd, yp, baseZCrd,1.0f }, { 1.0f });
+		axis.vxBuf->insertData(6 + 4 * (density ) + 2 * (i ) + 1, { -axisCrd, yp, extZCrd,1.0f }, { -axisCrd,yp,extZCrd,1.0f }, { 1.0f });
+	}
+
+	for (int i = 0; i < density; i++) {
+		auto yp = mix(-axisCrd, axisCrd, (float)i / (float)density);
+		axis.vxBuf->insertData(6 + 6 * (density)+2 * (i), { yp , -axisCrd, baseZCrd,1.0f }, { yp, -axisCrd, baseZCrd,1.0f }, { 1.0f });
+		axis.vxBuf->insertData(6 + 6 * (density)+2 * (i)+1, { yp, -axisCrd, extZCrd,1.0f }, { yp,-axisCrd,extZCrd,1.0f }, { 1.0f });
+	}
+
+	// Other
+	for (int i = 0; i < density; i++) {
+		auto yp = mix(baseZCrd, extZCrd, (float)i / (float)density);
+		axis.vxBuf->insertData(6 + 8 * (density)+2 * (i), { -axisCrd, axisCrd, yp,1.0f }, { -axisCrd, axisCrd, yp,1.0f }, { 1.0f });
+		axis.vxBuf->insertData(6 + 8 * (density)+2 * (i)+1, { -axisCrd, -axisCrd, yp,1.0f }, { -axisCrd, -axisCrd,yp,1.0f }, { 1.0f });
+	}
+
+	for (int i = 0; i < density; i++) {
+		auto yp = mix(baseZCrd, extZCrd, (float)i / (float)density);
+		axis.vxBuf->insertData(6 + 10 * (density)+2 * (i), { axisCrd, -axisCrd, yp,1.0f }, { axisCrd, -axisCrd, yp,1.0f }, { 1.0f });
+		axis.vxBuf->insertData(6 + 10 * (density)+2 * (i)+1, { -axisCrd, -axisCrd, yp,1.0f }, { -axisCrd, -axisCrd,yp,1.0f }, { 1.0f });
+	}
+
 
 	core.renderer.createIndexBuffer(&axis.ixBuf);
-	axis.ixBuf->setIndices({ 0, 1 , 2 , 3, 4,5 });
+	axis.ixBuf->setIndices(std::views::iota(0u,static_cast<unsigned>(totl))|std::ranges::to<std::vector>());
 
 	// Load shaders
 	axis.shaderFile.vertexShader = getShader("axis.vert");
@@ -669,13 +728,23 @@ void recordCommandBufferAll() {
 	}
 }
 
+void prepareImguiFrame() {
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	ImGui::Begin("Hello, world!");                          
+	ImGui::Text("This is some useful text.");
+	ImGui::End();
+}
+
 void drawLoop(int& currentFrame) {
-	
+	prepareImguiFrame();
 	uint32_t imgIdx;
 	
 	core.renderer.drPrepareFrame(currentFrame, &imgIdx);
 
-	// Compute Task
+	// Computing
 	comp.computeProgress[0]->waitForFence();
 	comp.computeProgress[0]->resetFence();
 
@@ -689,11 +758,20 @@ void drawLoop(int& currentFrame) {
 
 	core.renderer.drSubmitCommandBufferCompQueueGeneral(comp.computeCmdBufIdx[0], nullptr, &semaphoreToSignal, comp.computeProgress[0]);
 
-	// Graphics Drawing
+	// Drawing
+	ImGui::Render();
+	ImDrawData* drawData = ImGui::GetDrawData();
+	core.renderer.exRenderImGui(currentFrame, vis.framebuffer, { 0,0,0,1 }, drawData);
+	uint32_t imguiCmdBuf;
+	core.renderer.exGetImGuiCommandBufferIndex(currentFrame, &imguiCmdBuf);
+	AnthemSemaphore* imguiSemaphore;
+	core.renderer.exGetImGuiDrawProgressSemaphore(currentFrame, &imguiSemaphore);
+	std::vector<const AnthemSemaphore*> imguiDone = { imguiSemaphore };
 
-	ANTH_ASSERT((vis.firstStageDone[currentFrame] != nullptr),"No");
+	ANTH_ASSERT((vis.firstStageDone[currentFrame] != nullptr),"");
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(currentFrame, imgIdx, &semaphoreToSignal, &waitStage,nullptr,&firstStageDone);
-	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(textPipe.fontCmdBuf[currentFrame], imgIdx, &firstStageDone, &waitStage, nullptr, &secondStageDone);
+	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(imguiCmdBuf, imgIdx, &firstStageDone, &waitStage, nullptr, &imguiDone);
+	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(textPipe.fontCmdBuf[currentFrame], imgIdx, &imguiDone, &waitStage, nullptr, &secondStageDone);
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral(axis.axisCmdBuf[currentFrame], imgIdx, &secondStageDone,
 		&waitStageAxis);
 
@@ -772,10 +850,13 @@ void initText() {
 
 	for (int i = 1; i < density; i++) {
 		std::string text = to_string_with_prec(1.0 / density * i,2);
+		std::string textZ = std::to_string((int)(1.0 / density * i * 180));
 
 		ANTH_LOGI(text);
 		textPipe.tickLabelX.push_back(insertString(text, scale));
-		textPipe.tickLabelY.push_back(insertString(text, scale));
+		auto w = insertString(textZ, scale);
+		textPipe.tickLabelY.push_back(w);
+		ANTH_LOGI(w, ",", textZ);
 		textPipe.tickLabelZ.push_back(insertString(text, scale));
 
 		float st = ExpParams::axisOriginCrd, stz = ExpParams::axisOriginCrdZ;
@@ -786,36 +867,51 @@ void initText() {
 		float mx = mix(st, ed, 1.0f * i / density), mxz = mix(stz, edz, 1.0f * i / density);
 		textPipe.tickPosX.push_back({ mx,st,stz,1.0f });
 		textPipe.tickPosY.push_back({ st,mx,stz,1.0f });
-		textPipe.tickPosZ.push_back({ st,st,mxz,1.0f });
+		textPipe.tickPosZ.push_back({ ed,st,mxz,1.0f });
 	}
+	//throw;
 }
 
 void updateTextPositions() {
-	setStringPosition(0, 0, -0.75, true);
+	setStringPosition(0, 0, -0.65, true);
 	AtMatf4 proj, view;
 
 	core.camera.getProjectionMatrix(proj);
 	core.camera.getViewMatrix(view);
 	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
-	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, (float)glfwGetTime() * 0.001);
+	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, ExpParams::visRot);
 	AtMatf4 transform = proj.multiply(view).multiply(local);
 
 	for (int i = 0; i < textPipe.tickLabelX.size(); i++) {
 		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosX[i]);
-		setStringPosition(textPipe.tickLabelX[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3]);
+		setStringPosition(textPipe.tickLabelX[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3],false, true,true);
 	}
 	for (int i = 0; i < textPipe.tickLabelY.size(); i++) {
 		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosY[i]);
-		setStringPosition(textPipe.tickLabelY[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3]);
+		setStringPosition(textPipe.tickLabelY[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3],false,true);
 	}
 	for (int i = 0; i < textPipe.tickLabelZ.size(); i++) {
 		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosZ[i]);
-		setStringPosition(textPipe.tickLabelZ[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3]);
+		setStringPosition(textPipe.tickLabelZ[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3], false, false,true);
 	}
 }
 
+void setupImgui() {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.FontGlobalScale = 1.5;
+	ImGui::StyleColorsDark();
+	core.renderer.exInitImGui();
+}
+
+
 int main() {
 	prepareCore();
+	setupImgui();
+
 	std::once_flag p1;
 	auto startGenTime = std::chrono::steady_clock().now();
 	initFont();
@@ -837,6 +933,8 @@ int main() {
 	auto startTime = std::chrono::steady_clock().now();
 
 	core.renderer.setDrawFunction([&]() {
+
+
 		updateTextPositions();
 		updateVisUniform();
 		updateTextPipeUniform();
@@ -854,6 +952,7 @@ int main() {
 		});
 	});
 	core.renderer.startDrawLoopDemo();
+	core.renderer.exDestroyImgui();
 	core.renderer.finalize();
 
 	return 0;

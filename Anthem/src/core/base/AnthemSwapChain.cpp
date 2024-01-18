@@ -177,4 +177,7 @@ namespace Anthem::Core{
     const VkSwapchainKHR* AnthemSwapChain::getSwapChain() const{
         return &(this->swapChain);
     }
+    const VkFormat* AnthemSwapChain::getFormat() const {
+        return &(this->specifiedSurfaceFormat.format);
+    }
 }
