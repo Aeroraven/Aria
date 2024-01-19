@@ -213,14 +213,14 @@ namespace Anthem::Core{
             return true;
         }
         const VkDescriptorSetLayout* getDescriptorSetLayoutUniformBuffer(uint32_t idx) const{
-            ANTH_LOGI("Total Size=",this->uniformBuffers.size());
-            ANTH_LOGI("VisIdx=",idx);
+            //ANTH_LOGI("Total Size=",this->uniformBuffers.size());
+            //ANTH_LOGI("VisIdx=",idx);
             return &(this->uniformBuffers.at(idx).layout);
         }
         bool createDescriptorSetSsbo(uint32_t numSets){
-            ANTH_LOGI("Allocating Descriptor Update: SSBO");
+            //ANTH_LOGI("Allocating Descriptor Update: SSBO");
             for(int i=0;i<this->ssboDesc.size();i++){
-                ANTH_LOGI("Allocate in Pool:",this->ssboDesc.at(i).descPoolId);
+                //ANTH_LOGI("Allocate in Pool:",this->ssboDesc.at(i).descPoolId);
                 std::vector<VkDescriptorSetLayout> descSetLayout(numSets,this->ssboDesc.at(i).layout);
                 VkDescriptorSetAllocateInfo allocInfo = {};
                 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -235,13 +235,13 @@ namespace Anthem::Core{
                     return false;
                 }
             }
-            ANTH_LOGI("Preparing Descriptor Update: SSBO");
+            //ANTH_LOGI("Preparing Descriptor Update: SSBO");
             for (uint32_t j = 0; j < static_cast<uint32_t>(this->ssboDesc.size()); j++) {
                 ssboDesc.at(j).bufferInfo = new VkDescriptorBufferInfo[numSets];
             }
             for(uint32_t i=0;i<numSets;i++){
                 for(uint32_t j=0;j<static_cast<uint32_t>(this->ssboDesc.size());j++){
-                    ANTH_LOGI("Buffer Copies =", ssboDesc.at(j).buffer->size(),",",i,",", ssboDesc.at(j).buffer->at(i).buffer);
+                    //ANTH_LOGI("Buffer Copies =", ssboDesc.at(j).buffer->size(),",",i,",", ssboDesc.at(j).buffer->at(i).buffer);
                     ssboDesc.at(j).bufferInfo[i].buffer = ssboDesc.at(j).buffer->at(i).buffer;
                     ssboDesc.at(j).bufferInfo[i].offset = 0;
                     ssboDesc.at(j).bufferInfo[i].range = ssboDesc.at(j).size;
@@ -268,9 +268,9 @@ namespace Anthem::Core{
         bool createDescriptorSet(uint32_t numSets){
             createDescriptorSetSsbo(numSets);
             //Create Uniform Descriptor Sets
-            ANTH_LOGI("Allocating Descriptor Update: Uniforms");
+            //ANTH_LOGI("Allocating Descriptor Update: Uniforms");
             for(int i=0;i<this->uniformBuffers.size();i++){
-                ANTH_LOGI("Allocate in Pool:",this->uniformBuffers.at(i).descPoolId);
+                //ANTH_LOGI("Allocate in Pool:",this->uniformBuffers.at(i).descPoolId);
                 std::vector<VkDescriptorSetLayout> descSetLayout(numSets,this->uniformBuffers.at(i).layout);
                 VkDescriptorSetAllocateInfo allocInfo = {};
                 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -285,10 +285,10 @@ namespace Anthem::Core{
                     return false;
                 }
             }
-            ANTH_LOGI("Preparing Descriptor Update: Uniforms");
+            //ANTH_LOGI("Preparing Descriptor Update: Uniforms");
             for(uint32_t i=0;i<numSets;i++){
                 for(uint32_t j=0;j<static_cast<uint32_t>(this->uniformBuffers.size());j++){
-                    ANTH_LOGI("Buffer Copies =",uniformBuffers.at(j).buffer->size());
+                    //ANTH_LOGI("Buffer Copies =",uniformBuffers.at(j).buffer->size());
                     uniformBuffers.at(j).bufferInfo.buffer = uniformBuffers.at(j).buffer->at(i).buffer;
                     uniformBuffers.at(j).bufferInfo.offset = 0;
                     uniformBuffers.at(j).bufferInfo.range = uniformBuffers.at(j).size;
@@ -311,9 +311,9 @@ namespace Anthem::Core{
                 vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteUniform.size()),descWriteUniform.data(),0,nullptr);
             }
             //Create Image Descriptor Sets
-            ANTH_LOGI("Allocating Descriptor Alloc: Samplers",this->samplersDesc.size());
+            //ANTH_LOGI("Allocating Descriptor Alloc: Samplers",this->samplersDesc.size());
             for(int i=0;i<this->samplersDesc.size();i++){
-                ANTH_LOGI("Allocate in Pool:",this->samplersDesc.at(i).descPoolId);
+                //ANTH_LOGI("Allocate in Pool:",this->samplersDesc.at(i).descPoolId);
                 std::vector<VkDescriptorSetLayout> descSetLayout(numSets,this->samplersDesc.at(i).layout);
                 VkDescriptorSetAllocateInfo allocInfo = {};
                 allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -329,7 +329,7 @@ namespace Anthem::Core{
                     return false;
                 }
             }
-            ANTH_LOGI("Preparing Descriptor Update: Samplers");
+            //ANTH_LOGI("Preparing Descriptor Update: Samplers");
             for(uint32_t i=0;i<numSets;i++){
                 for(uint32_t j=0;j<static_cast<uint32_t>(this->samplersDesc.size());j++){
                     samplersDesc.at(j).imageInfo.imageLayout = samplersDesc.at(j).img->getDesiredLayout();
@@ -354,7 +354,7 @@ namespace Anthem::Core{
                 vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteSampler.size()),descWriteSampler.data(),0,nullptr);
             }
 
-            ANTH_LOGI("done");
+            //ANTH_LOGI("done");
             return true;
         }
         bool destroyDescriptorSets(){

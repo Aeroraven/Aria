@@ -28,16 +28,20 @@ struct ExpParams {
 	static float moveDistance;
 	static float chosenAngle;
 	static bool translationFirst;
+	static bool use2D;
+	static bool useTriangleTopology;
+	static float rectW;
+	static float rectH;
+	static float rotExtZ;
 
 	static constexpr const char* selectableAngle[4] = { "Angle 1","Angle 2","Angle 3","Angle 4" };
 	static const char* selectedAngleCh;
 
 	// Parallel configurations
-	static constexpr int sqrtSampleCounts = 1024;
-	static constexpr int sampleCounts = sqrtSampleCounts * sqrtSampleCounts; //
+	static constexpr int sqrtSampleCounts = 2048;
+	static constexpr int sampleCounts = sqrtSampleCounts * sqrtSampleCounts; //Real samples
 	static constexpr int parallelsXGpu = 16384; // For GPU kernels
 	static constexpr int parallelsXCpu = 16; // For CPU threads
-
 
 	// Visualization
 	static constexpr float lineWidth = 2;
@@ -48,16 +52,22 @@ struct ExpParams {
 	static constexpr float axisOriginCrdZ = -1.0;
 	static constexpr float axisExtendCrdZ = 1.0;
 
-	static constexpr float visRot = 0.5;
+	static float visRot;
 };
 
 float ExpParams::moveFocal = 1.0;
 AtVecf4 ExpParams::rotationAxis = { 1.0f,0.0f,0.0f,0.0f };
-AtVecf4 ExpParams::centerTranslation = { 1.0f,0.0f,0.0f,0.0f };
+AtVecf4 ExpParams::centerTranslation = { 0.0f,0.0f,0.0f,0.0f };
 const char* ExpParams::selectedAngleCh = ExpParams::selectableAngle[0];
 float ExpParams::chosenAngle = 1.0;
 bool ExpParams::translationFirst = true;
 float ExpParams::moveDistance = 10.0;
+bool ExpParams::use2D = false;
+bool ExpParams::useTriangleTopology = true;
+float ExpParams::visRot = 0.5;
+float ExpParams::rectW = 1.0;
+float ExpParams::rectH = 1.0;
+float ExpParams::rotExtZ = 0.0;
 
 struct ExpCore {
 	AnthemSimpleToyRenderer renderer;
@@ -81,19 +91,21 @@ struct FontLib {
 
 	AnthemImage* tableTex;
 	AnthemDescriptorPool* tableDescPool;
-	
 }font;
 
 struct ComputePipeline {
 	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>, AtBufVecd4f<1>>* samples = nullptr;
 	AnthemUniformBufferImpl<
-		AnthemUniformVecf<4>, 
+		AnthemUniformVecf<4>,
 		AnthemUniformVecf<4>,
 		AnthemUniformVecf<1>,
 		AnthemUniformVecf<1>,
 		AnthemUniformVecf<1>,
+		AnthemUniformVecf<1>,
+		AnthemUniformVecf<1>,
+		AnthemUniformVecf<1>,
 		AnthemUniformVecf<1>
-	>* uniform = nullptr;
+	>* uniform = nullptr; 
 
 	AnthemDescriptorPool* descPoolUniform = nullptr;
 	AnthemDescriptorPool* descPoolSsbo = nullptr;
@@ -110,23 +122,28 @@ struct ComputePipeline {
 
 struct VisualizationPipeline {
 	AnthemIndexBuffer* ix = nullptr;
+	AnthemIndexBuffer* ixPoint = nullptr;
 	AnthemDepthBuffer* depthBuffer = nullptr;
 
 	AnthemShaderFilePaths shaderFile;
 	AnthemShaderModule* shader = nullptr;
 	AnthemGraphicsPipeline* pipeline = nullptr;
+	AnthemGraphicsPipeline* pipelinePoint = nullptr;
 	AnthemSwapchainFramebuffer* framebuffer = nullptr;
 	AnthemRenderPass* renderPass = nullptr;
+	AnthemRenderPass* renderPassPoint = nullptr;
 
 	AnthemGraphicsPipelineCreateProps cprop;
+	AnthemGraphicsPipelineCreateProps cpropPoint;
 	AnthemSemaphore** firstStageDone = nullptr;
-
 
 	using uProjMat = AnthemUniformMatf<4>;
 	using uViewMat = AnthemUniformMatf<4>;
 	using uLocalMat = AnthemUniformMatf<4>;
 	AnthemDescriptorPool* descVisUniform;
 	AnthemUniformBufferImpl<uProjMat, uViewMat, uLocalMat>* visUniform;
+
+	uint32_t* pointVisCmdBuf = nullptr;
 }vis;
 
 struct CoordAxisVisPipeline {
@@ -187,8 +204,15 @@ struct ColorRampLUT2D {
 
 
 void bindParamsToImgui() {
+	if (ExpParams::use2D) {
+		ExpParams::useTriangleTopology = false;
+	}
+	ImGui::InputFloat3("Center Translation", &ExpParams::centerTranslation[0]);
 	ImGui::InputFloat3("Rotation Axis", &ExpParams::rotationAxis[0]);
-	ImGui::InputFloat("Offset", &ExpParams::moveFocal);
+	ImGui::InputFloat("Offset Radius", &ExpParams::moveFocal);
+	ImGui::InputFloat("Rectangle Width", &ExpParams::rectW);
+	ImGui::InputFloat("Rectangle Height", &ExpParams::rectH);
+	ImGui::InputFloat("Rot Z", &ExpParams::rotExtZ);
 	if (ImGui::BeginCombo("Angle", ExpParams::selectedAngleCh)) {
 		for (int i = 0; i < 4; i++) {
 			bool is_selected = (ExpParams::selectedAngleCh == ExpParams::selectableAngle[i]);
@@ -203,6 +227,12 @@ void bindParamsToImgui() {
 	}
 	ImGui::Checkbox("Translation First", &ExpParams::translationFirst);
 	ImGui::InputFloat("Z Distance", &ExpParams::moveDistance);
+
+	ImGui::Text(" ");
+	ImGui::Text("Visualization Parameters");
+	ImGui::Checkbox("2D Figure", &ExpParams::use2D);
+	ImGui::Checkbox("Triangle Topology", &ExpParams::useTriangleTopology);
+	ImGui::SliderFloat("Rotation Y", &ExpParams::visRot, -1.0, 1.0);
 }
 
 
@@ -419,8 +449,8 @@ void updateCompUniform() {
 	std::string chosenAngle = ExpParams::selectedAngleCh;
 	float selAngleId = chosenAngle.back() - '0';
 	float translationFirst = ExpParams::translationFirst;
-	comp.uniform->specifyUniforms(temp1, &ExpParams::rotationAxis[0], &ExpParams::moveFocal, &selAngleId,&translationFirst,
-		&ExpParams::moveDistance);
+	comp.uniform->specifyUniforms(&ExpParams::centerTranslation[0], &ExpParams::rotationAxis[0], &ExpParams::moveFocal, &selAngleId, &translationFirst,
+		&ExpParams::moveDistance, &ExpParams::rectW, &ExpParams::rectH, &ExpParams::rotExtZ);
 	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
 		comp.uniform->updateBuffer(i);
 	}
@@ -433,10 +463,12 @@ void updateVisUniform() {
 	core.camera.specifyFrontEyeRay(0, -1.5, 3.4f);
 
 	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
-	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, ExpParams::visRot);
+	auto local = ExpParams::use2D ? Math::AnthemLinAlg::eye<float, 4>() : Math::AnthemLinAlg::axisAngleRotationTransform3(axis, ExpParams::visRot);
 
 	AtMatf4 proj, view, model;
-	float projRaw[16], viewRaw[16], modelRaw[16];
+	AtMatf4 eye = Math::AnthemLinAlg::eye<float, 4>();
+
+	float projRaw[16], viewRaw[16], modelRaw[16], eyeRaw[16];
 	core.camera.getProjectionMatrix(proj);
 	core.camera.getViewMatrix(view);
 	model = local.multiply(Math::AnthemLinAlg::eye<float, 4>());
@@ -444,8 +476,21 @@ void updateVisUniform() {
 	proj.columnMajorVectorization(projRaw);
 	view.columnMajorVectorization(viewRaw);
 	model.columnMajorVectorization(modelRaw);
+	eye.columnMajorVectorization(eyeRaw);
 
-	vis.visUniform->specifyUniforms(projRaw, viewRaw, modelRaw);
+	AtMatf4 eyeProj = Math::AnthemLinAlg::eye<float, 4>();
+	float eyeProjRaw[16];
+	eyeProj[0][0] = 0.3;
+	eyeProj[1][1] = -0.3 * rdW / rdH;
+	eyeProj.columnMajorVectorization(eyeProjRaw);
+
+	if (ExpParams::use2D) {
+		vis.visUniform->specifyUniforms(eyeProjRaw, eyeRaw, eyeRaw);
+	}
+	else {
+		vis.visUniform->specifyUniforms(projRaw, viewRaw, modelRaw);
+	}
+	
 	for (auto i : std::ranges::views::iota(0, 2)) {
 		vis.visUniform->updateBuffer(i);
 	}
@@ -455,8 +500,28 @@ void updateVisUniform() {
 void prepareVisualization() {
 	// Create required buffers
 	core.renderer.createIndexBuffer(&vis.ix);
+	core.renderer.createIndexBuffer(&vis.ixPoint);
 	core.renderer.createDepthBuffer(&vis.depthBuffer, false);
-	auto ind = std::ranges::views::iota(0,ExpParams::sampleCounts) | std::ranges::to<std::vector<unsigned int>>();
+	
+	auto indPt = std::ranges::views::iota(0,ExpParams::sampleCounts) | std::ranges::to<std::vector<unsigned int>>();
+	vis.ixPoint->setIndices(indPt);
+
+	std::vector<unsigned> ind;
+	for (int i = 0; i < ExpParams::sqrtSampleCounts - 1; i++) {
+		for (int j = 0; j < ExpParams::sqrtSampleCounts - 1; j++) {
+			int lx = i * ExpParams::sqrtSampleCounts + j;
+			int lx1 = i * ExpParams::sqrtSampleCounts + j + 1;
+			int lx3 = (i + 1) * ExpParams::sqrtSampleCounts + j;
+			int lx2 = (i + 1) * ExpParams::sqrtSampleCounts + (j + 1);
+
+			ind.push_back(lx);
+			ind.push_back(lx1);
+			ind.push_back(lx2);
+			ind.push_back(lx);
+			ind.push_back(lx2);
+			ind.push_back(lx3);
+		}
+	}
 	vis.ix->setIndices(ind);
 
 	// Load shaders
@@ -480,10 +545,9 @@ void prepareVisualization() {
 	core.renderer.setupRenderPass(&vis.renderPass, &opt, vis.depthBuffer);
 	core.renderer.createSwapchainImageFramebuffers(&vis.framebuffer, vis.renderPass, vis.depthBuffer);
 	
-	vis.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_POINT_LIST;
-
 
 	// Assemble Pipeline
+	vis.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
 	AnthemDescriptorSetEntry uniformBufferDescEntryRegPipeline = {
 		.descPool = vis.descVisUniform,
 		.descSetType = AT_ACDS_UNIFORM_BUFFER,
@@ -495,9 +559,17 @@ void prepareVisualization() {
 		.inTypeIndex = 0
 	};
 	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { uniformBufferDescEntryRegPipeline,cRamp };
-
 	core.renderer.createGraphicsPipelineCustomized(&vis.pipeline, descSetEntriesRegPipeline, vis.renderPass, vis.shader,
 		comp.samples, &vis.cprop);
+
+	vis.cpropPoint.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_POINT_LIST;
+	core.renderer.createGraphicsPipelineCustomized(&vis.pipelinePoint, descSetEntriesRegPipeline, vis.renderPass, vis.shader,
+		comp.samples, &vis.cpropPoint);
+
+	vis.pointVisCmdBuf = new uint32_t[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
+	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+		core.renderer.drAllocateCommandBuffer(&vis.pointVisCmdBuf[i]);
+	}
 
 	// Create Sync
 	vis.firstStageDone = new AnthemSemaphore * [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
@@ -509,6 +581,9 @@ void prepareVisualization() {
 void prepareTextVis() {
 	// Demo string
 	insertString("Figure 1",0.0012);
+	insertString("Rotation", 0.0010);
+	insertString("Angle", 0.0010);
+	insertString("Offset", 0.0010);
 
 	// Prepare comps
 	textPipe.shaderFile.vertexShader = getShader("text.vert");
@@ -724,6 +799,31 @@ void recordCommandBufferDrw(int i) {
 	renderer.drEndRenderPass(i);
 }
 
+void recordCommandBufferDrwPointTopo(int i) {
+	auto& renderer = core.renderer;
+	renderer.drStartRenderPass(vis.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), vis.pointVisCmdBuf[i], false);
+	renderer.drSetViewportScissor(vis.pointVisCmdBuf[i]);
+	renderer.drBindGraphicsPipeline(vis.pipelinePoint, vis.pointVisCmdBuf[i]);
+	renderer.drBindVertexBufferFromSsbo(comp.samples, 0, vis.pointVisCmdBuf[i]);
+	renderer.drBindIndexBuffer(vis.ixPoint, vis.pointVisCmdBuf[i]);
+
+	AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
+			.descPool = vis.descVisUniform,
+			.descSetType = AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER,
+			.inTypeIndex = 0
+	};
+	AnthemDescriptorSetEntry cRamp = {
+		.descPool = clut.lutDesc,
+		.descSetType = AT_ACDS_SAMPLER,
+		.inTypeIndex = 0
+	};
+	std::vector<AnthemDescriptorSetEntry> descSetEntries = { uniformBufferDescEntryRdw,cRamp };
+	renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries, vis.pipeline, vis.pointVisCmdBuf[i]);
+
+	renderer.drDraw(vis.ixPoint->getIndexCount(), vis.pointVisCmdBuf[i]);
+	renderer.drEndRenderPass(vis.pointVisCmdBuf[i]);
+}
+
 
 void recordCommandBufferComp(int i) {
 	auto& renderer = core.renderer;
@@ -767,10 +867,13 @@ void recordCommandBufferAll() {
 		recordCommandBufferDrw(i);
 		renderer.drEndCommandRecording(i);
 
+		renderer.drStartCommandRecording(vis.pointVisCmdBuf[i]);
+		recordCommandBufferDrwPointTopo(i);
+		renderer.drEndCommandRecording(vis.pointVisCmdBuf[i]);
+
 		renderer.drStartCommandRecording(axis.axisCmdBuf[i]);
 		recordCommandBufferDrwAxis(i);
 		renderer.drEndCommandRecording(axis.axisCmdBuf[i]);
-
 
 		renderer.drStartCommandRecording(textPipe.fontCmdBuf[i]);
 		recordCommandBufferDrwText(i);
@@ -820,7 +923,12 @@ void drawLoop(int& currentFrame) {
 	std::vector<const AnthemSemaphore*> imguiDone = { imguiSemaphore };
 
 	ANTH_ASSERT((vis.firstStageDone[currentFrame] != nullptr),"");
-	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(currentFrame, imgIdx, &semaphoreToSignal, &waitStage,nullptr,&firstStageDone);
+	if (ExpParams::useTriangleTopology) {
+		core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(currentFrame, imgIdx, &semaphoreToSignal, &waitStage, nullptr, &firstStageDone);
+	}
+	else {
+		core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(vis.pointVisCmdBuf[currentFrame], imgIdx, &semaphoreToSignal, &waitStage, nullptr, &firstStageDone);
+	}
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(imguiCmdBuf, imgIdx, &firstStageDone, &waitStage, nullptr, &imguiDone);
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral2(textPipe.fontCmdBuf[currentFrame], imgIdx, &imguiDone, &waitStage, nullptr, &secondStageDone);
 	core.renderer.drSubmitCommandBufferGraphicsQueueGeneral(axis.axisCmdBuf[currentFrame], imgIdx, &secondStageDone,
@@ -851,10 +959,11 @@ void initFont() {
 		std::ranges::views::iota('.', '.' + 1) | std::ranges::to<std::vector>(),
 		std::ranges::views::iota(' ', ' ' + 1) | std::ranges::to<std::vector>(),
 	};
+
 	auto goalsRange = std::ranges::join_view(goals);
 	cv::Mat fontTable(1024, 1024, CV_8UC1);
 	for (auto i : goalsRange) {
-		ANTH_LOGI("Generating Character:", i);
+		//ANTH_LOGI("Generating Character:", i);
 		
 		ANTH_ASSERT(!FT_Load_Char(font.face, i, FT_LOAD_RENDER), "Cannot load glyph, ascii=", i);
 		size_t bufferSize = font.face->glyph->bitmap.width * font.face->glyph->bitmap.rows;
@@ -862,7 +971,7 @@ void initFont() {
 		if (!bufferSize) {
 			font.glyphBuffer[i] = nullptr;
 			std::tie(font.glyphRows[i], font.glyphWidth[i]) = std::make_tuple(0, 0);
-			ANTH_LOGI("Ignored character:", i);
+			//ANTH_LOGI("Ignored character:", i);
 			continue;
 		}
 
@@ -874,7 +983,7 @@ void initFont() {
 		font.glyphBearingY[i] = font.face->glyph->bitmap_top;
 		font.advance[i] = font.face->glyph->advance.x;
 
-		ANTH_LOGI("Allocated buf:", sizeof(bufferType) * bufferSize, "@", (long long)(font.glyphBuffer[i]));
+		//ANTH_LOGI("Allocated buf:", sizeof(bufferType) * bufferSize, "@", (long long)(font.glyphBuffer[i]));
 		memcpy(font.glyphBuffer[i], font.face->glyph->bitmap.buffer, sizeof(bufferType) * bufferSize);
 
 		// Resize
@@ -891,6 +1000,7 @@ void initFont() {
 	}
 	core.renderer.createDescriptorPool(&(font.tableDescPool));
 	core.renderer.createTexture(&font.tableTex, font.tableDescPool, fontTable.data, 1024, 1024, 1, 0, false, false, AT_IF_R_UINT8);
+	ANTH_LOGI("Font tex done.");
 }
 
 void initText() {
@@ -931,19 +1041,41 @@ void updateTextPositions() {
 	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
 	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, ExpParams::visRot);
 	AtMatf4 transform = proj.multiply(view).multiply(local);
+	if (ExpParams::use2D) {
+		int rdH, rdW;
+		core.renderer.exGetWindowSize(rdH, rdW);
+		AtMatf4 eyeProj = Math::AnthemLinAlg::eye<float, 4>();
+		float eyeProjRaw[16];
+		eyeProj[0][0] = 0.3;
+		eyeProj[1][1] = -0.3 * rdW / rdH;
+		eyeProj.columnMajorVectorization(eyeProjRaw);
 
+		transform = eyeProj;
+	}
+	float avgX1 = 0, avgX2 = 0, avgY1 = 0, avgY2 = 0, avgZ1 = 0, avgZ2 = 0;
+	float nv = textPipe.tickLabelX.size();
 	for (int i = 0; i < textPipe.tickLabelX.size(); i++) {
 		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosX[i]);
-		setStringPosition(textPipe.tickLabelX[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3],false, true,true);
+		setStringPosition(textPipe.tickLabelX[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3],true, false,true);
+		avgX1 += ssPx[0] / ssPx[3];
+		avgX2 += ssPx[1] / ssPx[3];
 	}
 	for (int i = 0; i < textPipe.tickLabelY.size(); i++) {
 		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosY[i]);
 		setStringPosition(textPipe.tickLabelY[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3],false,true);
+		avgY1 += ssPx[0] / ssPx[3];
+		avgY2 += ssPx[1] / ssPx[3];
 	}
 	for (int i = 0; i < textPipe.tickLabelZ.size(); i++) {
 		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosZ[i]);
 		setStringPosition(textPipe.tickLabelZ[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3], false, false,true);
+		avgZ1 += ssPx[0] / ssPx[3];
+		avgZ2 += ssPx[1] / ssPx[3];
 	}
+	setStringPosition(1, avgX1 / nv, avgX2 / nv + 0.12, true);
+	setStringPosition(2, avgY1 / nv - 0.04, avgY2 / nv , false, true);
+	setStringPosition(3, avgZ1 / nv + 0.08, avgZ2 / nv, false);
+
 }
 
 void setupImgui() {
@@ -952,7 +1084,7 @@ void setupImgui() {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	io.FontGlobalScale = 1.7;
+	io.FontGlobalScale = 1.8;
 	ImGui::StyleColorsDark();
 	core.renderer.exInitImGui();
 }

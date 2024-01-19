@@ -41,8 +41,8 @@ file(GLOB_RECURSE SOURCE_0 "include/*.h")
 file(GLOB_RECURSE SOURCE_1 "src/*.cpp")
 file(GLOB_RECURSE SOURCE_2 "include/external_ref/*.h")
 
-file(GLOB_RECURSE SOURCE_IMGUI "imgui/*.h")
-file(GLOB_RECURSE SOURCE_IMGUI_2 "imgui/*.cpp")
+file(GLOB_RECURSE SOURCE_IMGUI "imgui2/*.h")
+file(GLOB_RECURSE SOURCE_IMGUI_2 "imgui2/*.cpp")
 
 
 file(GLOB SOURCE_STAGES "demo/*.cpp")

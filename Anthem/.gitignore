@@ -16,3 +16,4 @@ lib/
 *.gltf
 .vs/
 *.ttf
+imgui2/*

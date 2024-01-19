@@ -34,7 +34,7 @@ namespace Anthem::Core{
             ANTH_LOGE("Failed to bind buffer memory");
             return false;
         }
-        ANTH_LOGI("Buffer memory binded");
+        ///ANTH_LOGI("Buffer memory binded");
         return true;
     }
     

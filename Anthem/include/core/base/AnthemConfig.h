@@ -8,7 +8,7 @@ namespace Anthem{
             const char* APP_NAME = "Anthem";
             const char* ENGINE_NAME = "No Engine?";
             
-            int APP_RESLOUTION_W = 1920;
+            int APP_RESLOUTION_W = 2048;
             int APP_RESLOUTION_H = 1080;
 
             std::vector<const char*> VKCFG_VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};

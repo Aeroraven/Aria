@@ -30,7 +30,7 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->config != nullptr,"Config not specified");
         this->commandBuffer.push_back(new VkCommandBuffer());
 
-        ANTH_LOGI("Creating command buffer");
+        //ANTH_LOGI("Creating command buffer");
         VkCommandBufferAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = this->commandPool;

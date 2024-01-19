@@ -7,6 +7,9 @@ layout(set = 0,binding = 0) uniform UniformBufferObject{
     float chosenAngle;
     float translationFirst;
     float zDistance;
+    float rectW;
+    float rectH;
+    float rotExtZ;
 }ubo;
 
 struct Particle{
@@ -43,27 +46,31 @@ void main(){
 
     vec4 rectVertices[4];
     float interiorAngles[4];
-    rectVertices[0] = vec4(-1.0,1.0,0.0,1.0);
-    rectVertices[1] = vec4(1.0,1.0,0.0,1.0);
-    rectVertices[2] = vec4(1.0,-1.0,0.0,1.0);
-    rectVertices[3] = vec4(-1.0,-1.0,0.0,1.0);
+    rectVertices[0] = vec4(-ubo.rectW,ubo.rectH,0.0,1.0);
+    rectVertices[1] = vec4(ubo.rectW,ubo.rectH,0.0,1.0);
+    rectVertices[2] = vec4(ubo.rectW,-ubo.rectH,0.0,1.0);
+    rectVertices[3] = vec4(-ubo.rectW,-ubo.rectH,0.0,1.0);
     float rotAng = pIn.rnd.x * 3.14159;
+    float rotAngZ = pIn.rnd.z * 3.14159;
     float transX = ubo.moveFocal*sin(pIn.rnd.y*3.14159*2.0);
     float transY = ubo.moveFocal*cos(pIn.rnd.y*3.14159*2.0);
     mat4 rotMat = generateRotationMatrix(normalize(vec3(ubo.rotAxis.xyz)),rotAng);
+    mat4 rotMatZ = generateRotationMatrix(normalize(vec3(0.0,0.0,1.0)),ubo.rotExtZ);
     if(ubo.translationFirst>0.5){
         for(int i=0;i<4;i++){
-            rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0);
+            rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0)+vec4(ubo.translation.xyz,0.0);
         }
     }
     for(int i=0;i<4;i++){
         rectVertices[i] = rotMat * rectVertices[i] + vec4(0.0,0.0,ubo.zDistance,0.0);
+        rectVertices[i] = rotMatZ * rectVertices[i];
     }
     if(ubo.translationFirst<0.5){
         for(int i=0;i<4;i++){
-            rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0);
+            rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0)+vec4(ubo.translation.xyz,0.0);
         }
     }
+
     for(int i=0;i<4;i++){
         vec4 v1 = rectVertices[i];
         vec4 v2 = rectVertices[(i+1)%4];

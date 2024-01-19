@@ -510,7 +510,6 @@ namespace Anthem::Core{
             .usingMsaa = enableMsaa
         };
         //this->drawingCommandHelper->startRenderPass(&startInfo,frameIdx);
-        ANTH_LOGI("Cmdbuf binds");
         ANTH_ASSERT(swapChain != nullptr,"Swap chain not specified");
         
         VkRenderPassBeginInfo renderPassBeginInfo = {};
