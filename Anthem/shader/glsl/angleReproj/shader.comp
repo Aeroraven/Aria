@@ -1,5 +1,5 @@
 #version 450
-
+precision highp float;
 layout(set = 0,binding = 0) uniform UniformBufferObject{
     vec4 translation;
     vec4 rotAxis;
@@ -26,6 +26,9 @@ layout(std140, set = 2,binding = 0) buffer ssboOut{
 };
 
 layout(local_size_x = 256,local_size_y=1,local_size_z=1) in;
+
+
+
 const float mvFocal = 1.0;
 mat4 generateRotationMatrix(vec3 axis, float angle){
     float c = cos(angle);
@@ -50,10 +53,10 @@ void main(){
     rectVertices[1] = vec4(ubo.rectW,ubo.rectH,0.0,1.0);
     rectVertices[2] = vec4(ubo.rectW,-ubo.rectH,0.0,1.0);
     rectVertices[3] = vec4(-ubo.rectW,-ubo.rectH,0.0,1.0);
-    float rotAng = pIn.rnd.x * 3.14159;
+    float rotAng = (pIn.rnd.x+1.0) * 3.14159;
     float rotAngZ = pIn.rnd.z * 3.14159;
-    float transX = ubo.moveFocal*sin(pIn.rnd.y*3.14159*2.0);
-    float transY = ubo.moveFocal*cos(pIn.rnd.y*3.14159*2.0);
+    float transX = ubo.moveFocal*sin(pIn.rnd.y*3.14159+3.14159);
+    float transY = ubo.moveFocal*cos(pIn.rnd.y*3.14159+3.14159);
     mat4 rotMat = generateRotationMatrix(normalize(vec3(ubo.rotAxis.xyz)),rotAng);
     mat4 rotMatZ = generateRotationMatrix(normalize(vec3(0.0,0.0,1.0)),ubo.rotExtZ);
     if(ubo.translationFirst>0.5){
@@ -62,15 +65,18 @@ void main(){
         }
     }
     for(int i=0;i<4;i++){
-        rectVertices[i] = rotMat * rectVertices[i] + vec4(0.0,0.0,ubo.zDistance,0.0);
-        rectVertices[i] = rotMatZ * rectVertices[i];
+        rectVertices[i] = rotMat * rectVertices[i];
+        rectVertices[i] = rotMatZ * rectVertices[i] + vec4(0.0,0.0,ubo.zDistance,0.0);
     }
     if(ubo.translationFirst<0.5){
         for(int i=0;i<4;i++){
             rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0)+vec4(ubo.translation.xyz,0.0);
         }
     }
-
+    float discardFlag[4];
+    for(int i=0;i<4;i++){
+        discardFlag[i]=0.0;
+    }
     for(int i=0;i<4;i++){
         vec4 v1 = rectVertices[i];
         vec4 v2 = rectVertices[(i+1)%4];
@@ -82,6 +88,11 @@ void main(){
 
         vec2 d1 = normalize(a2-a1);
         vec2 d2 = normalize(a3-a1);
+
+        if(length(a2-a1)<1e-4||length(a3-a1)<1e-4){
+            discardFlag[i]=1.0;
+            continue;
+        }
 
         float angle = acos(dot(d1,d2));
         interiorAngles[i] = mix(-1.0,1.0,angle/3.1415926);
@@ -96,6 +107,10 @@ void main(){
     }else if(ubo.chosenAngle>0.5){
         displayId=0;
     }
+    if(discardFlag[displayId]>0.5){
+        particleOut[idx].pos = vec4(0.0,0.0,0.0,0.0);
+    }else{
+        particleOut[idx].pos = vec4(pIn.rnd.x,interiorAngles[displayId],pIn.rnd.y,0.0);
+    }
 
-    particleOut[idx].pos = vec4(pIn.rnd.x,interiorAngles[displayId],pIn.rnd.y,0.0);
 }

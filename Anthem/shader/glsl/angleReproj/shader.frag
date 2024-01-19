@@ -16,4 +16,6 @@ void main(){
     }
     outColor = texture(tex,(vec2(inRawData.y)+1.0)/2.0);
 
+    //outColor=vec4((inRawData.y+1.0)/2.0);
+
 }

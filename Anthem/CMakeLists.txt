@@ -34,8 +34,7 @@ find_package(OpenCV REQUIRED PATHS "C:/Users/Huang/Desktop/Work/OpenCV/opencv/so
 include_directories("C:/Program Files (x86)/GLFW/include")
 include_directories("C:/Program Files (x86)/freetype/include/freetype2")
 include_directories("C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install/include")
-
-include_directories("imgui/")
+include_directories("imgui2/")
 
 file(GLOB_RECURSE SOURCE_0 "include/*.h")
 file(GLOB_RECURSE SOURCE_1 "src/*.cpp")

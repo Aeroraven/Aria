@@ -38,9 +38,9 @@ struct ExpParams {
 	static const char* selectedAngleCh;
 
 	// Parallel configurations
-	static constexpr int sqrtSampleCounts = 2048;
-	static constexpr int sampleCounts = sqrtSampleCounts * sqrtSampleCounts; //Real samples
-	static constexpr int parallelsXGpu = 16384; // For GPU kernels
+	static constexpr int sqrtSampleCounts = 4096;
+	static constexpr int sampleCounts = sqrtSampleCounts * sqrtSampleCounts; //Total samples
+	static constexpr int parallelsXGpu = 65536; // For GPU kernels 16384
 	static constexpr int parallelsXCpu = 16; // For CPU threads
 
 	// Visualization
@@ -53,6 +53,7 @@ struct ExpParams {
 	static constexpr float axisExtendCrdZ = 1.0;
 
 	static float visRot;
+	static float visRotX;
 };
 
 float ExpParams::moveFocal = 1.0;
@@ -60,11 +61,12 @@ AtVecf4 ExpParams::rotationAxis = { 1.0f,0.0f,0.0f,0.0f };
 AtVecf4 ExpParams::centerTranslation = { 0.0f,0.0f,0.0f,0.0f };
 const char* ExpParams::selectedAngleCh = ExpParams::selectableAngle[0];
 float ExpParams::chosenAngle = 1.0;
-bool ExpParams::translationFirst = true;
+bool ExpParams::translationFirst = false;
 float ExpParams::moveDistance = 10.0;
 bool ExpParams::use2D = false;
 bool ExpParams::useTriangleTopology = true;
 float ExpParams::visRot = 0.5;
+float ExpParams::visRotX = 0.0;
 float ExpParams::rectW = 1.0;
 float ExpParams::rectH = 1.0;
 float ExpParams::rotExtZ = 0.0;
@@ -233,6 +235,7 @@ void bindParamsToImgui() {
 	ImGui::Checkbox("2D Figure", &ExpParams::use2D);
 	ImGui::Checkbox("Triangle Topology", &ExpParams::useTriangleTopology);
 	ImGui::SliderFloat("Rotation Y", &ExpParams::visRot, -1.0, 1.0);
+	ImGui::SliderFloat("Rotation X", &ExpParams::visRotX, -1.0, 1.0);
 }
 
 
@@ -373,10 +376,9 @@ void prepareComputePipeline() {
 			for (auto i : std::ranges::views::iota(st, ed)) {
 				float fx = i % ExpParams::sqrtSampleCounts * 1.0 / ExpParams::sqrtSampleCounts;//AnthemLinAlg::randomNumber<float>();
 				float fy = (i / ExpParams::sqrtSampleCounts) * 1.0 / ExpParams::sqrtSampleCounts;
-				fx = 2.0f * (fx - 0.5f);
-				fy = 2.0f * (fy - 0.5f);
+				fx = 2.0f * (fx - 0.5);
+				fy = 2.0f * (fy - 0.5);
 				w->setInput(i, { fx, fy, 0.0f, 0.0f }, { fx, fy, 0.0f, 0.0f });
-				//ANTH_ASSERT((fx > -1.1 && fx < 1.1) && (fy > -1.1 && fy < 1.1), "Overflow",i);
 			}
 		};
 		std::vector<std::thread> jobs;
@@ -440,9 +442,13 @@ void prepareColorRamp() {
 	cv::Mat destMap;
 	cv::applyColorMap(srcMap, destMap, cv::COLORMAP_JET);
 	cv::cvtColor(destMap, destMap, cv::COLOR_BGR2RGBA);
+	cv::imwrite("C:/WR/a.jpg", destMap);
 
 	core.renderer.createDescriptorPool(&clut.lutDesc);
 	core.renderer.createTexture(&clut.lutTex, clut.lutDesc, destMap.data, 64, 64, 4, 0, false, false);
+
+	cv::cvtColor(destMap, destMap, cv::COLOR_RGBA2BGR);
+	cv::imwrite("C:/WR/a.jpg", destMap);
 }
 void updateCompUniform() {
 	float temp1[4] = { 0,0,5,0 };
@@ -462,9 +468,11 @@ void updateVisUniform() {
 	core.camera.specifyPosition(0.0, 1.5, -3.4f);
 	core.camera.specifyFrontEyeRay(0, -1.5, 3.4f);
 
-	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
+	auto axis = Math::AnthemVector<float, 3>({0.0f,1.0f,0.0f });
 	auto local = ExpParams::use2D ? Math::AnthemLinAlg::eye<float, 4>() : Math::AnthemLinAlg::axisAngleRotationTransform3(axis, ExpParams::visRot);
-
+	if (!ExpParams::use2D) {
+		local = local.multiply(Math::AnthemLinAlg::axisAngleRotationTransform3(Math::AnthemVector<float, 3>({ 1.0f,0.0f,0.0f }), ExpParams::visRotX));
+	}
 	AtMatf4 proj, view, model;
 	AtMatf4 eye = Math::AnthemLinAlg::eye<float, 4>();
 
@@ -580,7 +588,7 @@ void prepareVisualization() {
 
 void prepareTextVis() {
 	// Demo string
-	insertString("Figure 1",0.0012);
+	insertString("A",0.000);
 	insertString("Rotation", 0.0010);
 	insertString("Angle", 0.0010);
 	insertString("Offset", 0.0010);
@@ -1009,7 +1017,7 @@ void initText() {
 	float scale = 0.0010;
 
 	for (int i = 1; i < density; i++) {
-		std::string text = std::to_string((int)(1.0 / density * i * 180));  //to_string_with_prec(1.0 / density * i,2);
+		std::string text = std::to_string((int)(1.0 / density * i * 360));  //to_string_with_prec(1.0 / density * i,2);
 		std::string textZ = std::to_string((int)(1.0 / density * i * 180));
 
 		ANTH_LOGI(text);
@@ -1040,6 +1048,7 @@ void updateTextPositions() {
 	core.camera.getViewMatrix(view);
 	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
 	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, ExpParams::visRot);
+	local = local.multiply(Math::AnthemLinAlg::axisAngleRotationTransform3(Math::AnthemVector<float, 3>({ 1.0f,0.0f,0.0f }), ExpParams::visRotX));
 	AtMatf4 transform = proj.multiply(view).multiply(local);
 	if (ExpParams::use2D) {
 		int rdH, rdW;
@@ -1056,25 +1065,25 @@ void updateTextPositions() {
 	float nv = textPipe.tickLabelX.size();
 	for (int i = 0; i < textPipe.tickLabelX.size(); i++) {
 		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosX[i]);
-		setStringPosition(textPipe.tickLabelX[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3],true, false,true);
+		setStringPosition(textPipe.tickLabelX[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3]+0.04,true, false,true);
 		avgX1 += ssPx[0] / ssPx[3];
 		avgX2 += ssPx[1] / ssPx[3];
 	}
 	for (int i = 0; i < textPipe.tickLabelY.size(); i++) {
 		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosY[i]);
-		setStringPosition(textPipe.tickLabelY[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3],false,true);
+		setStringPosition(textPipe.tickLabelY[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3]+0.04,false,true);
 		avgY1 += ssPx[0] / ssPx[3];
 		avgY2 += ssPx[1] / ssPx[3];
 	}
 	for (int i = 0; i < textPipe.tickLabelZ.size(); i++) {
 		auto ssPx = AnthemLinAlg::linearTransform<float, 4, 4>(transform, textPipe.tickPosZ[i]);
-		setStringPosition(textPipe.tickLabelZ[i], ssPx[0] / ssPx[3], ssPx[1] / ssPx[3], false, false,true);
+		setStringPosition(textPipe.tickLabelZ[i], ssPx[0] / ssPx[3]+0.04, ssPx[1] / ssPx[3], false, false,true);
 		avgZ1 += ssPx[0] / ssPx[3];
 		avgZ2 += ssPx[1] / ssPx[3];
 	}
-	setStringPosition(1, avgX1 / nv, avgX2 / nv + 0.12, true);
+	setStringPosition(1, avgX1 / nv, avgX2 / nv + 0.16, true);
 	setStringPosition(2, avgY1 / nv - 0.04, avgY2 / nv , false, true);
-	setStringPosition(3, avgZ1 / nv + 0.08, avgZ2 / nv, false);
+	setStringPosition(3, avgZ1 / nv + 0.12, avgZ2 / nv, false);
 
 }
 

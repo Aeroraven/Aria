@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <vulkan/vulkan.h>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -15,7 +14,6 @@
 #include <concepts>
 #include <cmath>
 #include <cstring>
-#include <GLFW/glfw3.h>
 #include <random>
 #include <array>
 #include <map>
@@ -28,9 +26,34 @@
 #include <typeinfo>
 #include <sstream>
 
+#ifndef _HAS_CXX23
+    #if __cplusplus >= 202302L
+        #define _HAS_CXX23 1
+    #else
+        #define _HAS_CXX23 0
+    #endif
+#endif
+
 #ifdef _HAS_CXX23
 #include <stacktrace>
 #endif
+
+
+
+// Backend
+#include <vulkan/vulkan.h>
+#include <GLFW/glfw3.h>
+
+
+// External Modules
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#define AT_EXT_FREETYPE_ENABLED
+
+#include <opencv2/core/core.hpp>          
+#include <opencv2/imgcodecs/imgcodecs.hpp>    
+#include <opencv2/imgproc.hpp>
+#define AT_EXT_OPENCV_ENABLED
 
 // WorkDir
 #define ANTH_SHADER_DIR "C:\\WR\\Aria\\Anthem\\shader\\glsl\\"
@@ -133,12 +156,3 @@ namespace Anthem::Core::TmplDefs{
 }
 
 
-// External Modules
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#define AT_EXT_FREETYPE_ENABLED
-
-#include <opencv2/core/core.hpp>          
-#include <opencv2/imgcodecs/imgcodecs.hpp>    
-#include <opencv2/imgproc.hpp>
-#define AT_EXT_OPENCV_ENABLED
