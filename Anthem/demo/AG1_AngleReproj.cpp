@@ -36,12 +36,12 @@ struct ExpParams {
 
 	static constexpr const char* selectableAngle[5] = { 
 		"Angle 1 / 1","Angle 2 / 2","Angle 3 / 3","Angle 4 / 4",
-		"Sim 1 / 5"
+		"Sim 1 (RotX) / 5"
 	};
 	static const char* selectedAngleCh;
 
 	// Parallel configurations
-	static constexpr int sqrtSampleCounts = 1024;
+	static constexpr int sqrtSampleCounts = 4096;
 	static constexpr int sampleCounts = sqrtSampleCounts * sqrtSampleCounts; //Total samples
 	static constexpr int parallelsXGpu = 65536; // For GPU kernels 16384
 	static constexpr int parallelsXCpu = 16; // For CPU threads
