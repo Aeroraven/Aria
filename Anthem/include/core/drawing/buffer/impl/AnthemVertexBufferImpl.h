@@ -16,7 +16,7 @@ namespace Anthem::Core {
     template<typename... AttrTp, uint32_t... AttrSz>
     class AnthemVertexBufferImpl<AnthemVAOAttrDesc<AttrTp, AttrSz>...> :public AnthemVertexBuffer {
         static_assert(sizeof...(AttrSz) == sizeof...(AttrTp), "Invalid data size");
-    private:
+    protected:
         uint32_t singleVertexSize = 0;
         std::array<uint32_t, sizeof...(AttrSz)> attrDims = { AttrSz... };
         std::array<uint32_t, sizeof...(AttrTp)> attrTpSize = { sizeof(AttrTp)... };

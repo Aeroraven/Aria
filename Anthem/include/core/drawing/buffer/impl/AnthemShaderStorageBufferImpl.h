@@ -188,8 +188,9 @@ namespace Anthem::Core {
             }
             return true;
         }
+
         bool virtual prepareVertexInputInfo(VkPipelineVertexInputStateCreateInfo* info, uint32_t bindLoc) override {
-            ANTH_LOGI(this->usage == AnthemSSBOUsage::AT_ASBU_VERTEX);
+            ANTH_ASSERT(this->usage == AnthemSSBOUsage::AT_ASBU_VERTEX,"");
 
             if (!this->getInputBindingDescriptionInternal(&vertexInputBindingDescription,bindLoc)) {
                 ANTH_LOGE("Failed to get input binding description");
@@ -206,6 +207,22 @@ namespace Anthem::Core {
             info->pVertexAttributeDescriptions = vertexInputAttributeDescription.data();
             return true;
         }
+
+        bool virtual prepareVertexInputInfo2(VkVertexInputBindingDescription* outBindingDesc, std::vector<VkVertexInputAttributeDescription>* outAttrDesc, uint32_t bindLoc) {
+            ANTH_ASSERT(this->usage == AnthemSSBOUsage::AT_ASBU_VERTEX, "");
+
+            if (!this->getInputBindingDescriptionInternal(&vertexInputBindingDescription, bindLoc)) {
+                ANTH_LOGE("Failed to get input binding description");
+                return false;
+            }
+            if (!this->getInputAttrDescriptionInternal(&vertexInputAttributeDescription, bindLoc)) {
+                ANTH_LOGE("Failed to get input attribute description");
+                return false;
+            }
+            *outBindingDesc = vertexInputBindingDescription;
+            *outAttrDesc = vertexInputAttributeDescription;
+        }
+
         bool virtual updateLayoutSpecification(AnthemVertexStageLayoutSpec* spec, uint32_t bindLoc) {
             return true;
         }

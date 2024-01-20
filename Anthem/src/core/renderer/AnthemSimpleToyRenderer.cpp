@@ -579,6 +579,18 @@ namespace Anthem::Core{
         vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,(vertexBuffer->getDestBufferObject()),emptyOffsetPlaceholder);
         return true;
     }
+
+    bool AnthemSimpleToyRenderer::drBindVertexBufferMultiple(std::vector<AnthemVertexBuffer*> vertexBuffer, uint32_t cmdIdx) {
+        std::vector<VkBuffer> bufs;
+        std::vector<VkDeviceSize> vdSize;
+        for (auto p : vertexBuffer) {
+            bufs.push_back(*p->getDestBufferObject());
+            vdSize.push_back(0);
+        }
+        vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(cmdIdx), 0, vertexBuffer.size(), bufs.data(), vdSize.data());
+        return true;
+    }
+
     bool AnthemSimpleToyRenderer::drBindVertexBufferFromSsbo(AnthemShaderStorageBuffer* vertexBuffer, uint32_t copyId, uint32_t cmdIdx) {
         vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(cmdIdx), 0, 1, (vertexBuffer->getDestBufferObject(copyId)), emptyOffsetPlaceholder);
         return true;
@@ -638,7 +650,10 @@ namespace Anthem::Core{
         vkCmdDrawIndexed(*this->commandBuffers->getCommandBuffer(cmdIdx), vertices, 1, 0, 0, 0);
         return true;
     }
-
+    bool AnthemSimpleToyRenderer::drDrawInstanced(uint32_t vertices, uint32_t instances, uint32_t cmdIdx) {
+        vkCmdDrawIndexed(*this->commandBuffers->getCommandBuffer(cmdIdx), vertices, instances, 0, 0, 0);
+        return true;
+    }
     bool AnthemSimpleToyRenderer::presentFrameDemo(uint32_t currentFrame, AnthemRenderPass* renderPass, 
     AnthemGraphicsPipeline* pipeline, AnthemSwapchainFramebuffer* framebuffer,uint32_t avaImageIdx,
     AnthemVertexBuffer* vbuf, AnthemUniformBuffer* ubuf,AnthemIndexBuffer* ibuf,AnthemDescriptorPool* descPool){

@@ -8,5 +8,8 @@ if __name__ == "__main__":
         subfiles = os.listdir("./shader/glsl/"+x)
         for y in subfiles:
             if y.endswith(".vert") or y.endswith(".frag") or y.endswith(".geom") or y.endswith(".comp"):
-                subprocess.run(["glslc", "./shader/glsl/"+x+"/"+y, "-o", "./shader/glsl/"+x+"/"+y+".spv"]) 
+                w = subprocess.run(["glslc", "./shader/glsl/"+x+"/"+y, "-o", "./shader/glsl/"+x+"/"+y+".spv"]) 
+                if w.returncode != 0:
+                    print("Error compiling shader:",y)
+                    raise
                 print("- Compiled shader:",y)
