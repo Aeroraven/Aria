@@ -41,6 +41,13 @@ mat4 generateRotationMatrix(vec3 axis, float angle){
                 0.0,                                0.0,                                0.0,                                1.0);
 }
 
+float getFunc(float phi,float theta,float k,float focal){
+    float u = (1.0-sin(phi)*focal)*sin(theta);
+    float v = (focal*cos(phi)*sin(theta)+k*cos(theta));
+    float deno = sqrt(u*u+v*v);
+    return acos(u/deno);
+}
+
 
 void main(){
     uint idx = gl_GlobalInvocationID.x;
@@ -59,6 +66,8 @@ void main(){
     float transY = ubo.moveFocal*cos(pIn.rnd.y*3.14159+3.14159);
     mat4 rotMat = generateRotationMatrix(normalize(vec3(ubo.rotAxis.xyz)),rotAng);
     mat4 rotMatZ = generateRotationMatrix(normalize(vec3(0.0,0.0,1.0)),ubo.rotExtZ);
+
+    float dv = getFunc(pIn.rnd.y*3.14159+3.14159,rotAng,ubo.zDistance,ubo.moveFocal);
     if(ubo.translationFirst>0.5){
         for(int i=0;i<4;i++){
             rectVertices[i] = rectVertices[i] + vec4(transX,transY,0.0,0.0)+vec4(ubo.translation.xyz,0.0);
@@ -107,10 +116,16 @@ void main(){
     }else if(ubo.chosenAngle>0.5){
         displayId=0;
     }
+    dv = mix(-1.0,1.0,dv/3.1415926);
     if(discardFlag[displayId]>0.5){
         particleOut[idx].pos = vec4(0.0,0.0,0.0,0.0);
     }else{
-        particleOut[idx].pos = vec4(pIn.rnd.x,interiorAngles[displayId],pIn.rnd.y,0.0);
+        if(ubo.chosenAngle>4.5){
+            particleOut[idx].pos = vec4(pIn.rnd.x,dv,pIn.rnd.y,0.0);
+        }else{
+            particleOut[idx].pos = vec4(pIn.rnd.x,interiorAngles[displayId],pIn.rnd.y,0.0);
+        }
+        
     }
 
 }

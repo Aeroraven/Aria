@@ -34,11 +34,14 @@ struct ExpParams {
 	static float rectH;
 	static float rotExtZ;
 
-	static constexpr const char* selectableAngle[4] = { "Angle 1","Angle 2","Angle 3","Angle 4" };
+	static constexpr const char* selectableAngle[5] = { 
+		"Angle 1 / 1","Angle 2 / 2","Angle 3 / 3","Angle 4 / 4",
+		"Sim 1 / 5"
+	};
 	static const char* selectedAngleCh;
 
 	// Parallel configurations
-	static constexpr int sqrtSampleCounts = 4096;
+	static constexpr int sqrtSampleCounts = 1024;
 	static constexpr int sampleCounts = sqrtSampleCounts * sqrtSampleCounts; //Total samples
 	static constexpr int parallelsXGpu = 65536; // For GPU kernels 16384
 	static constexpr int parallelsXCpu = 16; // For CPU threads
@@ -216,7 +219,7 @@ void bindParamsToImgui() {
 	ImGui::InputFloat("Rectangle Height", &ExpParams::rectH);
 	ImGui::InputFloat("Rot Z", &ExpParams::rotExtZ);
 	if (ImGui::BeginCombo("Angle", ExpParams::selectedAngleCh)) {
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 5; i++) {
 			bool is_selected = (ExpParams::selectedAngleCh == ExpParams::selectableAngle[i]);
 			if (ImGui::Selectable(ExpParams::selectableAngle[i], is_selected)) {
 				ExpParams::selectedAngleCh = ExpParams::selectableAngle[i];
