@@ -1,7 +1,7 @@
 #include "../../../../include/core/drawing/image/AnthemImageContainer.h"
 
 namespace Anthem::Core{
-    bool AnthemImageContainer::generateMipmap(uint32_t texWidth,uint32_t texHeight){
+    bool AnthemImageContainer::generateMipmap2D(uint32_t texWidth,uint32_t texHeight){
         //Referenced from https://vulkan-tutorial.com/Generating_Mipmaps
 
         uint32_t cmdBufIdx;
@@ -89,11 +89,16 @@ namespace Anthem::Core{
         vkFreeMemory(this->logicalDevice->getLogicalDevice(),this->image.memory,nullptr);
         return true;
     }
-    bool AnthemImageContainer::createImageViewInternal(VkImageAspectFlags aspectFlags){
+    bool AnthemImageContainer::createImageViewInternal(VkImageAspectFlags aspectFlags, bool use3d){
         VkImageViewCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.image = this->image.image;
-        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        if (!use3d) {
+            createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        }
+        else {
+            createInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
+        }
         createInfo.format =  this->image.imageInfo.format;
         createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -196,13 +201,18 @@ namespace Anthem::Core{
         ANTH_ASSERT(samplerResult==VK_SUCCESS,"Failed to create sampler");
         return true;
     }
-    bool AnthemImageContainer::createImageInternal(VkImageUsageFlags usage,  VkFormat format, uint32_t width, uint32_t height){
+    bool AnthemImageContainer::createImageInternal(VkImageUsageFlags usage,  VkFormat format, uint32_t width, uint32_t height,uint32_t depth){
         //Filling Image Info
         this->image.imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        this->image.imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        if (depth > 1) {
+            this->image.imageInfo.imageType = VK_IMAGE_TYPE_3D;
+        }
+        else {
+            this->image.imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        }
         this->image.imageInfo.extent.width = width;
         this->image.imageInfo.extent.height = height;
-        this->image.imageInfo.extent.depth = 1;
+        this->image.imageInfo.extent.depth = depth;
         this->image.imageInfo.mipLevels = this->image.mipmapLodLevels;
         this->image.imageInfo.arrayLayers = 1;
         this->image.imageInfo.format = format;
@@ -238,6 +248,9 @@ namespace Anthem::Core{
     }
     uint32_t AnthemImageContainer::getImageHeight(){
         return this->image.imageInfo.extent.height;
+    }
+    uint32_t AnthemImageContainer::getImageDepth() {
+        return this->image.imageInfo.extent.depth;
     }
     const VkImageView* AnthemImageContainer::getImageView() const{
         return &(this->image.imageView);

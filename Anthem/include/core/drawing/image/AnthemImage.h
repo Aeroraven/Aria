@@ -8,7 +8,7 @@
 namespace Anthem::Core{
     enum AnthemImageUsage{
         AT_IU_UNDEFINED = 0,
-        AT_IU_TEXTURE2D = 1,
+        AT_IU_TEXTURE = 1,
         AT_IU_COLOR_ATTACHMENT = 2
     };
     enum AnthemImageFormat{
@@ -25,7 +25,7 @@ namespace Anthem::Core{
     public AnthemDescriptorPoolReqBase{
     private:
         char* rawImageData = nullptr;
-        uint32_t width = 0,height = 0,channels = 0;
+        uint32_t width = 0, height = 0, channels = 0, depth = 1;
         AnthemGeneralBufferProp stagingBuffer{};
         bool msaaOn = false;
         AnthemImageUsage definedUsage = AT_IU_UNDEFINED;
@@ -48,11 +48,14 @@ namespace Anthem::Core{
         bool enableMipMapping();
         bool enableMsaa();
         bool loadImageData(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
+        bool loadImageData3(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels,uint32_t depth);
         bool setImageSize(uint32_t width, uint32_t height);
+        bool setImageSize3(uint32_t width, uint32_t height, uint32_t depth);
         bool setImageFormat(AnthemImageFormat format);
         
         const VkImageView* getImageView() const;
         uint32_t getWidth() const;
         uint32_t getHeight() const;
+        uint32_t getDepth() const;
     };
 }

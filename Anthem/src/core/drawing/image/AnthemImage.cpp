@@ -3,14 +3,19 @@
 namespace Anthem::Core{
     bool AnthemImage::loadImageData(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels){
         this->rawImageData = new char[width*height*channels];
-        ANTH_LOGI("Before Memcpy Sz=", width*height*channels, " PTR=",(long long)(data));
         memcpy(this->rawImageData,data,width*height*channels);
-        ANTH_LOGV("After Memcpy");
         this->width = width;
         this->height = height;
         this->channels = channels;
-        ANTH_TODO("Check if image is 4 channel");
-        //ANTH_ASSERT(this->channels==4,"Image channels must be 4");
+        return true;
+    }
+    bool AnthemImage::loadImageData3(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels,uint32_t depth) {
+        this->rawImageData = new char[width * height * depth * channels];
+        memcpy(this->rawImageData, data, width * height * depth * channels);
+        this->width = width;
+        this->height = height;
+        this->depth = depth;
+        this->channels = channels;
         return true;
     }
     bool AnthemImage::setImageFormat(AnthemImageFormat format){
@@ -20,6 +25,12 @@ namespace Anthem::Core{
     bool AnthemImage::setImageSize(uint32_t width, uint32_t height){
         this->width = width;
         this->height = height;
+        return true;
+    }
+    bool AnthemImage::setImageSize3(uint32_t width, uint32_t height, uint32_t depth) {
+        this->width = width;
+        this->height = height;
+        this->depth = depth;
         return true;
     }
     bool AnthemImage::prepareImage(){
@@ -36,28 +47,28 @@ namespace Anthem::Core{
         }else if (this->desiredFormat == AT_IF_R_UINT8) {
             pendingFormat = VK_FORMAT_R8_SRGB;
         }
-        if (this->definedUsage == AT_IU_TEXTURE2D){
+        if (this->definedUsage == AT_IU_TEXTURE){
             this->createStagingBuffer();
-            this->createImageInternal( VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, pendingFormat, this->width, this->height);
+            this->createImageInternal( VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, pendingFormat, this->width, this->height, this->depth);
             ANTH_LOGI("Image created");
             this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
             this->copyBufferToImage();
             ANTH_LOGI("Buffer copied");
             if(this->image.mipmapLodLevels > 1){
-                this->generateMipmap(this->width,this->height);
+                this->generateMipmap2D(this->width,this->height);
                 ANTH_LOGI("Generated Mipmap");
             }else{
                 this->createImageTransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
                 ANTH_LOGI("Skip generating Mipmap");
             }
-            this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
+            this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT,this->depth>1);
             this->createSampler();
             this->destroyStagingBuffer();
         }else if(this->definedUsage == AT_IU_COLOR_ATTACHMENT){
             if(this->msaaOn){
-                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT , pendingFormat, this->width, this->height);
+                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT , pendingFormat, this->width, this->height,this->depth);
             }else{
-                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT , pendingFormat, this->width, this->height);
+                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT , pendingFormat, this->width, this->height, this->depth);
             }
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
             this->createSampler();
@@ -65,7 +76,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemImage::createStagingBuffer(){
-        VkDeviceSize dvSize = this->width*this->height*this->channels;
+        VkDeviceSize dvSize = this->width*this->height*this->channels*this->depth;
         createBufferInternalUt(this->logicalDevice,this->phyDevice,
             &stagingBuffer,VK_BUFFER_USAGE_TRANSFER_SRC_BIT,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         vkMapMemory(this->logicalDevice->getLogicalDevice(),stagingBuffer.bufferMem,0,dvSize,0,&stagingBuffer.mappedMem);
@@ -87,7 +98,7 @@ namespace Anthem::Core{
         region.imageSubresource.baseArrayLayer = 0;
         region.imageSubresource.layerCount = 1;
         region.imageOffset = {0,0,0};
-        region.imageExtent = {this->width,this->height,1};
+        region.imageExtent = {this->width,this->height,this->depth};
         vkCmdCopyBufferToImage(*(this->cmdBufs->getCommandBuffer(cmdBufIdx)),this->stagingBuffer.buffer,this->image.image,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,1,&region);
         
         this->cmdBufs->endCommandRecording(cmdBufIdx);
@@ -124,7 +135,7 @@ namespace Anthem::Core{
     }
 
     uint32_t AnthemImage::calculateBufferSize(){
-        return this->height*this->width*this->channels;
+        return this->height*this->width*this->channels*this->depth;
     }
     const VkImageView* AnthemImage::getImageView() const{
         return AnthemImageContainer::getImageView();
@@ -139,5 +150,8 @@ namespace Anthem::Core{
     }
     uint32_t AnthemImage::getHeight() const{
         return this->height;
+    }
+    uint32_t AnthemImage::getDepth() const {
+        return this->depth;
     }
 }

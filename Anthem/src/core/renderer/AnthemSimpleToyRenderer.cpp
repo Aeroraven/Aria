@@ -211,7 +211,7 @@ namespace Anthem::Core{
     }
 
     bool AnthemSimpleToyRenderer::createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
-        uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap, bool enableMsaa, AnthemImageFormat imageFmt){
+        uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap2D, bool enableMsaa, AnthemImageFormat imageFmt){
         ANTH_LOGI("Addr2:", (void*)texData);
         //Allocate Image
         auto textureImage = new AnthemImage();
@@ -219,8 +219,8 @@ namespace Anthem::Core{
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
         textureImage->loadImageData(texData,texWidth,texHeight,texChannel);
-        textureImage->specifyUsage(AnthemImageUsage::AT_IU_TEXTURE2D);
-        if(generateMipmap){
+        textureImage->specifyUsage(AnthemImageUsage::AT_IU_TEXTURE);
+        if(generateMipmap2D){
             textureImage->enableMipMapping();
         }
         if(enableMsaa){
@@ -232,6 +232,26 @@ namespace Anthem::Core{
         //Allocate Descriptor Set For Sampler
         ANTH_LOGI("In addsampler");
         descPool->addSampler(textureImage,bindLoc,this->imageDescPoolIdx);
+        *pImage = textureImage;
+        this->textures.push_back(textureImage);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createTexture3d(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
+        uint32_t texHeight, uint32_t texDepth, uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt) {
+        ANTH_LOGI("Addr2:", (void*)texData);
+        //Allocate Image
+        auto textureImage = new AnthemImage();
+        textureImage->specifyLogicalDevice(this->logicalDevice.get());
+        textureImage->specifyPhyDevice(this->phyDevice.get());
+        textureImage->specifyCommandBuffers(this->commandBuffers.get());
+        textureImage->loadImageData3(texData, texWidth, texHeight, texChannel, texDepth);
+        textureImage->specifyUsage(AnthemImageUsage::AT_IU_TEXTURE);
+        textureImage->setImageFormat(imageFmt);
+        textureImage->prepareImage();
+
+        //Allocate Descriptor Set For Sampler
+        ANTH_LOGI("In addsampler");
+        descPool->addSampler(textureImage, bindLoc, this->imageDescPoolIdx);
         *pImage = textureImage;
         this->textures.push_back(textureImage);
         return true;

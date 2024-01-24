@@ -24,19 +24,21 @@ namespace Anthem::Core{
         AnthemImageProp image = {};
         VkSampler sampler = nullptr;
     protected:
-        bool createImageInternal(VkImageUsageFlags usage, VkFormat format, uint32_t width, uint32_t height);
-        bool createImageViewInternal(VkImageAspectFlags aspectFlags);
+        bool createImageInternal(VkImageUsageFlags usage, VkFormat format, uint32_t width, uint32_t height, uint32_t depth);
+        bool createImageViewInternal(VkImageAspectFlags aspectFlags,bool use3d = false);
         bool createImageTransitionLayout(VkImageLayout oldLayout,VkImageLayout newLayout);
         bool createSampler();
         bool destroyImageInternal();
         bool destroyImageViewInternal();
-        bool generateMipmap(uint32_t texWidth,uint32_t texHeight);
+        bool generateMipmap2D(uint32_t texWidth,uint32_t texHeight);
         
         bool samplerCreated=false;
         
     public:
         uint32_t virtual getImageWidth();
         uint32_t virtual getImageHeight();
+        uint32_t virtual getImageDepth();
+
         const VkImageView* getImageView() const;
         const VkSampleCountFlags getSampleCount() const{
             return this->image.msaaCount;
