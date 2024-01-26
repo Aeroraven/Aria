@@ -88,6 +88,7 @@ void prepareRenderer() {
 void loadNoise() {
 	noise.buffer = new unsigned char[noise.perDimSize * noise.perDimSize * noise.perDimSize];
 	auto jobFunction = [&](int jobId, int totalJobs) {
+		constexpr static float stepInterval = 0.007;
 		IAnthemNoiseGenerator* baseGenerator = new AnthemImprovedNoise();
 		AnthemFractalNoise* noiseGenerator = new AnthemFractalNoise(baseGenerator,noise.fractalIterations);
 		int segmentSize = noise.perDimSize * noise.perDimSize * noise.perDimSize / totalJobs;
@@ -95,7 +96,7 @@ void loadNoise() {
 			int px = i / (noise.perDimSize * noise.perDimSize);
 			int py = (i % (noise.perDimSize * noise.perDimSize)) / noise.perDimSize;
 			int pz = (i % (noise.perDimSize * noise.perDimSize)) %  noise.perDimSize;
-			double cp = noiseGenerator->noise(px, py, pz) * 255.0;
+			double cp = noiseGenerator->noise(px * stepInterval, py * stepInterval, pz * stepInterval) * 255.0;
 			noise.buffer[i] = (uint8_t)(cp);
 		}
 	};
