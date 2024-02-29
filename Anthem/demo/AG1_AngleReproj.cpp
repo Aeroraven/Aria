@@ -7,7 +7,6 @@
 
 
 #include <chrono>
-
 #include <thread>
 #include <mutex>
 
@@ -41,7 +40,7 @@ struct ExpParams {
 	static const char* selectedAngleCh;
 
 	// Parallel configurations
-	static constexpr int sqrtSampleCounts = 4096;
+	static constexpr int sqrtSampleCounts = 1024;
 	static constexpr int sampleCounts = sqrtSampleCounts * sqrtSampleCounts; //Total samples
 	static constexpr int parallelsXGpu = 65536; // For GPU kernels 16384
 	static constexpr int parallelsXCpu = 16; // For CPU threads
@@ -1101,6 +1100,20 @@ void setupImgui() {
 	core.renderer.exInitImGui();
 }
 
+void copyDataBack() {
+	static int counter = 1;
+	static char* recv = nullptr;
+	counter++;
+	if (counter % 50 == 0) {
+		ANTH_LOGI("Start copying data back");
+		if (recv == nullptr) {
+			size_t x = comp.samples->getBufferSize();
+			recv = new char[x];
+		}
+		comp.samples->copyDataBack(1, recv);
+		ANTH_LOGI("Copied data back");
+	}
+}
 
 int main() {
 	prepareCore();
@@ -1133,8 +1146,9 @@ int main() {
 		updateTextPipeUniform();
 
 		drawLoop(currentFrame);
-		std::call_once(p1, [&]() {
+		copyDataBack();
 
+		std::call_once(p1, [&]() {
 			auto endTime = std::chrono::steady_clock().now();
 			auto durationGen = std::chrono::duration_cast<std::chrono::milliseconds>( endTime - startGenTime);
 			auto durationCalc = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);

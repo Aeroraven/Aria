@@ -268,3 +268,14 @@ namespace Anthem::Core::Math{
         }
     };
 }
+/*
+mat3 (float x1,float x2,float x3){
+    x1 = x1*PI2;
+    x2 = x2*PI2;
+    mat3 R = mat3(cos(x1),sin(x1),0.0,-sin(x1),cos(x1),0.0,0.0,0.0,1.0);
+    vec3 v = vec3(cos(x2)*sqrt(x3),sin(x2)*sqrt(x3),sqrt(1.0-x3));
+    mat3 T = mat3(v.x*v.x,v.x*v.y,v.x*v.z,v.x*v.y,v.y*v.y,v.y*v.z,v.x*v.z,v.y*v.z,v.z*v.z);
+    mat3 I = mat3(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+    mat3 H = I - 2.0*T;
+    return -H*R;
+}*/

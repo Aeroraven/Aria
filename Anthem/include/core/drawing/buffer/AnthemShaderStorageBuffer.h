@@ -52,28 +52,50 @@ namespace Anthem::Core{
             return true;
         }
         bool prepareStagingBuffer(){
-            this->createBufferInternal(&this->bufferProp.staging,VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            this->createBufferInternal(&this->bufferProp.staging,VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
             ANTH_LOGI("Creating Staging:", this->bufferProp.staging.buffer);
             vkMapMemory(this->logicalDevice->getLogicalDevice(), this->bufferProp.staging.bufferMem, 0, getBufferSize(), 0, &this->bufferProp.staging.mappedMem);
             memcpy(this->bufferProp.staging.mappedMem, this->bufferData, (size_t)getBufferSize());
             vkUnmapMemory(this->logicalDevice->getLogicalDevice(), this->bufferProp.staging.bufferMem);
             return true;
         }
-
         bool prepareSSBO(){
             ANTH_ASSERT(this->usage != AnthemSSBOUsage::AT_ASBU_UNDEFINED,"Undefined usage");
-            auto usageBit = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+            auto usageBit = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
             
             for(uint32_t i=0;i<this->numCopies;i++){
                 if(this->usage == AnthemSSBOUsage::AT_ASBU_VERTEX){
                     this->createBufferInternal(&this->bufferProp.ssbo[i], 
-                        (VkBufferUsageFlagBits)(VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT), 
+                        (VkBufferUsageFlagBits)(usageBit), 
                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
                     this->copyFromStagingToSSBO(i);
                 }
             }
             return true;
         }
+        bool copyDataBack(int copyId,void* receivingRegion) {
+            AnthemGeneralBufferProp backStaging;
+            this->createBufferInternal(&backStaging, VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+            VkBufferCopy cpInfo = {};
+            cpInfo.size = this->getBufferSize();
+            vkMapMemory(logicalDevice->getLogicalDevice(), backStaging.bufferMem, 0, getBufferSize(), 0, &backStaging.mappedMem);
+            uint32_t cmdIdx;
+            this->cmdBufs->createCommandBuffer(&cmdIdx);
+            this->cmdBufs->startCommandRecording(cmdIdx);
+            vkCmdCopyBuffer(*this->cmdBufs->getCommandBuffer(cmdIdx), this->bufferProp.ssbo[copyId].buffer, backStaging.buffer, 1, &cpInfo);
+            this->cmdBufs->endCommandRecording(cmdIdx);
+            this->cmdBufs->submitTaskToGraphicsQueue(cmdIdx, true);
+            memcpy(receivingRegion, backStaging.mappedMem, (size_t)getBufferSize());
+            vkUnmapMemory(logicalDevice->getLogicalDevice(), backStaging.bufferMem);
+            vkFreeMemory(logicalDevice->getLogicalDevice(), backStaging.bufferMem,nullptr);
+            vkDestroyBuffer(logicalDevice->getLogicalDevice(), backStaging.buffer, nullptr);
+            return true;
+        }
+
+
         const VkBuffer* getDestBufferObject(uint32_t copyId) const {
             return &(this->bufferProp.ssbo.at(copyId).buffer);
         }
