@@ -1,0 +1,108 @@
+#version 450
+precision highp float;
+layout(set = 0,binding = 0) uniform UniformBufferObject{
+    float rotXLower;
+    float rotXUpper;
+    float rotYLower;
+    float rotYUpper;
+    float transDeviation;
+    float transZLower;
+    float transZUpper;
+    float rectH;
+    float rectW;
+}ubo;
+
+struct Sample{
+    vec4 rnd;
+    vec4 pos;
+};
+
+layout(std140, set = 1,binding = 0) readonly buffer ssboIn{
+    Sample sampleIn[];
+};
+layout(std140, set = 2,binding = 0) buffer ssboOut{
+    Sample sampleOut[];
+};
+layout(local_size_x = 256,local_size_y=1,local_size_z=1) in;
+
+mat4 generateRotationMatrix(vec3 axis, float angle){
+    float c = cos(angle);
+    float s = sin(angle);
+    float oc = 1.0 - c;
+
+    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                0.0,                                0.0,                                0.0,                                1.0);
+}
+
+void main(){
+    uint idx = gl_GlobalInvocationID.x;
+    Sample pIn = sampleIn[idx];
+
+    vec4 rectVertex[4];
+    float interiorAngles[4];
+    float rotDeg = 0.0;
+    
+    float rotDir = pIn.rnd.y > 0.5 ? 1.0 : -1.0;
+    vec4 rotAxis = vec4(1.0,0.0,0.0,0.0);
+    vec3 normal = vec3(0.0,0.0,0.0);
+    if(rotDir < 0.0){
+        rotAxis = vec4(0.0,1.0,0.0,0.0);
+        rotDeg = mix(ubo.rotYLower,ubo.rotYUpper,pIn.rnd.x);
+    }else{
+        rotAxis = vec4(1.0,0.0,0.0,0.0);
+        rotDeg = mix(ubo.rotXLower,ubo.rotXUpper,pIn.rnd.x);
+    }
+    rotDeg = radians(rotDeg);
+
+    float transDeg = mix(0.0,360.0,pIn.pos.x);
+    float transLen = pIn.pos.y * ubo.transDeviation;
+    float transZ = mix(ubo.transZLower,ubo.transZUpper,pIn.pos.z);
+    transDeg = radians(transDeg);
+    vec2 transDirection = vec2(cos(transDeg),sin(transDeg));
+    vec4 translation = vec4(transDirection * transLen,transZ,0.0);
+
+    rectVertex[0] = vec4(-ubo.rectW,ubo.rectH,0.0,1.0);
+    rectVertex[1] = vec4(ubo.rectW,ubo.rectH,0.0,1.0);
+    rectVertex[2] = vec4(ubo.rectW,-ubo.rectH,0.0,1.0);
+    rectVertex[3] = vec4(-ubo.rectW,-ubo.rectH,0.0,1.0);
+
+    mat4 rotMat = generateRotationMatrix(rotAxis.xyz,rotDeg);
+    for(int i = 0; i < 4; i++){
+        rectVertex[i] = rotMat * rectVertex[i];
+        rectVertex[i] += translation;
+    }
+
+    // Calculate normal
+    vec3 v1 = rectVertex[1].xyz - rectVertex[0].xyz;
+    vec3 v2 = rectVertex[2].xyz - rectVertex[0].xyz;
+    v1 = normalize(v1);
+    v2 = normalize(v2);
+    normal = cross(v1,v2);
+
+    // Project to 2D
+    vec2 vert2d[4];
+    for(int i = 0; i < 4; i++){
+        vert2d[i] = rectVertex[i].xy / rectVertex[i].z;
+    }
+
+    // Get interior angles
+    for(int i = 0; i < 4; i++){
+        vec2 a1 = vert2d[i];
+        vec2 a2 = vert2d[(i+1)%4];
+        vec2 a3 = vert2d[(i+3)%4];
+
+        vec2 d1 = normalize(a2-a1);
+        vec2 d2 = normalize(a3-a1);
+
+        float angle = acos(dot(d1,d2));
+        interiorAngles[i] = mix(-1.0,1.0,angle/3.1415926);
+    }
+
+    sampleOut[idx].pos = vec4(interiorAngles[0],interiorAngles[1],interiorAngles[2],interiorAngles[3]);
+    sampleOut[idx].rnd = vec4(normal,1.0);
+    if(abs(normal.x)>1.0 || abs(normal.y)>1.0 || abs(normal.z)>1.0){
+        sampleOut[idx].rnd = vec4(1.0,1.0,1.0,1.0);
+    }
+}

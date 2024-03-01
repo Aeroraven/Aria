@@ -60,6 +60,7 @@ void main(){
     rectVertices[1] = vec4(ubo.rectW,ubo.rectH,0.0,1.0);
     rectVertices[2] = vec4(ubo.rectW,-ubo.rectH,0.0,1.0);
     rectVertices[3] = vec4(-ubo.rectW,-ubo.rectH,0.0,1.0);
+
     float rotAng = (pIn.rnd.x+1.0) * 3.14159;
     float rotAngZ = pIn.rnd.z * 3.14159;
     float transX = ubo.moveFocal*sin(pIn.rnd.y*3.14159+3.14159);

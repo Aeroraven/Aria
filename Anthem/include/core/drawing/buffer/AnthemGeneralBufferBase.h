@@ -7,8 +7,8 @@
 
 namespace Anthem::Core{
 
-    class AnthemGeneralBufferBase:public Util::AnthemUtlLogicalDeviceReqBase,
-    public Util::AnthemUtlPhyDeviceReqBase{
+    class AnthemGeneralBufferBase:public virtual Util::AnthemUtlLogicalDeviceReqBase,
+    public virtual Util::AnthemUtlPhyDeviceReqBase{
     protected:
         uint32_t virtual calculateBufferSize() = 0;
         bool virtual createBufferInternal(AnthemGeneralBufferProp* bufProp, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memProp);

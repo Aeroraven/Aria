@@ -14,7 +14,6 @@ using namespace Anthem::Core;
 using namespace Anthem::Core::Math;
 using namespace Anthem::Core::Math::Abbr;
 using namespace Anthem::Components::Camera;
-
 using namespace std::chrono;
 
 
@@ -40,7 +39,7 @@ struct ExpParams {
 	static const char* selectedAngleCh;
 
 	// Parallel configurations
-	static constexpr int sqrtSampleCounts = 1024;
+	static constexpr int sqrtSampleCounts = 4096;
 	static constexpr int sampleCounts = sqrtSampleCounts * sqrtSampleCounts; //Total samples
 	static constexpr int parallelsXGpu = 65536; // For GPU kernels 16384
 	static constexpr int parallelsXCpu = 16; // For CPU threads
@@ -444,11 +443,8 @@ void prepareColorRamp() {
 	cv::Mat destMap;
 	cv::applyColorMap(srcMap, destMap, cv::COLORMAP_JET);
 	cv::cvtColor(destMap, destMap, cv::COLOR_BGR2RGBA);
-	cv::imwrite("C:/WR/a.jpg", destMap);
-
 	core.renderer.createDescriptorPool(&clut.lutDesc);
 	core.renderer.createTexture(&clut.lutTex, clut.lutDesc, destMap.data, 64, 64, 4, 0, false, false);
-
 	cv::cvtColor(destMap, destMap, cv::COLOR_RGBA2BGR);
 	cv::imwrite("C:/WR/a.jpg", destMap);
 }
@@ -545,7 +541,7 @@ void prepareVisualization() {
 	updateVisUniform();
 
 	// Create Pipeline
-	core.renderer.setupDemoRenderPass(&vis.renderPass, vis.depthBuffer);
+	//core.renderer.setupDemoRenderPass(&vis.renderPass, vis.depthBuffer);
 	
 	AnthemRenderPassSetupOption opt;
 	opt.predefinedClearColor = { 1,1,1,1.0 };
