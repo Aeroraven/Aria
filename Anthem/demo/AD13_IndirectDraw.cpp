@@ -15,7 +15,7 @@ struct Stage {
 
 	AnthemVertexBufferImpl<
 		AtAttributeVecf<3>,
-		AtAttributeVecf<2>
+		AtAttributeVecf<3>
 	>* vx = nullptr;
 	AnthemIndexBuffer* ix = nullptr;
 	AnthemDepthBuffer* depth = nullptr;
@@ -79,7 +79,7 @@ void prepare() {
 		for (int i = 0; i < stage.model[k].numVertices; i++) {
 			stage.vx->insertData(i + prs[k],
 				{ stage.model[k].positions[i * 3],stage.model[k].positions[i * 3 + 1],stage.model[k].positions[i * 3 + 2] },
-				{ stage.model[k].texCoords[i * 2],stage.model[k].texCoords[i * 2] });
+				{ stage.model[k].texCoords[i * 2],stage.model[k].texCoords[i * 2], k*1.0f });
 		}
 	};
 	for (int k = 0; k < prs.size(); k++) {
