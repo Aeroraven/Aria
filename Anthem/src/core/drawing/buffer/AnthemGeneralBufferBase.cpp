@@ -1,6 +1,6 @@
 #include "../../../../include/core/drawing/buffer/AnthemGeneralBufferBase.h"
 namespace Anthem::Core{
-    bool AnthemGeneralBufferBase::createBufferInternal(AnthemGeneralBufferProp* bufProp, VkBufferUsageFlagBits usage, VkMemoryPropertyFlags memProp){
+    bool AnthemGeneralBufferBase::createBufferInternal(AnthemGeneralBufferProp* bufProp, VkBufferUsageFlags usage, VkMemoryPropertyFlags memProp){
         ANTH_ASSERT(this->logicalDevice,"Device is nullptr!");
         ANTH_LOGI("Creating buffer");
         bufProp->bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

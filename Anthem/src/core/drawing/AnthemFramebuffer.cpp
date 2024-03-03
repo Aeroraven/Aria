@@ -92,7 +92,7 @@ namespace Anthem::Core{
         this->depthBuffer = depthBuffer;
         return true;
     }
-    const VkFramebuffer* AnthemFramebuffer::getFramebuffer() const{
-        return &(this->framebuffer);
+    VkFramebuffer* AnthemFramebuffer::getFramebuffer() const{
+        return (VkFramebuffer*) & (this->framebuffer);
     }
 }

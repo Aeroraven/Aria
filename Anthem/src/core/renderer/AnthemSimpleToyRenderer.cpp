@@ -60,6 +60,12 @@ namespace Anthem::Core{
             delete p;
         }
         ANTH_LOGI("Index Buffers Destroyed");
+        for (auto& p : this->indirectDrawBuffers) {
+            p->destroyBuffer();
+            delete p;
+        }
+        ANTH_LOGI("Indirect Buffers Destroyed");
+
 
         this->mainLoopSyncer->destroySyncObjects();
         this->commandBuffers->destroyCommandPool();
@@ -211,8 +217,9 @@ namespace Anthem::Core{
     }
 
     bool AnthemSimpleToyRenderer::createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
-        uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap2D, bool enableMsaa, AnthemImageFormat imageFmt){
-        ANTH_LOGI("Addr2:", (void*)texData);
+        uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap2D, bool enableMsaa, AnthemImageFormat imageFmt,
+        uint32_t descId, bool ignoreDescPool){
+
         //Allocate Image
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
@@ -230,15 +237,18 @@ namespace Anthem::Core{
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
-        ANTH_LOGI("In addsampler");
-        descPool->addSampler(textureImage,bindLoc,this->imageDescPoolIdx);
+        if (descId == -1) {
+            ANTH_LOGW("Descriptor pool index not specified for Tex2D, using the default value", this->imageDescPoolIdx);
+            descId = this->imageDescPoolIdx;
+        }
+        if(ignoreDescPool) descPool->addSampler(textureImage,bindLoc, descId);
         *pImage = textureImage;
         this->textures.push_back(textureImage);
         return true;
     }
     bool AnthemSimpleToyRenderer::createTexture3d(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
-        uint32_t texHeight, uint32_t texDepth, uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt) {
-        ANTH_LOGI("Addr2:", (void*)texData);
+        uint32_t texHeight, uint32_t texDepth, uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt, uint32_t descId) {
+
         //Allocate Image
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
@@ -250,14 +260,18 @@ namespace Anthem::Core{
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
-        ANTH_LOGI("In addsampler");
-        descPool->addSampler(textureImage, bindLoc, this->imageDescPoolIdx);
+        if (descId == -1) {
+            ANTH_LOGW("Descriptor pool index not specified for Tex3D, using the default value", this->imageDescPoolIdx);
+            descId = this->imageDescPoolIdx;
+        }
+        descPool->addSampler(textureImage, bindLoc, descId);
         *pImage = textureImage;
         this->textures.push_back(textureImage);
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::createColorAttachmentImage(AnthemImage** pImage,AnthemDescriptorPool* descPool, uint32_t bindLoc, AnthemImageFormat format, bool enableMsaa){
+    bool AnthemSimpleToyRenderer::createColorAttachmentImage(AnthemImage** pImage,AnthemDescriptorPool* descPool, uint32_t bindLoc,
+        AnthemImageFormat format, bool enableMsaa,uint32_t descId){
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
@@ -273,7 +287,11 @@ namespace Anthem::Core{
 
         //Allocate Descriptor Set For Sampler
         if(!enableMsaa){
-            descPool->addSampler(textureImage,bindLoc,this->imageDescPoolIdx);
+            if (descId == -1) {
+                ANTH_LOGW("Descriptor pool index not specified for ColorAttachment, using the default value", this->imageDescPoolIdx);
+                descId = this->imageDescPoolIdx;
+            }
+            descPool->addSampler(textureImage,bindLoc, descId);
         }
         *pImage = textureImage;
         this->textures.push_back(textureImage);
@@ -286,6 +304,9 @@ namespace Anthem::Core{
             p->createBuffer();
         }
         for(const auto& p:indexBuffers){
+            p->createBuffer();
+        }
+        for (const auto& p : indirectDrawBuffers) {
             p->createBuffer();
         }
         //for (const auto& p : ssboBuffers) {
@@ -306,6 +327,17 @@ namespace Anthem::Core{
         idxBuffer->specifyCommandBuffers(this->commandBuffers.get());
         *pIndexBuffer = idxBuffer;
         this->indexBuffers.push_back(idxBuffer);
+        return true;
+    }
+
+    bool AnthemSimpleToyRenderer::createIndirectDrawBuffer(AnthemIndirectDrawBuffer** pIndirectBuffer) {
+        auto idBuffer = new AnthemIndirectDrawBuffer();
+        idBuffer->specifyLogicalDevice(this->logicalDevice.get());
+        idBuffer->specifyPhyDevice(this->phyDevice.get());
+        idBuffer->specifyCommandBuffers(this->commandBuffers.get());
+
+        *pIndirectBuffer = idBuffer;
+        this->indirectDrawBuffers.push_back(idBuffer);
         return true;
     }
     
@@ -406,6 +438,13 @@ namespace Anthem::Core{
         return true;
     }
 
+    bool AnthemSimpleToyRenderer::addSamplerArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
+        if (descId == -1) {
+            ANTH_LOGW("Descriptor pool index not specified for Sampler, using the default value", this->imageDescPoolIdx);
+            descId = this->imageDescPoolIdx;
+        }
+        return descPool->addSamplerArray(images, bindLoc, descId);
+    }
     bool AnthemSimpleToyRenderer::destroySwapChain(){
         for(const auto& p:this->simpleFramebuffers){
             p->destroyFramebuffers();
@@ -672,6 +711,25 @@ namespace Anthem::Core{
     }
     bool AnthemSimpleToyRenderer::drDrawInstanced(uint32_t vertices, uint32_t instances, uint32_t cmdIdx) {
         vkCmdDrawIndexed(*this->commandBuffers->getCommandBuffer(cmdIdx), vertices, instances, 0, 0, 0);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drDrawInstancedAll(uint32_t vertices, uint32_t instances, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance, uint32_t cmdIdx) {
+        vkCmdDrawIndexed(*this->commandBuffers->getCommandBuffer(cmdIdx), vertices, instances,firstIndex,vertexOffset,firstInstance);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drDrawIndexedIndirect(AnthemIndirectDrawBuffer* buffer, uint32_t cmdIdx) {
+        auto feats = (*this->phyDevice).getDeviceFeatures();
+        if (feats.multiDrawIndirect == VK_TRUE) {
+            vkCmdDrawIndexedIndirect(*this->commandBuffers->getCommandBuffer(cmdIdx),
+                *buffer->getBuffer(), 0, buffer->getNumCommands(), sizeof(VkDrawIndexedIndirectCommand));
+        }
+        else {
+            ANTH_LOGW("Multi indirect draw not supported");
+            for (int i = 0; i < buffer->getNumCommands(); i++) {
+                vkCmdDrawIndexedIndirect(*this->commandBuffers->getCommandBuffer(cmdIdx),
+                    *buffer->getBuffer(), i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
+            }
+        }
         return true;
     }
     bool AnthemSimpleToyRenderer::presentFrameDemo(uint32_t currentFrame, AnthemRenderPass* renderPass, 

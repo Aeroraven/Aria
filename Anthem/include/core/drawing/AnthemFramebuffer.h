@@ -28,6 +28,6 @@ namespace Anthem::Core{
         bool virtual createFromColorAttachment(const std::vector<const AnthemImage*>* colorImages, const AnthemRenderPass* renderPass);
         bool virtual destroyFramebuffers();
         bool virtual recreateFramebuffer();
-        const VkFramebuffer* getFramebuffer() const;
+        VkFramebuffer* getFramebuffer() const;
     };
 }

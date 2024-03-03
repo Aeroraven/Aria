@@ -57,6 +57,7 @@
 
 // WorkDir
 #define ANTH_SHADER_DIR "C:\\WR\\Aria\\Anthem\\shader\\glsl\\"
+#define ANTH_ASSET_DIR "C:\\WR\\Aria\\Anthem\\assets\\"
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>

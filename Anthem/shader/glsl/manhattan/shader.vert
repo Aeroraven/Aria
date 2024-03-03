@@ -14,7 +14,7 @@ layout(location=1) out vec4 outRawData;
 
 void main(){
     gl_PointSize = 4.0f;
-    gl_Position = ubo.projMat*ubo.viewMat*ubo.localMat*vec4(inPosition.xyz,1.0);
+    gl_Position = ubo.projMat *  ubo.viewMat*ubo.localMat*vec4(inPosition.xyz,1.0);
     outRawData = vec4(inPosition.xyz,1.0);
     outColor = vec4(inRandom.xyz,1.0);
 }

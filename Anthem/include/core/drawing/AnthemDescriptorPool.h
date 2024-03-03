@@ -19,13 +19,13 @@ namespace Anthem::Core{
     };
 
     struct AnthemSamplerDescriptorInfo{
-        AnthemImageContainer* img;
+        std::vector<AnthemImageContainer*> img;
         uint32_t bindLoc;
         VkDescriptorSetLayoutBinding layoutBindingDesc = {};
         VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
         uint32_t descPoolId;
         VkDescriptorSetLayout layout = VK_NULL_HANDLE;
-        VkDescriptorImageInfo imageInfo = {};
+        std::vector<VkDescriptorImageInfo> imageInfo = {};
     };
 
     struct AnthemShaderStorageBufferDescriptorInfo{
@@ -113,18 +113,22 @@ namespace Anthem::Core{
             return true;
         }
         bool addSampler(AnthemImageContainer* imageSampler,uint32_t bindLoc, uint32_t descPoolId){
+            return addSamplerArray({ imageSampler }, bindLoc, descPoolId);
+        }
+        bool addSamplerArray(std::vector<AnthemImageContainer*> imageSampler, uint32_t bindLoc, uint32_t descPoolId) {
             this->samplersDesc.push_back({});
-            ANTH_LOGI("Spec Binding Addrs", (long long)(this),"/",this->samplersDesc.size());
             auto& layoutBindingDesc = this->samplersDesc.back().layoutBindingDesc;
             auto& layoutCreateInfo = this->samplersDesc.back().layoutCreateInfo;
 
-            this->samplersDesc.back().img = imageSampler;
             this->samplersDesc.back().bindLoc = bindLoc;
             this->samplersDesc.back().descPoolId = descPoolId;
-
+            for (int i = 0; i < imageSampler.size(); i++) {
+                this->samplersDesc.back().img.push_back(imageSampler[i]);
+                this->samplersDesc.back().imageInfo.push_back({});
+            }
             layoutBindingDesc.binding = bindLoc;
             layoutBindingDesc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            layoutBindingDesc.descriptorCount = 1;
+            layoutBindingDesc.descriptorCount = imageSampler.size();
             layoutBindingDesc.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
             layoutBindingDesc.pImmutableSamplers = nullptr;
 
@@ -133,7 +137,7 @@ namespace Anthem::Core{
             layoutCreateInfo.pBindings = &layoutBindingDesc;
 
             ANTH_LOGI("Start Create Layout");
-            if(vkCreateDescriptorSetLayout(logicalDevice->getLogicalDevice(),&layoutCreateInfo,nullptr,&(this->samplersDesc.back().layout))!=VK_SUCCESS){
+            if (vkCreateDescriptorSetLayout(logicalDevice->getLogicalDevice(), &layoutCreateInfo, nullptr, &(this->samplersDesc.back().layout)) != VK_SUCCESS) {
                 ANTH_LOGE("Failed to create descriptor set layout");
                 return false;
             }
@@ -265,6 +269,53 @@ namespace Anthem::Core{
             vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteSsbo.size()), descWriteSsbo.data(), 0, nullptr);
             return true;
         }
+        bool createDescriptorSetSampler(uint32_t numSets) {
+            //Create Image Descriptor Sets
+            //ANTH_LOGI("Allocating Descriptor Alloc: Samplers",this->samplersDesc.size());
+            for (int i = 0; i < this->samplersDesc.size(); i++) {
+                //ANTH_LOGI("Allocate in Pool:",this->samplersDesc.at(i).descPoolId);
+                std::vector<VkDescriptorSetLayout> descSetLayout(numSets, this->samplersDesc.at(i).layout);
+                VkDescriptorSetAllocateInfo allocInfo = {};
+                allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+                allocInfo.pNext = nullptr;
+                allocInfo.descriptorPool = descriptorPoolList.at(this->samplersDesc.at(i).descPoolId);
+                allocInfo.descriptorSetCount = numSets;
+                allocInfo.pSetLayouts = descSetLayout.data();
+
+                descriptorSetsImg.resize(numSets);
+                auto res = vkAllocateDescriptorSets(this->logicalDevice->getLogicalDevice(), &allocInfo, descriptorSetsImg.data());
+                if (res != VK_SUCCESS) {
+                    ANTH_LOGE("Failed to allocate descriptor sets", res);
+                    return false;
+                }
+            }
+
+            for (uint32_t i = 0; i < numSets; i++) {
+                for (uint32_t j = 0; j < static_cast<uint32_t>(this->samplersDesc.size()); j++) {
+                    for (uint32_t k = 0; k < samplersDesc.at(j).imageInfo.size(); k++) {
+                        samplersDesc.at(j).imageInfo[k].imageLayout = samplersDesc.at(j).img[k]->getDesiredLayout();
+                        samplersDesc.at(j).imageInfo[k].imageView = *(samplersDesc.at(j).img[k]->getImageView());
+                        samplersDesc.at(j).imageInfo[k].sampler = *(samplersDesc.at(j).img[k]->getSampler());
+                    }
+
+                    VkWriteDescriptorSet descCp = {};
+                    descCp.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                    descCp.pNext = nullptr;
+                    descCp.dstSet = descriptorSetsImg.at(i);
+                    descCp.dstBinding = samplersDesc.at(j).bindLoc;
+                    descCp.dstArrayElement = 0;
+                    descCp.descriptorCount = samplersDesc.at(j).imageInfo.size();
+                    descCp.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                    descCp.pImageInfo = samplersDesc.at(j).imageInfo.data();
+                    descCp.pBufferInfo = nullptr;
+                    descCp.pTexelBufferView = nullptr;
+
+                    descWriteSampler.push_back(descCp);
+                }
+
+                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteSampler.size()), descWriteSampler.data(), 0, nullptr);
+            }
+        }
         bool createDescriptorSet(uint32_t numSets){
             createDescriptorSetSsbo(numSets);
             //Create Uniform Descriptor Sets
@@ -310,50 +361,8 @@ namespace Anthem::Core{
                 
                 vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteUniform.size()),descWriteUniform.data(),0,nullptr);
             }
-            //Create Image Descriptor Sets
-            //ANTH_LOGI("Allocating Descriptor Alloc: Samplers",this->samplersDesc.size());
-            for(int i=0;i<this->samplersDesc.size();i++){
-                //ANTH_LOGI("Allocate in Pool:",this->samplersDesc.at(i).descPoolId);
-                std::vector<VkDescriptorSetLayout> descSetLayout(numSets,this->samplersDesc.at(i).layout);
-                VkDescriptorSetAllocateInfo allocInfo = {};
-                allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-                allocInfo.pNext = nullptr;
-                allocInfo.descriptorPool = descriptorPoolList.at(this->samplersDesc.at(i).descPoolId);
-                allocInfo.descriptorSetCount = numSets;
-                allocInfo.pSetLayouts = descSetLayout.data();
-
-                descriptorSetsImg.resize(numSets);
-                auto res = vkAllocateDescriptorSets(this->logicalDevice->getLogicalDevice(),&allocInfo,descriptorSetsImg.data());
-                if(res!=VK_SUCCESS){
-                    ANTH_LOGE("Failed to allocate descriptor sets",res);
-                    return false;
-                }
-            }
-            //ANTH_LOGI("Preparing Descriptor Update: Samplers");
-            for(uint32_t i=0;i<numSets;i++){
-                for(uint32_t j=0;j<static_cast<uint32_t>(this->samplersDesc.size());j++){
-                    samplersDesc.at(j).imageInfo.imageLayout = samplersDesc.at(j).img->getDesiredLayout();
-                    samplersDesc.at(j).imageInfo.imageView = *(samplersDesc.at(j).img->getImageView());
-                    samplersDesc.at(j).imageInfo.sampler = *(samplersDesc.at(j).img->getSampler());
-
-                    VkWriteDescriptorSet descCp = {};
-                    descCp.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                    descCp.pNext = nullptr;
-                    descCp.dstSet = descriptorSetsImg.at(i);
-                    descCp.dstBinding = samplersDesc.at(j).bindLoc;
-                    descCp.dstArrayElement = 0;
-                    descCp.descriptorCount = 1;
-                    descCp.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                    descCp.pImageInfo = &samplersDesc.at(j).imageInfo;
-                    descCp.pBufferInfo = nullptr;
-                    descCp.pTexelBufferView = nullptr;
-
-                    descWriteSampler.push_back(descCp);
-                }
-                
-                vkUpdateDescriptorSets(this->logicalDevice->getLogicalDevice(), static_cast<uint32_t>(descWriteSampler.size()),descWriteSampler.data(),0,nullptr);
-            }
-
+            
+            createDescriptorSetSampler(numSets);
             //ANTH_LOGI("done");
             return true;
         }
@@ -399,6 +408,7 @@ namespace Anthem::Core{
                 return false;
             }
             this->descriptorPoolList.push_back(pool);
+            //TODO: Ambiguous Code
             *index = static_cast<uint32_t>(this->descriptorPoolList.size())-1;
 
             return true;

@@ -92,6 +92,9 @@ namespace Anthem::External{
                 }
             }
             curResult.basePath = this->modelDirectory+"/";
+            if (curResult.positions.size()) {
+                curResult.numVertices = curResult.positions.size() / 3;
+            }
             ANTH_LOGI("Parse done.");
             ANTH_LOGI("Position Primitive Type:",curResult.positionPrimitiveType, "Dimension:",curResult.positionDim,"Length",curResult.positions.size());
             ANTH_LOGI("Normal Primitive Type:",curResult.normalPrimitiveType, "Dimension:",curResult.normalDim,"Length",curResult.normals.size());

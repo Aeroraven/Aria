@@ -67,14 +67,14 @@ struct VisualizationPipeline {
 }vis;
 
 struct ExpParams {
-	static constexpr const int sampleCounts = 16777216; //Total samples
+	static constexpr const int sampleCounts = 16777216/16; //Total samples
 	static constexpr const int parallelsGpu = 65536; // For GPU kernels 16384
 	static constexpr const int parallelsCpu = 16; // For CPU threads
 
 	float rotXLower = -89.0f;
 	float rotXUpper = 89.0f;
-	float rotYLower = -89.0f;
-	float rotYUpper = 89.0f;
+	float rotYLower = -0.0f;
+	float rotYUpper = 0.0f;
 
 	float transDeviation = 25.0f;
 	float transZLower = 5.0f;
@@ -191,8 +191,8 @@ void updateVisUniform() {
 	int rdH, rdW;
 	core.renderer.exGetWindowSize(rdH, rdW);
 	core.camera.specifyFrustum(AT_PI / 3 * 1, 0.1, 100, 1.0 * rdW / rdH);
-	core.camera.specifyPosition(0.0, 1.5, -3.0f);
-	core.camera.specifyFrontEyeRay(0, -1.5, 3.0f);
+	core.camera.specifyPosition(0.0, 0.0, -3.4f);
+	core.camera.specifyFrontEyeRay(0, -0.0, 3.4f);
 
 	auto axis = Math::AnthemVector<float, 3>({ 0.0f,1.0f,0.0f });
 	auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis, expParam.visRot);
@@ -228,9 +228,11 @@ void prepareVisualization() {
 
 	vis.shaderFile.vertexShader = getShader("vert");
 	vis.shaderFile.fragmentShader = getShader("frag");
+	//vis.shaderFile.geometryShader = getShader("geom");
 	core.renderer.createShader(&vis.shader, &vis.shaderFile);
 
-	auto indPt = std::ranges::views::iota(0, ExpParams::sampleCounts) | std::ranges::to<std::vector<unsigned int>>();
+	auto indPt = std::ranges::views::iota(0, ExpParams::sampleCounts) | 
+		std::ranges::to<std::vector<unsigned int>>();
 	vis.ix->setIndices(indPt);
 
 	// Create Uniform Buffer
@@ -295,7 +297,7 @@ void recordCommandBufferDrw(int i) {
 		.descSetType = AT_ACDS_UNIFORM_BUFFER,
 		.inTypeIndex = 0
 	};
-
+	renderer.drSetLineWidth(1, i);
 	std::vector<AnthemDescriptorSetEntry> descSetEntries = { dseUniform };
 	renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries, vis.pipeline, i);
 

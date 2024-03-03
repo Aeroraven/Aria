@@ -21,6 +21,8 @@ namespace Anthem::External{
         std::string pbrBaseColorTexPath = "";
         std::string basePath = "";
 
+        uint32_t numVertices = 0;
+
         int positionDim = 3;
         int normalDim = 3;
         int texCoordDim = 2;

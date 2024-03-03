@@ -92,6 +92,7 @@ void preparStage(StagePass& target, AnthemSimpleToyRenderer& renderer){
     renderer.createSwapchainImageFramebuffers(&target.framebuffer,target.pass,target.depthBuffer);
     ANTH_LOGI("Render Pass Created");
 
+
     //Create Shader
     AnthemShaderFilePaths shaderFile = {
         .vertexShader = "C:\\WR\\Aria\\Anthem\\shader\\glsl\\geometryNormal\\shader.vert.spv",
