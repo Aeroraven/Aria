@@ -5,6 +5,7 @@
 #include "../include/components/camera/AnthemCamera.h"
 #include "../include/core/drawing/buffer/AnthemBufferMemAligner.h"
 #include "../include/core/drawing/buffer/impl/AnthemVertexBufferImpl.h"
+#include "../include/core/drawing/buffer/impl/AnthemInstancingVertexBufferImpl.h"
 
 using namespace Anthem::External;
 using namespace Anthem::Core;
@@ -17,6 +18,10 @@ struct Stage {
 		AtAttributeVecf<3>,
 		AtAttributeVecf<3>
 	>* vx = nullptr;
+
+	AnthemInstancingVertexBufferImpl<
+		AtAttributeVecf<1>
+	>* vix = nullptr;
 	AnthemIndexBuffer* ix = nullptr;
 	AnthemDepthBuffer* depth = nullptr;
 	AnthemShaderFilePaths shaderPath;
@@ -41,6 +46,8 @@ struct Stage {
 
 	AnthemDescriptorPool* descImage = nullptr;
 	AnthemImage** image = nullptr;
+
+	float rot = 0.0f;
 }stage;
 
 inline std::string getShader(auto x) {
@@ -66,6 +73,8 @@ void loadModel() {
 
 void prepare() {
 	stage.renderer.createVertexBuffer(&stage.vx);
+	stage.renderer.createInstancingBuffer(&stage.vix);
+
 	std::vector<uint32_t> prs;
 	uint32_t prx = 0;
 	for (auto& p : stage.model) {
@@ -73,15 +82,21 @@ void prepare() {
 		prx += p.numVertices;
 	}
 	stage.vx->setTotalVertices(prx);
-
+	stage.vix->setTotalVertices(3);
 	std::vector<std::thread> th;
 	auto childJob = [&](int k)->void {
 		for (int i = 0; i < stage.model[k].numVertices; i++) {
 			stage.vx->insertData(i + prs[k],
 				{ stage.model[k].positions[i * 3],stage.model[k].positions[i * 3 + 1],stage.model[k].positions[i * 3 + 2] },
-				{ stage.model[k].texCoords[i * 2],stage.model[k].texCoords[i * 2], k*1.0f });
+				{ stage.model[k].texCoords[i * 2],stage.model[k].texCoords[i * 2+1], k*1.0f });
 		}
+
 	};
+	for (int i = 0; i < 3; i++) {
+		stage.vix->insertData(i, { -70.0f+i*70.0f });
+	}
+	stage.vix->setAttrBindingPoint({ 2 });
+
 	for (int k = 0; k < prs.size(); k++) {
 		std::thread childExec(childJob, k);
 		th.push_back(std::move(childExec));
@@ -97,7 +112,9 @@ void prepare() {
 	uint32_t alcx = 0;
 	for (int k = 0; k < prs.size(); k++) {
 		ixList.insert(ixList.end(), stage.model[k].indices.begin(), stage.model[k].indices.end());
-		stage.indirect->addIndirectDrawCommand(1, 0, stage.model[k].indices.size(), alcx, prs[k]);
+		for (int j = 0; j < 3; j++) {
+			stage.indirect->addIndirectDrawCommand(3, 0, stage.model[k].indices.size(), alcx, prs[k]);
+		}
 		alcx += stage.model[k].indices.size();
 	}
 	stage.ix->setIndices(ixList);
@@ -146,10 +163,12 @@ void prepare() {
 		.descSetType = AT_ACDS_SAMPLER,
 		.inTypeIndex = 0
 	};
+	stage.cprop.vertStageLayout = { stage.vx,stage.vix };
 	stage.renderer.createGraphicsPipelineCustomized(&stage.pipeline, { dseUniform,dseSampler }, stage.renderPass, stage.shader, stage.vx, &stage.cprop);
 }
 
 void updateUniform() {
+	stage.rot += 0.01;
 	int rdH, rdW;
 	stage.renderer.exGetWindowSize(rdH, rdW);
 	stage.camera.specifyFrustum((float)AT_PI / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
@@ -158,7 +177,8 @@ void updateUniform() {
 	AtMatf4 proj, view, local;
 	stage.camera.getProjectionMatrix(proj);
 	stage.camera.getViewMatrix(view);
-	local = AnthemLinAlg::eye<float, 4>();
+	//local = AnthemLinAlg::eye<float, 4>();
+	local = AnthemLinAlg::axisAngleRotationTransform3<float>({ 0.0f,1.0f,0.0f }, stage.rot);
 
 	float pm[16], vm[16], lm[16];
 	proj.columnMajorVectorization(pm);
@@ -180,7 +200,7 @@ void recordCommand() {
 			(AnthemFramebuffer*)stage.framebuffer->getFramebufferObject(i), i, false);
 		stage.renderer.drSetViewportScissor(i);
 		stage.renderer.drBindGraphicsPipeline(stage.pipeline, i);
-		stage.renderer.drBindVertexBuffer(stage.vx, i);
+		stage.renderer.drBindVertexBufferMultiple({ stage.vx,stage.vix }, i);
 		stage.renderer.drBindIndexBuffer(stage.ix, i);
 		AnthemDescriptorSetEntry dseUniform = {
 			.descPool = stage.descPool,
@@ -217,6 +237,7 @@ int main() {
 	recordCommand();
 	int currentFrame = 0;
 	stage.renderer.setDrawFunction([&]() {
+		updateUniform();
 		drawLoop(currentFrame++);
 		currentFrame %= 2;
 	});

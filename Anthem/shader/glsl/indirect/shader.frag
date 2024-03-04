@@ -7,15 +7,15 @@ layout(location = 0) in vec3 inTex;
 
 void main() {
     if(inTex.z<0.1){
-        outColor = texture(tex[0],inTex.xy).rgba;
+        outColor.xyz = texture(tex[0],inTex.xy).rgb;
     }else if(inTex.z<1.1){
-        outColor = texture(tex[1],inTex.xy).rgba;
+        outColor.xyz = texture(tex[1],inTex.xy).rgb;
     }else if(inTex.z<2.1){
-        outColor = texture(tex[2],inTex.xy).rgba;
+        outColor.xyz = texture(tex[2],inTex.xy).rgb;
     }else if(inTex.z<3.1){
-        outColor = texture(tex[3],inTex.xy).rgba;
+        outColor.xyz = texture(tex[3],inTex.xy).rgb;
     }else if(inTex.z<4.1){
-        outColor = texture(tex[4],inTex.xy).rgba;
+        outColor.xyz = texture(tex[4],inTex.xy).rgb;
     }
-    
+    outColor.w = 1.0;
 }
