@@ -35,9 +35,13 @@ namespace Anthem::Core{
             }else if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER){
                 p.descPool->appendUniformDescriptorLayoutIdx(&layouts,p.inTypeIndex);
                 ANTH_LOGI("Uniform:",p.inTypeIndex);
-            }else if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SHADER_STORAGE_BUFFER){
-                p.descPool->appendSsboDescriptorLayoutIdx(&layouts,p.inTypeIndex);
-                ANTH_LOGI("SSBO:",p.inTypeIndex);
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SHADER_STORAGE_BUFFER) {
+                p.descPool->appendSsboDescriptorLayoutIdx(&layouts, p.inTypeIndex);
+                ANTH_LOGI("SSBO:", p.inTypeIndex);
+            }else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_STORAGE_IMAGE){
+                p.descPool->appendStorageImageDescriptorLayoutIdx(&layouts, p.inTypeIndex);
+
             }else{
                 ANTH_LOGE("Invalid layout type");
             }

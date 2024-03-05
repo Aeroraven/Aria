@@ -17,6 +17,7 @@ class Stage {
 public:
 	AnthemDescriptorPool* descStorage = nullptr;
 	AnthemDescriptorPool* descImage = nullptr;
+	AnthemDescriptorPool* descStImage = nullptr;
 
 	AnthemImage* image = nullptr;
 	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* ssbo = nullptr;
@@ -69,8 +70,11 @@ inline std::string getShader(auto x) {
 
 void prepareCompute() {
 	stage.renderer.createDescriptorPool(&stage.descImage);
+	stage.renderer.createDescriptorPool(&stage.descStImage);
 	stage.renderer.createTexture(&stage.image, stage.descImage, nullptr, stage.texSize, stage.texSize, 4, 0,
 		false, false, AT_IF_SRGB_FLOAT32, -1, false, AT_IU_COMPUTE_OUTPUT);
+
+	stage.image->toGeneralLayout();
 
 	stage.compShaderPath.computeShader = getShader("comp");
 	stage.renderer.createShader(&stage.compShader, &stage.compShaderPath);
@@ -82,9 +86,12 @@ void prepareCompute() {
 	};
 	stage.renderer.createShaderStorageBuffer(&stage.ssbo, stage.texSize * stage.texSize, 0, stage.descStorage, std::make_optional(createFunc));
 	
+	std::vector<AnthemImageContainer*> ct = { stage.image };
+	stage.renderer.addStorageImageArrayToDescriptor(ct, stage.descStImage, 0, -1);
+
 	AnthemDescriptorSetEntry dseImage = {
-		.descPool = stage.descImage,
-		.descSetType = AT_ACDS_SAMPLER,
+		.descPool = stage.descStImage,
+		.descSetType = AT_ACDS_STORAGE_IMAGE,
 		.inTypeIndex = 0
 	};
 	AnthemDescriptorSetEntry dseStore = {
@@ -110,7 +117,7 @@ void prepareDraw() {
 	stage.renderer.quGetComputeQueueIdx(&stage.tSrc.queueFamily);
 	stage.tSrc.stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
-	stage.tDst.access = VK_ACCESS_TRANSFER_WRITE_BIT;
+	stage.tDst.access = VK_ACCESS_SHADER_WRITE_BIT;
 	stage.tDst.layout = VK_IMAGE_LAYOUT_GENERAL;
 	stage.renderer.quGetGraphicsQueueIdx(&stage.tDst.queueFamily);
 	stage.tDst.stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
@@ -174,8 +181,8 @@ void recordCommandCompute() {
 
 		//TODO: Barrier
 		AnthemDescriptorSetEntry dseImage = {
-			.descPool = stage.descImage,
-			.descSetType = AT_ACDS_SAMPLER,
+			.descPool = stage.descStImage,
+			.descSetType = AT_ACDS_STORAGE_IMAGE,
 			.inTypeIndex = static_cast<uint32_t>(i)
 		};
 		AnthemDescriptorSetEntry dseStore = {

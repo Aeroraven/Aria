@@ -58,5 +58,11 @@ namespace Anthem::Core{
         uint32_t getWidth() const;
         uint32_t getHeight() const;
         uint32_t getDepth() const;
+
+        bool toGeneralLayout() {
+            this->image.desiredLayout = VK_IMAGE_LAYOUT_GENERAL;
+            this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+            return true;
+        }
     };
 }

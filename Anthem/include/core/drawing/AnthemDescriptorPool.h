@@ -8,18 +8,19 @@
 #include "./descriptor/AnthemSamplerDescriptor.h"
 #include "./descriptor/AnthemStorageBufferDescriptor.h"
 #include "./descriptor/AnthemUniformBufferDescriptor.h"
+#include "./descriptor/AnthemStorageImageDescriptor.h"
 
 namespace Anthem::Core{
 
     class AnthemDescriptorPool:public virtual Util::AnthemUtlLogicalDeviceReqBase,
     public virtual AnthemSamplerDescriptor, public virtual AnthemUniformBufferDescriptor,
-    public virtual AnthemStorageBufferDescriptor{
+    public virtual AnthemStorageBufferDescriptor,public virtual AnthemStorageImageDescriptor{
 
     protected:
         std::vector<VkDescriptorPool> descriptorPoolList = {};
     public:
         AnthemDescriptorPool():AnthemSamplerDescriptor(nullptr),AnthemUniformBufferDescriptor(nullptr),
-        AnthemStorageBufferDescriptor(nullptr){
+        AnthemStorageBufferDescriptor(nullptr),AnthemStorageImageDescriptor(nullptr){
 
         }
         bool virtual specifyLogicalDevice(const AnthemLogicalDevice* device) {
@@ -27,6 +28,7 @@ namespace Anthem::Core{
             this->setLogicalDeviceSampler(device);
             this->setLogicalDeviceUniform(device);
             this->setLogicalDeviceSsbo(device);
+            this->setLogicalDeviceStorageImage(device);
             return true;
         }
 
@@ -34,6 +36,7 @@ namespace Anthem::Core{
             getAllDescriptorSetsUniform(frameIdx, outRef);
             getAllDescriptorSetsSampler(frameIdx, outRef);
             getAllDescriptorSetsSsbo(frameIdx, outRef);
+            getAllDescriptorSetsStorageImage(frameIdx, outRef);
             return true;
         }
         
@@ -41,6 +44,7 @@ namespace Anthem::Core{
             destroyLayoutBindingUniform();
             destroyLayoutBindingSampler();
             destroyLayoutBindingSsbo();
+            destroyLayoutBindingStorageImage();
             return true;
         }
 
@@ -48,6 +52,7 @@ namespace Anthem::Core{
             getAllDescriptorLayoutsUniform(outRef);
             getAllDescriptorLayoutsSampler(outRef);
             getAllDescriptorLayoutsSsbo(outRef);
+            getAllDescriptorLayoutsStorageImage(outRef);
             return true;
         }
         
@@ -55,6 +60,7 @@ namespace Anthem::Core{
             createDescriptorSetSsbo(numSets, descriptorPoolList);
             createDescriptorSetUniform(numSets, descriptorPoolList);
             createDescriptorSetSampler(numSets, descriptorPoolList);
+            createDescriptorSetStorageImage(numSets, descriptorPoolList);
             return true;
         }
 

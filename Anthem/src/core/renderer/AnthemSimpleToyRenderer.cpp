@@ -190,6 +190,7 @@ namespace Anthem::Core{
         descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&(this->uniformDescPoolIdx));
         descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ,&(this->imageDescPoolIdx));
         descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &(this->ssboDescPoolIdx));
+        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &(this->storageImgDescPoolIdx));
         *pDescPool = descriptorPool;
         this->descriptorPools.push_back(descriptorPool);
         return true;
@@ -445,6 +446,13 @@ namespace Anthem::Core{
         }
         return descPool->addSamplerArray(images, bindLoc, descId);
     }
+    bool AnthemSimpleToyRenderer::addStorageImageArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
+        if (descId == -1) {
+            ANTH_LOGW("Descriptor pool index not specified for Sampler, using the default value", this->storageImgDescPoolIdx);
+            descId = this->storageImgDescPoolIdx;
+        }
+        return descPool->addStorageImageArray(images, bindLoc, descId);
+    }
     bool AnthemSimpleToyRenderer::destroySwapChain(){
         for(const auto& p:this->simpleFramebuffers){
             p->destroyFramebuffers();
@@ -536,17 +544,28 @@ namespace Anthem::Core{
         }
         VkSubmitInfo submitInfo{};
         std::vector<VkSemaphore> semToSignal;
-        for (const auto& p : *semaphoreToSignal) {
-            semToSignal.push_back(*p->getSemaphore());
+        if (semaphoreToSignal != nullptr) {
+            for (const auto& p : *semaphoreToSignal) {
+                semToSignal.push_back(*p->getSemaphore());
+            }
         }
+
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = this->commandBuffers->getCommandBuffer(cmdIdx);
         submitInfo.signalSemaphoreCount = static_cast<decltype(submitInfo.signalSemaphoreCount)>(semToSignal.size());
         submitInfo.pSignalSemaphores = semToSignal.data();
-        if (vkQueueSubmit(this->logicalDevice->getComputeQueue(), 1, &submitInfo, *fenceToSignal->getFence()) != VK_SUCCESS) {
-            ANTH_LOGE("failed to submit compute command buffer!");
-        };
+        if (fenceToSignal == nullptr) {
+            if (vkQueueSubmit(this->logicalDevice->getComputeQueue(), 1, &submitInfo, nullptr) != VK_SUCCESS) {
+                ANTH_LOGE("failed to submit compute command buffer!");
+            };
+        }
+        else {
+            if (vkQueueSubmit(this->logicalDevice->getComputeQueue(), 1, &submitInfo, *fenceToSignal->getFence()) != VK_SUCCESS) {
+                ANTH_LOGE("failed to submit compute command buffer!");
+            };
+        }
+
         return true;
     }
     bool AnthemSimpleToyRenderer::drEndCommandRecording(uint32_t cmdIdx){
@@ -670,6 +689,9 @@ namespace Anthem::Core{
             else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SHADER_STORAGE_BUFFER) {
                 p.descPool->appendDescriptorSetSsbo(p.inTypeIndex, descSets);
                 ANTH_LOGI("AcqIdx:", p.inTypeIndex);
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_STORAGE_IMAGE) {
+                p.descPool->appendDescriptorSetStorageImage(p.inTypeIndex, descSets);
             }
             else {
                 ANTH_LOGE("Unknown Descriptor Set Type");

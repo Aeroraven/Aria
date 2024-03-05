@@ -41,6 +41,7 @@ namespace Anthem::Core{
         bool destroyImageInternal();
         bool destroyImageViewInternal();
         bool generateMipmap2D(uint32_t texWidth,uint32_t texHeight);
+
     
     public:
         bool recordPipelineBarrier(VkCommandBuffer* cmdBuf, AnthemImagePipelineBarrier* src, AnthemImagePipelineBarrier* dst, VkImageAspectFlags aspectFlag);

@@ -82,6 +82,7 @@ namespace Anthem::Core{
         uint32_t uniformDescPoolIdx = -1;
         uint32_t imageDescPoolIdx = -1;
         uint32_t ssboDescPoolIdx = -1;
+        uint32_t storageImgDescPoolIdx = -1;
 
         VkDeviceSize emptyOffsetPlaceholder[1] = {0};
 
@@ -146,6 +147,8 @@ namespace Anthem::Core{
         bool createFence(AnthemFence** pFence);
 
         bool addSamplerArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,
+            uint32_t bindLoc, uint32_t descId);
+        bool addStorageImageArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,
             uint32_t bindLoc, uint32_t descId);
 
         // Command Buffer Operations
