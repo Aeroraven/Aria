@@ -243,6 +243,29 @@ namespace Anthem::Core{
         ANTH_LOGI("Image created");
         return true;
     }
+
+    bool AnthemImageContainer::recordPipelineBarrier(VkCommandBuffer* cmdBuf, AnthemImagePipelineBarrier* src, AnthemImagePipelineBarrier* dst, VkImageAspectFlags aspectFlag) {
+        VkImageMemoryBarrier mb = {};
+        mb.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        mb.image = this->image.image;
+        mb.subresourceRange.aspectMask = aspectFlag;
+        mb.subresourceRange.baseArrayLayer = 0;
+        mb.subresourceRange.layerCount = 1;
+        mb.subresourceRange.baseMipLevel = 0;
+        mb.subresourceRange.levelCount = this->image.mipmapLodLevels;
+
+        mb.srcAccessMask = src->access;
+        mb.srcQueueFamilyIndex = src->queueFamily;
+        mb.oldLayout = src->layout;
+        mb.dstAccessMask = dst->access;
+        mb.dstQueueFamilyIndex = dst->queueFamily;
+        mb.newLayout = dst->layout;
+
+        mb.pNext = nullptr;
+        vkCmdPipelineBarrier(*cmdBuf, src->stage, dst->stage, 0, 0, nullptr, 0, nullptr, 1, &mb);
+        return true;
+    }
+
     uint32_t AnthemImageContainer::getImageWidth(){
         return this->image.imageInfo.extent.width;
     }

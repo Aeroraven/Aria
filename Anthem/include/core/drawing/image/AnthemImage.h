@@ -9,7 +9,8 @@ namespace Anthem::Core{
     enum AnthemImageUsage{
         AT_IU_UNDEFINED = 0,
         AT_IU_TEXTURE = 1,
-        AT_IU_COLOR_ATTACHMENT = 2
+        AT_IU_COLOR_ATTACHMENT = 2,
+        AT_IU_COMPUTE_OUTPUT = 3,
     };
     enum AnthemImageFormat{
         AT_IF_UNDEFINED,

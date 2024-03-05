@@ -35,7 +35,7 @@ namespace Anthem::Core{
         VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_16_BIT;
 
         //Clear attachments
-        std::vector<bool> clearColorAttachmentOnLoad = { true };
+        std::vector<int> clearColorAttachmentOnLoad = { true };
         bool clearDepthAttachmentOnLoad = true;
         std::optional<std::array<float, 4>> predefinedClearColor = std::nullopt;
     };

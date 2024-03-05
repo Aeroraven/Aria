@@ -101,7 +101,8 @@ void prepareOffscreenPass(){
     AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
-        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 }
+        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 },
+        .clearColorAttachmentOnLoad = {true,true,true,true}
     };
     renderer.setupRenderPass(&offscreenPass.pass,&setupOpt,offscreenPass.depthBuffer);
     ANTH_LOGI("Render Pass Created");

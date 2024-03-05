@@ -154,7 +154,8 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
-        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32, AT_IF_SRGB_FLOAT32, AT_IF_SRGB_FLOAT32 }
+        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32, AT_IF_SRGB_FLOAT32, AT_IF_SRGB_FLOAT32 },
+        .clearColorAttachmentOnLoad = {true,true,true}
     };
     renderer.setupRenderPass(&offscreen.pass,&setupOpt,offscreen.depthBuffer);
     ANTH_LOGI("Render Pass Created");

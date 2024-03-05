@@ -218,15 +218,15 @@ namespace Anthem::Core{
 
     bool AnthemSimpleToyRenderer::createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
         uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc,bool generateMipmap2D, bool enableMsaa, AnthemImageFormat imageFmt,
-        uint32_t descId, bool ignoreDescPool){
+        uint32_t descId, bool ignoreDescPool, AnthemImageUsage usage){
 
         //Allocate Image
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
-        textureImage->loadImageData(texData,texWidth,texHeight,texChannel);
-        textureImage->specifyUsage(AnthemImageUsage::AT_IU_TEXTURE);
+        textureImage->loadImageData(texData, texWidth, texHeight, texChannel);
+        textureImage->specifyUsage(usage);
         if(generateMipmap2D){
             textureImage->enableMipMapping();
         }
@@ -241,7 +241,7 @@ namespace Anthem::Core{
             ANTH_LOGW("Descriptor pool index not specified for Tex2D, using the default value", this->imageDescPoolIdx);
             descId = this->imageDescPoolIdx;
         }
-        if(ignoreDescPool) descPool->addSampler(textureImage,bindLoc, descId);
+        if(!ignoreDescPool) descPool->addSampler(textureImage,bindLoc, descId);
         *pImage = textureImage;
         this->textures.push_back(textureImage);
         return true;
@@ -697,6 +697,13 @@ namespace Anthem::Core{
         return true;
     }
 
+    bool AnthemSimpleToyRenderer::drColorImagePipelineBarrier(AnthemImageContainer* container, AnthemImagePipelineBarrier* srcProp,
+        AnthemImagePipelineBarrier* dstProp, uint32_t cmdIdx) {
+        auto p = this->commandBuffers->getCommandBuffer(cmdIdx);
+        auto x = (std::remove_cv_t<std::remove_pointer_t<decltype(p)>>*)(p);
+        return container->recordPipelineBarrier(x, srcProp, dstProp, VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+
     bool AnthemSimpleToyRenderer::drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx, uint32_t cmdIdx){
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
         descPool->getAllDescriptorSets(frameIdx,descSets);
@@ -793,6 +800,13 @@ namespace Anthem::Core{
             this->finalize();
         }
     }
-
+    bool AnthemSimpleToyRenderer::quGetComputeQueueIdx(uint32_t* queue) {
+        *queue = phyDevice->getPhyQueueComputeFamilyIndice().value();
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::quGetGraphicsQueueIdx(uint32_t* queue) {
+        *queue = phyDevice->getPhyQueueGraphicsFamilyIndice().value();
+        return true;
+    }
 
 }

@@ -54,7 +54,6 @@ namespace Anthem::Core{
         ANTH_UNIQUE_PTR(AnthemViewport) viewport;
 
         ANTH_UNIQUE_PTR(AnthemSwapchainFramebuffer) framebufferList;
-
         ANTH_UNIQUE_PTR(AnthemDrawingCommandHelper) drawingCommandHelper;
 
 
@@ -125,7 +124,8 @@ namespace Anthem::Core{
         bool createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa);
         bool createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,uint32_t texHeight,
              uint32_t texChannel, uint32_t bindLoc, bool generateMipmap2D, bool enableMsaa,
-            AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1,bool ignoreDescPool=false);
+            AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1,bool ignoreDescPool=false,
+            AnthemImageUsage usage = AT_IU_TEXTURE);
         bool createTexture3d(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth, uint32_t texHeight, uint32_t texDepth,
             uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1);
         bool createColorAttachmentImage(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint32_t bindLoc,
@@ -183,12 +183,20 @@ namespace Anthem::Core{
         bool drBindDescriptorSet(AnthemDescriptorPool* descPool, AnthemGraphicsPipeline* pipeline, uint32_t frameIdx,uint32_t cmdIdx);
         bool drBindDescriptorSetCustomizedGraphics(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx);
         bool drBindDescriptorSetCustomizedCompute(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemComputePipeline* pipeline, uint32_t cmdIdx);
+        
+        bool drColorImagePipelineBarrier(AnthemImageContainer* container, AnthemImagePipelineBarrier* srcProp, AnthemImagePipelineBarrier* dstProp, uint32_t cmdIdx);
+        
         bool drDraw(uint32_t vertices,uint32_t cmdIdx);
         bool drDrawInstanced(uint32_t vertices, uint32_t instances, uint32_t cmdIdx);
         bool drDrawInstancedAll(uint32_t vertices, uint32_t instances, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance, uint32_t cmdIdx);
         bool drDrawIndexedIndirect(AnthemIndirectDrawBuffer* buffer, uint32_t cmdIdx);
         bool drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ);
         
+        bool quGetComputeQueueIdx(uint32_t* queue);
+        bool quGetGraphicsQueueIdx(uint32_t* queue);
+
+        // External 
+
         bool exGetWindowSize(int& height,int& width);
 
         static void exImGuiCheckStat(VkResult err)

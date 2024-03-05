@@ -14,6 +14,14 @@ namespace Anthem::Core{
         uint32_t mipmapLodLevels = 1;
         VkSampleCountFlags msaaCount = VK_SAMPLE_COUNT_1_BIT;
         VkImageLayout desiredLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        VkShaderStageFlags reqStageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    };
+
+    struct AnthemImagePipelineBarrier {
+        VkImageLayout layout;
+        VkAccessFlags access;
+        VkPipelineStageFlags stage;
+        uint32_t queueFamily;
     };
 
     class AnthemImageContainer:
@@ -23,6 +31,8 @@ namespace Anthem::Core{
     protected:
         AnthemImageProp image = {};
         VkSampler sampler = nullptr;
+        bool samplerCreated = false;
+
     protected:
         bool createImageInternal(VkImageUsageFlags usage, VkFormat format, uint32_t width, uint32_t height, uint32_t depth);
         bool createImageViewInternal(VkImageAspectFlags aspectFlags,bool use3d = false);
@@ -31,15 +41,20 @@ namespace Anthem::Core{
         bool destroyImageInternal();
         bool destroyImageViewInternal();
         bool generateMipmap2D(uint32_t texWidth,uint32_t texHeight);
-        
-        bool samplerCreated=false;
+    
+    public:
+        bool recordPipelineBarrier(VkCommandBuffer* cmdBuf, AnthemImagePipelineBarrier* src, AnthemImagePipelineBarrier* dst, VkImageAspectFlags aspectFlag);
         
     public:
         uint32_t virtual getImageWidth();
         uint32_t virtual getImageHeight();
         uint32_t virtual getImageDepth();
 
+
         const VkImageView* getImageView() const;
+        const VkShaderStageFlags getRequiredShaderStage() const {
+            return this->image.reqStageFlags;
+        }
         const VkSampleCountFlags getSampleCount() const{
             return this->image.msaaCount;
         }

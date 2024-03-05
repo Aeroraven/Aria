@@ -187,7 +187,8 @@ void prepareOffscreen(DeferPass& offscreen,AnthemSimpleToyRenderer& renderer){
     AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
-        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32, AT_IF_SRGB_FLOAT32 }
+        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32, AT_IF_SRGB_FLOAT32 },
+        .clearColorAttachmentOnLoad = {true,true}
     };
     renderer.setupRenderPass(&offscreen.pass,&setupOpt,offscreen.depthBuffer);
     ANTH_LOGI("Render Pass Created");
@@ -262,7 +263,7 @@ void generateAOParameters(){
     using AOParamTp = std::remove_pointer_t<decltype(aoParam.samples)>;
     decltype(aoParam.samples)* vecContainer[] = {&aoParam.samples,&aoParam.noise};
     const int vecDim[] = {aoParam.sampleVecDim, aoParam.noiseVecDim};
-    const int vecNum[] = {aoParam.numSamples, aoParam.noiseVecDim * aoParam.noiseVecDim};
+    const int vecNum[] = {aoParam.numSamples, aoParam.noiseTexSize * aoParam.noiseTexSize};
     for(int T=0;T<2;T++){
         *(vecContainer[T]) = new float[vecDim[T]*vecNum[T]];
         for(auto i=0;i<vecNum[T];i++){
@@ -281,8 +282,8 @@ void generateAOParameters(){
     }
 
     //Clamp Noises
-    aoParam.noiseU = new std::remove_pointer_t<decltype(aoParam.noiseU)>[vecDim[1]*vecNum[1]];
-    for(int i=0;i<vecDim[1]*vecNum[1];i++){
+    aoParam.noiseU = new std::remove_pointer_t<decltype(aoParam.noiseU)>[4*aoParam.noiseTexSize * aoParam.noiseTexSize];
+    for(int i=0;i< aoParam.noiseTexSize * aoParam.noiseTexSize*4;i++){
         aoParam.noiseU[i] = (aoParam.noise[i] + 1.0)/2.0 * 255;
     }
 }

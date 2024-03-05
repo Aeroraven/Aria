@@ -132,7 +132,7 @@ void prepare() {
 			texPath += "cat.jpg";
 		}
 		loader->loadImage(texPath.c_str(), &texWidth, &texHeight, &texChannels, &texData);
-		stage.renderer.createTexture(&stage.image[i], stage.descImage, texData, texWidth, texHeight, texChannels, 0, false, false);
+		stage.renderer.createTexture(&stage.image[i], stage.descImage, texData, texWidth, texHeight, texChannels, 0, false, false,AT_IF_SRGB_UINT8,-1,true);
 		imgContainer.push_back(stage.image[i]);
 	}
 	

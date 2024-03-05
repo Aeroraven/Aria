@@ -129,6 +129,7 @@ void recordCommandsStage(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, St
         renderer.drBindVertexBuffer(target.vxBuffers[j],i);
         renderer.drBindIndexBuffer(target.ixBuffers[j],i);
         renderer.drBindDescriptorSetCustomizedGraphics(descSetEntries,target.pipeline,i);
+        renderer.drSetLineWidth(2, i);
         renderer.drDraw(target.ixBuffers[j]->getIndexCount(),i);
     }
     renderer.drEndRenderPass(i);
