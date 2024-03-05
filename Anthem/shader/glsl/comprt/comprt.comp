@@ -2,14 +2,17 @@
 struct Object {
     vec4 data;
 };
-layout(set = 0, binding = 0) writeonly highp uniform image2D sOut;  
-layout(std140, set = 1,binding = 0) readonly buffer sIn{
-    Object particleIn[];
+layout(set = 0, binding = 0) uniform Uniform{
+    float objLength;
+} ubo;
+layout(set = 1, binding = 0) writeonly highp uniform image2D sOut;  
+layout(std140, set = 2,binding = 0) readonly buffer sIn{
+    Object geometry[];
 };
 layout(local_size_x = 16, local_size_y=16, local_size_z=1) in;
 
 void main() {
     ivec2 dim = imageSize(sOut);
 	vec2 uv = vec2(gl_GlobalInvocationID.xy)/vec2(dim.x,dim.y);
-    imageStore(sOut,ivec2(gl_GlobalInvocationID.xy),vec4(1.0,1.0,0.0,1.0));
+    imageStore(sOut,ivec2(gl_GlobalInvocationID.xy),vec4(uv.x,uv.y,0.0,1.0));
 }

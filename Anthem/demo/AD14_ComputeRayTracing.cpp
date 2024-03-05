@@ -18,9 +18,19 @@ public:
 	AnthemDescriptorPool* descStorage = nullptr;
 	AnthemDescriptorPool* descImage = nullptr;
 	AnthemDescriptorPool* descStImage = nullptr;
+	AnthemDescriptorPool* descUni = nullptr;
 
 	AnthemImage* image = nullptr;
-	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* ssbo = nullptr;
+	AnthemShaderStorageBufferImpl<
+		AtBufVecd4f<1>, //Type + Material
+		AtBufVecd4f<1>, //Pos
+		AtBufVecd4f<1>,  //Color
+		AtBufVecd4f<1>  //Param
+		
+	>* ssbo = nullptr;
+
+	AnthemUniformBufferImpl<AnthemUniformVecf<1>>* uniform;
+
 	AnthemShaderFilePaths compShaderPath;
 	AnthemShaderModule* compShader = nullptr;
 	AnthemComputePipeline* compPipe = nullptr;
@@ -76,19 +86,27 @@ void prepareCompute() {
 
 	stage.image->toGeneralLayout();
 
+	stage.renderer.createDescriptorPool(&stage.descUni);
+	stage.renderer.createUniformBuffer(&stage.uniform, 0, stage.descUni);
+
 	stage.compShaderPath.computeShader = getShader("comp");
 	stage.renderer.createShader(&stage.compShader, &stage.compShaderPath);
 
 	stage.renderer.createDescriptorPool(&stage.descStorage);
 	using ssboType = std::remove_cv_t<decltype(stage.ssbo)>;
 	std::function<void(ssboType)> createFunc = [&](ssboType w) {
-		//TODO
+		w->setInput(0, { 0,0,0,0 }, { 0,0,4,0 }, { 1,0,0,0 }, { 1,0,0,0 });
 	};
 	stage.renderer.createShaderStorageBuffer(&stage.ssbo, stage.texSize * stage.texSize, 0, stage.descStorage, std::make_optional(createFunc));
 	
 	std::vector<AnthemImageContainer*> ct = { stage.image };
 	stage.renderer.addStorageImageArrayToDescriptor(ct, stage.descStImage, 0, -1);
 
+	AnthemDescriptorSetEntry dseUni = {
+		.descPool = stage.descUni,
+		.descSetType = AT_ACDS_UNIFORM_BUFFER,
+		.inTypeIndex = 0
+	};
 	AnthemDescriptorSetEntry dseImage = {
 		.descPool = stage.descStImage,
 		.descSetType = AT_ACDS_STORAGE_IMAGE,
@@ -99,7 +117,7 @@ void prepareCompute() {
 		.descSetType = AT_ACDS_SHADER_STORAGE_BUFFER,
 		.inTypeIndex = 0
 	};
-	stage.renderer.createComputePipelineCustomized(&stage.compPipe, { dseImage,dseStore }, stage.compShader);
+	stage.renderer.createComputePipelineCustomized(&stage.compPipe, { dseUni, dseImage, dseStore }, stage.compShader);
 
 	stage.fence = new AnthemFence*[stage.inFlight];
 	stage.semaphore = new AnthemSemaphore*[stage.inFlight];
@@ -180,6 +198,11 @@ void recordCommandCompute() {
 		stage.renderer.drBindComputePipeline(stage.compPipe, stage.compCmdIdx[i]);
 
 		//TODO: Barrier
+		AnthemDescriptorSetEntry dseUni = {
+			.descPool = stage.descUni,
+			.descSetType = AT_ACDS_UNIFORM_BUFFER,
+			.inTypeIndex = static_cast<uint32_t>(i)
+		};
 		AnthemDescriptorSetEntry dseImage = {
 			.descPool = stage.descStImage,
 			.descSetType = AT_ACDS_STORAGE_IMAGE,
@@ -191,7 +214,7 @@ void recordCommandCompute() {
 			.inTypeIndex = static_cast<uint32_t>(i)
 		};
 
-		stage.renderer.drBindDescriptorSetCustomizedCompute({ dseImage,dseStore }, stage.compPipe, stage.compCmdIdx[i]);
+		stage.renderer.drBindDescriptorSetCustomizedCompute({ dseUni,dseImage,dseStore }, stage.compPipe, stage.compCmdIdx[i]);
 		stage.renderer.drComputeDispatch(stage.compCmdIdx[i], stage.texSize / stage.texSplit, stage.texSize / stage.texSplit, 1);
 		stage.renderer.drEndCommandRecording(stage.compCmdIdx[i]);
 	}
