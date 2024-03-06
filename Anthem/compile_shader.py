@@ -1,9 +1,16 @@
 import os 
 import subprocess
+import argparse
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser(description="Compile all shaders in the glsl folder")
+    argparser.add_argument("--shader", help="Compile a specific shader", default=None)
+    args = argparser.parse_args()
+
     dirs = os.listdir("./shader/glsl/")
     for x in dirs:
+        if args.shader and x != args.shader:
+            continue
         print("Compiling Shader:",x)
         subfiles = os.listdir("./shader/glsl/"+x)
         for y in subfiles:

@@ -24,12 +24,15 @@ public:
 	AnthemShaderStorageBufferImpl<
 		AtBufVecd4f<1>, //Type + Material
 		AtBufVecd4f<1>, //Pos
-		AtBufVecd4f<1>,  //Color
+		AtBufVecd4f<1>, //Color
 		AtBufVecd4f<1>  //Param
 		
 	>* ssbo = nullptr;
 
-	AnthemUniformBufferImpl<AnthemUniformVecf<1>>* uniform;
+	AnthemUniformBufferImpl<
+		AnthemUniformVecf<1>,
+		AnthemUniformVecf<1>
+	>* uniform;
 
 	AnthemShaderFilePaths compShaderPath;
 	AnthemShaderModule* compShader = nullptr;
@@ -89,18 +92,29 @@ void prepareCompute() {
 	stage.renderer.createDescriptorPool(&stage.descUni);
 	stage.renderer.createUniformBuffer(&stage.uniform, 0, stage.descUni);
 
+	int rdH, rdW;
+	stage.renderer.exGetWindowSize(rdH, rdW);
+	float geomSize = 2.0f, aspectRatio = 1.0f * rdW / rdH;
+	stage.uniform->specifyUniforms(&geomSize, &aspectRatio);
+	for (auto i : std::views::iota(0, stage.inFlight)) {
+		stage.uniform->updateBuffer(i);
+	}
+
 	stage.compShaderPath.computeShader = getShader("comp");
 	stage.renderer.createShader(&stage.compShader, &stage.compShaderPath);
 
 	stage.renderer.createDescriptorPool(&stage.descStorage);
 	using ssboType = std::remove_cv_t<decltype(stage.ssbo)>;
 	std::function<void(ssboType)> createFunc = [&](ssboType w) {
-		w->setInput(0, { 0,0,0,0 }, { 0,0,4,0 }, { 1,0,0,0 }, { 1,0,0,0 });
+		w->setInput(0, { 0,0,0,0 }, { 0,-0.5,4,0 }, { 1,0.8,0.5,1 }, { 1,0,0,0 });
+		w->setInput(1, { 1,0,0,0 }, { 0,-1.5,0,0 }, { 1,0.8,0.5,1 }, { 0,1,0,0 });
 	};
-	stage.renderer.createShaderStorageBuffer(&stage.ssbo, stage.texSize * stage.texSize, 0, stage.descStorage, std::make_optional(createFunc));
+	stage.renderer.createShaderStorageBuffer(&stage.ssbo, 1, 0, stage.descStorage, std::make_optional(createFunc));
 	
 	std::vector<AnthemImageContainer*> ct = { stage.image };
 	stage.renderer.addStorageImageArrayToDescriptor(ct, stage.descStImage, 0, -1);
+
+
 
 	AnthemDescriptorSetEntry dseUni = {
 		.descPool = stage.descUni,

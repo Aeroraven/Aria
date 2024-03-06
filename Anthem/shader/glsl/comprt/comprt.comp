@@ -1,9 +1,13 @@
 #version 450
 struct Object {
-    vec4 data;
+    vec4 type;
+    vec4 position;
+    vec4 color;
+    vec4 shape;
 };
 layout(set = 0, binding = 0) uniform Uniform{
     float objLength;
+    float aspect;
 } ubo;
 layout(set = 1, binding = 0) writeonly highp uniform image2D sOut;  
 layout(std140, set = 2,binding = 0) readonly buffer sIn{
@@ -11,8 +15,146 @@ layout(std140, set = 2,binding = 0) readonly buffer sIn{
 };
 layout(local_size_x = 16, local_size_y=16, local_size_z=1) in;
 
+struct Ray{
+    vec3 origin;
+    vec3 direction;
+};
+
+const int MAX_TRACING_STEP = 10;
+const vec3 SKY_COLOR = vec3(0.5,0.7,1.0);
+const uint SAMPLE_STEP = 5;
+
+vec2 seeds = vec2(554.0,544.0);
+vec2 seedsIncr = vec2(1.14,5.14);
+
+float collideSphere(Ray ray, vec3 sCenter, float radius, inout vec3 normal){
+    vec3 oc = ray.origin - sCenter;
+    float a = dot(ray.direction,ray.direction);
+    float b = 2.0*dot(oc,ray.direction);
+    float c = dot(oc,oc) - radius*radius;
+    float delta = b*b - 4.0*a*c;
+    if(delta < 0.0) return -1.0;
+    float x1 = (-b - sqrt(delta))/(2.0*a);
+    float x2 = (-b + sqrt(delta))/(2.0*a);
+    if(x1 < 0.0 && x2 < 0.0) return -1.0;
+    if(x1 < 0.0){
+        normal = (ray.origin + ray.direction*x2 - sCenter)/radius;
+        return x2;
+    } 
+    if(x2 < 0.0){
+        normal = (ray.origin + ray.direction*x1 - sCenter)/radius;
+        return x1;
+    }
+    return min(x1,x2);
+}
+
+float collidePlane(Ray ray, vec3 pCenter, vec3 pNormal, vec2 pSize){
+    vec3 oc = pCenter - ray.origin;
+    float t = dot(oc,pNormal)/dot(ray.direction,pNormal);
+    if(t < 0.0) return -1.0;
+    vec3 endPt = ray.origin + ray.direction*t;
+    vec3 v = endPt - pCenter; 
+    return t;
+}
+
+float random(){
+    seeds += vec2(seedsIncr.xy);
+    highp float a = 12.9898;
+    highp float b = 78.233;
+    highp float c = 43758.5453;
+    highp float dt= dot(seeds ,vec2(a,b));
+    highp float sn= mod(dt,3.14);
+    return fract(sin(sn) * c);
+}
+vec3 randomUnitVector() {
+    float up = random() * 2.0 - 1.0; 
+    float over = sqrt( max(0.0, 1.0 - up * up) );
+    float around = random() * 6.28318530717;
+    return normalize(vec3(cos(around) * over, up, sin(around) * over));	
+}
+
+void diffuseReflection(inout Ray ray, vec3 collPoint, vec3 collNormal){
+    vec3 refl = randomUnitVector();
+    float dt = dot(refl,collNormal);
+    if(dt<0.0) refl = -refl;
+    ray.origin = collPoint;
+    ray.direction = refl;
+}
+
+vec4 tracing(Ray ray){
+    int k = 0;
+    vec4 pastColors[MAX_TRACING_STEP];
+    vec4 accuMaterial[MAX_TRACING_STEP];
+    vec4 accuColor[MAX_TRACING_STEP];
+    
+    // RES = E1+M1(E2+M2(E3+M3(K)))
+
+    for(k=0;k<MAX_TRACING_STEP;k++){
+        if(k==MAX_TRACING_STEP-1){
+            pastColors[k] = vec4(SKY_COLOR,1.0);
+            break;
+        }
+        float t = -1.0;
+        int objId = -1;
+        vec3 accNormal = vec3(0.0);
+        // Collision
+        for(int i = 0; i < int(ubo.objLength); i++){
+            float tp = -1.0;
+            vec3 accNormalLcl = vec3(0.0);
+            if(geometry[i].type.x < 1.0){ 
+                tp = collideSphere(ray,geometry[i].position.xyz,geometry[i].shape.x,accNormalLcl);
+                accNormalLcl = (ray.origin + ray.direction*tp - geometry[i].position.xyz);
+                accNormalLcl = normalize(accNormalLcl);
+            }else if(geometry[i].type.x<2.0){
+                tp = collidePlane(ray,geometry[i].position.xyz,geometry[i].shape.xyz,vec2(1.0));
+                accNormalLcl = geometry[i].shape.xyz;
+            }
+            if(tp > 0.0 && (tp < t || t < 0.0)){
+                t = tp;
+                objId = i;
+                accNormal = accNormalLcl;
+            }
+        }
+        if(objId < 0){
+            pastColors[k] = vec4(SKY_COLOR,1.0);
+            break;
+        }
+        pastColors[k] = geometry[objId].color;
+        //return vec4(accNormal,1.0);
+        // Reflection
+        ray.origin = ray.origin + ray.direction*t;
+        diffuseReflection(ray,ray.origin,accNormal);
+    }
+    //k--;
+    accuColor[k] = pastColors[k];
+    for(int i=k-1;i>=0;i--){
+        accuColor[i] = accuColor[i+1]*pastColors[i];
+    }
+    if(length(accuColor[0].xyz)<0.3){
+        return vec4(1.0,0.0,0.0,1.0);
+    }
+    return accuColor[0];
+}
+
 void main() {
     ivec2 dim = imageSize(sOut);
-	vec2 uv = vec2(gl_GlobalInvocationID.xy)/vec2(dim.x,dim.y);
-    imageStore(sOut,ivec2(gl_GlobalInvocationID.xy),vec4(uv.x,uv.y,0.0,1.0));
+    uvec2 uframes = uvec2(0.0);
+    uint T = 0;
+	vec2 uv = ((vec2(gl_GlobalInvocationID.xy)/vec2(dim.x,dim.y))-0.5);
+    uv.y = -uv.y;
+    seeds += vec2(uv.xy);
+    seedsIncr += vec2(uv);
+    uv = uv *vec2(ubo.aspect,1.0);
+    
+    vec4 ret = vec4(0.0);
+    float sp = 0.0;
+
+    for(T=0;T<5;T++){
+        Ray ray;
+        ray.origin = vec3(0.0,0.0,-1.0);
+        ray.direction = normalize(vec3(uv,1.0));
+        ret += tracing(ray)/5.0;
+    }
+
+    imageStore(sOut,ivec2(gl_GlobalInvocationID.xy),vec4(ret.xyz,1.0));
 }
