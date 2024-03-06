@@ -16,11 +16,12 @@ using namespace Anthem::Components::Camera;
 class Stage {
 public:
 	AnthemDescriptorPool* descStorage = nullptr;
-	AnthemDescriptorPool* descImage = nullptr;
-	AnthemDescriptorPool* descStImage = nullptr;
+	AnthemDescriptorPool** descImage1 = nullptr;
+	AnthemDescriptorPool** descStImage1 = nullptr;
 	AnthemDescriptorPool* descUni = nullptr;
 
-	AnthemImage* image = nullptr;
+	AnthemImage** image1 = nullptr;
+
 	AnthemShaderStorageBufferImpl<
 		AtBufVecd4f<1>, //Type + Material
 		AtBufVecd4f<1>, //Pos
@@ -30,6 +31,7 @@ public:
 	>* ssbo = nullptr;
 
 	AnthemUniformBufferImpl<
+		AnthemUniformVecf<1>,
 		AnthemUniformVecf<1>,
 		AnthemUniformVecf<1>
 	>* uniform;
@@ -66,6 +68,8 @@ public:
 	const int inFlight = 2;
 	const int texSplit = 16;
 
+	float renderedFrames = 0;
+
 }stage;
 
 void initialize() {
@@ -82,23 +86,25 @@ inline std::string getShader(auto x) {
 }
 
 void prepareCompute() {
-	stage.renderer.createDescriptorPool(&stage.descImage);
-	stage.renderer.createDescriptorPool(&stage.descStImage);
-	stage.renderer.createTexture(&stage.image, stage.descImage, nullptr, stage.texSize, stage.texSize, 4, 0,
-		false, false, AT_IF_SRGB_FLOAT32, -1, false, AT_IU_COMPUTE_OUTPUT);
+	stage.descImage1 = new AnthemDescriptorPool * [stage.inFlight];
+	stage.descStImage1 = new AnthemDescriptorPool * [stage.inFlight];
+	stage.image1 = new AnthemImage * [stage.inFlight];
+	for (auto i : std::views::iota(0, stage.inFlight)) {
+		stage.renderer.createDescriptorPool(&stage.descImage1[i]);
+		stage.renderer.createDescriptorPool(&stage.descStImage1[i]);
+		stage.renderer.createTexture(&stage.image1[i], stage.descImage1[i], nullptr, stage.texSize, stage.texSize, 4, 0,
+			false, false, AT_IF_SRGB_FLOAT32, -1, false, AT_IU_COMPUTE_OUTPUT);
+		stage.image1[i]->toGeneralLayout();
 
-	stage.image->toGeneralLayout();
+		std::vector<AnthemImageContainer*> ct = { stage.image1[i]};
+		stage.renderer.addStorageImageArrayToDescriptor(ct, stage.descStImage1[i], 0, -1);
+
+	}
 
 	stage.renderer.createDescriptorPool(&stage.descUni);
 	stage.renderer.createUniformBuffer(&stage.uniform, 0, stage.descUni);
 
-	int rdH, rdW;
-	stage.renderer.exGetWindowSize(rdH, rdW);
-	float geomSize = 2.0f, aspectRatio = 1.0f * rdW / rdH;
-	stage.uniform->specifyUniforms(&geomSize, &aspectRatio);
-	for (auto i : std::views::iota(0, stage.inFlight)) {
-		stage.uniform->updateBuffer(i);
-	}
+	
 
 	stage.compShaderPath.computeShader = getShader("comp");
 	stage.renderer.createShader(&stage.compShader, &stage.compShaderPath);
@@ -111,18 +117,19 @@ void prepareCompute() {
 	};
 	stage.renderer.createShaderStorageBuffer(&stage.ssbo, 1, 0, stage.descStorage, std::make_optional(createFunc));
 	
-	std::vector<AnthemImageContainer*> ct = { stage.image };
-	stage.renderer.addStorageImageArrayToDescriptor(ct, stage.descStImage, 0, -1);
-
-
 
 	AnthemDescriptorSetEntry dseUni = {
 		.descPool = stage.descUni,
 		.descSetType = AT_ACDS_UNIFORM_BUFFER,
 		.inTypeIndex = 0
 	};
-	AnthemDescriptorSetEntry dseImage = {
-		.descPool = stage.descStImage,
+	AnthemDescriptorSetEntry dseImageF = {
+		.descPool = stage.descStImage1[0],
+		.descSetType = AT_ACDS_STORAGE_IMAGE,
+		.inTypeIndex = 0
+	};
+	AnthemDescriptorSetEntry dseImageS = {
+		.descPool = stage.descStImage1[1],
 		.descSetType = AT_ACDS_STORAGE_IMAGE,
 		.inTypeIndex = 0
 	};
@@ -131,7 +138,7 @@ void prepareCompute() {
 		.descSetType = AT_ACDS_SHADER_STORAGE_BUFFER,
 		.inTypeIndex = 0
 	};
-	stage.renderer.createComputePipelineCustomized(&stage.compPipe, { dseUni, dseImage, dseStore }, stage.compShader);
+	stage.renderer.createComputePipelineCustomized(&stage.compPipe, { dseUni, dseImageF, dseImageS, dseStore }, stage.compShader);
 
 	stage.fence = new AnthemFence*[stage.inFlight];
 	stage.semaphore = new AnthemSemaphore*[stage.inFlight];
@@ -143,13 +150,23 @@ void prepareCompute() {
 	}
 }
 
+void updateUniform() {
+	int rdH, rdW;
+	stage.renderer.exGetWindowSize(rdH, rdW);
+	float geomSize = 2.0f, aspectRatio = 1.0f * rdW / rdH, totlSamples = stage.renderedFrames++;
+	stage.uniform->specifyUniforms(&geomSize, &aspectRatio, &totlSamples);
+	for (auto i : std::views::iota(0, stage.inFlight)) {
+		stage.uniform->updateBuffer(i);
+	}
+}
+
 void prepareDraw() {
 	stage.tSrc.access = 0;
 	stage.tSrc.layout = VK_IMAGE_LAYOUT_GENERAL;
 	stage.renderer.quGetComputeQueueIdx(&stage.tSrc.queueFamily);
 	stage.tSrc.stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 
-	stage.tDst.access = VK_ACCESS_SHADER_WRITE_BIT;
+	stage.tDst.access = VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT;
 	stage.tDst.layout = VK_IMAGE_LAYOUT_GENERAL;
 	stage.renderer.quGetGraphicsQueueIdx(&stage.tDst.queueFamily);
 	stage.tDst.stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
@@ -177,7 +194,7 @@ void prepareDraw() {
 	stage.renderer.createSwapchainImageFramebuffers(&stage.framebuffer, stage.pass, stage.depth);
 
 	AnthemDescriptorSetEntry dseImage = {
-		.descPool = stage.descImage,
+		.descPool = stage.descImage1[0],
 		.descSetType = AT_ACDS_SAMPLER,
 		.inTypeIndex = 0
 	};
@@ -187,14 +204,15 @@ void prepareDraw() {
 void recordCommandsDisplay() {
 	for (auto i : std::views::iota(0, stage.inFlight)) {
 		stage.renderer.drStartCommandRecording(i);
-		stage.renderer.drColorImagePipelineBarrier(stage.image, &stage.tSrc, &stage.tDst, i);
+		stage.renderer.drColorImagePipelineBarrier(stage.image1[0], &stage.tSrc, &stage.tDst, i);
+		stage.renderer.drColorImagePipelineBarrier(stage.image1[1], &stage.tSrc, &stage.tDst, i);
 		stage.renderer.drStartRenderPass(stage.pass, (AnthemFramebuffer*)stage.framebuffer->getFramebufferObject(i), i, false);
 		stage.renderer.drSetViewportScissor(i);
 		stage.renderer.drBindGraphicsPipeline(stage.dispPipe, i);
 		stage.renderer.drBindVertexBuffer(stage.vx, i);
 		stage.renderer.drBindIndexBuffer(stage.ix, i);
 		AnthemDescriptorSetEntry dseImage = {
-			.descPool = stage.descImage,
+			.descPool = stage.descImage1[i],
 			.descSetType = AT_ACDS_SAMPLER,
 			.inTypeIndex = static_cast<uint32_t>(i)
 		};
@@ -217,8 +235,13 @@ void recordCommandCompute() {
 			.descSetType = AT_ACDS_UNIFORM_BUFFER,
 			.inTypeIndex = static_cast<uint32_t>(i)
 		};
-		AnthemDescriptorSetEntry dseImage = {
-			.descPool = stage.descStImage,
+		AnthemDescriptorSetEntry dseImageF = {
+			.descPool = stage.descStImage1[i],
+			.descSetType = AT_ACDS_STORAGE_IMAGE,
+			.inTypeIndex = static_cast<uint32_t>(i)
+		};
+		AnthemDescriptorSetEntry dseImageS = {
+			.descPool = stage.descStImage1[1-i],
 			.descSetType = AT_ACDS_STORAGE_IMAGE,
 			.inTypeIndex = static_cast<uint32_t>(i)
 		};
@@ -228,7 +251,7 @@ void recordCommandCompute() {
 			.inTypeIndex = static_cast<uint32_t>(i)
 		};
 
-		stage.renderer.drBindDescriptorSetCustomizedCompute({ dseUni,dseImage,dseStore }, stage.compPipe, stage.compCmdIdx[i]);
+		stage.renderer.drBindDescriptorSetCustomizedCompute({ dseUni,dseImageF,dseImageS,dseStore }, stage.compPipe, stage.compCmdIdx[i]);
 		stage.renderer.drComputeDispatch(stage.compCmdIdx[i], stage.texSize / stage.texSplit, stage.texSize / stage.texSplit, 1);
 		stage.renderer.drEndCommandRecording(stage.compCmdIdx[i]);
 	}
@@ -254,6 +277,7 @@ int main() {
 
 	uint32_t cFrame = 0;
 	stage.renderer.setDrawFunction([&](){
+		updateUniform();
 		mainLoop(cFrame++);
 		cFrame %= 2;
 	});

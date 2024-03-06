@@ -8,9 +8,11 @@ struct Object {
 layout(set = 0, binding = 0) uniform Uniform{
     float objLength;
     float aspect;
+    float rdFrames;
 } ubo;
 layout(set = 1, binding = 0) writeonly highp uniform image2D sOut;  
-layout(std140, set = 2,binding = 0) readonly buffer sIn{
+layout(set = 2, binding = 0, rgba32f) readonly highp uniform image2D sRef;  
+layout(std140, set = 3,binding = 0) readonly buffer sIn{
     Object geometry[];
 };
 layout(local_size_x = 16, local_size_y=16, local_size_z=1) in;
@@ -20,9 +22,9 @@ struct Ray{
     vec3 direction;
 };
 
-const int MAX_TRACING_STEP = 10;
+const int MAX_TRACING_STEP = 20;
 const vec3 SKY_COLOR = vec3(0.5,0.7,1.0);
-const uint SAMPLE_STEP = 5;
+const uint SAMPLE_STEP = 20;
 
 vec2 seeds = vec2(554.0,544.0);
 vec2 seedsIncr = vec2(1.14,5.14);
@@ -120,10 +122,11 @@ vec4 tracing(Ray ray){
             break;
         }
         pastColors[k] = geometry[objId].color;
-        //return vec4(accNormal,1.0);
+
         // Reflection
         ray.origin = ray.origin + ray.direction*t;
         diffuseReflection(ray,ray.origin,accNormal);
+        ray.origin = ray.origin + ray.direction*0.001;
     }
     //k--;
     accuColor[k] = pastColors[k];
@@ -142,6 +145,7 @@ void main() {
     uint T = 0;
 	vec2 uv = ((vec2(gl_GlobalInvocationID.xy)/vec2(dim.x,dim.y))-0.5);
     uv.y = -uv.y;
+    seeds += vec2(ubo.rdFrames*0.451,ubo.rdFrames*0.919);
     seeds += vec2(uv.xy);
     seedsIncr += vec2(uv);
     uv = uv *vec2(ubo.aspect,1.0);
@@ -149,12 +153,18 @@ void main() {
     vec4 ret = vec4(0.0);
     float sp = 0.0;
 
-    for(T=0;T<5;T++){
+    for(T=0;T<SAMPLE_STEP;T++){
         Ray ray;
         ray.origin = vec3(0.0,0.0,-1.0);
         ray.direction = normalize(vec3(uv,1.0));
-        ret += tracing(ray)/5.0;
-    }
+        ret += tracing(ray)/float(SAMPLE_STEP);
 
-    imageStore(sOut,ivec2(gl_GlobalInvocationID.xy),vec4(ret.xyz,1.0));
+        seeds += vec2(ubo.rdFrames*0.451,ubo.rdFrames*0.919);
+        seeds += vec2(uv.xy);
+        seedsIncr += vec2(ubo.rdFrames*0.451,ubo.rdFrames*0.919);
+        seedsIncr += vec2(uv);
+    }
+    vec4 refv = imageLoad(sRef,ivec2(gl_GlobalInvocationID.xy));
+    vec4 target = mix(refv,ret,1.0/(1.0+float(ubo.rdFrames)));
+    imageStore(sOut,ivec2(gl_GlobalInvocationID.xy),vec4(target.xyz,1.0));
 }

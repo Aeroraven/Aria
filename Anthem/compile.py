@@ -4,14 +4,14 @@ import argparse
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="Compile all shaders in the glsl folder")
-    argparser.add_argument("--shader", help="Compile a specific shader", default=None)
+    argparser.add_argument("--target", help="Compile a specific shader", default=None)
     args = argparser.parse_args()
 
     dirs = os.listdir("./shader/glsl/")
     for x in dirs:
-        if args.shader and x != args.shader:
+        if args.target and x != args.target:
             continue
-        print("Compiling Shader:",x)
+        print("Compiling :",x)
         subfiles = os.listdir("./shader/glsl/"+x)
         for y in subfiles:
             if y.endswith(".vert") or y.endswith(".frag") or y.endswith(".geom") or y.endswith(".comp"):
@@ -19,4 +19,4 @@ if __name__ == "__main__":
                 if w.returncode != 0:
                     print("Error compiling shader:",y)
                     raise
-                print("- Compiled shader:",y)
+                print("- Compiled :",y)
