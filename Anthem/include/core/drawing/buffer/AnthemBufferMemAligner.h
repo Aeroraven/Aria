@@ -210,6 +210,23 @@ namespace Anthem::Core{
             }
             return true;
         }
+        bool bmaSetAllUniformInput(std::array<Tp, VecSz>... args) {
+            std::vector<char*> ptrs = { (reinterpret_cast<char*>(args.data()))... };
+            for (int i = 0; i < numArgs; i++) {
+                auto idxOffset = uniformOffsetReq.at(i);
+                memcpy(buffer + idxOffset, ptrs.at(i), elemSize.at(i));
+            }
+            return true;
+        }
+        bool bmaSetAllUniformInput2(Tp*... args) {
+            std::vector<char*> ptrs = { (reinterpret_cast<char*>(args)... };
+            for (int i = 0; i < numArgs; i++) {
+                auto idxOffset = uniformOffsetReq.at(i);
+                memcpy(buffer + idxOffset, ptrs.at(i), elemSize.at(i));
+            }
+            return true;
+        }
+
         IdxType bmaCalcRequiredSpaceForDynInput(IdxType numElements){
             return bmaGetIthElementPrePadding(numElements+1);
         }
