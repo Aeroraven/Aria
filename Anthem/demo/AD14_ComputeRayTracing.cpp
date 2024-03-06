@@ -26,7 +26,8 @@ public:
 		AtBufVecd4f<1>, //Type + Material
 		AtBufVecd4f<1>, //Pos
 		AtBufVecd4f<1>, //Color
-		AtBufVecd4f<1>  //Param
+		AtBufVecd4f<1>,  //Param
+		AtBufVecd4f<1> //Emission
 		
 	>* ssbo = nullptr;
 
@@ -64,10 +65,10 @@ public:
 	AnthemImagePipelineBarrier tDst;
 
 	uint32_t* compCmdIdx = nullptr;
-	const int texSize = 1024;
+	const int texSize = 2048;
 	const int inFlight = 2;
 	const int texSplit = 16;
-
+	const int numGeometries = 5;
 	float renderedFrames = 0;
 
 }stage;
@@ -104,18 +105,19 @@ void prepareCompute() {
 	stage.renderer.createDescriptorPool(&stage.descUni);
 	stage.renderer.createUniformBuffer(&stage.uniform, 0, stage.descUni);
 
-	
-
 	stage.compShaderPath.computeShader = getShader("comp");
 	stage.renderer.createShader(&stage.compShader, &stage.compShaderPath);
 
 	stage.renderer.createDescriptorPool(&stage.descStorage);
 	using ssboType = std::remove_cv_t<decltype(stage.ssbo)>;
 	std::function<void(ssboType)> createFunc = [&](ssboType w) {
-		w->setInput(0, { 0,0,0,0 }, { 0,-0.5,4,0 }, { 1,0.8,0.5,1 }, { 1,0,0,0 });
-		w->setInput(1, { 1,0,0,0 }, { 0,-1.5,0,0 }, { 1,0.8,0.5,1 }, { 0,1,0,0 });
+		w->setInput(4, { 0,0,0,0 }, { -1.5,0,2.5,0 }, { 0.2,0.3 ,0.6,1 }, { 0.5,0,0,0 }, { 0,0,0,0 });
+		w->setInput(3, { 0,0,0,0 }, { -0.5,-0.5,2.5,0 }, { 0.2,0.6 ,0.7,1 }, { 0.3,0,0,0 }, { 12,10,10,1 });
+		w->setInput(2, { 0,0,0,0 }, { 1,0,3,0 }, { 0.85,0.5 ,0.2,1 }, { 0.5,0,0,0 }, { 0,0,0,0 });
+		w->setInput(1, { 0,0,0,0 }, { 0,0.5,4,0 }, { 0.8,0.2 ,0.2,1 }, { 1,0,0,0 }, { 0,0,0,0 });
+		w->setInput(0, { 1,0,0,0 }, { 0,-0.5,0,0 }, { 0.7,0.7,0.7,1 }, { 0,1,0,0 }, { 0,0,0,0 });
 	};
-	stage.renderer.createShaderStorageBuffer(&stage.ssbo, 1, 0, stage.descStorage, std::make_optional(createFunc));
+	stage.renderer.createShaderStorageBuffer(&stage.ssbo, stage.numGeometries, 0, stage.descStorage, std::make_optional(createFunc));
 	
 
 	AnthemDescriptorSetEntry dseUni = {
@@ -153,7 +155,7 @@ void prepareCompute() {
 void updateUniform() {
 	int rdH, rdW;
 	stage.renderer.exGetWindowSize(rdH, rdW);
-	float geomSize = 2.0f, aspectRatio = 1.0f * rdW / rdH, totlSamples = stage.renderedFrames++;
+	float geomSize = stage.numGeometries * 1.0f, aspectRatio = 1.0f * rdW / rdH, totlSamples = stage.renderedFrames++;
 	stage.uniform->specifyUniforms(&geomSize, &aspectRatio, &totlSamples);
 	for (auto i : std::views::iota(0, stage.inFlight)) {
 		stage.uniform->updateBuffer(i);

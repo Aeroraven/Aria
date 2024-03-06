@@ -214,7 +214,6 @@ void recordCommand() {
 		};
 		stage.renderer.drBindDescriptorSetCustomizedGraphics({ dseUniform,dseSampler }, stage.pipeline, i);
 		stage.renderer.drDrawIndexedIndirect(stage.indirect, i);
-
 		stage.renderer.drEndRenderPass(i);
 		stage.renderer.drEndCommandRecording(i);
 	}

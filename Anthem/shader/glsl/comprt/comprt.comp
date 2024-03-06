@@ -4,6 +4,7 @@ struct Object {
     vec4 position;
     vec4 color;
     vec4 shape;
+    vec4 emission;
 };
 layout(set = 0, binding = 0) uniform Uniform{
     float objLength;
@@ -22,12 +23,20 @@ struct Ray{
     vec3 direction;
 };
 
-const int MAX_TRACING_STEP = 20;
-const vec3 SKY_COLOR = vec3(0.5,0.7,1.0);
+const int MAX_TRACING_STEP = 50;
+const vec3 SKY_COLOR = vec3(0.9,0.9,1.0)*0.05;
 const uint SAMPLE_STEP = 20;
 
 vec2 seeds = vec2(554.0,544.0);
 vec2 seedsIncr = vec2(1.14,5.14);
+
+void gammaRectFromLinear(inout vec4 color){
+    color.xyz = pow(color.xyz,vec3(1.0/2.2));
+}
+
+void gammaRectToLinear(inout vec4 color){
+    color.xyz = pow(color.xyz,vec3(2.2));
+}
 
 float collideSphere(Ray ray, vec3 sCenter, float radius, inout vec3 normal){
     vec3 oc = ray.origin - sCenter;
@@ -60,6 +69,7 @@ float collidePlane(Ray ray, vec3 pCenter, vec3 pNormal, vec2 pSize){
 }
 
 float random(){
+    //Random function from https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
     seeds += vec2(seedsIncr.xy);
     highp float a = 12.9898;
     highp float b = 78.233;
@@ -68,6 +78,7 @@ float random(){
     highp float sn= mod(dt,3.14);
     return fract(sin(sn) * c);
 }
+
 vec3 randomUnitVector() {
     float up = random() * 2.0 - 1.0; 
     float over = sqrt( max(0.0, 1.0 - up * up) );
@@ -88,12 +99,13 @@ vec4 tracing(Ray ray){
     vec4 pastColors[MAX_TRACING_STEP];
     vec4 accuMaterial[MAX_TRACING_STEP];
     vec4 accuColor[MAX_TRACING_STEP];
+    vec4 accuEmission[MAX_TRACING_STEP];
     
     // RES = E1+M1(E2+M2(E3+M3(K)))
 
     for(k=0;k<MAX_TRACING_STEP;k++){
         if(k==MAX_TRACING_STEP-1){
-            pastColors[k] = vec4(SKY_COLOR,1.0);
+            pastColors[k] = vec4(0.0,0.0,0.0,1.0);
             break;
         }
         float t = -1.0;
@@ -122,22 +134,20 @@ vec4 tracing(Ray ray){
             break;
         }
         pastColors[k] = geometry[objId].color;
+        accuEmission[k] = geometry[objId].emission;
 
         // Reflection
         ray.origin = ray.origin + ray.direction*t;
         diffuseReflection(ray,ray.origin,accNormal);
         ray.origin = ray.origin + ray.direction*0.001;
     }
-    //k--;
     accuColor[k] = pastColors[k];
     for(int i=k-1;i>=0;i--){
-        accuColor[i] = accuColor[i+1]*pastColors[i];
-    }
-    if(length(accuColor[0].xyz)<0.3){
-        return vec4(1.0,0.0,0.0,1.0);
+        accuColor[i] = accuColor[i+1]*pastColors[i] + accuEmission[i];
     }
     return accuColor[0];
 }
+
 
 void main() {
     ivec2 dim = imageSize(sOut);
@@ -164,7 +174,9 @@ void main() {
         seedsIncr += vec2(ubo.rdFrames*0.451,ubo.rdFrames*0.919);
         seedsIncr += vec2(uv);
     }
-    vec4 refv = imageLoad(sRef,ivec2(gl_GlobalInvocationID.xy));
+    vec4 refv = imageLoad(sRef,ivec2(gl_GlobalInvocationID.xy)); 
+    gammaRectToLinear(refv);
     vec4 target = mix(refv,ret,1.0/(1.0+float(ubo.rdFrames)));
+    gammaRectFromLinear(target);
     imageStore(sOut,ivec2(gl_GlobalInvocationID.xy),vec4(target.xyz,1.0));
 }
