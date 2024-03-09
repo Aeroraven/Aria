@@ -28,14 +28,24 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemGeneralBufferBase::bindBufferInternal(AnthemGeneralBufferProp* bufProp){
-        //Bind Memory
         auto result = vkBindBufferMemory(this->logicalDevice->getLogicalDevice(),bufProp->buffer,bufProp->bufferMem,0);
         if(result!=VK_SUCCESS){
             ANTH_LOGE("Failed to bind buffer memory");
             return false;
         }
-        ///ANTH_LOGI("Buffer memory binded");
         return true;
     }
-    
+    bool AnthemGeneralBufferBase::setupBufferBarrierInternal(VkCommandBuffer cmdBuf,AnthemGeneralBufferProp* bufProp, AnthemBufferBarrierProp* src, AnthemBufferBarrierProp* dst) {
+        VkBufferMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        barrier.srcAccessMask = src->access;
+        barrier.srcQueueFamilyIndex = src->queueFamily;
+        barrier.dstAccessMask = dst->access;
+        barrier.dstQueueFamilyIndex = dst->queueFamily;
+        barrier.size = VK_WHOLE_SIZE;
+        barrier.buffer = bufProp->buffer;
+
+        vkCmdPipelineBarrier(cmdBuf, src->stage, dst->stage, 0, 0, nullptr, 1, &barrier, 0, nullptr);
+        return true;
+    }
 }

@@ -158,6 +158,20 @@ namespace Anthem::Core{
             } 
             return alignReqs;
         }
+        uint32_t bmaGetUniformAlignOffsetsAll() {
+            std::array<IdxType, uniformElemCnt> alignReqs;
+            int cIdx = 0;
+            int curOffset = 0;
+            for (IdxType i = 0; i < dynVarStart; i++) {
+                for (IdxType j = 0; j < arrayElements.at(i); j++) {
+                    auto diff = curOffset % alignRequirement.at(i);
+                    if (diff != 0) curOffset += alignRequirement.at(i) - diff;
+                    alignReqs[cIdx++] = static_cast<IdxType>(curOffset);
+                    curOffset += elemSize.at(i);
+                }
+            }
+            return curOffset;
+        }
         std::array<IdxType,uniformElemCnt> uniformOffsetReq = bmaGetUniformAlignOffsets();
 
         std::array<IdxType,dynamicElemCnt> bmaGetDynamicAlignOffsets(){
@@ -219,7 +233,7 @@ namespace Anthem::Core{
             return true;
         }
         bool bmaSetAllUniformInput2(Tp*... args) {
-            std::vector<char*> ptrs = { (reinterpret_cast<char*>(args)... };
+            std::vector<char*> ptrs = { reinterpret_cast<char*>(args)... };
             for (int i = 0; i < numArgs; i++) {
                 auto idxOffset = uniformOffsetReq.at(i);
                 memcpy(buffer + idxOffset, ptrs.at(i), elemSize.at(i));

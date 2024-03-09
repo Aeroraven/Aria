@@ -565,11 +565,11 @@ void prepareVisualization() {
 		.inTypeIndex = 0
 	};
 	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { uniformBufferDescEntryRegPipeline,cRamp };
-	core.renderer.createGraphicsPipelineCustomized(&vis.pipeline, descSetEntriesRegPipeline, vis.renderPass, vis.shader,
+	core.renderer.createGraphicsPipelineCustomized(&vis.pipeline, descSetEntriesRegPipeline, {}, vis.renderPass, vis.shader,
 		comp.samples, &vis.cprop);
 
 	vis.cpropPoint.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_POINT_LIST;
-	core.renderer.createGraphicsPipelineCustomized(&vis.pipelinePoint, descSetEntriesRegPipeline, vis.renderPass, vis.shader,
+	core.renderer.createGraphicsPipelineCustomized(&vis.pipelinePoint, descSetEntriesRegPipeline, {}, vis.renderPass, vis.shader,
 		comp.samples, &vis.cpropPoint);
 
 	vis.pointVisCmdBuf = new uint32_t[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
@@ -713,7 +713,7 @@ void prepareAxisVis() {
 	};
 	std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { uniformBufferDescEntryRegPipeline };
 
-	core.renderer.createGraphicsPipelineCustomized(&axis.pipeline, descSetEntriesRegPipeline, axis.renderPass, axis.shader,
+	core.renderer.createGraphicsPipelineCustomized(&axis.pipeline, descSetEntriesRegPipeline, {}, axis.renderPass, axis.shader,
 		axis.vxBuf, &axis.cprop);
 
 	axis.drawProgress = new AnthemFence * [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];

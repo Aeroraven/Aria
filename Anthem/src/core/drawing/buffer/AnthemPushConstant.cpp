@@ -12,11 +12,13 @@ namespace Anthem::Core {
 		default:
 			ANTH_LOGE("Unsupported flag:", stage);
 		}
+		return true;
 	}
 	VkPushConstantRange AnthemPushConstant::getRange() {
 		VkPushConstantRange range = {};
 		range.stageFlags = this->flags;
 		range.size = this->getSize();
 		range.offset = 0;
+		return range;
 	}
 }

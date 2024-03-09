@@ -102,7 +102,7 @@ void prepareDraw() {
     drw.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_POINT_LIST;
 
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = { };
-    renderer.createGraphicsPipelineCustomized(&drw.pipeline, descSetEntriesRegPipeline, drw.pass, drw.shader, comp.ssbo, &drw.cprop);
+    renderer.createGraphicsPipelineCustomized(&drw.pipeline, descSetEntriesRegPipeline, {}, drw.pass, drw.shader, comp.ssbo, &drw.cprop);
     ANTH_LOGI("Done");
 }
 

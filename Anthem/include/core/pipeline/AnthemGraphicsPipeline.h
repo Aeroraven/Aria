@@ -8,6 +8,7 @@
 #include "../drawing/buffer/AnthemVertexBuffer.h"
 #include "../drawing/buffer/AnthemUniformBuffer.h"
 #include "../drawing/buffer/AnthemVertexStageLayoutSpec.h"
+#include "../drawing/buffer/AnthemPushConstant.h"
 #include "./AnthemDescriptorSetEntry.h"
 
 namespace Anthem::Core{
@@ -89,7 +90,7 @@ namespace Anthem::Core{
 
         bool preparePreqPipelineCreateInfo();
         bool createPipelineLayout();
-        bool createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry);
+        bool createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry,const std::vector<AnthemPushConstant*> pushConsts);
         bool destroyPipelineLayout();
         
         bool createPipeline();

@@ -1,0 +1,88 @@
+#version 450
+struct Object {
+    vec4 pos;
+    vec4 velocity;
+    vec4 lastPos;
+};
+layout(std140, set = 0,binding = 0) readonly buffer sIn{
+    Object nodeIn[];
+};
+layout(std140, set = 1,binding = 0) writeonly buffer sOut{
+    Object nodeOut[];
+};
+layout(set = 2,binding = 0) uniform Ubo{
+    float clothSize;
+    float neighbourDistance;
+    float elasticCoef;
+    float gravityCoef;
+    float particleMass;
+    float damping;
+    float timeStep;
+}ubo;
+
+layout(local_size_x = 2, local_size_y=2, local_size_z=1) in;
+
+vec3 addSpringForce(ivec2 tgt,ivec2 src,float alpha,float base){
+    int cSize = int(ubo.clothSize);
+    if(src.x<0 || src.x>=cSize || src.y<0 || src.y>=cSize) return vec3(0.0);
+    int srcIdx = src.y * cSize + src.x;
+    int tgtIdx = tgt.y * cSize + tgt.x;
+
+    float baseDist = base*ubo.neighbourDistance;
+    vec3 srcPos = nodeIn[srcIdx].pos.xyz;
+    vec3 tgtPos = nodeIn[tgtIdx].pos.xyz;
+
+    vec3 dir = normalize(srcPos-tgtPos);
+    float dist = length(srcPos-tgtPos);
+    float force = (dist-baseDist) * ubo.elasticCoef*alpha;
+    return dir * force;
+}
+
+vec3 addGravity(ivec2 tgt){
+    return vec3(0.0, -ubo.gravityCoef, 0.0);
+}
+
+vec3 verlet(ivec2 tgt,vec3 acc){
+    int cSize = int(ubo.clothSize);
+    int tgtIdx = tgt.y * cSize + tgt.x;
+    vec3 pos = nodeIn[tgtIdx].pos.xyz;
+    vec3 lastPos = nodeIn[tgtIdx].lastPos.xyz;
+    vec3 npos = pos + (pos-lastPos) * ubo.damping + acc * ubo.timeStep * ubo.timeStep;
+    return npos;
+}
+
+vec3 addAllSpringConstraints(ivec2 tgt){
+    vec3 accu = vec3(0.0);
+    //Structural & Shearing
+    accu += addSpringForce(tgt, ivec2(tgt.x+1,tgt.y),1.0,1.0);
+    accu += addSpringForce(tgt, ivec2(tgt.x-1,tgt.y),1.0,1.0);
+    accu += addSpringForce(tgt, ivec2(tgt.x,tgt.y+1),1.0,1.0);
+    accu += addSpringForce(tgt, ivec2(tgt.x,tgt.y-1),1.0,1.0);
+    accu += addSpringForce(tgt, ivec2(tgt.x+1,tgt.y+1),1.0,sqrt(2.0));
+    accu += addSpringForce(tgt, ivec2(tgt.x-1,tgt.y-1),1.0,sqrt(2.0));
+    accu += addSpringForce(tgt, ivec2(tgt.x+1,tgt.y-1),1.0,sqrt(2.0));
+    accu += addSpringForce(tgt, ivec2(tgt.x-1,tgt.y+1),1.0,sqrt(2.0));
+
+    //Bending
+    accu += addSpringForce(tgt, ivec2(tgt.x+2,tgt.y),0.6,2.0);
+    accu += addSpringForce(tgt, ivec2(tgt.x-2,tgt.y),0.6,2.0);
+    accu += addSpringForce(tgt, ivec2(tgt.x,tgt.y+2),0.6,2.0);
+    accu += addSpringForce(tgt, ivec2(tgt.x,tgt.y-2),0.6,2.0);
+
+    accu /= ubo.particleMass;
+    return accu;
+}
+
+void main(){
+    ivec2 locId = ivec2(int(gl_GlobalInvocationID.x),int(gl_GlobalInvocationID.y)); 
+	int idx = locId.y * int(ubo.clothSize) + locId.x;
+    
+    if(locId.y==int(ubo.clothSize)-1 && locId.x==int(ubo.clothSize)-1) return;
+    if(locId.y==int(ubo.clothSize)-1 && locId.x==0) return;
+    vec3 acc = addGravity(ivec2(locId.x,locId.y));
+    acc += addAllSpringConstraints(ivec2(locId.x,locId.y));
+
+    nodeOut[idx].lastPos = nodeIn[idx].pos;
+    nodeOut[idx].pos = vec4(verlet(ivec2(locId.x,locId.y),acc),1.0);
+    //nodeOut[idx].pos = nodeIn[idx].pos + vec4(0.0001, 0.0, 0.0, 0.0);
+}

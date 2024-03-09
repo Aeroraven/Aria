@@ -149,7 +149,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerDescEntryRegPipeline};
 
-    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline,offscreen.pass,offscreen.shader,offscreen.vxBuffers[0], nullptr);
+    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline, {}, offscreen.pass,offscreen.shader,offscreen.vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 }
 

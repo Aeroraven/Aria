@@ -79,7 +79,7 @@ void buildPipeline() {
 	drw.cprop.blendPreset = AnthemBlendPreset::AT_ABP_NO_BLEND;
 	drw.cprop.vertStageLayout = { drw.vvbuf,drw.vibuf };
 
-	core.renderer.createGraphicsPipelineCustomized(&drw.pipeline, {}, drw.renderPass, drw.shader, drw.vvbuf, &drw.cprop);
+	core.renderer.createGraphicsPipelineCustomized(&drw.pipeline, {}, {}, drw.renderPass, drw.shader, drw.vvbuf, &drw.cprop);
 }
 
 void recordCommandBufferDrw(int i) {

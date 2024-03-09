@@ -134,7 +134,7 @@ int main(){
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerDescEntryRegPipeline};
 
     AnthemGraphicsPipeline* pipeline;
-    renderer->createGraphicsPipelineCustomized(&pipeline,descSetEntriesRegPipeline,pass,shader,vxBuffers[0], nullptr);
+    renderer->createGraphicsPipelineCustomized(&pipeline,descSetEntriesRegPipeline, {}, pass,shader,vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 
     //Start Loop

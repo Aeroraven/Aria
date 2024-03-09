@@ -18,6 +18,7 @@ namespace Anthem::Core {
 		
 	public:
 		virtual uint32_t getSize() = 0;
+		virtual void* getData() = 0;
 		virtual bool enableShaderStage(AnthemPushConstantStageFlags stage);
 		virtual VkPushConstantRange getRange();
 	};

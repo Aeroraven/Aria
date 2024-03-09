@@ -141,7 +141,7 @@ void prepareSecondPass() {
 		.inTypeIndex = 0
 	};
 	std::vector<AnthemDescriptorSetEntry> descEntry = { uniformBufferDescEntryRdw,samplerRdw,samplerNoiseRdw };
-	core.renderer.createGraphicsPipelineCustomized(&vol.pipeline, descEntry, vol.pass, vol.shader, cube.vbuf, &vol.cprop);
+	core.renderer.createGraphicsPipelineCustomized(&vol.pipeline, descEntry, {}, vol.pass, vol.shader, cube.vbuf, &vol.cprop);
 
 }
 
@@ -198,7 +198,7 @@ void createCube() {
 			.inTypeIndex = 0
 	};
 	std::vector<AnthemDescriptorSetEntry> descEntry = { uniformBufferDescEntryRdw };
-	core.renderer.createGraphicsPipelineCustomized(&cube.pipeline, descEntry, cube.pass, cube.shader, cube.vbuf, &cube.cprop);
+	core.renderer.createGraphicsPipelineCustomized(&cube.pipeline, descEntry, {}, cube.pass, cube.shader, cube.vbuf, &cube.cprop);
 
 }
 

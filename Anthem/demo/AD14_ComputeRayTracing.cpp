@@ -200,7 +200,7 @@ void prepareDraw() {
 		.descSetType = AT_ACDS_SAMPLER,
 		.inTypeIndex = 0
 	};
-	stage.renderer.createGraphicsPipelineCustomized(&stage.dispPipe, { dseImage }, stage.pass, stage.dispShader, stage.vx, & stage.cprop);
+	stage.renderer.createGraphicsPipelineCustomized(&stage.dispPipe, { dseImage }, {}, stage.pass, stage.dispShader, stage.vx, & stage.cprop);
 }
 
 void recordCommandsDisplay() {

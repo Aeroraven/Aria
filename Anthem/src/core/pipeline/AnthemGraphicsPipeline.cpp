@@ -194,7 +194,7 @@ namespace Anthem::Core{
         this->prerequisiteInfoSpecified = true;
         return true;
     }
-    bool AnthemGraphicsPipeline::createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry){
+    bool AnthemGraphicsPipeline::createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry, const std::vector<AnthemPushConstant*> pushConsts){
         // Create Pipeline
         this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         this->pipelineLayoutCreateInfo.pNext = nullptr;
@@ -202,22 +202,23 @@ namespace Anthem::Core{
         for(const auto& p:entry){
             if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER){
                 p.descPool->appendSamplerDescriptorLayoutIdx(&layouts,p.inTypeIndex);
-                ANTH_LOGI("Sampler:",p.inTypeIndex);
             }else if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER){
                 p.descPool->appendUniformDescriptorLayoutIdx(&layouts,p.inTypeIndex);
-                ANTH_LOGI("Uniform:",p.inTypeIndex);
             }else{
                 ANTH_LOGE("Invalid layout type");
             }
         }
 
-        for(auto x:layouts){
-            ANTH_LOGI("Layouts Are:",(long long)(x));
-        }
-
         this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
         this->pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
-        ANTH_LOGI("Specified pipeline layout",layouts.size());
+
+        // Push Constants
+        std::vector<VkPushConstantRange> constRanges;
+        this->pipelineLayoutCreateInfo.pushConstantRangeCount = pushConsts.size();
+        for (const auto& p : pushConsts) {
+            constRanges.push_back(p->getRange());
+        }
+        this->pipelineLayoutCreateInfo.pPushConstantRanges = constRanges.data();
 
         //Create Layout
         auto result = vkCreatePipelineLayout(this->logicalDevice->getLogicalDevice(),&(this->pipelineLayoutCreateInfo),nullptr,&(this->pipelineLayout));

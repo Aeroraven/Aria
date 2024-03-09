@@ -164,7 +164,7 @@ void prepare() {
 		.inTypeIndex = 0
 	};
 	stage.cprop.vertStageLayout = { stage.vx,stage.vix };
-	stage.renderer.createGraphicsPipelineCustomized(&stage.pipeline, { dseUniform,dseSampler }, stage.renderPass, stage.shader, stage.vx, &stage.cprop);
+	stage.renderer.createGraphicsPipelineCustomized(&stage.pipeline, { dseUniform,dseSampler }, {}, stage.renderPass, stage.shader, stage.vx, &stage.cprop);
 }
 
 void updateUniform() {

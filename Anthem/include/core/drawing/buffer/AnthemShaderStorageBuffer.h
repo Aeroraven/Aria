@@ -31,6 +31,9 @@ namespace Anthem::Core{
         uint32_t virtual getBufferSize() {
             return this->calculateBufferSize();
         }
+        bool setupBarrier(VkCommandBuffer cmd,uint32_t copyId,AnthemBufferBarrierProp* src, AnthemBufferBarrierProp* dst) {
+            return this->setupBufferBarrierInternal(cmd, &this->bufferProp.ssbo[copyId], src, dst);
+        }
         bool specifyNumCopies(uint32_t numCopies){
             this->numCopies = numCopies;
             this->bufferProp.ssbo.resize(numCopies);

@@ -110,7 +110,7 @@ void preparStage(StagePass& target, AnthemSimpleToyRenderer& renderer){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline};
 
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffers[0], nullptr);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline, {}, target.pass,target.shader,target.vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 }
 

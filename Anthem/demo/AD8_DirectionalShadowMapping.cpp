@@ -125,7 +125,7 @@ void prepareDebug(){
     };
 
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerPosition};
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer,nullptr);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline, {}, target.pass,target.shader,target.vxBuffer,nullptr);
     ANTH_LOGI("Done");
 }
 
@@ -176,7 +176,7 @@ void prepareTarget(){
     
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerShadowDepthInfo};
 
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,shadow.vxBuffers[0], nullptr);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline, {}, target.pass,target.shader,shadow.vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -272,7 +272,7 @@ void prepareOffscreen(){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline};
 
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffers[0], nullptr);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline, {}, target.pass,target.shader,target.vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 
 }

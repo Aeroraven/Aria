@@ -67,7 +67,7 @@ struct VisualizationPipeline {
 }vis;
 
 struct ExpParams {
-	static constexpr const int sampleCounts = 16777216/16; //Total samples
+	static constexpr const int sampleCounts = 65536*16; //Total samples
 	static constexpr const int parallelsGpu = 65536; // For GPU kernels 16384
 	static constexpr const int parallelsCpu = 16; // For CPU threads
 
@@ -258,7 +258,7 @@ void prepareVisualization() {
 
 	std::vector<AnthemDescriptorSetEntry> vct = { dseUniform  };
 	vis.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_POINT_LIST;
-	core.renderer.createGraphicsPipelineCustomized(&vis.pipeline, vct, vis.renderPass, vis.shader, comp.ssbo, &vis.cprop);
+	core.renderer.createGraphicsPipelineCustomized(&vis.pipeline, vct, {}, vis.renderPass, vis.shader, comp.ssbo, &vis.cprop);
 }
 
 void recordCommandBufferComp(int i) {

@@ -27,6 +27,7 @@
 #include "../drawing/buffer/impl/AnthemUniformBufferImpl.h"
 #include "../drawing/buffer/impl/AnthemVertexBufferImpl.h"
 #include "../drawing/buffer/impl/AnthemInstancingVertexBufferImpl.h"
+#include "../drawing/buffer/impl/AnthemPushConstantImpl.h"
 
 #include "../drawing/buffer/AnthemIndirectDrawBuffer.h"
 
@@ -77,6 +78,8 @@ namespace Anthem::Core{
 
         std::vector<AnthemFence*> extFences;
         std::vector<AnthemSemaphore*> extSemaphores;
+
+        std::vector<AnthemPushConstant*> pushConstants;
 
 
         uint32_t uniformDescPoolIdx = -1;
@@ -140,7 +143,9 @@ namespace Anthem::Core{
 
         bool registerPipelineSubComponents();
         bool createGraphicsPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule, IAnthemVertexBufferAttrLayout* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
-        bool createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule, IAnthemVertexBufferAttrLayout* vertexBuffer,AnthemGraphicsPipelineCreateProps* createProps);
+        bool createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,
+            std::vector<AnthemDescriptorSetEntry> descSetEntries, std::vector<AnthemPushConstant*> pushConstants,
+            AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule, IAnthemVertexBufferAttrLayout* vertexBuffer,AnthemGraphicsPipelineCreateProps* createProps);
         bool createComputePipelineCustomized(AnthemComputePipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemShaderModule* shaderModule);
         
         bool createSemaphore(AnthemSemaphore** pSemaphore);
@@ -163,6 +168,7 @@ namespace Anthem::Core{
         bool drPresentFrame(uint32_t frameIdx, uint32_t avaImageIdx);
         bool drSubmitBufferPrimaryCall(uint32_t frameIdx,uint32_t cmdIdx);
         bool drClearCommands(uint32_t cmdIdx);
+        bool drPushConstants(AnthemPushConstant* pushConstant, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx);
 
         bool drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx,
             const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,
@@ -188,7 +194,8 @@ namespace Anthem::Core{
         bool drBindDescriptorSetCustomizedCompute(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemComputePipeline* pipeline, uint32_t cmdIdx);
         
         bool drColorImagePipelineBarrier(AnthemImageContainer* container, AnthemImagePipelineBarrier* srcProp, AnthemImagePipelineBarrier* dstProp, uint32_t cmdIdx);
-        
+        bool drStorageBufferPipelineBarrier(AnthemShaderStorageBuffer* buffer, uint32_t copyId, AnthemBufferBarrierProp* src, AnthemBufferBarrierProp* dst, uint32_t cmdIdx);
+
         bool drDraw(uint32_t vertices,uint32_t cmdIdx);
         bool drDrawInstanced(uint32_t vertices, uint32_t instances, uint32_t cmdIdx);
         bool drDrawInstancedAll(uint32_t vertices, uint32_t instances, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance, uint32_t cmdIdx);
@@ -424,5 +431,13 @@ namespace Anthem::Core{
             return true;
         }
 
+        template< template <typename Tp, uint32_t MatDim, uint32_t VecSz, uint32_t ArrSz> class... DescTp,
+            typename... Tp, uint32_t... MatDim, uint32_t... VecSz, uint32_t... ArrSz>
+        bool createPushConstant(AnthemPushConstantImpl<DescTp<Tp, MatDim, VecSz, ArrSz>...>** pPushConst) {
+            auto obj = new AnthemPushConstantImpl<DescTp<Tp, MatDim, VecSz, ArrSz>...>();
+            pushConstants.push_back(obj);
+            *pPushConst = obj;
+            return true;
+        }
     };
 }

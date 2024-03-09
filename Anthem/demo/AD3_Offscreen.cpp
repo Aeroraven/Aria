@@ -87,7 +87,7 @@ void prepareTarget(TargetPass& target,AnthemSimpleToyRenderer& renderer){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerDescEntryRegPipeline};
 
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer, nullptr);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline, {}, target.pass,target.shader,target.vxBuffer, nullptr);
     ANTH_LOGI("Done");
 }
 void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer){
@@ -211,7 +211,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline,samplerDescEntryRegPipeline};
 
-    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline,offscreen.pass,offscreen.shader,offscreen.vxBuffers[0], nullptr);
+    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline, {}, offscreen.pass,offscreen.shader,offscreen.vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 }
 

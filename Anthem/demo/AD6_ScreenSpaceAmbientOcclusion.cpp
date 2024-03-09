@@ -134,7 +134,7 @@ void prepareAOPipeline(AOPass& target, DeferPass& offscr, AnthemSimpleToyRendere
         .inTypeIndex = 0
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerNormal,samplerPosition,samplerAONoise,uniformAO};
-    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline,target.pass,target.shader,target.vxBuffer, nullptr);
+    renderer.createGraphicsPipelineCustomized(&target.pipeline,descSetEntriesRegPipeline, {}, target.pass,target.shader,target.vxBuffer, nullptr);
     ANTH_LOGI("Done");
 }
 
@@ -219,7 +219,7 @@ void prepareOffscreen(DeferPass& offscreen,AnthemSimpleToyRenderer& renderer){
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {uniformBufferDescEntryRegPipeline};
 
-    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline,offscreen.pass,offscreen.shader,offscreen.vxBuffers[0], nullptr);
+    renderer.createGraphicsPipelineCustomized(&offscreen.pipeline,descSetEntriesRegPipeline, {}, offscreen.pass,offscreen.shader,offscreen.vxBuffers[0], nullptr);
     ANTH_LOGI("Pipeline Created");
 }
 
