@@ -27,7 +27,9 @@ struct Stage {
 	AnthemShaderStorageBufferImpl<
 		AtBufVecd4f<1>, //Pos
 		AtBufVecd4f<1>, //Vel
-		AtBufVecd4f<1> //LastPos
+		AtBufVecd4f<1>, //LastPos
+		AtBufVecd4f<1>,
+		AtBufVecdFloat<1>
 	>* ssbo;
 	AnthemUniformBufferImpl<
 		AtUniformVecf<1>, //Cloth Size
@@ -36,7 +38,9 @@ struct Stage {
 		AtUniformVecf<1>, //g
 		AtUniformVecf<1>, //m
 		AtUniformVecf<1>, //Damping
-		AtUniformVecf<1> //TimeStep
+		AtUniformVecf<1>, //TimeStep
+		AtUniformVecf<1>,
+		AtUniformVecf<1>
 	>* uniform;
 	AnthemIndexBuffer* ix;
 
@@ -65,10 +69,20 @@ struct Stage {
 	AnthemGraphicsPipelineCreateProps cprop;
 
 	//Consts
-	const int clothWidth = 64;
-	const int loclSize = 2;
+	const int clothGridWidth = 128;
+
+	const int loclSize = 8;
 	const int inFlight = 2;
-	const int clIters = 64;
+	const int clIters = 256;
+	const float sK = 16000.0;
+	const float sG = 0.1f;
+	const float sM = 1.0f;
+	const float sDamping = 0.98;
+	const float sTimestep = 0.003;
+	const float windAmpl = 0.16;
+	const float windFreq = 0.02;
+
+	float curTime = 0;
 }stage;
 
 inline std::string getShader(auto x) {
@@ -89,12 +103,12 @@ void initialize() {
 }
 
 void updatePushConstant() {
-	stage.camera.specifyPosition(0.0f, 0.0f, -2.0f);
+	stage.camera.specifyPosition(0.0f, 0.0f, -1.0f);
 
 	AtMatf4 proj, view, local;
 	stage.camera.getProjectionMatrix(proj);
 	stage.camera.getViewMatrix(view);
-	local = AnthemLinAlg::axisAngleRotationTransform3<float>({ 0.0f,1.0f,0.0f }, 0.0);
+	local = AnthemLinAlg::axisAngleRotationTransform3<float>({ 0.0f,1.0f,0.0f }, AT_PI/6.0);
 
 	float pm[16], vm[16], lm[16];
 	proj.columnMajorVectorization(pm);
@@ -106,28 +120,46 @@ void updatePushConstant() {
 	stage.pconst->enableShaderStage(AT_APCS_FRAGMENT);
 }
 
+void updateUniform() {
+	float ndist = 1.0f / (stage.clothGridWidth - 1);
+	float sK = stage.sK;
+	float sG = stage.sG;
+	float sM = stage.sM;
+	float sDamping = stage.sDamping;
+	float sTimestep = stage.sTimestep;
+	float clothWid = stage.clothGridWidth;
+	float sAmpl = stage.windAmpl;
+	float sFreq = stage.windFreq;
+
+	stage.uniform->specifyUniforms(&clothWid, &ndist, &sK, &sG, &sM, &sDamping, &sTimestep, &sAmpl, &sFreq);
+	for (int i = 0; i < stage.inFlight; i++) {
+		stage.uniform->updateBuffer(i);
+	}
+}
+
 void prepareCloth() {
 	stage.renderer.createDescriptorPool(&stage.descSsbo);
 	using ssboType = std::remove_cv_t<decltype(stage.ssbo)>;
 	std::function<void(ssboType)> createFunc = [&](ssboType w) {
 		
-		for (int j = 0; j < stage.clothWidth; j++) {
-			for (int i = 0; i < stage.clothWidth; i++) {
-				int curId = j * stage.clothWidth + i;
-				float cx = (i * 1.0f / (stage.clothWidth - 1)) * 1.0f - 0.5f;
-				float cy = (j * 1.0f / (stage.clothWidth - 1)) * 1.0f - 0.5f;
-				w->setInput(curId, { cx,cy,0.0,1.0f }, { cx,cy,0.0f,1.0f }, { cx,cy,0.0,1.0f });
+		for (int j = 0; j < stage.clothGridWidth; j++) {
+			for (int i = 0; i < stage.clothGridWidth; i++) {
+				int curId = j * stage.clothGridWidth + i;
+				float cx = (i * 1.0f / (stage.clothGridWidth - 1)) * 1.0f - 0.5f;
+				float cy = (j * 1.0f / (stage.clothGridWidth - 1)) * 1.0f - 0.5f;
+				w->setInput(curId, { cx,0.5,cy,1.0f }, { cx,0.5,cy,1.0f },
+					{ cx,0.5,cy,1.0f }, { 0.0,0.0,0.0,0.0 }, { 0.0 });
 			}
 		}
 	};
-	stage.renderer.createShaderStorageBuffer(&stage.ssbo, stage.clothWidth * stage.clothWidth, 0, stage.descSsbo, std::make_optional(createFunc), -1);
+	stage.renderer.createShaderStorageBuffer(&stage.ssbo, stage.clothGridWidth * stage.clothGridWidth, 0, stage.descSsbo, std::make_optional(createFunc), -1);
 	std::vector<uint32_t> idc;
-	for (int i = 0; i < stage.clothWidth - 1; i++) {
-		for (int j = 0; j < stage.clothWidth - 1; j++) {
-			uint32_t lc = i * stage.clothWidth + j;
-			uint32_t rc = i * stage.clothWidth + j + 1;
-			uint32_t lcx = (i+1)*stage.clothWidth + j;
-			uint32_t rcx = (i + 1) * stage.clothWidth + j + 1;
+	for (int i = 0; i < stage.clothGridWidth - 1; i++) {
+		for (int j = 0; j < stage.clothGridWidth - 1; j++) {
+			uint32_t lc = i * stage.clothGridWidth + j;
+			uint32_t rc = i * stage.clothGridWidth + j + 1;
+			uint32_t lcx = (i+1)*stage.clothGridWidth + j;
+			uint32_t rcx = (i + 1) * stage.clothGridWidth + j + 1;
 			idc.push_back(lc);
 			idc.push_back(rc);
 			idc.push_back(rcx);
@@ -143,18 +175,10 @@ void prepareCloth() {
 	stage.renderer.createDescriptorPool(&stage.descUni);
 	stage.renderer.createUniformBuffer(&stage.uniform, 0, stage.descUni);
 
-	float ndist = 1.0f / (stage.clothWidth - 1);
-	float sK = 1000.0f;
-	float sG = 0.1f;
-	float sM = 1.0f;
-	float sDamping = 0.95;
-	float sTimestep = 0.005;
-	float clothWid = stage.clothWidth;
-	stage.uniform->specifyUniforms(&clothWid, &ndist, &sK, &sG, &sM, &sDamping, &sTimestep);
-	for (int i = 0; i < stage.inFlight; i++) {
-		stage.uniform->updateBuffer(i);
-	}
+	updateUniform();
 }
+
+
 
 void prepareCompute() {
 	stage.compShaderPath.computeShader = getShader("comp");
@@ -269,7 +293,7 @@ void recordCommandCompute() {
 				.inTypeIndex = 0
 			};
 			stage.renderer.drBindDescriptorSetCustomizedCompute({ dseIn,dseOut,dseUni }, stage.compPipe, cmdIdx);
-			stage.renderer.drComputeDispatch(cmdIdx, stage.clothWidth / stage.loclSize, stage.clothWidth / stage.loclSize, 1);
+			stage.renderer.drComputeDispatch(cmdIdx, stage.clothGridWidth / stage.loclSize, stage.clothGridWidth / stage.loclSize, 1);
 			if (k != stage.clIters - 1) {
 				stage.renderer.drStorageBufferPipelineBarrier(stage.ssbo, 0, &c2cSrc, &c2cDst, cmdIdx);
 				stage.renderer.drStorageBufferPipelineBarrier(stage.ssbo, 1, &c2cSrc, &c2cDst, cmdIdx);

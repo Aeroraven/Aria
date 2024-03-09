@@ -2,7 +2,7 @@
 
 layout(location = 0) out vec4 outColor;
 
-layout(location = 0) in vec4 inVel;
+layout(location = 0) in vec4 inNorm;
 
 layout(push_constant, std140) uniform Ubo{
     mat4 proj;
@@ -11,5 +11,5 @@ layout(push_constant, std140) uniform Ubo{
 };
 
 void main() {
-    outColor = vec4(inVel.xy,1.0, 1.0f);
+    outColor = vec4(abs(inNorm.xyz), 1.0f);
 }

@@ -716,7 +716,6 @@ namespace Anthem::Core{
             }
             else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SHADER_STORAGE_BUFFER) {
                 p.descPool->appendDescriptorSetSsbo(p.inTypeIndex, descSets);
-                ANTH_LOGI("AcqIdx:", p.inTypeIndex);
             }
             else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_STORAGE_IMAGE) {
                 p.descPool->appendDescriptorSetStorageImage(p.inTypeIndex, descSets);
