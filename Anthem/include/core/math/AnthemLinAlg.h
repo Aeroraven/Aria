@@ -262,6 +262,18 @@ namespace Anthem::Core::Math{
         }
 
         template<typename T>
+            requires ALinAlgIsNumericTp<T>
+        inline static ALinAlgVec<T, 4> randomRgba() {
+            const auto a = atUniformNumber(0.0f, 1.0f);
+            const auto b = atUniformNumber(0.0f, 1.0f);
+            const auto c = atUniformNumber(0.0f, 1.0f);
+            const auto d = atUniformNumber(0.0f, 1.0f);
+            ALinAlgVec<T, 4> ret = { a,b,c,d };
+            return ret;
+
+        }
+
+        template<typename T>
         requires ALinAlgIsNumericTp<T>
         inline static T randomNumber(){
             return atUniformNumber(0.0f,1.0f);

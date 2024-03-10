@@ -105,5 +105,13 @@ namespace Anthem::Core::Math{
                 out[i] = data[i];
             }
         }
+
+        std::array<T, R> toStdArray() const {
+            std::array<T, R> ret;
+            for (int i = 0; i < R; i++) {
+                ret[i] = data[i];
+            }
+            return ret;
+        }
     };
 }

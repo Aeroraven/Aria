@@ -57,6 +57,7 @@
 
 // WorkDir
 #define ANTH_SHADER_DIR "C:\\WR\\Aria\\Anthem\\shader\\glsl\\"
+#define ANTH_SHADER_DIR_HLSL "C:\\WR\\Aria\\Anthem\\shader\\hlsl\\"
 #define ANTH_ASSET_DIR "C:\\WR\\Aria\\Anthem\\assets\\"
 
 // Pointerrs
