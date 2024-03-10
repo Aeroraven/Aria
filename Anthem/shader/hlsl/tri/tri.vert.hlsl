@@ -1,8 +1,8 @@
 struct VSInput
 {
-	[[vk::location(0)]] float3 Position : POSITION0;
+    [[vk::location(0)]] float4 Position : POSITION0;
 	[[vk::location(1)]] float4 Rotation : POSITION1;
-	[[vk::location(2)]] float4 Translation : POSITION2;
+    [[vk::location(2)]] float4 Translation : POSITION2;
 	[[vk::location(3)]] float4 Color : COLOR0;
 };
 
@@ -41,10 +41,10 @@ VSOutput main(VSInput sIn)
 {
 	VSOutput VSOut;
 	float4x4 instTransform = RotationMatrix(sIn.Rotation.xyz, sIn.Rotation.w);
-    float4 localVert = float4(sIn.Position.xyz, 1.0); //mul(instTransform, float4(sIn.Position.xyz, 1.0));
-	localVert += float4(sIn.Translation.xyz, 0.0);
+    float4 localVert =mul(instTransform, float4(sIn.Position.xyz, 1.0)); //
+    localVert += float4(sIn.Translation.xyz, 0.0);
 	
-	VSOut.Position = mul(ubo.Proj, mul(ubo.View, mul(ubo.View, localVert)));
-	VSOut.Color = sIn.Color;
+    VSOut.Position = mul(ubo.Proj, mul(ubo.View, mul(ubo.Model, localVert)));
+    VSOut.Color = sIn.Color;
 	return VSOut;
 }

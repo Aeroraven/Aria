@@ -16,7 +16,7 @@ using namespace Anthem::Components::Camera;
 
 struct Stage {
 	AnthemVertexBufferImpl<
-		AtAttributeVecf<3>  //Pos
+		AtAttributeVecf<4>  //Pos
 	>* vx = nullptr;
 	AnthemInstancingVertexBufferImpl<
 		AtAttributeVecf<4>, //Rot
@@ -65,16 +65,18 @@ void initialize() {
 	int rdH, rdW;
 	st.renderer.exGetWindowSize(rdH, rdW);
 	st.camera.specifyFrustum((float)AT_PI / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 0, -2);
+	st.camera.specifyPosition(0, 1.85, -1.85);
+	st.camera.specifyFrontEyeRay(0, -1.85, 1.85);
 }
 
 
 void createVertex() {
+	float triSize = 0.05;
 	st.renderer.createVertexBuffer(&st.vx);
 	st.vx->setTotalVertices(3);
-	st.vx->insertData(0, { -0.05,0.0,0.0 });
-	st.vx->insertData(1, { 0,0.05,0.0 });
-	st.vx->insertData(2, { 0.05,0.0,0.0 });
+	st.vx->insertData(0, { -triSize*2,-triSize,0.0,0.0 });
+	st.vx->insertData(1, { 0,triSize,0.0,0.0 });
+	st.vx->insertData(2, { triSize,0.0,0.0,0.0 });
 
 	st.renderer.createIndexBuffer(&st.ix);
 	st.ix->setIndices({ 0,1,2 });
@@ -93,19 +95,10 @@ void createInstancing() {
 		std::array<float, 4> rotv;
 		std::array<float, 4> tranv;
 		auto rota = rot.toStdArray();
-		auto trana = rot.toStdArray();
+		auto trana = trans.toStdArray();
+		rotv[3] = ang;
 		std::copy(rota.begin(), rota.end(), rotv.begin());
 		std::copy(trana.begin(), trana.end(), tranv.begin());
-		rotv[3] = ang;
-		rotv[0] = 0;
-		rotv[1] = 1;
-		rotv[2] = 0;
-
-		tranv[0] = 3.5;
-		tranv[1] = 3.5;
-		tranv[2] = 0;
-		tranv[3] = 0;
-
 		st.vix->insertData(i, rotv, tranv, rgba.toStdArray());
 	}
 }
@@ -119,7 +112,7 @@ void updateUniform() {
 	AtMatf4 proj, view, model;
 	st.camera.getProjectionMatrix(proj);
 	st.camera.getViewMatrix(view);
-	model = AnthemLinAlg::axisAngleRotationTransform3<float>({ 0.0f,1.0f,0.0f }, static_cast<float>(glfwGetTime()));
+	model = AnthemLinAlg::axisAngleRotationTransform3<float>({ 0.0f,1.0f,0.0f }, 0.1f*static_cast<float>(glfwGetTime()));
 	
 	float pm[16], vm[16], lm[16];
 	proj.columnMajorVectorization(pm);

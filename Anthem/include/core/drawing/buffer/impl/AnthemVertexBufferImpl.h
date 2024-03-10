@@ -30,19 +30,17 @@ namespace Anthem::Core {
     public:
         AnthemVertexBufferImpl() {
             this->singleVertexSize = 0;
-
             for (auto i = 0; i < sizeof...(AttrSz); i++) {
-                ANTH_LOGI("Param Size=", this->attrDims[i] * this->attrTpSize[i]);
                 this->singleVertexSize += this->attrDims[i] * this->attrTpSize[i];
                 attrBindPoint[i] = i;
             }
-            ANTH_LOGI("Total Size=", this->singleVertexSize);
         }
         bool setTotalVertices(uint32_t vertexNum) {
             ANTH_ASSERT(vertexNum > 0, "Invalid vertex number");
             this->totalVertices = vertexNum;
-            this->rawBufferData = new char[this->calculateBufferSize()];
-            ANTH_LOGI("Allocated:", this->calculateBufferSize());
+            auto bufSize = this->calculateBufferSize();
+            this->rawBufferData = new char[bufSize];
+            ANTH_LOGI("Buffer Allocated:", bufSize);
             return true;
         }
         bool setAttrBindingPoint(std::array<uint32_t,sizeof...(AttrTp)> data) {
@@ -53,12 +51,7 @@ namespace Anthem::Core {
         }
         bool insertData(int idx, std::array<AttrTp, AttrSz>... data) {
             ANTH_ASSERT(idx < this->totalVertices, "Invalid index");
-
-            //Convert Src Data to Void Pointers
             std::vector<void*> dataPtrs = { data.data()... };
-
-            //Memcpy
-            ANTH_TODO("Bug");
             auto offset = idx * this->singleVertexSize;
             auto dataOffset = 0;
             for (auto i = 0; i < sizeof...(AttrSz); i++) {

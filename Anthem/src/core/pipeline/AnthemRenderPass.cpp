@@ -201,7 +201,6 @@ namespace Anthem::Core{
             }
             colorAttachmentList.push_back(colorAttachment);
         }
-        ANTH_LOGI("www");
         //Create Msaa Attachment
         int colorAttachmentMsaaIndex = -1;
         VkAttachmentDescription colorAttachmentMsaa = {}; 
@@ -216,7 +215,6 @@ namespace Anthem::Core{
             colorAttachmentMsaa.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         }
 
-        ANTH_LOGI("www");
         for(int i=0;i<opt.colorAttachmentFormats.size();i++){
             this->renderPassAttachments.push_back(colorAttachmentList[i]);
             registerAttachmentType(AT_ARPCA_COLOR, this->setupOption.predefinedClearColor);
@@ -231,7 +229,6 @@ namespace Anthem::Core{
         VkAttachmentDescription depthAttachment = {};
         VkAttachmentReference depthAttachmentRef{};
 
-        ANTH_LOGI("www");
         if(this->depthBuffer != nullptr){
             depthAttachment.format = this->depthBuffer->getDepthFormat();
             if(opt.msaaType == AT_ARPMT_MSAA){
@@ -268,7 +265,6 @@ namespace Anthem::Core{
 
         //Create Attachment Reference
         std::vector<VkAttachmentReference> colorAttachmentReferenceList = {};
-        ANTH_LOGI("www");
         for(int i=0;i<opt.colorAttachmentFormats.size();i++){
             VkAttachmentReference colorAttachmentReference = {};
             colorAttachmentReference.attachment = i;
