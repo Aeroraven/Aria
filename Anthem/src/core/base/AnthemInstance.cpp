@@ -54,6 +54,7 @@ namespace Anthem::Core{
     }
     bool AnthemInstance::startDrawLoop(std::function<void()> drawFunc){
         ANTH_ASSERT(window != nullptr, "Window not specified");
+        ANTH_LOGI("Loop starts");
         while(!glfwWindowShouldClose(window)){
             glfwPollEvents();
             drawFunc();

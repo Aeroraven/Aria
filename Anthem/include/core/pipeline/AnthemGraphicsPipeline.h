@@ -17,6 +17,7 @@ namespace Anthem::Core{
         AT_AIAT_TRIANGLE_LIST = 1,
         AT_AIAT_POINT_LIST = 2,
         AT_AIAT_LINE = 3,
+        AT_AIAT_PATCH_LIST = 4
     };
 
     enum class AnthemBlendPreset {
@@ -25,10 +26,22 @@ namespace Anthem::Core{
         AT_ABP_DEFAULT_TRANSPARENCY = 2
     };
 
+    enum class AnthemRasterizerPolygonMode {
+        AT_ARPM_POLYGON_FILL = 1,
+        AT_ARPM_WIREFRAME = 2
+    };
+
     struct AnthemGraphicsPipelineCreateProps {
         AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
         std::optional<std::vector<IAnthemVertexBufferAttrLayout*>> vertStageLayout = std::nullopt;
         AnthemBlendPreset blendPreset = AnthemBlendPreset::AT_ABP_NO_BLEND;
+
+        // Tessellation
+        bool enableTessellation = false;
+        uint32_t patchControlPoints = 0;
+
+        // Rasterizer
+        AnthemRasterizerPolygonMode polygonMode = AnthemRasterizerPolygonMode::AT_ARPM_POLYGON_FILL;
     };
 
     class AnthemGraphicsPipeline{     
@@ -59,6 +72,7 @@ namespace Anthem::Core{
         
         std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachmentState = {};
         VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
+        VkPipelineTessellationStateCreateInfo tessStateCreateInfo = {};
 
         VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo = {};
 

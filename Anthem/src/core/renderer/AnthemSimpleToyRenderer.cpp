@@ -247,6 +247,33 @@ namespace Anthem::Core{
         this->textures.push_back(textureImage);
         return true;
     }
+    bool AnthemSimpleToyRenderer::createTexture2(AnthemImage** pImage, AnthemImageCreateProps* prop, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId, bool ignoreDescPool) {
+        //Allocate Image
+        auto textureImage = new AnthemImage();
+        textureImage->specifyLogicalDevice(this->logicalDevice.get());
+        textureImage->specifyPhyDevice(this->phyDevice.get());
+        textureImage->specifyCommandBuffers(this->commandBuffers.get());
+        textureImage->loadImageData(prop->texData, prop->texWidth, prop->texHeight, prop->texChannel);
+        textureImage->specifyUsage(prop->usage);
+        if (prop->mipmap2d) {
+            textureImage->enableMipMapping();
+        }
+        if (prop->msaa) {
+            textureImage->enableMsaa();
+        }
+        textureImage->setImageFormat(prop->format);
+        textureImage->addAccessStage(prop->extraAccessStages);
+        textureImage->prepareImage();
+        //Allocate Descriptor Set For Sampler
+        if (descId == -1) {
+            ANTH_LOGW("Descriptor pool index not specified for Tex2D, using the default value", this->imageDescPoolIdx);
+            descId = this->imageDescPoolIdx;
+        }
+        if (!ignoreDescPool) descPool->addSampler(textureImage, bindLoc, descId);
+        *pImage = textureImage;
+        this->textures.push_back(textureImage);
+        return true;
+    }
     bool AnthemSimpleToyRenderer::createTexture3d(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
         uint32_t texHeight, uint32_t texDepth, uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt, uint32_t descId) {
 

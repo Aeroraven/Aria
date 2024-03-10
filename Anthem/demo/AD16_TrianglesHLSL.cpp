@@ -74,9 +74,9 @@ void createVertex() {
 	float triSize = 0.05;
 	st.renderer.createVertexBuffer(&st.vx);
 	st.vx->setTotalVertices(3);
-	st.vx->insertData(0, { -triSize*2,-triSize,0.0,0.0 });
+	st.vx->insertData(0, { -triSize*1.5f,-triSize,0.0,0.0 });
 	st.vx->insertData(1, { 0,triSize,0.0,0.0 });
-	st.vx->insertData(2, { triSize,0.0,0.0,0.0 });
+	st.vx->insertData(2, { triSize * 1.5f,0.0,0.0,0.0 });
 
 	st.renderer.createIndexBuffer(&st.ix);
 	st.ix->setIndices({ 0,1,2 });

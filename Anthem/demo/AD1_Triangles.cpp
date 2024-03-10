@@ -4,6 +4,10 @@
 using namespace Anthem::Core;
 using namespace Anthem::External;
 
+// AD1 Triangles
+// =======================
+// Hello World Program
+
 int main(){
     ANTH_LOGI("Goodbye World!");
     auto cfg = ANTH_MAKE_SHARED(Anthem::Core::AnthemConfig)();

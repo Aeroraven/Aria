@@ -17,5 +17,6 @@ namespace Anthem::Core{
         bool virtual createFramebuffersFromSwapChain(const AnthemSwapChain* swapChain,const AnthemRenderPass* renderPass);
         bool virtual destroyFramebuffers();
         const AnthemFramebuffer* getFramebufferObject(uint32_t index) const;
+        AnthemFramebuffer* getFramebufferObjectUnsafe(uint32_t index);
     };
 }

@@ -8,6 +8,8 @@ namespace Anthem::Core{
         auto fragShaderCode = new std::vector<char>();
         auto geomShaderCode = new std::vector<char>();
         auto compShaderCode = new std::vector<char>();
+        auto tessConShaderCode = new std::vector<char>();
+        auto tessEvalShaderCode = new std::vector<char>();
 
         if(filename->vertexShader.has_value()){
             this->readFile(filename->vertexShader.value(),vertexShaderCode);
@@ -20,6 +22,12 @@ namespace Anthem::Core{
         }
         if(filename->computeShader.has_value()){
             this->readFile(filename->computeShader.value(),compShaderCode);
+        }
+        if (filename->tessControlShader.has_value()) {
+            this->readFile(filename->tessControlShader.value(), tessConShaderCode);
+        }
+        if (filename->tessEvalShader.has_value()) {
+            this->readFile(filename->tessEvalShader.value(), tessEvalShaderCode);
         }
 
         //Specify Shader Module
@@ -43,6 +51,16 @@ namespace Anthem::Core{
             this->shaderModules->computeShaderModule = std::make_optional<VkShaderModule>();
             this->createSingleShaderModule(device,compShaderCode,&(this->shaderModules->computeShaderModule));
             ANTH_LOGI("Compute shader loaded");
+        }
+        if (filename->tessControlShader.has_value()) {
+            this->shaderModules->tessControlShader = std::make_optional<VkShaderModule>();
+            this->createSingleShaderModule(device, tessConShaderCode, &(this->shaderModules->tessControlShader));
+            ANTH_LOGI("Tessellation control shader loaded");
+        }
+        if (filename->tessEvalShader.has_value()) {
+            this->shaderModules->tessEvalShader = std::make_optional<VkShaderModule>();
+            this->createSingleShaderModule(device, tessEvalShaderCode, &(this->shaderModules->tessEvalShader));
+            ANTH_LOGI("Tessellation evaluation shader loaded");
         }
         this->shaderModules->vertexShaderModuleCreated = true;
         return true;
@@ -71,6 +89,12 @@ namespace Anthem::Core{
         }
         if(this->shaderModules->computeShaderModule.has_value()){
             vkDestroyShaderModule(device->getLogicalDevice(),this->shaderModules->computeShaderModule.value(),nullptr);
+        }
+        if (this->shaderModules->tessControlShader.has_value()) {
+            vkDestroyShaderModule(device->getLogicalDevice(), this->shaderModules->tessControlShader.value(), nullptr);
+        }
+        if (this->shaderModules->tessEvalShader.has_value()) {
+            vkDestroyShaderModule(device->getLogicalDevice(), this->shaderModules->tessEvalShader.value(), nullptr);
         }
         return true;
     }
@@ -110,6 +134,22 @@ namespace Anthem::Core{
             computeShaderStageCreateInfo.module = this->shaderModules->computeShaderModule.value();
             computeShaderStageCreateInfo.pName = "main";
             shaderStageCreateInfo->push_back(computeShaderStageCreateInfo);
+        }
+        if (this->shaderModules->tessControlShader.has_value()) {
+            VkPipelineShaderStageCreateInfo tessConShaderInfo = {};
+            tessConShaderInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            tessConShaderInfo.stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+            tessConShaderInfo.module = this->shaderModules->tessControlShader.value();
+            tessConShaderInfo.pName = "main";
+            shaderStageCreateInfo->push_back(tessConShaderInfo);
+        }
+        if (this->shaderModules->tessEvalShader.has_value()) {
+            VkPipelineShaderStageCreateInfo tessEvalShaderInfo = {};
+            tessEvalShaderInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            tessEvalShaderInfo.stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+            tessEvalShaderInfo.module = this->shaderModules->tessEvalShader.value();
+            tessEvalShaderInfo.pName = "main";
+            shaderStageCreateInfo->push_back(tessEvalShaderInfo);
         }
         return true;
     }

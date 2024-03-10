@@ -96,12 +96,20 @@ namespace Anthem::Core{
         }
         else if (extraProps.inputTopo == topoEnum::AT_AIAT_LINE) {
             this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
-        }else {
+        }
+        else if (extraProps.inputTopo == topoEnum::AT_AIAT_PATCH_LIST) {
+            this->inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+        }
+        else {
             ANTH_LOGE("Unknown topology");
         }
-
-        
         this->inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
+
+        //Specify Tessellation Info
+        if (extraProps.enableTessellation) {
+            this->tessStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+            this->tessStateCreateInfo.patchControlPoints = extraProps.patchControlPoints;
+        }
 
         //Specify Viewport Info
         ANTH_ASSERT(this->viewport != nullptr,"Viewport not specified");
@@ -113,7 +121,16 @@ namespace Anthem::Core{
         this->rasterizerStateCreateInfo.flags = 0;
         this->rasterizerStateCreateInfo.depthClampEnable = VK_FALSE;
         this->rasterizerStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-        this->rasterizerStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+        if (extraProps.polygonMode == AnthemRasterizerPolygonMode::AT_ARPM_POLYGON_FILL) {
+            this->rasterizerStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+        }
+        else if (extraProps.polygonMode == AnthemRasterizerPolygonMode::AT_ARPM_WIREFRAME) {
+            this->rasterizerStateCreateInfo.polygonMode = VK_POLYGON_MODE_LINE;
+        }
+        else {
+            ANTH_LOGE("Unsupported polygon fill mode");
+        }
+
         this->rasterizerStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
         this->rasterizerStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
         this->rasterizerStateCreateInfo.depthBiasEnable = VK_FALSE;
@@ -278,6 +295,9 @@ namespace Anthem::Core{
         this->pipelineCreateInfo.pVertexInputState = &(this->vertexInputStateCreateInfo);
         this->pipelineCreateInfo.pInputAssemblyState = &(this->inputAssemblyStateCreateInfo);
         this->pipelineCreateInfo.pTessellationState = nullptr;
+        if (extraProps.enableTessellation) {
+            this->pipelineCreateInfo.pTessellationState = &(this->tessStateCreateInfo);
+        }
         this->pipelineCreateInfo.pViewportState = &(this->viewportStateCreateInfo);
         this->pipelineCreateInfo.pRasterizationState = &(this->rasterizerStateCreateInfo);
         this->pipelineCreateInfo.pMultisampleState = &(this->multisampleStateCreateInfo);

@@ -16,7 +16,7 @@ namespace Anthem::Core{
 
     private:
         std::vector<AnthemUniformBufferProp> uniformBuffers = {};
-
+        uint32_t extraStage = 0;
     protected:
         
         bool virtual getRawBufferData(void** ptr) = 0;
@@ -55,7 +55,14 @@ namespace Anthem::Core{
             memcpy(uniformBuffers.at(idx).mappedMem,data,this->getBufferSize());
             return true;
         }
-
+        bool specifyExtraAccessStage(uint32_t stage) {
+            this->extraStage |= stage;
+            return true;
+        }
+        uint32_t getExtraAccessStage(uint32_t stage) {
+            return this->extraStage;
+        }
+        
         virtual ~AnthemUniformBuffer() {}
     };
     

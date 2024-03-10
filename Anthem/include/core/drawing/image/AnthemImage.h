@@ -6,6 +6,8 @@
 #include "../buffer/AnthemGeneralBufferUtilBase.h"
 
 namespace Anthem::Core{
+    
+
     enum AnthemImageUsage{
         AT_IU_UNDEFINED = 0,
         AT_IU_TEXTURE = 1,
@@ -18,6 +20,20 @@ namespace Anthem::Core{
         AT_IF_SRGB_FLOAT32,
         AT_IF_SBGR_UINT8,
         AT_IF_R_UINT8,
+    };
+
+    struct AnthemImageCreateProps {
+        uint8_t* texData = nullptr;
+        uint32_t texWidth = 0;
+        uint32_t texHeight = 0;
+        uint32_t texChannel = 0;
+
+        bool mipmap2d = false;
+        bool msaa = false;
+        AnthemImageFormat format = AT_IF_SRGB_UINT8;
+        AnthemImageUsage usage = AT_IU_TEXTURE;
+
+        uint32_t extraAccessStages = 0;
     };
 
     class AnthemImage:
@@ -53,6 +69,8 @@ namespace Anthem::Core{
         bool setImageSize(uint32_t width, uint32_t height);
         bool setImageSize3(uint32_t width, uint32_t height, uint32_t depth);
         bool setImageFormat(AnthemImageFormat format);
+
+        bool addAccessStage(uint32_t stageFlag);
         
         const VkImageView* getImageView() const;
         uint32_t getWidth() const;

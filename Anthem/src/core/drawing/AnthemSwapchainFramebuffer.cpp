@@ -36,4 +36,8 @@ namespace Anthem::Core{
         ANTH_ASSERT(index < this->framebuffers.size(),"Invalid index");
         return &(this->framebuffers[index]);
     }
+    AnthemFramebuffer* AnthemSwapchainFramebuffer::getFramebufferObjectUnsafe(uint32_t index) {
+        ANTH_ASSERT(index < this->framebuffers.size(), "Invalid index");
+        return &(this->framebuffers[index]);
+    }
 }

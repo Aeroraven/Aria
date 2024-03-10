@@ -130,6 +130,7 @@ namespace Anthem::Core{
              uint32_t texChannel, uint32_t bindLoc, bool generateMipmap2D, bool enableMsaa,
             AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1,bool ignoreDescPool=false,
             AnthemImageUsage usage = AT_IU_TEXTURE);
+        bool createTexture2(AnthemImage** pImage, AnthemImageCreateProps* prop, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId = -1, bool ignoreDescPool = false);
         bool createTexture3d(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth, uint32_t texHeight, uint32_t texDepth,
             uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1);
         bool createColorAttachmentImage(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint32_t bindLoc,

@@ -102,6 +102,11 @@ namespace Anthem::Core{
         return true;
     }
 
+    bool AnthemImage::addAccessStage(uint32_t stageFlag) {
+        this->image.reqStageFlags |= stageFlag;
+        return true;
+    }
+
     bool AnthemImage::copyBufferToImage(){
         uint32_t cmdBufIdx;
         this->cmdBufs->createCommandBuffer(&cmdBufIdx);

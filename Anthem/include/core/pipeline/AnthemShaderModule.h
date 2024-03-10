@@ -10,6 +10,8 @@ namespace Anthem::Core{
         std::optional<std::string> fragmentShader;
         std::optional<std::string> geometryShader;
         std::optional<std::string> computeShader;
+        std::optional<std::string> tessControlShader;
+        std::optional<std::string> tessEvalShader;
     };
 
     struct AnthemShaderModulesGroup{
@@ -18,6 +20,8 @@ namespace Anthem::Core{
         std::optional<VkShaderModule> fragmentShaderModule = std::nullopt;
         std::optional<VkShaderModule> geometryShaderModule = std::nullopt;
         std::optional<VkShaderModule> computeShaderModule = std::nullopt;
+        std::optional<VkShaderModule> tessControlShader = std::nullopt;
+        std::optional<VkShaderModule> tessEvalShader = std::nullopt;
     };
 
     class AnthemShaderModule: private Util::AnthemUtlFileReaderBase{

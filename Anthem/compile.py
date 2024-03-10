@@ -16,12 +16,16 @@ if __name__ == "__main__":
         subfiles = os.listdir("./shader/"+args.lang+"/"+x)
         for y in subfiles:
             if y.endswith(".vert") or y.endswith(".frag") or y.endswith(".geom") or y.endswith(".comp") or \
-                y.endswith(".vert.hlsl") or y.endswith(".frag.hlsl") or y.endswith(".geom.hlsl") or y.endswith(".comp.hlsl"):
+                y.endswith(".tesc") or y.endswith(".tese") or \
+                y.endswith(".vert.hlsl") or y.endswith(".frag.hlsl") or y.endswith(".geom.hlsl") or y.endswith(".comp.hlsl") or \
+                y.endswith(".tesc.hlsl") or y.endswith(".tese.hlsl"):
                 hlsl_profile = {
                     "vert.hlsl": "vs_6_0",
                     "frag.hlsl": "ps_6_0",
                     "geom.hlsl": "gs_6_0",
-                    "comp.hlsl": "cs_6_0"
+                    "comp.hlsl": "cs_6_0",
+                    "tesc.hlsl": "hs_6_0",
+                    "tese.hlsl": "ds_6_0"
                 }
                 w = 1
                 if args.lang == "glsl":
