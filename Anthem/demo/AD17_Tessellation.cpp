@@ -26,6 +26,7 @@ struct Stage {
 
 	// Descriptor
 	AnthemDescriptorPool* desc;
+	AnthemDescriptorPool* desc2;
 	AnthemUniformBufferImpl<AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>>* uniform;
 
 	// Image
@@ -53,8 +54,8 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.camera.specifyFrustum((float)AT_PI / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 1.85, -1.85);
-	st.camera.specifyFrontEyeRay(0, -1.85, 1.85);
+	st.camera.specifyPosition(0, 3, -6.85);
+	st.camera.specifyFrontEyeRay(0, -2, 6.85);
 }
 
 inline std::string getShader(auto x) {
@@ -68,6 +69,7 @@ inline std::string getShader(auto x) {
 
 void createDesc() {
 	st.rd.createDescriptorPool(&st.desc);
+	st.rd.createDescriptorPool(&st.desc2);
 }
 
 void loadImage() {
@@ -93,7 +95,7 @@ void loadImage() {
 }
 
 void createUniform() {
-	st.rd.createUniformBuffer(&st.uniform, 0, st.desc, -1);
+	st.rd.createUniformBuffer(&st.uniform, 0, st.desc2, -1);
 }
 
 void createGeometry() {
@@ -111,10 +113,10 @@ void createGeometry() {
 			uint32_t locId = cj * st.rawGrids + ci;
 			float fx = 1.0f * ci / (st.rawGrids - 1);
 			float fy = 1.0f * cj / (st.rawGrids - 1);
-			float locX = fx * 1.0 - 0.5;
-			float locZ = fy * 1.0 - 0.5;
+			float locX = fx * 40.0 - 20.0;
+			float locZ = fy * 40.0 - 20.0;
 			indices.push_back(cur);
-			st.vx->insertData(cur++, { locX,0.0,locZ,0.0 }, { fx,fy });
+			st.vx->insertData(cur++, { locX,0.0,locZ,1.0 }, { fx,fy });
 		}
 	};
 	for (int i = 0; i < st.rawGrids; i++) {
@@ -142,10 +144,11 @@ void createPipeline() {
 	
 	st.copt.enableTessellation = true;
 	st.copt.patchControlPoints = 4;
+	st.copt.polygonMode = AnthemRasterizerPolygonMode::AT_ARPM_WIREFRAME;
 	st.copt.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_PATCH_LIST;
 
 	AnthemDescriptorSetEntry dseUniform{
-		.descPool = st.desc,
+		.descPool = st.desc2,
 		.descSetType = AT_ACDS_UNIFORM_BUFFER,
 		.inTypeIndex = 0
 	};
@@ -170,14 +173,14 @@ void recordCommand() {
 		st.rd.drBindIndexBuffer(st.ix, i);
 
 		AnthemDescriptorSetEntry dseUniform{
-			.descPool = st.desc,
+			.descPool = st.desc2,
 			.descSetType = AT_ACDS_UNIFORM_BUFFER,
 			.inTypeIndex = static_cast<uint32_t>(i)
 		};
 		AnthemDescriptorSetEntry dseImage{
 			.descPool = st.desc,
 			.descSetType = AT_ACDS_SAMPLER,
-			.inTypeIndex = static_cast<uint32_t>(1 - i)
+			.inTypeIndex = 0
 		};
 
 		st.rd.drBindDescriptorSetCustomizedGraphics({ dseUniform,dseImage }, st.pipe, i);
@@ -191,7 +194,9 @@ void updateUniform() {
 	AtMatf4 proj, view, model;
 	st.camera.getProjectionMatrix(proj);
 	st.camera.getViewMatrix(view);
-	model = AnthemLinAlg::axisAngleRotationTransform3<float>({ 0.0f,1.0f,0.0f }, 0.1f * static_cast<float>(glfwGetTime()));
+	//model = AnthemLinAlg::axisAngleRotationTransform3<float>({ 0.0f,1.0f,0.0f }, 0.1f * static_cast<float>(glfwGetTime()));
+	model = AnthemLinAlg::identity<float, 4>();
+
 
 	float pm[16], vm[16], lm[16];
 	proj.columnMajorVectorization(pm);

@@ -43,11 +43,11 @@ DSOutput main(ConstHSOutput inChs,float2 tessCoord:SV_DomainLocation,const Outpu
     float4 posDown = lerp(patch[2].position, patch[3].position, u);
     float4 posInt = lerp(posUp, posDown, v);
     
-    float height = texHeightMap.SampleLevel(sampHeightMap, texInt, 1).r;
-    posInt.y = height;
+    float h = texHeightMap.SampleLevel(sampHeightMap, texInt, 1).r * 0.9 + 0.1;
+    posInt.y = h * 5.0;
     
-    dsOut.position = mul(ubo.proj, mul(ubo.view, mul(ubo.model, posInt)));
-    dsOut.color = float4(0.2, 0.0, 0.0, 1.0);
+    dsOut.position = mul(ubo.proj, mul(ubo.view, mul(ubo.model, float4(posInt.xyz, 1.0))));
+    dsOut.color = float4(h,h,h,1.0);
     return dsOut;
 }
 
