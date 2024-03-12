@@ -14,6 +14,10 @@ using namespace Anthem::External;
 using namespace Anthem::Core;
 using namespace Anthem::Components::Camera;
 
+// AD17 Tessellation
+// =======================
+// Terrain Generation using Tessellation Shader
+
 struct Stage {
 	// Core
 	AnthemSimpleToyRenderer rd;

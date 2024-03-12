@@ -217,7 +217,7 @@ namespace Anthem::Core{
 
         for(int i=0;i<opt.colorAttachmentFormats.size();i++){
             this->renderPassAttachments.push_back(colorAttachmentList[i]);
-            registerAttachmentType(AT_ARPCA_COLOR, this->setupOption.predefinedClearColor);
+            registerAttachmentType(AT_ARPCA_COLOR, this->setupOption.clearColors[i]);
         }
         if(opt.msaaType == AT_ARPMT_MSAA){
             this->renderPassAttachments.push_back(colorAttachmentMsaa);

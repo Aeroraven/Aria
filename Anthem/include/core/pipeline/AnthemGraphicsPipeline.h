@@ -23,7 +23,9 @@ namespace Anthem::Core{
     enum class AnthemBlendPreset {
         AT_ABP_NO_BLEND = 0,
         AT_ABP_MANUAL = 1,
-        AT_ABP_DEFAULT_TRANSPARENCY = 2
+        AT_ABP_DEFAULT_TRANSPARENCY = 2,
+        AT_ABP_WEIGHTED_BLENDED_ACCUM = 3,
+        AT_ABP_WEIGHTED_BLENDED_REVEAL = 4
     };
 
     enum class AnthemRasterizerPolygonMode {
@@ -34,7 +36,8 @@ namespace Anthem::Core{
     struct AnthemGraphicsPipelineCreateProps {
         AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
         std::optional<std::vector<IAnthemVertexBufferAttrLayout*>> vertStageLayout = std::nullopt;
-        AnthemBlendPreset blendPreset = AnthemBlendPreset::AT_ABP_NO_BLEND;
+        std::vector<AnthemBlendPreset> blendPreset = { AnthemBlendPreset::AT_ABP_NO_BLEND };
+        bool writeDepthStencil = true;
 
         // Tessellation
         bool enableTessellation = false;

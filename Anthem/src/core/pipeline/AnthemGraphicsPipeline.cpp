@@ -160,14 +160,30 @@ namespace Anthem::Core{
 
 
         for(uint32_t i=0;i<numColorAttachments;i++){
-            if (this->extraProps.blendPreset == AnthemBlendPreset::AT_ABP_NO_BLEND) {
+            if (this->extraProps.blendPreset[i] == AnthemBlendPreset::AT_ABP_NO_BLEND) {
                 this->colorBlendAttachmentState[i].blendEnable = VK_FALSE;
             }
-            else if(this->extraProps.blendPreset == AnthemBlendPreset::AT_ABP_DEFAULT_TRANSPARENCY){
+            else if(this->extraProps.blendPreset[i] == AnthemBlendPreset::AT_ABP_DEFAULT_TRANSPARENCY){
                 this->colorBlendAttachmentState[i].blendEnable = VK_TRUE;
                 this->colorBlendAttachmentState[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
                 this->colorBlendAttachmentState[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
                 this->colorBlendAttachmentState[i].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+                this->colorBlendAttachmentState[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+                this->colorBlendAttachmentState[i].colorBlendOp = VK_BLEND_OP_ADD;
+            }
+            else if (this->extraProps.blendPreset[i] == AnthemBlendPreset::AT_ABP_WEIGHTED_BLENDED_ACCUM) {
+                this->colorBlendAttachmentState[i].blendEnable = VK_TRUE;
+                this->colorBlendAttachmentState[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+                this->colorBlendAttachmentState[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+                this->colorBlendAttachmentState[i].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+                this->colorBlendAttachmentState[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+                this->colorBlendAttachmentState[i].colorBlendOp = VK_BLEND_OP_ADD;
+            }
+            else if (this->extraProps.blendPreset[i] == AnthemBlendPreset::AT_ABP_WEIGHTED_BLENDED_REVEAL) {
+                this->colorBlendAttachmentState[i].blendEnable = VK_TRUE;
+                this->colorBlendAttachmentState[i].srcAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+                this->colorBlendAttachmentState[i].dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+                this->colorBlendAttachmentState[i].srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
                 this->colorBlendAttachmentState[i].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
                 this->colorBlendAttachmentState[i].colorBlendOp = VK_BLEND_OP_ADD;
             }
@@ -184,13 +200,11 @@ namespace Anthem::Core{
         this->colorBlendStateCreateInfo.attachmentCount = static_cast<uint32_t>(colorBlendAttachmentState.size());
         this->colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentState.data();
 
-        //ANTH_ASSERT( colorBlendAttachmentState.size()>0, "Color blend attachment should not be empty");
-
         //Specify Depth & Stencil Info
         this->depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         this->depthStencilStateCreateInfo.pNext = nullptr;  
         this->depthStencilStateCreateInfo.flags = 0;
-        if (this->extraProps.blendPreset == AnthemBlendPreset::AT_ABP_DEFAULT_TRANSPARENCY) {
+        if (!this->extraProps.writeDepthStencil) {
             this->depthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
             this->depthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
         }

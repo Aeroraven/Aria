@@ -38,6 +38,7 @@ namespace Anthem::Core{
         std::vector<int> clearColorAttachmentOnLoad = { true };
         bool clearDepthAttachmentOnLoad = true;
         std::optional<std::array<float, 4>> predefinedClearColor = std::nullopt;
+        std::vector<std::array<float, 4>> clearColors = { {0,0,0,0} };
     };
 
     class AnthemRenderPass{
