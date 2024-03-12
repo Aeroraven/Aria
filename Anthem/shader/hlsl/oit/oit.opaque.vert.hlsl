@@ -7,9 +7,9 @@ struct VSInput
 
 struct Camera
 {
-	float4 proj;
-	float4 view;
-	float4 model;
+	float4x4 proj;
+    float4x4 view;
+    float4x4 model;
 };
 
 [[vk::push_constant]] Camera cam;
@@ -23,7 +23,7 @@ struct VSOutput
 VSOutput main(VSInput vsIn)
 {
 	VSOutput vsOut;
-    vsOut.position = float4(vsIn.position.xyz,1.0); //mul(cam.proj, mul(cam.view, mul(cam.model, float4(vsIn.position.xyz, 1.0))));
+    vsOut.position = mul(cam.proj, mul(cam.view, mul(cam.model, float4(vsIn.position.xyz, 1.0))));
 	vsOut.color = vsIn.color;
 	return vsOut;
 }

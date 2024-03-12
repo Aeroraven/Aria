@@ -13,6 +13,6 @@ VSOutput main(VSInput vsIn)
 {
     VSOutput vsOut;
     vsOut.position = float4(vsIn.position.xy, 0.5, 1.0);
-    vsOut.texCoord = float2(vsIn.position.xy);
+    vsOut.texCoord = float2(vsIn.position.xy) * 0.5 + 0.5;
     return vsOut;
 }

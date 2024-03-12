@@ -90,15 +90,15 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.camera.specifyFrustum((float)AT_PI / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 0, -1.85);
-	st.camera.specifyFrontEyeRay(0, 0, 1.85);
+	st.camera.specifyPosition(0, 0, -6);
+	st.camera.specifyFrontEyeRay(0, 0, 6);
 }
 
 void createGeometry() {
 	st.rd.createVertexBuffer(&st.vx);
 	st.vx->setTotalVertices(12);
-	float devX[3] = { -1.0,0.0,1.0 };
-	float devZ[3] = { 0.0,-1.0,-2.0 };
+	float devX[3] = { -0.3,0.0,0.3 };
+	float devZ[3] = { 1.0,0.0,2.0 };
 	float color[3][4] = {
 		{0.0,0.0,1.0,0.5},
 		{1.0,0.0,0.0,1.0},
