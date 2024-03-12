@@ -97,8 +97,8 @@ void initialize() {
 void createGeometry() {
 	st.rd.createVertexBuffer(&st.vx);
 	st.vx->setTotalVertices(12);
-	float devX[3] = { -0.3,0.0,0.3 };
-	float devZ[3] = { 1.0,0.0,2.0 };
+	float devX[3] = { -0.3,0.9,0.3 };
+	float devZ[3] = { 1.0,3.0,2.0 };
 	float color[3][4] = {
 		{0.0,0.0,1.0,0.5},
 		{1.0,0.0,0.0,1.0},
