@@ -11,6 +11,7 @@ struct Camera
 	float4 view;
 	float4 model;
 };
+
 [[vk::push_constant]] Camera cam;
 
 struct VSOutput
@@ -22,7 +23,7 @@ struct VSOutput
 VSOutput main(VSInput vsIn)
 {
 	VSOutput vsOut;
-	vsOut.position = mul(cam.proj, mul(cam.view, mul(cam.model, float4(vsIn.position.xyz, 1.0))));
+    vsOut.position = float4(vsIn.position.xyz,1.0); //mul(cam.proj, mul(cam.view, mul(cam.model, float4(vsIn.position.xyz, 1.0))));
 	vsOut.color = vsIn.color;
 	return vsOut;
 }

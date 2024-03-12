@@ -90,28 +90,28 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.camera.specifyFrustum((float)AT_PI / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 3, -6.85);
-	st.camera.specifyFrontEyeRay(0, -2, 6.85);
+	st.camera.specifyPosition(0, 0, -1.85);
+	st.camera.specifyFrontEyeRay(0, 0, 1.85);
 }
 
 void createGeometry() {
 	st.rd.createVertexBuffer(&st.vx);
 	st.vx->setTotalVertices(12);
 	float devX[3] = { -1.0,0.0,1.0 };
-	float devZ[3] = { 0.0,1.0,2.0 };
+	float devZ[3] = { 0.0,-1.0,-2.0 };
 	float color[3][4] = {
 		{0.0,0.0,1.0,0.5},
 		{1.0,0.0,0.0,1.0},
 		{0.0,1.0,0.0,0.5},
 	};
 	for (int i = 0; i < 3; i++) {
-		st.vx->insertData(i * 3 + 0, { -1.0f + devX[i],1.0f,devZ[i],1.0 }, { color[i][0],color[i][1],color[i][2],color[i][3] });
-		st.vx->insertData(i * 3 + 1, {  1.0f + devX[i],1.0f,devZ[i],1.0 }, { color[i][0],color[i][1],color[i][2],color[i][3] });
-		st.vx->insertData(i * 3 + 0, { 1.0f + devX[i],-1.0f,devZ[i],1.0 }, { color[i][0],color[i][1],color[i][2],color[i][3] });
-		st.vx->insertData(i * 3 + 0, { -1.0f + devX[i],-1.0f,devZ[i],1.0 }, { color[i][0],color[i][1],color[i][2],color[i][3] });
+		st.vx->insertData(i * 4 + 0, { -1.0f + devX[i],1.0f,devZ[i],1.0 }, { color[i][0],color[i][1],color[i][2],color[i][3] });
+		st.vx->insertData(i * 4 + 1, {  1.0f + devX[i],1.0f,devZ[i],1.0 }, { color[i][0],color[i][1],color[i][2],color[i][3] });
+		st.vx->insertData(i * 4 + 2, { 1.0f + devX[i],-1.0f,devZ[i],1.0 }, { color[i][0],color[i][1],color[i][2],color[i][3] });
+		st.vx->insertData(i * 4 + 3, { -1.0f + devX[i],-1.0f,devZ[i],1.0 }, { color[i][0],color[i][1],color[i][2],color[i][3] });
 	}
 	st.rd.createIndexBuffer(&st.ixOpaque);
-	st.ixOpaque->setIndices({ 4,5,6,6,7,0 });
+	st.ixOpaque->setIndices({ 4,5,6,6,7,4 });
 	st.rd.createIndexBuffer(&st.ixTransparent);
 	st.ixTransparent->setIndices({ 0,1,2,2,3,0,8,9,10,10,11,8 });
 }
@@ -129,7 +129,7 @@ void updatePushConstant() {
 	AtMatf4 proj, view, local;
 	st.camera.getProjectionMatrix(proj);
 	st.camera.getViewMatrix(view);
-	local = AnthemLinAlg::axisAngleRotationTransform3<float>({ 0.0f,1.0f,0.0f }, AT_PI / 6.0);
+	local = AnthemLinAlg::identity<float, 4>(); //AnthemLinAlg::axisAngleRotationTransform3<float>({ 0.0f,1.0f,0.0f }, AT_PI / 6.0);
 
 	float pm[16], vm[16], lm[16];
 	proj.columnMajorVectorization(pm);

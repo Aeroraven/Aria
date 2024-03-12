@@ -18,6 +18,7 @@ SamplerState sampSolid : register(s0, space2);
 PSOutput main(VSOutput vsOut)
 {
     PSOutput psOut;
-    psOut.color = float4(1.0, 0.0, 0.0, 1.0);
+    float4 solid = texSolid.Sample(sampSolid, vsOut.texCoord);
+    psOut.color = solid;
     return psOut;
 }
