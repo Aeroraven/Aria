@@ -93,7 +93,9 @@ namespace Anthem::Core{
         VkImageViewCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         createInfo.image = this->image.image;
-        if (!use3d) {
+        if (this->image.isCubic) {
+            createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        }else if (!use3d) {
             createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
         }
         else {
@@ -107,7 +109,7 @@ namespace Anthem::Core{
         createInfo.subresourceRange.aspectMask = aspectFlags;
         createInfo.subresourceRange.baseArrayLayer = 0;
         createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.layerCount = 1;
+        createInfo.subresourceRange.layerCount = this->image.layerCounts;
         createInfo.subresourceRange.levelCount = this->image.mipmapLodLevels;
         auto result = vkCreateImageView(this->logicalDevice->getLogicalDevice(),&createInfo,nullptr,&(this->image.imageView));
         if(result != VK_SUCCESS){
@@ -137,7 +139,7 @@ namespace Anthem::Core{
         barrier.subresourceRange.baseMipLevel = 0;
         barrier.subresourceRange.levelCount = this->image.mipmapLodLevels;
         barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
+        barrier.subresourceRange.layerCount = this->image.layerCounts;
 
         VkPipelineStageFlags sourceStage;
         VkPipelineStageFlags destinationStage;
@@ -221,14 +223,14 @@ namespace Anthem::Core{
         this->image.imageInfo.extent.height = height;
         this->image.imageInfo.extent.depth = depth;
         this->image.imageInfo.mipLevels = this->image.mipmapLodLevels;
-        this->image.imageInfo.arrayLayers = 1;
+        this->image.imageInfo.arrayLayers = this->image.layerCounts;;
         this->image.imageInfo.format = format;
         this->image.imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
         this->image.imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         this->image.imageInfo.usage = usage;
         this->image.imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         this->image.imageInfo.samples = (decltype(this->image.imageInfo.samples)) this->image.msaaCount;
-        this->image.imageInfo.flags = 0;
+        this->image.imageInfo.flags = this->image.extraFlags;
 
         ANTH_LOGI("Image Mip Lvls:", this->image.imageInfo.mipLevels);
 

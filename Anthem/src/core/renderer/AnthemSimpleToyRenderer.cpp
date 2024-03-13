@@ -47,6 +47,10 @@ namespace Anthem::Core{
             p->destroyImage();
             delete p;
         }
+        for (auto& p : this->texCubes) {
+            p->destroyImage();
+            delete p;
+        }
         ANTH_LOGV("Textures Destroyed");
 
         for(auto& p:this->vertexBuffers){
@@ -275,6 +279,25 @@ namespace Anthem::Core{
         if (!ignoreDescPool) descPool->addSampler(textureImage, bindLoc, descId);
         *pImage = textureImage;
         this->textures.push_back(textureImage);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createCubicTextureSimple(AnthemImageCubic** pImage, AnthemDescriptorPool* descPool, std::array<uint8_t*, 6>data,
+        uint32_t texWidth, uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc, uint32_t descId) {
+        //Allocate Image
+        auto textureImage = new AnthemImageCubic();
+        textureImage->specifyLogicalDevice(this->logicalDevice.get());
+        textureImage->specifyPhyDevice(this->phyDevice.get());
+        textureImage->specifyCommandBuffers(this->commandBuffers.get());
+        textureImage->loadImageData(data, texWidth, texHeight, texChannel);
+        textureImage->specifyUsage(AT_IU_TEXTURE);
+        textureImage->setImageFormat(AT_IF_SRGB_UINT8);
+        if (descId == -1) {
+            ANTH_LOGW("Descriptor pool index not specified for TexCube, using the default value", this->imageDescPoolIdx);
+            descId = this->imageDescPoolIdx;
+        }
+        descPool->addSampler(textureImage, bindLoc, descId);
+        *pImage = textureImage;
+        this->texCubes.push_back(textureImage);
         return true;
     }
     bool AnthemSimpleToyRenderer::createTexture3d(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,

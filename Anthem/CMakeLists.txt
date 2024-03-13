@@ -5,6 +5,11 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
+set(AT_REQ_VULKAN_BASE "C:/VulkanSDK/1.3.261.1")
+set(AT_REQ_GLFW3_BASE "C:/Program Files (x86)/GLFW/")
+set(AT_REQ_FREETYPE_BASE "C:/Program Files (x86)/freetype/")
+set(AT_REQ_OPENCV_INSTALL "C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install")
+
 if(MSVC)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fsanitize=address /Od")
 endif()
@@ -16,24 +21,24 @@ message(CMAKE_RUNTIME_OUTPUT_DIRECTORY=${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 message(CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR})
 message(CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
 
-set(Vulkan_LIBRARY C:/VulkanSDK/1.3.261.1/Lib/vulkan-1.lib)
-set(Vulkan_INCLUDE_DIR C:/VulkanSDK/1.3.261.1/Include)
+set(Vulkan_LIBRARY ${AT_REQ_VULKAN_BASE}/Lib/vulkan-1.lib)
+set(Vulkan_INCLUDE_DIR ${AT_REQ_VULKAN_BASE}/Include)
 find_package(Vulkan REQUIRED)
 
-set(glfw3_DIR "C:/Program Files (x86)/GLFW/lib/cmake/glfw3/")
-set(glfw3_LIB "C:/Program Files (x86)/GLFW/lib/glfw3.lib")
+set(glfw3_DIR ${AT_REQ_GLFW3_BASE}/lib/cmake/glfw3/)
+set(glfw3_LIB ${AT_REQ_GLFW3_BASE}/lib/glfw3.lib)
 find_package(glfw3 3.3 REQUIRED)
 
 
-set(FREETYPE_LIBRARY "C:/Program Files (x86)/freetype/lib/freetype.lib")
-set(FREETYPE_INCLUDE_DIRS "C:/Program Files (x86)/freetype/include")
+set(FREETYPE_LIBRARY ${AT_REQ_FREETYPE_BASE}/lib/freetype.lib)
+set(FREETYPE_INCLUDE_DIRS ${AT_REQ_FREETYPE_BASE}/include)
 find_package(freetype REQUIRED)
 
-find_package(OpenCV REQUIRED PATHS "C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install" )
+find_package(OpenCV REQUIRED PATHS ${AT_REQ_OPENCV_INSTALL} )
 
-include_directories("C:/Program Files (x86)/GLFW/include")
-include_directories("C:/Program Files (x86)/freetype/include/freetype2")
-include_directories("C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install/include")
+include_directories(${AT_REQ_GLFW3_BASE}/include)
+include_directories(${AT_REQ_FREETYPE_BASE}/include/freetype2)
+include_directories(${AT_REQ_OPENCV_INSTALL}/include)
 include_directories("imgui2/")
 
 file(GLOB_RECURSE SOURCE_0 "include/*.h")

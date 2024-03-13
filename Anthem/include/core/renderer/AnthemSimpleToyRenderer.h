@@ -30,6 +30,7 @@
 #include "../drawing/buffer/impl/AnthemPushConstantImpl.h"
 
 #include "../drawing/buffer/AnthemIndirectDrawBuffer.h"
+#include "../drawing/image/AnthemImageCubic.h"
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -60,6 +61,7 @@ namespace Anthem::Core{
 
         std::vector<AnthemRenderPass*> renderPasses;
         std::vector<AnthemImage*> textures;
+        std::vector<AnthemImageCubic*> texCubes;
         std::vector<AnthemShaderModule*> shaders;
 
         std::vector<AnthemVertexBuffer*> vertexBuffers;
@@ -131,6 +133,8 @@ namespace Anthem::Core{
             AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1,bool ignoreDescPool=false,
             AnthemImageUsage usage = AT_IU_TEXTURE);
         bool createTexture2(AnthemImage** pImage, AnthemImageCreateProps* prop, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId = -1, bool ignoreDescPool = false);
+        bool createCubicTextureSimple(AnthemImageCubic** pImage, AnthemDescriptorPool* descPool, std::array<uint8_t*, 6>data, 
+            uint32_t texWidth, uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc, uint32_t descId);
         bool createTexture3d(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth, uint32_t texHeight, uint32_t texDepth,
             uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1);
         bool createColorAttachmentImage(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint32_t bindLoc,
