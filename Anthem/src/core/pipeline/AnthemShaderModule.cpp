@@ -3,66 +3,29 @@
 namespace Anthem::Core{
     bool AnthemShaderModule::createShaderModules(AnthemLogicalDevice* device,const AnthemShaderFilePaths* filename){
         //Load Shader Code
-        ANTH_LOGI("Loading Shader Code");
-        auto vertexShaderCode = new std::vector<char>();
-        auto fragShaderCode = new std::vector<char>();
-        auto geomShaderCode = new std::vector<char>();
-        auto compShaderCode = new std::vector<char>();
-        auto tessConShaderCode = new std::vector<char>();
-        auto tessEvalShaderCode = new std::vector<char>();
 
-        if(filename->vertexShader.has_value()){
-            this->readFile(filename->vertexShader.value(),vertexShaderCode);
-        }
-        if(filename->fragmentShader.has_value()){
-            this->readFile(filename->fragmentShader.value(),fragShaderCode);
-        }
-        if(filename->geometryShader.has_value()){
-            this->readFile(filename->geometryShader.value(),geomShaderCode);
-        }
-        if(filename->computeShader.has_value()){
-            this->readFile(filename->computeShader.value(),compShaderCode);
-        }
-        if (filename->tessControlShader.has_value()) {
-            this->readFile(filename->tessControlShader.value(), tessConShaderCode);
-        }
-        if (filename->tessEvalShader.has_value()) {
-            this->readFile(filename->tessEvalShader.value(), tessEvalShaderCode);
-        }
+        auto createShaderSingle = [&](const std::optional<std::string>& path, std::optional<VkShaderModule>& shader,const char* stageName) {
+            auto code = new std::vector<char>();
+            if (path.has_value()) {
+                this->readFile(path.value(), code);
+                shader = std::make_optional<VkShaderModule>();
+                this->createSingleShaderModule(device, code, &shader);
+                ANTH_LOGV(stageName, " shader loaded.");
+            }
+        };
 
-        //Specify Shader Module
-        ANTH_LOGI("Creating Shader Module");
-        if(filename->vertexShader.has_value()){
-            this->shaderModules->vertexShaderModule = std::make_optional<VkShaderModule>();
-            this->createSingleShaderModule(device,vertexShaderCode,&(this->shaderModules->vertexShaderModule));
-            ANTH_LOGI("Vertex shader loaded");
-        }
-        if(filename->fragmentShader.has_value()){
-            this->shaderModules->fragmentShaderModule = std::make_optional<VkShaderModule>();
-            this->createSingleShaderModule(device,fragShaderCode,&(this->shaderModules->fragmentShaderModule));
-            ANTH_LOGI("Fragment shader loaded");
-        }
-        if(filename->geometryShader.has_value()){
-            this->shaderModules->geometryShaderModule = std::make_optional<VkShaderModule>();
-            this->createSingleShaderModule(device,geomShaderCode,&(this->shaderModules->geometryShaderModule));
-            ANTH_LOGI("Geometry shader loaded");
-        }
-        if(filename->computeShader.has_value()){
-            this->shaderModules->computeShaderModule = std::make_optional<VkShaderModule>();
-            this->createSingleShaderModule(device,compShaderCode,&(this->shaderModules->computeShaderModule));
-            ANTH_LOGI("Compute shader loaded");
-        }
-        if (filename->tessControlShader.has_value()) {
-            this->shaderModules->tessControlShader = std::make_optional<VkShaderModule>();
-            this->createSingleShaderModule(device, tessConShaderCode, &(this->shaderModules->tessControlShader));
-            ANTH_LOGI("Tessellation control shader loaded");
-        }
-        if (filename->tessEvalShader.has_value()) {
-            this->shaderModules->tessEvalShader = std::make_optional<VkShaderModule>();
-            this->createSingleShaderModule(device, tessEvalShaderCode, &(this->shaderModules->tessEvalShader));
-            ANTH_LOGI("Tessellation evaluation shader loaded");
-        }
+        createShaderSingle(filename->vertexShader, shaderModules->vertexShaderModule, "Vertex");
+        createShaderSingle(filename->fragmentShader, shaderModules->fragmentShaderModule, "Fragment");
+        createShaderSingle(filename->geometryShader, shaderModules->geometryShaderModule, "Geometry");
+        createShaderSingle(filename->computeShader, shaderModules->computeShaderModule, "Compute");
+        createShaderSingle(filename->tessControlShader, shaderModules->tessControlShader, "Tessellation Control");
+        createShaderSingle(filename->tessEvalShader, shaderModules->tessEvalShader, "Tessellation Evaluation");
+        createShaderSingle(filename->taskShader, shaderModules->taskShader, "Task");
+        createShaderSingle(filename->meshShader, shaderModules->meshShader, "Mesh");
+
         this->shaderModules->vertexShaderModuleCreated = true;
+        ANTH_LOGI("Shader code loaded");
+
         return true;
     }
     bool AnthemShaderModule::createSingleShaderModule(AnthemLogicalDevice* device,std::vector<char>* shaderCode,std::optional<VkShaderModule>* shaderModule){
@@ -78,79 +41,47 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemShaderModule::destroyShaderModules(AnthemLogicalDevice* device){
-        if(this->shaderModules->vertexShaderModule.has_value()){
-            vkDestroyShaderModule(device->getLogicalDevice(),this->shaderModules->vertexShaderModule.value(),nullptr);
-        }
-        if(this->shaderModules->fragmentShaderModule.has_value()){
-            vkDestroyShaderModule(device->getLogicalDevice(),this->shaderModules->fragmentShaderModule.value(),nullptr);
-        }
-        if(this->shaderModules->geometryShaderModule.has_value()){
-            vkDestroyShaderModule(device->getLogicalDevice(),this->shaderModules->geometryShaderModule.value(),nullptr);
-        }
-        if(this->shaderModules->computeShaderModule.has_value()){
-            vkDestroyShaderModule(device->getLogicalDevice(),this->shaderModules->computeShaderModule.value(),nullptr);
-        }
-        if (this->shaderModules->tessControlShader.has_value()) {
-            vkDestroyShaderModule(device->getLogicalDevice(), this->shaderModules->tessControlShader.value(), nullptr);
-        }
-        if (this->shaderModules->tessEvalShader.has_value()) {
-            vkDestroyShaderModule(device->getLogicalDevice(), this->shaderModules->tessEvalShader.value(), nullptr);
-        }
+
+        auto destroyShaderSingle = [&](std::optional<VkShaderModule>& shader) {
+            if (shader.has_value()) {
+                vkDestroyShaderModule(device->getLogicalDevice(),shader.value(), nullptr);
+            }
+        };
+
+        destroyShaderSingle(shaderModules->vertexShaderModule);
+        destroyShaderSingle(shaderModules->fragmentShaderModule);
+        destroyShaderSingle(shaderModules->geometryShaderModule);
+        destroyShaderSingle(shaderModules->computeShaderModule);
+        destroyShaderSingle(shaderModules->tessControlShader);
+        destroyShaderSingle(shaderModules->tessEvalShader);
+        destroyShaderSingle(shaderModules->taskShader);
+        destroyShaderSingle(shaderModules->meshShader);
+
         return true;
     }
     bool AnthemShaderModule::specifyShaderStageCreateInfo(std::vector<VkPipelineShaderStageCreateInfo>* shaderStageCreateInfo) const{
         ANTH_ASSERT(this->shaderModules->vertexShaderModuleCreated,"Shader module not created");
-        if(this->shaderModules->vertexShaderModule.has_value()){
-            VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = {};
-            vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-            vertexShaderStageCreateInfo.module = this->shaderModules->vertexShaderModule.value();
-            vertexShaderStageCreateInfo.pName = "main";
-            shaderStageCreateInfo->push_back(vertexShaderStageCreateInfo);
-        }
+        
+        auto specifyInfoSingle = [&](std::optional<VkShaderModule>& shader, VkShaderStageFlagBits stage) {
+            if (shader.has_value()) {
+                VkPipelineShaderStageCreateInfo cInfo{};
+                cInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+                cInfo.stage = stage;
+                cInfo.module = shader.value();
+                cInfo.pName = "main";
+                shaderStageCreateInfo->push_back(cInfo);
+            }
+        };
+        
+        specifyInfoSingle(shaderModules->vertexShaderModule, VK_SHADER_STAGE_VERTEX_BIT);
+        specifyInfoSingle(shaderModules->fragmentShaderModule, VK_SHADER_STAGE_FRAGMENT_BIT);
+        specifyInfoSingle(shaderModules->geometryShaderModule, VK_SHADER_STAGE_GEOMETRY_BIT);
+        specifyInfoSingle(shaderModules->computeShaderModule, VK_SHADER_STAGE_COMPUTE_BIT);
+        specifyInfoSingle(shaderModules->tessControlShader, VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT);
+        specifyInfoSingle(shaderModules->tessEvalShader, VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT);
+        specifyInfoSingle(shaderModules->taskShader, VK_SHADER_STAGE_TASK_BIT_EXT);
+        specifyInfoSingle(shaderModules->meshShader, VK_SHADER_STAGE_MESH_BIT_EXT);
 
-        if(this->shaderModules->fragmentShaderModule.has_value()){
-            VkPipelineShaderStageCreateInfo fragmentShaderStageCreateInfo = {};
-            fragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            fragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-            fragmentShaderStageCreateInfo.module = this->shaderModules->fragmentShaderModule.value();
-            fragmentShaderStageCreateInfo.pName = "main";
-            shaderStageCreateInfo->push_back(fragmentShaderStageCreateInfo);
-        }
-
-        if(this->shaderModules->geometryShaderModule.has_value()){
-            VkPipelineShaderStageCreateInfo geometryShaderStageCreateInfo = {};
-            geometryShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            geometryShaderStageCreateInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
-            geometryShaderStageCreateInfo.module = this->shaderModules->geometryShaderModule.value();
-            geometryShaderStageCreateInfo.pName = "main";
-            shaderStageCreateInfo->push_back(geometryShaderStageCreateInfo);
-        }
-
-        if(this->shaderModules->computeShaderModule.has_value()){
-            VkPipelineShaderStageCreateInfo computeShaderStageCreateInfo = {};
-            computeShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            computeShaderStageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-            computeShaderStageCreateInfo.module = this->shaderModules->computeShaderModule.value();
-            computeShaderStageCreateInfo.pName = "main";
-            shaderStageCreateInfo->push_back(computeShaderStageCreateInfo);
-        }
-        if (this->shaderModules->tessControlShader.has_value()) {
-            VkPipelineShaderStageCreateInfo tessConShaderInfo = {};
-            tessConShaderInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            tessConShaderInfo.stage = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-            tessConShaderInfo.module = this->shaderModules->tessControlShader.value();
-            tessConShaderInfo.pName = "main";
-            shaderStageCreateInfo->push_back(tessConShaderInfo);
-        }
-        if (this->shaderModules->tessEvalShader.has_value()) {
-            VkPipelineShaderStageCreateInfo tessEvalShaderInfo = {};
-            tessEvalShaderInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            tessEvalShaderInfo.stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-            tessEvalShaderInfo.module = this->shaderModules->tessEvalShader.value();
-            tessEvalShaderInfo.pName = "main";
-            shaderStageCreateInfo->push_back(tessEvalShaderInfo);
-        }
         return true;
     }
 }

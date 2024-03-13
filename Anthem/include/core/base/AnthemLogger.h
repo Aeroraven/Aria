@@ -43,13 +43,15 @@ namespace Anthem{
 
             inline std::string classNameTrack(const std::string& prettyFunction) {
                 size_t colons = prettyFunction.find("!") + 1;
-                return prettyFunction.substr(colons,prettyFunction.size()-colons);
+                auto x = prettyFunction.substr(colons,prettyFunction.size()-colons);
+                size_t pls = x.find("+");
+                return x.substr(0, pls);
             }
             void log_prefix(const char* level){
                 auto timestamp = std::time(nullptr);
                 auto formattedTime = std::asctime(std::localtime(&timestamp));
                 formattedTime[strlen(formattedTime)-1] = '\0';
-                std::cout << ANTH_LOGGER_CYAN << "["  << level << "] "<< ANTH_LOGGER_GREEN <<"(" << formattedTime << ") " << ANTH_LOGGER_RESET;
+                std::cout << ANTH_LOGGER_CYAN << "["  << level << "] "<< ANTH_LOGGER_GREEN <<"(" << &formattedTime[4] << ") " << ANTH_LOGGER_RESET;
             }
  
             template<typename... _Args>

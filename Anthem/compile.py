@@ -14,25 +14,48 @@ if __name__ == "__main__":
             continue
         print("Compiling :",x)
         subfiles = os.listdir("./shader/"+args.lang+"/"+x)
+        req_suffix = [".vert",".frag",".geom",".comp",".tesc",".tese",".mesh",".task"]
+
         for y in subfiles:
-            if y.endswith(".vert") or y.endswith(".frag") or y.endswith(".geom") or y.endswith(".comp") or \
-                y.endswith(".tesc") or y.endswith(".tese") or \
-                y.endswith(".vert.hlsl") or y.endswith(".frag.hlsl") or y.endswith(".geom.hlsl") or y.endswith(".comp.hlsl") or \
-                y.endswith(".tesc.hlsl") or y.endswith(".tese.hlsl"):
-                hlsl_profile = {
-                    "vert.hlsl": "vs_6_0",
-                    "frag.hlsl": "ps_6_0",
-                    "geom.hlsl": "gs_6_0",
-                    "comp.hlsl": "cs_6_0",
-                    "tesc.hlsl": "hs_6_0",
-                    "tese.hlsl": "ds_6_0"
-                }
-                w = 1
-                if args.lang == "glsl":
-                    w = subprocess.run(["glslc", "./shader/glsl/"+x+"/"+y, "-o", "./shader/glsl/"+x+"/"+y+".spv"]) 
-                elif args.lang == "hlsl":
-                    w = subprocess.run(["dxc","-spirv","-T", hlsl_profile[y[-9:]], "./shader/hlsl/"+x+"/"+y, "-Fo", "./shader/hlsl/"+x+"/"+y+".spv"])
-                if w.returncode != 0:
-                    print("Error compiling shader:",y)
-                    raise
-                print("- Compiled :",y)
+            for pv in req_suffix:
+                if y.endswith(pv) or y.endswith(pv+".hlsl"):
+                    hlsl_profile = {
+                        "vert.hlsl": "vs_6_1",
+                        "frag.hlsl": "ps_6_4",
+                        "geom.hlsl": "gs_6_1",
+                        "comp.hlsl": "cs_6_1",
+                        "tesc.hlsl": "hs_6_1",
+                        "tese.hlsl": "ds_6_1",
+                        "mesh.hlsl": "ms_6_6",
+                        "task.hlsl": "as_6_6"
+                    }
+                    extra_args = {
+                        "vert.hlsl": "",
+                        "frag.hlsl": "",
+                        "geom.hlsl": "",
+                        "comp.hlsl": "",
+                        "tesc.hlsl": "",
+                        "tese.hlsl": "",
+                        "mesh.hlsl": "-fspv-target-env=vulkan1.2",
+                        "task.hlsl": "-fspv-target-env=vulkan1.2"
+                    }
+                    w = 1
+                    if args.lang == "glsl":
+                        w = subprocess.run(["glslc", "./shader/glsl/"+x+"/"+y, "-o", "./shader/glsl/"+x+"/"+y+".spv"]) 
+                    elif args.lang == "hlsl":
+                        w = subprocess.run(["dxc",
+                                            "-spirv",
+                                            "-T", hlsl_profile[y[-9:]], 
+                                            "./shader/hlsl/"+x+"/"+y, 
+                                            extra_args[y[-9:]] , 
+                                            '-fspv-extension=SPV_KHR_ray_tracing',
+                                            '-fspv-extension=SPV_KHR_multiview',
+                                            '-fspv-extension=SPV_KHR_shader_draw_parameters',
+                                            '-fspv-extension=SPV_EXT_descriptor_indexing',
+                                            '-fspv-extension=SPV_KHR_ray_query',
+                                            '-fspv-extension=SPV_KHR_fragment_shading_rate',
+                                            "-Fo", "./shader/hlsl/"+x+"/"+y+".spv"])
+                    if w.returncode != 0:
+                        print("Error compiling shader:",y)
+                        raise
+                    print("- Compiled :",y)

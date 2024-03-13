@@ -30,8 +30,6 @@ namespace Anthem::Core{
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
         int i = 0;
         for(const auto& queueFamily : queueFamilies){
-            ANTH_LOGI("Queue Family ",i,":",queueFamily.queueFlags);
-            
             VkBool32 presentSupport = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface->getWindowSurface(), &presentSupport);
 
@@ -80,9 +78,9 @@ namespace Anthem::Core{
 
             for(uint32_t i=0;i<deviceMemoryProperties.memoryHeapCount;i++){
                 rating += 1;
-                ANTH_LOGI("Heap ",i,":",deviceMemoryProperties.memoryHeaps[i].size,",",deviceMemoryProperties.memoryHeaps[i].flags);
+                //ANTH_LOGI("Heap ",i,":",deviceMemoryProperties.memoryHeaps[i].size,",",deviceMemoryProperties.memoryHeaps[i].flags);
             }
-            ANTH_LOGI("Extension Support:",extSupportAssert);
+            //ANTH_LOGI("Extension Support:",extSupportAssert);
  
             availFlag = (deviceProperties.deviceType==VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) && 
                  famQueueIdx->graphicsFamily.has_value() &&
@@ -92,20 +90,20 @@ namespace Anthem::Core{
             return std::make_tuple(availFlag, rating, famQueueIdx);
         };
 
-        std::vector<std::tuple<int, VkPhysicalDevice, ANTH_UNSAFE_PTR(AnthemPhyQueueFamilyIdx)>> availableDevices;
+        std::vector<std::tuple<int, VkPhysicalDevice, ANTH_UNSAFE_PTR(AnthemPhyQueueFamilyIdx),std::string>> availableDevices;
         for(const auto& device : devices){
             VkPhysicalDeviceProperties deviceProperties;
             vkGetPhysicalDeviceProperties(device, &deviceProperties);
             ANTH_LOGI("Found GPU: ",deviceProperties.deviceName," ApiVer:",deviceProperties.apiVersion);
             auto conds = checkDeviceSuitable(device);
-            availableDevices.push_back(std::make_tuple(std::get<1>(conds), device, std::get<2>(conds)));
+            availableDevices.push_back(std::make_tuple(std::get<1>(conds), device, std::get<2>(conds), deviceProperties.deviceName));
         }
         ANTH_ASSERT(availableDevices.size()!=0,"Failed to find suitable GPU");
         std::sort(availableDevices.begin(), availableDevices.end(), [](const auto& a, const auto& b){
             return std::get<0>(a)>std::get<0>(b);
         });
         auto chosenDevice = availableDevices.at(0);
-        ANTH_LOGI("Chosen Score=",std::get<0>(chosenDevice));
+        ANTH_LOGI("Chosen Hardaware: ",std::get<3>(chosenDevice));
         this->physicalDevice = std::get<1>(chosenDevice);
         this->physicalDeviceQueueFamily = std::get<2>(chosenDevice);
         return true;

@@ -21,7 +21,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemCommandBuffers::destroyCommandPool(){
-        ANTH_LOGI("Destroying command pool");
+        ANTH_LOGV("Destroying command pool");
         vkDestroyCommandPool(this->logicalDevice->getLogicalDevice(),commandPool,nullptr);
         return true;
     }

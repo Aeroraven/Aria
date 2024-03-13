@@ -27,7 +27,7 @@ namespace Anthem::Core{
                 return false;
             }
             this->syncObjectAvailable = true;
-            ANTH_LOGI("Sync objects created, Idx=",i);
+            ANTH_LOGV("Sync objects created, Idx=",i);
         }
         
         return true;
@@ -36,7 +36,7 @@ namespace Anthem::Core{
     bool AnthemMainLoopSyncer::destroySyncObjects(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->syncObjectAvailable,"Sync objects not created");
-        ANTH_LOGI("Destroying sync objects");
+        ANTH_LOGV("Destroying sync objects");
         for(auto i=0;i<this->config->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
             vkDestroySemaphore(this->logicalDevice->getLogicalDevice(),this->imageAvailableSp.at(i),nullptr);
             vkDestroySemaphore(this->logicalDevice->getLogicalDevice(),this->drawFinishedSp.at(i),nullptr);

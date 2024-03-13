@@ -11,65 +11,65 @@ namespace Anthem::Core{
 
         this->logicalDevice->waitForIdle();
         this->destroySwapChain();
-        ANTH_LOGI("Swapchain Destroyed");
+        ANTH_LOGV("Swapchain Destroyed");
 
         for(auto& p:this->descriptorPools){
             p->destroyDescriptorPool();
             p->destroyLayoutBinding();
             delete p;
         }
-        ANTH_LOGI("Desc Pools Destroyed");
+        ANTH_LOGV("Desc Pools Destroyed");
 
         for(auto& p:this->uniformBuffers){
             p->destroyBuffers();
-            ANTH_LOGI("Preparing to delete uniform buffer");
+            ANTH_LOGV("Preparing to delete uniform buffer");
             delete p;
         }
-        ANTH_LOGI("Uniform Buffers Destroyed");
+        ANTH_LOGV("Uniform Buffers Destroyed");
 
         for (auto& p : this->extFences) {
             p->destroyFence();
         }
-        ANTH_LOGI("Fences Destroyed");
+        ANTH_LOGV("Fences Destroyed");
 
         for (auto& p : this->extSemaphores) {
             p->destroySemaphore();
         }
-        ANTH_LOGI("Semaphores Destroyed");
+        ANTH_LOGV("Semaphores Destroyed");
 
         for (auto& p : this->ssboBuffers) {
             p->destroyStagingBuffer();
             p->destroySSBO();
         }
-        ANTH_LOGI("SSBO Destroyed");
+        ANTH_LOGV("SSBO Destroyed");
 
         for(auto& p:this->textures){
             p->destroyImage();
             delete p;
         }
-        ANTH_LOGI("Textures Destroyed");
+        ANTH_LOGV("Textures Destroyed");
 
         for(auto& p:this->vertexBuffers){
             p->destroyBuffer();
             delete p;
         }
-        ANTH_LOGI("Vertex Buffers Destroyed");
+        ANTH_LOGV("Vertex Buffers Destroyed");
 
         for(auto& p:this->indexBuffers){
             p->destroyBuffer();
             delete p;
         }
-        ANTH_LOGI("Index Buffers Destroyed");
+        ANTH_LOGV("Index Buffers Destroyed");
         for (auto& p : this->indirectDrawBuffers) {
             p->destroyBuffer();
             delete p;
         }
-        ANTH_LOGI("Indirect Buffers Destroyed");
+        ANTH_LOGV("Indirect Buffers Destroyed");
 
 
         this->mainLoopSyncer->destroySyncObjects();
         this->commandBuffers->destroyCommandPool();
-        ANTH_LOGI("Synchronization Objects & Command Pools Destroyed");
+        ANTH_LOGV("Synchronization Objects & Command Pools Destroyed");
 
         for(auto& p:this->graphicsPipelines){
             p->destroyPipeline();
@@ -82,19 +82,19 @@ namespace Anthem::Core{
             delete p;
         }
 
-        ANTH_LOGI("Pipelines Destroyed");
+        ANTH_LOGV("Pipelines Destroyed");
 
         for(auto& p:this->shaders){
             p->destroyShaderModules(this->logicalDevice.get());
             delete p;
         }
-        ANTH_LOGI("Shaders Destroyed");
+        ANTH_LOGV("Shaders Destroyed");
 
         for(auto& p:this->renderPasses){
             p->destroyRenderPass();
             delete p;
         }
-        ANTH_LOGI("Render Passes Destroyed");
+        ANTH_LOGV("Render Passes Destroyed");
 
         logicalDevice->destroyLogicalDevice(this->instance->getInstance());
         validationLayer->destroyDebugMsgLayer(this->instance->getInstance());
@@ -103,6 +103,8 @@ namespace Anthem::Core{
         //Destroy Instance
         this->instance->destroyInstance();
         this->instance->destroyWindow();
+
+        ANTH_LOGV("Finalization done");
 
         return true;
     }
@@ -145,6 +147,7 @@ namespace Anthem::Core{
         this->logicalDeviceSelector->createLogicalDevice();
         this->logicalDevice = ANTH_MAKE_UNIQUE(AnthemLogicalDevice)();
         this->logicalDeviceSelector->getLogicalDevice(this->logicalDevice.get());
+        this->logicalDevice->preparePFNs();
 
         //Step5. Prepare Swapchain
         this->swapChain->specifySwapChainDetails(this->phyDevice.get(),this->instance->getWindow());
@@ -817,6 +820,10 @@ namespace Anthem::Core{
                     *buffer->getBuffer(), i * sizeof(VkDrawIndexedIndirectCommand), 1, sizeof(VkDrawIndexedIndirectCommand));
             }
         }
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drDrawMesh(uint32_t groupX, uint32_t groupY, uint32_t groupZ, uint32_t cmdIdx) {
+        this->logicalDevice->vkCall_vkCmdDrawMeshTaskExt(*this->commandBuffers->getCommandBuffer(cmdIdx), groupX, groupY, groupZ);
         return true;
     }
     bool AnthemSimpleToyRenderer::presentFrameDemo(uint32_t currentFrame, AnthemRenderPass* renderPass, 

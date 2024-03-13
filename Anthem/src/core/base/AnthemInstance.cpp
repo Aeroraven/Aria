@@ -73,7 +73,7 @@ namespace Anthem::Core{
         this->appInfo.applicationVersion = VK_MAKE_VERSION(1,0,0);
         this->appInfo.pEngineName = config->ENGINE_NAME;
         this->appInfo.engineVersion = VK_MAKE_VERSION(1,0,0);
-        this->appInfo.apiVersion = VK_API_VERSION_1_0;
+        this->appInfo.apiVersion = VK_API_VERSION_1_2;
 
         this->createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         this->createInfo.pApplicationInfo = &this->appInfo;
@@ -111,6 +111,7 @@ namespace Anthem::Core{
         if(config->VKCFG_ENABLE_VALIDATION_LAYERS){
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
+        extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         return extensions;
     }
     const VkInstanceCreateInfo* AnthemInstance::getCreateInfo() const{

@@ -6,7 +6,6 @@ namespace Anthem::Core{
     }
     bool AnthemLogicalDeviceSelector::createLogicalDevice(){
         //Create Queue
-        ANTH_LOGI("Registering Queues");
         registerQueueCreateInfo(phyDevice->getPhyQueueGraphicsFamilyIndice().value());
         registerQueueCreateInfo(phyDevice->getPhyQueuePresentFamilyIndice().value());
         
@@ -19,7 +18,6 @@ namespace Anthem::Core{
         this->creatingFeats.samplerAnisotropy = VK_TRUE;
 
         //Create Device
-        ANTH_LOGI("Creating Queue");
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.pQueueCreateInfos = this->queueCreateInfo.data();
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(this->queueCreateInfo.size());
@@ -27,6 +25,21 @@ namespace Anthem::Core{
         createInfo.ppEnabledExtensionNames = deviceSupportExtensions->data();
         createInfo.enabledLayerCount = 0;
         createInfo.pEnabledFeatures = &(this->creatingFeats);
+
+#ifdef VK_EXT_mesh_shader
+        VkPhysicalDeviceMeshShaderFeaturesEXT extMeshShader = {};
+        extMeshShader.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
+        extMeshShader.meshShader = VK_TRUE;
+        extMeshShader.taskShader = VK_TRUE;
+
+        VkPhysicalDeviceFeatures2 sPhyFeats = {};
+        sPhyFeats.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        sPhyFeats.features = this->creatingFeats;
+        sPhyFeats.pNext = &extMeshShader;
+
+        createInfo.pEnabledFeatures = nullptr;
+        createInfo.pNext = &sPhyFeats;
+#endif
 
         if(vkCreateDevice(phyDevice->getPhysicalDevice(), &createInfo, nullptr, &logicalDevice)!=VK_SUCCESS){
             ANTH_LOGI("Failed to create logical device");

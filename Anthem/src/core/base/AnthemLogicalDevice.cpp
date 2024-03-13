@@ -45,5 +45,13 @@ namespace Anthem::Core{
         vkDeviceWaitIdle(this->logicalDevice);
         return true;
     }
+    bool AnthemLogicalDevice::preparePFNs() {
+        this->procCmdDrawMesh = reinterpret_cast<PFN_vkCmdDrawMeshTasksEXT>(vkGetDeviceProcAddr(this->logicalDevice, "vkCmdDrawMeshTasksEXT"));
+        return true;
+    }
+    void AnthemLogicalDevice::vkCall_vkCmdDrawMeshTaskExt(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+        ANTH_ASSERT(this->procCmdDrawMesh, "Process is nullptr");
+        (*this->procCmdDrawMesh)(commandBuffer, groupCountX, groupCountY, groupCountZ);
+    }
 
 }

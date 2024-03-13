@@ -18,7 +18,12 @@ namespace Anthem::Core{
         VkPhysicalDeviceMemoryProperties deviceMemoryProperties = {};
         AnthemPhyQueueFamilyIdx queueFamilyIdx = {};
         bool deviceSpecified = false;
-        std::vector<const char*> requiredDeviceSupportedExtension = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+        std::vector<const char*> requiredDeviceSupportedExtension = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+            VK_EXT_MESH_SHADER_EXTENSION_NAME,
+            VK_KHR_SPIRV_1_4_EXTENSION_NAME,
+            VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME
+        };
         
     public:
         AnthemPhyDevice(); 

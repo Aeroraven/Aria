@@ -267,7 +267,6 @@ namespace Anthem::Core{
         this->pipelineLayoutCreateInfo.pNext = nullptr;
         this->pipelineLayoutCreateInfo.flags = 0;
         
-        ANTH_LOGI("Here");
         this->descriptorPool->getAllDescriptorLayouts(&layouts);
         for(auto x:layouts){
             ANTH_LOGI("Layouts Are:",(long long)(x));
@@ -301,12 +300,15 @@ namespace Anthem::Core{
         this->pipelineCreateInfo.pNext = nullptr;
         this->pipelineCreateInfo.flags = 0;
 
-        ANTH_LOGI("www");
         this->pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStageCreateInfo.size());
         this->pipelineCreateInfo.pStages = shaderStageCreateInfo.data();
 
-        ANTH_LOGI("www");
-        this->pipelineCreateInfo.pVertexInputState = &(this->vertexInputStateCreateInfo);
+        if (extraProps.emptyVertexStage) {
+            this->pipelineCreateInfo.pVertexInputState = nullptr;
+        }
+        else {
+            this->pipelineCreateInfo.pVertexInputState = &(this->vertexInputStateCreateInfo);
+        }
         this->pipelineCreateInfo.pInputAssemblyState = &(this->inputAssemblyStateCreateInfo);
         this->pipelineCreateInfo.pTessellationState = nullptr;
         if (extraProps.enableTessellation) {

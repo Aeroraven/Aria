@@ -45,6 +45,9 @@ namespace Anthem::Core{
 
         // Rasterizer
         AnthemRasterizerPolygonMode polygonMode = AnthemRasterizerPolygonMode::AT_ARPM_POLYGON_FILL;
+
+        // Mesh Shader
+        bool emptyVertexStage = false;
     };
 
     class AnthemGraphicsPipeline{     

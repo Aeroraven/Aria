@@ -10,6 +10,10 @@ namespace Anthem::Core{
         VkQueue presentQueue;
         VkQueue computeQueue;
         bool specifiedDevice = false;
+
+        PFN_vkCmdDrawMeshTasksEXT procCmdDrawMesh = nullptr;
+
+
     public:
         AnthemLogicalDevice();
         bool virtual specifyDevice(VkDevice device);
@@ -25,6 +29,10 @@ namespace Anthem::Core{
 
         bool virtual destroyLogicalDevice(const VkInstance* instance) ;
         bool virtual waitForIdle() const;
+
+        bool virtual preparePFNs();
+
+        void virtual vkCall_vkCmdDrawMeshTaskExt(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
     };
 
 }
