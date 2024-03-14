@@ -25,6 +25,7 @@
 #include <ranges>
 #include <typeinfo>
 #include <sstream>
+#include <deque>
 
 #ifndef _HAS_CXX23
     #if __cplusplus >= 202302L
@@ -93,9 +94,14 @@
 
 // Logger
 #define ANTH_ENABLE_LOG
+#define ANTH_LOG_IGNORE_VERBOSE
 
 #ifdef ANTH_ENABLE_LOG
-    #define ANTH_LOGV(...) Anthem::Core::AnthemLogger::getInstance().logv2(ANTH_CLASSNAME,std::make_tuple(__VA_ARGS__))
+    #ifdef ANTH_LOG_IGNORE_VERBOSE
+        #define ANTH_LOGV(...)
+    #else
+        #define ANTH_LOGV(...) Anthem::Core::AnthemLogger::getInstance().logv2(ANTH_CLASSNAME,std::make_tuple(__VA_ARGS__))
+    #endif
     #define ANTH_LOGI(...) Anthem::Core::AnthemLogger::getInstance().logi2(ANTH_CLASSNAME,std::make_tuple(__VA_ARGS__))
     #define ANTH_LOGW(...) Anthem::Core::AnthemLogger::getInstance().logw2(ANTH_CLASSNAME,std::make_tuple(__VA_ARGS__))
     #define ANTH_LOGE(...) Anthem::Core::AnthemLogger::getInstance().loge2(ANTH_CLASSNAME,std::make_tuple(__VA_ARGS__))

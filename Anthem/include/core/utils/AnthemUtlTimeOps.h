@@ -13,6 +13,7 @@ namespace Anthem::Core::Util{
         }
         bool recordTime(){
             lastTimePoint = std::chrono::steady_clock::now();
+            return true;
         }
         int64_t getDuration(){
             auto duration = std::chrono::steady_clock::now() - lastTimePoint;

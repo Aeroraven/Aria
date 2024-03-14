@@ -46,8 +46,6 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemMainLoopSyncer::waitForPrevFrame(uint32_t frameIdx){
-        ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
-        ANTH_ASSERT(this->syncObjectAvailable,"Sync objects not created");
         ANTH_LOGV("Waiting for fences, Idx=",frameIdx);
         vkWaitForFences(this->logicalDevice->getLogicalDevice(),1,&this->inFlightFence[frameIdx],VK_TRUE,UINT64_MAX);
         vkResetFences(this->logicalDevice->getLogicalDevice(),1,&this->inFlightFence[frameIdx]);
@@ -58,8 +56,6 @@ namespace Anthem::Core{
         return true;
     }
     uint32_t AnthemMainLoopSyncer::acquireNextFrame(uint32_t frameIdx,std::function<void()> swapChainOutdatedHandler){
-        ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
-        ANTH_ASSERT(this->syncObjectAvailable,"Sync objects not created");
         ANTH_LOGV("Acquiring next frame");
         uint32_t imageIndex;
         auto result = vkAcquireNextImageKHR(this->logicalDevice->getLogicalDevice(),*(this->swapChain->getSwapChain()),UINT64_MAX,this->imageAvailableSp[frameIdx],VK_NULL_HANDLE,&imageIndex);
@@ -141,11 +137,7 @@ namespace Anthem::Core{
 
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
-        
-        VkFence* sigFence = signalFence;
-        if (sigFence == nullptr) {
-            sigFence = &this->inFlightFence[frameIdx];
-        }
+        VkFence* sigFence = !signalFence ? &this->inFlightFence[frameIdx] : signalFence;
         if(vkQueueSubmit(this->logicalDevice->getGraphicsQueue(),1,&submitInfo,*sigFence)!=VK_SUCCESS){
             ANTH_LOGE("Failed to submit draw command buffer");
             return false;

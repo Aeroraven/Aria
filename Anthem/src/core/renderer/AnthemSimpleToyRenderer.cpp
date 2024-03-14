@@ -291,6 +291,7 @@ namespace Anthem::Core{
         textureImage->loadImageData(data, texWidth, texHeight, texChannel);
         textureImage->specifyUsage(AT_IU_TEXTURE);
         textureImage->setImageFormat(AT_IF_SRGB_UINT8);
+        textureImage->prepareImage();
         if (descId == -1) {
             ANTH_LOGW("Descriptor pool index not specified for TexCube, using the default value", this->imageDescPoolIdx);
             descId = this->imageDescPoolIdx;
@@ -588,10 +589,7 @@ namespace Anthem::Core{
     bool AnthemSimpleToyRenderer::drSubmitCommandBufferGraphicsQueueGeneral2(uint32_t cmdIdx, uint32_t frameIdx,
         const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,
         AnthemFence* customFence, const std::vector<const AnthemSemaphore*>* semaphoreToSignal) {
-        VkFence vf = nullptr;
-        if (customFence) {
-            vf = *customFence->getFence();
-        }
+        VkFence vf = customFence ? (*customFence->getFence()) : nullptr;
         return this->mainLoopSyncer->submitCommandBufferGeneral2(this->commandBuffers->getCommandBuffer(cmdIdx), frameIdx,
             semaphoreToWait, semaphoreWaitStages, &vf, semaphoreToSignal);
     }

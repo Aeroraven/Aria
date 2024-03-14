@@ -30,6 +30,7 @@ namespace Anthem::Core {
 			region.imageSubresource.baseArrayLayer = i;
 			region.imageSubresource.layerCount = 1;
 			region.bufferOffset = this->height * this->width * this->channels * this->depth * i;
+			copyRegions.push_back(region);
 		}
 		cmdBufs->startCommandRecording(cmdIdx);
 		vkCmdCopyBufferToImage(*this->cmdBufs->getCommandBuffer(cmdIdx),
@@ -51,7 +52,7 @@ namespace Anthem::Core {
 		uint32_t offsets = 0;
 		uint32_t blockSize = width * height * channels;
 		for (int i = 0; i < 6; i++) {
-			memcpy(this->rawImageData, data[i], blockSize);
+			memcpy(this->rawImageData + offsets, data[i], blockSize);
 			offsets += blockSize;
 		}
 		this->width = width;

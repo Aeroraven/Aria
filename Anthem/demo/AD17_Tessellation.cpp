@@ -3,16 +3,21 @@
 #include "../include/external/AnthemGLTFLoader.h"
 #include "../include/external/AnthemImageLoader.h"
 #include "../include/components/camera/AnthemCamera.h"
+#include "../include/components/performance/AnthemFrameRateMeter.h"
 #include "../include/core/drawing/buffer/AnthemBufferMemAligner.h"
 #include "../include/core/drawing/buffer/impl/AnthemVertexBufferImpl.h"
 #include "../include/core/drawing/buffer/impl/AnthemInstancingVertexBufferImpl.h"
 #include "../include/core/drawing/image/AnthemImage.h"
+#include "../include/core/drawing/image/AnthemImageCubic.h"
 #include "../include/core/drawing/buffer/impl/AnthemShaderStorageBufferImpl.h"
 #include "../include/core/drawing/buffer/impl/AnthemPushConstantImpl.h"
 
+using namespace Anthem::Components::Performance;
+using namespace Anthem::Components::Camera;
 using namespace Anthem::External;
 using namespace Anthem::Core;
-using namespace Anthem::Components::Camera;
+
+
 
 // AD17 Tessellation
 // =======================
@@ -23,6 +28,7 @@ struct Stage {
 	AnthemSimpleToyRenderer rd;
 	AnthemConfig cfg;
 	AnthemCamera camera = AnthemCamera(AT_ACPT_PERSPECTIVE);
+	AnthemFrameRateMeter fpsMeter = AnthemFrameRateMeter(10);
 
 	// Geometry
 	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<2>>* vx;
@@ -214,6 +220,13 @@ void updateUniform() {
 }
 
 void mainLoop() {
+	st.fpsMeter.record();
+	static int fx = 0;
+	fx = (fx + 1) % 100;
+	if (fx == 0) {
+		ANTH_LOGI("FPS:",st.fpsMeter.getFrameRate());
+	}
+
 	updateUniform();
 	static int cur = 0;
 	uint32_t imgIdx;
