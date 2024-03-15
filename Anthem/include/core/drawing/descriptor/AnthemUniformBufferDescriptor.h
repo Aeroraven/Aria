@@ -9,9 +9,10 @@
 
 namespace Anthem::Core {
     struct AnthemUniformBufferDescriptorInfo {
-        const std::vector<AnthemUniformBufferProp>* buffer;
-        uint32_t size;
-        VkDescriptorBufferInfo bufferInfo = {};
+        std::vector<const std::vector<AnthemUniformBufferProp>*> buffer;
+        std::vector<uint32_t> size;
+        std::vector<VkDescriptorBufferInfo> bufferInfo = {};
+
         uint32_t bindLoc;
         VkDescriptorSetLayoutBinding layoutBindingDesc = {};
         VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {};
@@ -26,6 +27,7 @@ namespace Anthem::Core {
         std::vector<VkDescriptorSet> descriptorSetsUniform = {};
         std::vector<AnthemUniformBufferDescriptorInfo> uniformBuffers;
         std::vector<VkWriteDescriptorSet> descWriteUniform = {};
+        uint32_t elementCounts = 1;
 
     public:
         AnthemUniformBufferDescriptor(AnthemLogicalDevice* device) {
@@ -42,23 +44,22 @@ namespace Anthem::Core {
             outRef->push_back(descriptorSetsUniform.at(idx));
             return true;
         }
-        bool addUniformBuffer(AnthemUniformBuffer* uniformBuffer, uint32_t bindLoc, uint32_t descPoolId) {
+        bool addUniformBufferMultiple(std::vector<AnthemUniformBuffer*> uniformBuffer, uint32_t bindLoc, uint32_t descPoolId) {
             this->uniformBuffers.push_back({});
-            ANTH_LOGI("Spec Binding Addrs");
             auto& layoutBindingDesc = this->uniformBuffers.back().layoutBindingDesc;
             auto& layoutCreateInfo = this->uniformBuffers.back().layoutCreateInfo;
 
-            ANTH_LOGI("Get Buffer Attrs");
             this->uniformBuffers.back().bindLoc = bindLoc;
-            this->uniformBuffers.back().buffer = uniformBuffer->getBuffers();
-            this->uniformBuffers.back().size = static_cast<uint32_t>(uniformBuffer->getBufferSize());
+            for (auto& x : uniformBuffer) {
+                this->uniformBuffers.back().buffer.push_back(x->getBuffers());
+                this->uniformBuffers.back().size.push_back(static_cast<uint32_t>(x->getBufferSize()));
+            }
             this->uniformBuffers.back().descPoolId = descPoolId;
 
-            ANTH_LOGI("Start Spec Info");
             //Create Layout Binding Desc
             layoutBindingDesc.binding = bindLoc;
             layoutBindingDesc.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            layoutBindingDesc.descriptorCount = 1;
+            layoutBindingDesc.descriptorCount = uniformBuffer.size();
             layoutBindingDesc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | 
                 VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT |
                 VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT |
@@ -69,14 +70,19 @@ namespace Anthem::Core {
             layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
             layoutCreateInfo.bindingCount = 1;
             layoutCreateInfo.pBindings = &layoutBindingDesc;
+            this->elementCounts = uniformBuffer.size();
 
-            ANTH_LOGI("Start Create Layout");
             if (vkCreateDescriptorSetLayout(logicalDevice->getLogicalDevice(), &layoutCreateInfo, nullptr, &(this->uniformBuffers.back().layout)) != VK_SUCCESS) {
                 ANTH_LOGE("Failed to create descriptor set layout");
                 return false;
             }
             return true;
         }
+
+        bool addUniformBuffer(AnthemUniformBuffer* uniformBuffer, uint32_t bindLoc, uint32_t descPoolId) {
+            return addUniformBufferMultiple({ uniformBuffer }, bindLoc, descPoolId);
+        }
+
         const VkDescriptorSetLayout* getDescriptorSetLayoutUniformBuffer(uint32_t idx) const {
             return &(this->uniformBuffers.at(idx).layout);
         }
@@ -100,20 +106,21 @@ namespace Anthem::Core {
 
             for (uint32_t i = 0; i < numSets; i++) {
                 for (uint32_t j = 0; j < static_cast<uint32_t>(this->uniformBuffers.size()); j++) {
-                    uniformBuffers.at(j).bufferInfo.buffer = uniformBuffers.at(j).buffer->at(i).buffer;
-                    uniformBuffers.at(j).bufferInfo.offset = 0;
-                    uniformBuffers.at(j).bufferInfo.range = uniformBuffers.at(j).size;
-
+                    for (uint32_t k = 0; k < this->elementCounts; k++) {
+                        uniformBuffers.at(j).bufferInfo.at(k).buffer = uniformBuffers.at(j).buffer.at(k)->at(i).buffer;
+                        uniformBuffers.at(j).bufferInfo.at(k).offset = 0;
+                        uniformBuffers.at(j).bufferInfo.at(k).range = uniformBuffers.at(j).size.at(k);
+                    }
                     VkWriteDescriptorSet descCp = {};
                     descCp.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
                     descCp.pNext = nullptr;
                     descCp.dstSet = descriptorSetsUniform.at(i);
                     descCp.dstBinding = uniformBuffers.at(j).bindLoc;
                     descCp.dstArrayElement = 0;
-                    descCp.descriptorCount = 1;
+                    descCp.descriptorCount = this->elementCounts;
                     descCp.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                     descCp.pImageInfo = nullptr;
-                    descCp.pBufferInfo = &uniformBuffers.at(j).bufferInfo;
+                    descCp.pBufferInfo = uniformBuffers.at(j).bufferInfo.data();
                     descCp.pTexelBufferView = nullptr;
 
                     descWriteUniform.push_back(descCp);

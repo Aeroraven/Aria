@@ -5,7 +5,7 @@ namespace Anthem::Core{
         this->logicalDevice = device;
         return true;
     }
-    bool AnthemFramebuffer::createFromColorAttachment(const std::vector<const AnthemImage*>* colorImages, const AnthemRenderPass* renderPass){
+    bool AnthemFramebuffer::createFromColorAttachment(const std::vector<const IAnthemImageViewContainer*>* colorImages, const AnthemRenderPass* renderPass){
         ANTH_ASSERT(this->depthBuffer != nullptr,"Depth buffer not specified");
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         this->ctRenderPass = renderPass;
@@ -19,11 +19,14 @@ namespace Anthem::Core{
         std::vector<VkImageView> framebufferAttachment;
         int colorImageCur = 0;
         auto totalRenderPassAttachments = renderPass->getTotalAttachmentCnt();
-        auto colorImageWid = (uint32_t)(this->depthBuffer->getImageWidth()); 
-        auto colorImageHeight =(uint32_t)(this->depthBuffer->getImageHeight()); 
+        auto colorImageWid = (this->depthBuffer->getImageWidth()); 
+        auto colorImageHeight =(this->depthBuffer->getImageHeight()); 
+        auto colorImageLayers = this->depthBuffer->getLayers();
+        
         if((*colorImages).size()>0){
             colorImageWid = (*colorImages)[0]->getWidth();
             colorImageHeight = (*colorImages)[0]->getHeight();
+            colorImageLayers = (*colorImages)[0]->getLayers();
         }
 
         for(uint32_t i=0;i<totalRenderPassAttachments;i++){
@@ -34,6 +37,7 @@ namespace Anthem::Core{
                 framebufferAttachment.push_back(*(tmp->getImageView()));
                 ANTH_ASSERT( tmp->getWidth() == colorImageWid, "Incompatible size");
                 ANTH_ASSERT( tmp->getHeight() == colorImageHeight, "Incompatible size");
+                ANTH_ASSERT( tmp->getLayers() == colorImageLayers, "Incompatible layer size");
 
             }else if(attType == AT_ARPCA_DEPTH){
                 framebufferAttachment.push_back(*(this->depthBuffer->getImageView()));
@@ -47,7 +51,7 @@ namespace Anthem::Core{
         framebufferInfo.pAttachments = framebufferAttachment.data();
         framebufferInfo.width = colorImageWid;
         framebufferInfo.height = colorImageHeight;
-        framebufferInfo.layers = 1;
+        framebufferInfo.layers = colorImageLayers;
         if(vkCreateFramebuffer(this->logicalDevice->getLogicalDevice(),&framebufferInfo,nullptr,&this->framebuffer) != VK_SUCCESS){
             ANTH_LOGE("Failed to create framebuffer");
             return false;

@@ -8,8 +8,8 @@
 
 namespace Anthem::Core{
     class AnthemDepthBuffer:
-    public AnthemImageContainer,
-    public Util::AnthemUtlSwapChainReqBase{
+    public virtual AnthemImageContainer,
+    public virtual Util::AnthemUtlSwapChainReqBase{
     private:
         VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
         bool ownsSampler = false;
@@ -21,6 +21,9 @@ namespace Anthem::Core{
         bool createDepthBufferWithSampler();
         bool destroyDepthBuffer();
         bool enableMsaa();
+        bool enableCubic();
+
+        uint32_t getLayers() const;
         VkFormat getDepthFormat() const{
             return depthFormat;
         }

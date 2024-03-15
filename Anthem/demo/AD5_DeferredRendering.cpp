@@ -167,7 +167,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     ANTH_LOGI("Attachments Created");
 
     //Create Framebuffer
-    std::vector<const AnthemImage*> tmpColorAttachment = { offscreen.albedoImage, offscreen.positionImage, offscreen.normalImage };
+    std::vector<const IAnthemImageViewContainer*> tmpColorAttachment = { offscreen.albedoImage, offscreen.positionImage, offscreen.normalImage };
     renderer.createSimpleFramebuffer(&offscreen.framebuffer,&tmpColorAttachment,offscreen.pass,offscreen.depthBuffer);
     ANTH_LOGI("Framebuffer Created");
 

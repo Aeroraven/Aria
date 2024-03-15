@@ -178,4 +178,7 @@ namespace Anthem::Core{
     uint32_t AnthemImage::getDepth() const {
         return this->depth;
     }
+    uint32_t AnthemImage::getLayers() const {
+        return this->image.layerCounts;
+    }
 }

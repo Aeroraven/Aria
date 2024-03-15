@@ -4,6 +4,7 @@
 #include "../base/AnthemLogicalDevice.h"
 #include "../pipeline/AnthemRenderPass.h"
 #include "../drawing/image/AnthemImage.h"
+#include "../drawing/image/IAnthemImageViewContainer.h"
 
 namespace Anthem::Core{
     enum AnthemFramebufferUsage{
@@ -16,7 +17,7 @@ namespace Anthem::Core{
     private:
         const AnthemLogicalDevice* logicalDevice = nullptr;
         VkFramebuffer framebuffer = nullptr;
-        std::vector<const AnthemImage*> colorAttachment = {};
+        std::vector<const IAnthemImageViewContainer*> colorAttachment = {};
         AnthemDepthBuffer* depthBuffer = nullptr;
         const AnthemRenderPass* ctRenderPass = nullptr;
         AnthemFramebufferUsage framebufferUsage = AT_AFU_UNDEFINED;
@@ -25,7 +26,7 @@ namespace Anthem::Core{
         bool virtual specifyLogicalDevice(const AnthemLogicalDevice* device);
 
         bool virtual createFromSwapchainImageView(VkImageView* swapChainImageView, const AnthemRenderPass* renderPass, int height, int width);
-        bool virtual createFromColorAttachment(const std::vector<const AnthemImage*>* colorImages, const AnthemRenderPass* renderPass);
+        bool virtual createFromColorAttachment(const std::vector<const IAnthemImageViewContainer*>* colorImages, const AnthemRenderPass* renderPass);
         bool virtual destroyFramebuffers();
         bool virtual recreateFramebuffer();
         VkFramebuffer* getFramebuffer() const;

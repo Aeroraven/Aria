@@ -469,7 +469,6 @@ namespace Anthem::Core{
         graphicsPipeline->specifyVertexBuffer(vertexBuffer);
         graphicsPipeline->specifyUniformBuffer(uniformBuffer);
         graphicsPipeline->specifyDescriptor(descPool);
-
         graphicsPipeline->preparePreqPipelineCreateInfo();
         graphicsPipeline->createPipelineLayout();
         graphicsPipeline->createPipeline();
@@ -477,7 +476,7 @@ namespace Anthem::Core{
         *pPipeline = graphicsPipeline;
         return true;
     }
-    bool AnthemSimpleToyRenderer::createSimpleFramebuffer(AnthemFramebuffer** pFramebuffer,const std::vector<const AnthemImage*>* colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer){
+    bool AnthemSimpleToyRenderer::createSimpleFramebuffer(AnthemFramebuffer** pFramebuffer,const std::vector<const IAnthemImageViewContainer*>* colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer){
         ANTH_TODO("Forced type cast");
         auto fb = new AnthemFramebuffer();
         fb->specifyLogicalDevice(this->logicalDevice.get());
@@ -875,6 +874,22 @@ namespace Anthem::Core{
         }
         depthBuffer->createDepthBufferWithSampler();
         descPool->addSampler(depthBuffer,bindLoc,this->imageDescPoolIdx);
+        this->depthBuffers.push_back(depthBuffer);
+        *pDepthBuffer = depthBuffer;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createDepthBufferCubicWithSampler(AnthemDepthBuffer** pDepthBuffer, AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa) {
+        auto depthBuffer = new AnthemDepthBuffer();
+        depthBuffer->specifyLogicalDevice(this->logicalDevice.get());
+        depthBuffer->specifyPhyDevice(this->phyDevice.get());
+        depthBuffer->specifyCommandBuffers(this->commandBuffers.get());
+        depthBuffer->specifySwapChain(this->swapChain.get());
+        if (enableMsaa) {
+            depthBuffer->enableMsaa();
+        }
+        depthBuffer->enableCubic();
+        depthBuffer->createDepthBufferWithSampler();
+        descPool->addSampler(depthBuffer, bindLoc, this->imageDescPoolIdx);
         this->depthBuffers.push_back(depthBuffer);
         *pDepthBuffer = depthBuffer;
         return true;

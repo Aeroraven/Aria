@@ -254,7 +254,7 @@ void prepareOffscreen(){
     renderer.setupRenderPass(&target.pass,&setupOpt,target.depthBuffer);
     ANTH_LOGI("Render Pass Created");
 
-    const std::vector<const AnthemImage*> temp = {};
+    const std::vector<const IAnthemImageViewContainer*> temp = {};
     renderer.createSimpleFramebuffer(&target.framebuffer,&temp,target.pass,target.depthBuffer);
 
     //Create Shader

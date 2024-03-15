@@ -10,7 +10,6 @@ namespace Anthem::Core{
     bool AnthemDepthBuffer::createDepthBufferWithSampler(){
         this->createImageInternal(VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,this->depthFormat,this->swapChain->getSwapChainExtentWidth(),this->swapChain->getSwapChainExtentHeight(),1);
         this->createImageViewInternal(VK_IMAGE_ASPECT_DEPTH_BIT);
-        //this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED,VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
         this->createSampler();
         ownsSampler = true;
         return true;
@@ -26,5 +25,14 @@ namespace Anthem::Core{
     bool AnthemDepthBuffer::enableMsaa(){
         this->image.msaaCount = this->phyDevice->getMaxSampleCount();
         return true;
+    }
+    bool AnthemDepthBuffer::enableCubic() {
+        this->image.extraFlags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+        this->image.isCubic = true;
+        this->image.layerCounts = 6;
+        return true;
+    }
+    uint32_t AnthemDepthBuffer::getLayers() {
+        return this->image.layerCounts;
     }
 }

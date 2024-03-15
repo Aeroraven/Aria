@@ -5,6 +5,7 @@
 #include "AnthemImageContainer.h"
 #include "../buffer/AnthemGeneralBufferUtilBase.h"
 #include "./AnthemImageInfo.h"
+#include "./IAnthemImageViewContainer.h"
 
 namespace Anthem::Core{
     
@@ -27,7 +28,8 @@ namespace Anthem::Core{
     class AnthemImage:
     public virtual AnthemGeneralBufferUtilBase,
     public virtual AnthemImageContainer,
-    public virtual AnthemDescriptorPoolReqBase{
+    public virtual AnthemDescriptorPoolReqBase,
+    public virtual IAnthemImageViewContainer {
     private:
         char* rawImageData = nullptr;
         uint32_t width = 0, height = 0, channels = 0, depth = 1;
@@ -60,9 +62,10 @@ namespace Anthem::Core{
 
         bool addAccessStage(uint32_t stageFlag);
         
-        const VkImageView* getImageView() const;
-        uint32_t getWidth() const;
-        uint32_t getHeight() const;
+        virtual const VkImageView* getImageView() const override;
+        virtual uint32_t getWidth() const override;
+        virtual uint32_t getHeight() const override;
+        virtual uint32_t getLayers() const override;
         uint32_t getDepth() const;
 
         bool toGeneralLayout() {

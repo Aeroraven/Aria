@@ -107,7 +107,7 @@ void prepareOffscreenPass(){
     renderer.setupRenderPass(&offscreenPass.pass,&setupOpt,offscreenPass.depthBuffer);
     ANTH_LOGI("Render Pass Created");
 
-    const std::vector<const AnthemImage*> temp = {offscreenPass.attachmentColor,
+    const std::vector<const IAnthemImageViewContainer*> temp = {offscreenPass.attachmentColor,
         offscreenPass.attachmentNormal,offscreenPass.attachmentPosition,offscreenPass.attachmentSpecular};
     renderer.createSimpleFramebuffer(&offscreenPass.framebuffer,&temp,offscreenPass.pass,offscreenPass.depthBuffer);
 
