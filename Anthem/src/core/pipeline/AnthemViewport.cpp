@@ -9,7 +9,7 @@ namespace Anthem::Core{
         this->swapChain = swapChain;
         return true;
     }
-    bool AnthemViewport::prepareViewportState(){
+    bool AnthemViewport::prepareViewportStateFromSwapchain(){
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->swapChain != nullptr,"Swap chain not specified");
         this->viewport = {
@@ -23,6 +23,25 @@ namespace Anthem::Core{
         this->scissor = {
             .offset = {0,0},
             .extent = *(this->swapChain->getSwapChainExtent()),
+        };
+        this->viewportPrepared = true;
+        return true;
+    }
+    bool AnthemViewport::prepareViewportStateCustom(float width, float height, float minDepth, float maxDepth) {
+        this->viewport = {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = width,
+            .height = height,
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f
+        };
+        this->scissor = {
+            .offset = {0,0},
+            .extent = {
+                .width = (uint32_t)width,
+                .height = (uint32_t)height
+            }
         };
         this->viewportPrepared = true;
         return true;

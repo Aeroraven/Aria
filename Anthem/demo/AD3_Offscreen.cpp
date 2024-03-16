@@ -219,7 +219,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
 
 void recordCommandsTarget(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, TargetPass& target, OffscreenPass& offscreen ,int i){
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(target.pipeline,i);
     AnthemDescriptorSetEntry samplerDescEntryRegPipeline = {
         .descPool = offscreen.descPoolColorAtt,
@@ -237,7 +237,7 @@ void recordCommandsTarget(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, T
 void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, OffscreenPass& offscreen,int i){
     //Prepare Command
     renderer.drStartRenderPass(offscreen.pass,(AnthemFramebuffer *)(offscreen.framebuffer),i,false);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(offscreen.pipeline,i);
     for(int j=0;j<offscreen.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {

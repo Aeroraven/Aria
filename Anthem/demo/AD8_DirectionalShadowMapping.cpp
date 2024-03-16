@@ -283,7 +283,7 @@ void recordCommandsShadowCalcStage(int i){
     auto& cfg = shared.config;
     //Prepare Command
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer),i,false);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(target.pipeline,i);
     for(int j=0;j<target.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
@@ -307,7 +307,7 @@ void recordCommandMainStage(int i){
     auto& renderer = shared.renderer;
     auto& cfg = shared.config;
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(target.pipeline,i);
     for(int j=0;j<shadow.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
@@ -336,7 +336,7 @@ void recordCommandDebugStage(int i){
     auto& renderer = shared.renderer;
     auto& cfg = shared.config;
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(target.pipeline,i);
 
     AnthemDescriptorSetEntry samplerShadowDepthInfo = {

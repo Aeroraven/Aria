@@ -64,4 +64,9 @@ namespace Anthem::Components::Camera{
         this->rotYaw = yaw;
         return true;
     }
+    bool AnthemCamera::specifyUp(float x, float y, float z) {
+        this->up = AtVecf3(x, y, z);
+        this->viewMatrix.markDirty();
+        return true;
+    }
 }

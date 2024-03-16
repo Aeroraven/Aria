@@ -209,7 +209,7 @@ void recordCommandsDisplay() {
 		stage.renderer.drColorImagePipelineBarrier(stage.image1[0], &stage.tSrc, &stage.tDst, i);
 		stage.renderer.drColorImagePipelineBarrier(stage.image1[1], &stage.tSrc, &stage.tDst, i);
 		stage.renderer.drStartRenderPass(stage.pass, (AnthemFramebuffer*)stage.framebuffer->getFramebufferObject(i), i, false);
-		stage.renderer.drSetViewportScissor(i);
+		stage.renderer.drSetViewportScissorFromSwapchain(i);
 		stage.renderer.drBindGraphicsPipeline(stage.dispPipe, i);
 		stage.renderer.drBindVertexBuffer(stage.vx, i);
 		stage.renderer.drBindIndexBuffer(stage.ix, i);

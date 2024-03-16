@@ -153,7 +153,7 @@ void recordCommand() {
 	for (int i = 0; i < st.inFlight; i++) {
 		rd.drStartCommandRecording(i);
 		rd.drStartRenderPass(st.pass, (AnthemFramebuffer*)(st.framebuffer->getFramebufferObject(i)), i, false);
-		rd.drSetViewportScissor(i);
+		rd.drSetViewportScissorFromSwapchain(i);
 		rd.drBindVertexBufferMultiple({ st.vx,st.vix }, i);
 		rd.drBindIndexBuffer(st.ix,i);
 		rd.drBindGraphicsPipeline(st.pipe, i);

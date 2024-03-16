@@ -157,7 +157,7 @@ void recordCommand() {
 	for (uint32_t i : ATRANGE(0, st.inFlight)) {
 		r.drStartCommandRecording(i);
 		r.drStartRenderPass(st.pass, st.fb->getFramebufferObjectUnsafe(i), i, false);
-		r.drSetViewportScissor(i);
+		r.drSetViewportScissorFromSwapchain(i);
 		r.drBindVertexBuffer(st.sbox,i);
 		r.drBindIndexBuffer(st.ix, i);
 		r.drBindGraphicsPipeline(st.pipe, i);

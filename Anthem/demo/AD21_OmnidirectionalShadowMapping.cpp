@@ -58,7 +58,10 @@ struct Stage {
 	AnthemRenderPassSetupOption roptShadow;
 	AnthemGraphicsPipelineCreateProps coptShadow;
 
+	AnthemViewport* vpCubic;
+
 	AnthemSemaphore* shadowMapped;
+	AnthemFence* dbgFence;
 	uint32_t cmdIdx[2];
 
 	// Debug Pipeline
@@ -82,18 +85,19 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 
-	st.camera.specifyFrustum((float)AT_PI*2.0 / 3.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
+	st.camera.specifyFrustum((float)AT_PI * 2.0f / 3.0f, 0.1f, 500.0f, 1.0f );
 	st.camera.specifyPosition(0, 0, -200);
 	if (st.debugEnable) {
 		st.camera.specifyPosition(0, 0, 0);
 	}
 	st.camera.specifyFrontEyeRay(0, 0, 1);
 
-	st.camLight.specifyFrustum((float)AT_PI *2.0 / 3.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camLight.specifyPosition(0, 0, -200);
+	st.camLight.specifyFrustum((float)AT_PI  / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
+	st.camLight.specifyPosition(0, 70, -150);
 	st.camLight.specifyFrontEyeRay(0, 0, 1);
 
 	st.rd.createSemaphore(&st.shadowMapped);
+	st.rd.createFence(&st.dbgFence);
 }
 
 void loadModel() {
@@ -175,12 +179,14 @@ void createShadowMap() {
 	}
 	st.rd.addUniformBufferArrayToDescriptor(unifs, st.descLight, 0, -1);
 
-	//st.spShadow.fragmentShader = getShader("shadow.frag");
+	st.spShadow.fragmentShader = getShader("shadow.frag");
 	st.spShadow.geometryShader = getShader("shadow.geom");
 	st.spShadow.vertexShader = getShader("shadow.vert");
 
 	st.rd.createShader(&st.sdShadow, &st.spShadow);
-	st.rd.createDepthBufferCubicWithSampler(&st.depthCubic, st.descShadowMap,0, 2048, false);
+	st.rd.createDepthBufferCubicWithSampler(&st.depthCubic, st.descShadowMap,0, 4096, false);
+
+	st.rd.createViewportCustom(&st.vpCubic, 4096, 4096, 0.0, 1.0);
 
 	st.roptShadow.renderPassUsage = AT_ARPAA_DEPTH_STENCIL_ONLY_PASS;
 	st.roptShadow.colorAttachmentFormats = {};
@@ -188,6 +194,7 @@ void createShadowMap() {
 	st.rd.createSimpleFramebuffer(&st.fbShadow, nullptr, st.passShadow, st.depthCubic);
 
 	AnthemDescriptorSetEntry dseLight{ st.descLight,AT_ACDS_UNIFORM_BUFFER,0 };
+	st.coptShadow.customViewport = st.vpCubic;
 	st.rd.createGraphicsPipelineCustomized(&st.pipeShadow, { dseLight }, {}, st.passShadow, st.sdShadow, st.ldModel.getVertexBuffer(), &st.coptShadow);
 }
 
@@ -199,7 +206,7 @@ void recordCommand() {
 		// Shadow Pass
 		r.drStartCommandRecording(st.cmdIdx[i]);
 		r.drStartRenderPass(st.passShadow, st.fbShadow, st.cmdIdx[i], false);
-		r.drSetViewportScissor(st.cmdIdx[i]);
+		r.drSetViewportScissor(st.vpCubic,st.cmdIdx[i]);
 		r.drBindGraphicsPipeline(st.pipeShadow, st.cmdIdx[i]);
 		r.drBindVertexBuffer(st.ldModel.getVertexBuffer(), st.cmdIdx[i]);
 		r.drBindIndexBuffer(st.ldModel.getIndexBuffer(), st.cmdIdx[i]);
@@ -212,16 +219,18 @@ void recordCommand() {
 		// Main Pass
 		r.drStartCommandRecording(i);
 		r.drStartRenderPass(st.passMain,st.fbMain->getFramebufferObjectUnsafe(i), i, false);
-		r.drSetViewportScissor(i);
+		r.drSetViewportScissorFromSwapchain(i);
 		r.drBindGraphicsPipeline(st.pipeMain, i);
 		if (st.debugEnable) {
 			r.drBindVertexBuffer(st.sbox, i);
 			r.drBindIndexBuffer(st.ix, i);
 			//r.drBindVertexBuffer(st.ldModel.getVertexBuffer(), i);
 			//r.drBindIndexBuffer(st.ldModel.getIndexBuffer(), i);
+
 			AnthemDescriptorSetEntry dseUniform{ st.descMain,AT_ACDS_UNIFORM_BUFFER,i };
 			AnthemDescriptorSetEntry dseSampler{ st.descShadowMap,AT_ACDS_SAMPLER,i };
 			AnthemDescriptorSetEntry dseLight{ st.descLight,AT_ACDS_UNIFORM_BUFFER,0 };
+
 			r.drBindDescriptorSetCustomizedGraphics({ dseUniform,dseSampler,dseLight }, st.pipeMain, i);
 			r.drDraw(st.ix->getIndexCount(), i);
 			//r.drDrawIndexedIndirect(st.ldModel.getIndirectBuffer(), i);
@@ -244,8 +253,9 @@ void updateUniform() {
 	AtMatf4 proj, view, local;
 	st.camera.getProjectionMatrix(proj);
 	st.camera.getViewMatrix(view);
-	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f },
+	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 1.0f,0.0f,0.0f },
 		0.5f * static_cast<float>(glfwGetTime()));
+	//local = AnthemLinAlg::eye<float, 4>();
 
 	float pm[16], vm[16], lm[16];
 	proj.columnMajorVectorization(pm);
@@ -267,12 +277,22 @@ void updateUniformLights() {
 		{0,0,1},
 		{0,0,-1}
 	};
-
+	std::vector<std::array<float, 3>> up = {
+		{0,1,0},
+		{0,1,0},
+		{0,0,-1},
+		{0,0,1}, 
+		{0,1,0},
+		{0,1,0},
+	};
+	float pm[6][16], vm[6][16], lm[6][16];
 	for (auto k : ATRANGE(0, 6)) {
 		AtMatf4 proj, view, local;
 		st.camLight.specifyFrustum((float)AT_PI * 2.0 / 3.0f, 0.1f, 500.0f, 1.0f );
 		st.camLight.specifyPosition(0, 70, -100);
+
 		st.camLight.specifyFrontEyeRay(dirs[k][0], dirs[k][1], dirs[k][2]);
+		st.camLight.specifyUp(up[k][0], up[k][1], up[k][2]);
 
 		st.camLight.getProjectionMatrix(proj);
 		st.camLight.getViewMatrix(view);
@@ -280,12 +300,12 @@ void updateUniformLights() {
 		ANTH_LOGI(k);
 		proj.print();
 		view.print();
-		float pm[16], vm[16], lm[16];
-		proj.columnMajorVectorization(pm);
-		view.columnMajorVectorization(vm);
-		local.columnMajorVectorization(lm);
+		
+		proj.columnMajorVectorization(pm[k]);
+		view.columnMajorVectorization(vm[k]);
+		local.columnMajorVectorization(lm[k]);
 
-		st.uniLight[k]->specifyUniforms(pm, vm, lm);
+		st.uniLight[k]->specifyUniforms(pm[k], vm[k], lm[k]);
 		for (int i = 0; i < st.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
 			st.uniLight[k]->updateBuffer(i);
 		}

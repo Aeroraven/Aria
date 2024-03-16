@@ -198,7 +198,7 @@ void recordCommand() {
 		stage.renderer.drStartCommandRecording(i);
 		stage.renderer.drStartRenderPass(stage.renderPass,
 			(AnthemFramebuffer*)stage.framebuffer->getFramebufferObject(i), i, false);
-		stage.renderer.drSetViewportScissor(i);
+		stage.renderer.drSetViewportScissorFromSwapchain(i);
 		stage.renderer.drBindGraphicsPipeline(stage.pipeline, i);
 		stage.renderer.drBindVertexBufferMultiple({ stage.vx,stage.vix }, i);
 		stage.renderer.drBindIndexBuffer(stage.ix, i);

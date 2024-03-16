@@ -734,7 +734,7 @@ void prepareAxisVis() {
 void recordCommandBufferDrwAxis(int i) {
 	auto& renderer = core.renderer;
 	renderer.drStartRenderPass(axis.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), axis.axisCmdBuf[i], false);
-	renderer.drSetViewportScissor(axis.axisCmdBuf[i]);
+	renderer.drSetViewportScissorFromSwapchain(axis.axisCmdBuf[i]);
 	renderer.drBindGraphicsPipeline(axis.pipeline, axis.axisCmdBuf[i]);
 	renderer.drBindVertexBuffer(axis.vxBuf, axis.axisCmdBuf[i]);
 	renderer.drBindIndexBuffer(axis.ixBuf, axis.axisCmdBuf[i]);
@@ -756,7 +756,7 @@ void recordCommandBufferDrwAxis(int i) {
 void recordCommandBufferDrwText(int i) {
 	auto& renderer = core.renderer;
 	renderer.drStartRenderPass(textPipe.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), textPipe.fontCmdBuf[i], false);
-	renderer.drSetViewportScissor(textPipe.fontCmdBuf[i]);
+	renderer.drSetViewportScissorFromSwapchain(textPipe.fontCmdBuf[i]);
 	renderer.drBindGraphicsPipeline(textPipe.pipeline, textPipe.fontCmdBuf[i]);
 	for (int j = 0; j < textPipe.strings.size(); j++) {
 		renderer.drBindVertexBuffer(textPipe.strings[j].vxBuf, textPipe.fontCmdBuf[i]);
@@ -783,7 +783,7 @@ void recordCommandBufferDrwText(int i) {
 void recordCommandBufferDrw(int i) {
 	auto& renderer = core.renderer;
 	renderer.drStartRenderPass(vis.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), i, false);
-	renderer.drSetViewportScissor(i);
+	renderer.drSetViewportScissorFromSwapchain(i);
 	renderer.drBindGraphicsPipeline(vis.pipeline, i);
 	renderer.drBindVertexBufferFromSsbo(comp.samples, 0, i);
 	renderer.drBindIndexBuffer(vis.ix, i);
@@ -808,7 +808,7 @@ void recordCommandBufferDrw(int i) {
 void recordCommandBufferDrwPointTopo(int i) {
 	auto& renderer = core.renderer;
 	renderer.drStartRenderPass(vis.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), vis.pointVisCmdBuf[i], false);
-	renderer.drSetViewportScissor(vis.pointVisCmdBuf[i]);
+	renderer.drSetViewportScissorFromSwapchain(vis.pointVisCmdBuf[i]);
 	renderer.drBindGraphicsPipeline(vis.pipelinePoint, vis.pointVisCmdBuf[i]);
 	renderer.drBindVertexBufferFromSsbo(comp.samples, 0, vis.pointVisCmdBuf[i]);
 	renderer.drBindIndexBuffer(vis.ixPoint, vis.pointVisCmdBuf[i]);

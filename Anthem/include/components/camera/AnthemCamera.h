@@ -40,6 +40,7 @@ namespace Anthem::Components::Camera{
         bool specifyOrthoClipSpace(float nearDepth,float farDepth, float aspectRatio,float clipSpaceHalfHeight);
         bool specifyPosition(float x,float y,float z);
         bool specifyFrontEyeRay(float x,float y,float z);
+        bool specifyUp(float x, float y, float z);
         bool specifyRotation(float pitch,float yaw);
 
         bool getProjectionMatrix(AtMatf4& out);

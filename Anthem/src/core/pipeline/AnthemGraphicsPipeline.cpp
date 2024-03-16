@@ -113,7 +113,13 @@ namespace Anthem::Core{
 
         //Specify Viewport Info
         ANTH_ASSERT(this->viewport != nullptr,"Viewport not specified");
-        this->viewport->getViewportStateCreateInfo(&(this->viewportStateCreateInfo));
+        if (extraProps.customViewport == std::nullopt) {
+            this->viewport->getViewportStateCreateInfo(&(this->viewportStateCreateInfo));
+        }
+        else {
+            extraProps.customViewport.value()->getViewportStateCreateInfo(&(this->viewportStateCreateInfo));
+        }
+        
 
         //Specify Rasterizer Info
         this->rasterizerStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;

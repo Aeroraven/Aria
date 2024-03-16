@@ -208,7 +208,7 @@ void recordCube() {
 		
 		// Pass 1: Endpoint of ray
 		core.renderer.drStartRenderPass(cube.pass, cube.framebuffer, i, false);
-		core.renderer.drSetViewportScissor(i);
+		core.renderer.drSetViewportScissorFromSwapchain(i);
 		core.renderer.drBindGraphicsPipeline(cube.pipeline, i);
 		core.renderer.drBindVertexBuffer(cube.vbuf, i);
 		core.renderer.drBindIndexBuffer(cube.ibuf, i);
@@ -226,7 +226,7 @@ void recordCube() {
 
 		// Pass 2: 
 		core.renderer.drStartRenderPass(vol.pass, (AnthemFramebuffer*)vol.framebuffer->getFramebufferObject(i), i, false);
-		core.renderer.drSetViewportScissor(i);
+		core.renderer.drSetViewportScissorFromSwapchain(i);
 		core.renderer.drBindGraphicsPipeline(vol.pipeline, i);
 		core.renderer.drBindVertexBuffer(cube.vbuf, i);
 		core.renderer.drBindIndexBuffer(cube.ibuf, i);

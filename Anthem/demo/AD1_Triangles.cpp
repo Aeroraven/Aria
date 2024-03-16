@@ -116,7 +116,7 @@ int main(){
         renderer->drClearCommands(currentFrame);
         renderer->drStartCommandRecording(currentFrame);
         renderer->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(currentFrame)),currentFrame,false);
-        renderer->drSetViewportScissor(currentFrame);
+        renderer->drSetViewportScissorFromSwapchain(currentFrame);
         renderer->drBindGraphicsPipeline(pipeline,currentFrame);
         renderer->drBindVertexBuffer(vxBuffer,currentFrame);
         renderer->drBindIndexBuffer(ixBuffer,currentFrame);

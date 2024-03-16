@@ -222,7 +222,7 @@ void recordCommands() {
 
 		r.drStartRenderPass(st.rpTransparent, st.fbTransparent, i, false);
 		r.drBindGraphicsPipeline(st.ppTransparent, i);
-		r.drSetViewportScissor(i);
+		r.drSetViewportScissorFromSwapchain(i);
 		r.drBindVertexBuffer(st.vx, i);
 		r.drBindIndexBuffer(st.ixTransparent, i);
 		r.drPushConstants(st.pconst, st.ppTransparent, i);
@@ -231,7 +231,7 @@ void recordCommands() {
 
 		r.drStartRenderPass(st.rpOpaque, st.fbOpaque, i, false);
 		r.drBindGraphicsPipeline(st.ppOpaque, i);
-		r.drSetViewportScissor(i);
+		r.drSetViewportScissorFromSwapchain(i);
 		r.drBindVertexBuffer(st.vx, i);
 		r.drBindIndexBuffer(st.ixOpaque, i);
 		r.drPushConstants(st.pconst, st.ppOpaque, i);
@@ -241,7 +241,7 @@ void recordCommands() {
 
 		r.drStartRenderPass(st.pass, st.fb->getFramebufferObjectUnsafe(i), i, false);
 		r.drBindGraphicsPipeline(st.pipe, i);
-		r.drSetViewportScissor(i);
+		r.drSetViewportScissorFromSwapchain(i);
 		r.drBindVertexBuffer(st.vxc, i);
 		r.drBindIndexBuffer(st.ixc, i);
 		AnthemDescriptorSetEntry dseAccu{ st.descAccuAtt,AT_ACDS_SAMPLER,0 };

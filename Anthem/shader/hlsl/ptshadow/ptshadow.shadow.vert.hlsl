@@ -13,6 +13,5 @@ VSOutput main(VSInput vsIn)
 {
     VSOutput vsOut;
     vsOut.position = float4(vsIn.position.xyz, 1.0);
-    vsOut.position.z = 0.1;
     return vsOut;
 }

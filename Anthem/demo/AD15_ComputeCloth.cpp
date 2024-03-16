@@ -239,7 +239,7 @@ void recordCommandDisplay() {
 		stage.renderer.drBindVertexBufferFromSsbo(stage.ssbo, i, i);
 		stage.renderer.drBindIndexBuffer(stage.ix,i);
 		stage.renderer.drPushConstants(stage.pconst, stage.dispPipe, i);
-		stage.renderer.drSetViewportScissor(i);
+		stage.renderer.drSetViewportScissorFromSwapchain(i);
 		stage.renderer.drDraw(stage.ix->getIndexCount(), i);
 		stage.renderer.drEndRenderPass(i);
 		stage.renderer.drEndCommandRecording(i);

@@ -28,7 +28,7 @@ void main(triangle VSOutput vsOut[3], inout TriangleStream<GSOutput> gsOutStream
             GSOutput gsOut;
             gsOut.slice = k;
             gsOut.orgPosition = vsOut[i].position;
-            gsOut.position = vsOut[i].position / 200.0; //mul(cam[k].proj, mul(cam[k].view, mul(cam[k].model, vsOut[i].position)));
+            gsOut.position = mul(cam[k].proj, mul(cam[k].view, mul(cam[k].model, vsOut[i].position)));
             gsOutStream.Append(gsOut);
         }
         gsOutStream.RestartStrip();

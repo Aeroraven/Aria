@@ -291,7 +291,7 @@ void generateAOParameters(){
 void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, DeferPass& offscreen,int i){
     //Prepare Command
     renderer.drStartRenderPass(offscreen.pass,(AnthemFramebuffer *)(offscreen.framebuffer),i,false);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(offscreen.pipeline,i);
     for(int j=0;j<offscreen.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
@@ -309,7 +309,7 @@ void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer
 }
 void recordCommandsTarget(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, AOPass& target,DeferPass& offscreen,int i){
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(target.pipeline,i);
 
     AnthemDescriptorSetEntry samplerNormal = {

@@ -80,8 +80,9 @@ namespace Anthem::Core{
 
         std::vector<AnthemFence*> extFences;
         std::vector<AnthemSemaphore*> extSemaphores;
-
         std::vector<AnthemPushConstant*> pushConstants;
+
+        std::vector<AnthemViewport*> customViewports;
 
 
         uint32_t uniformDescPoolIdx = -1;
@@ -126,7 +127,7 @@ namespace Anthem::Core{
         bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa);
         bool createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa);
         bool createDepthBufferCubicWithSampler(AnthemDepthBuffer** pDepthBuffer, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t height, bool enableMsaa);
-        
+        bool createViewportCustom(AnthemViewport** pViewport, float width, float height, float minDepth, float maxDepth);
         bool createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,uint32_t texHeight,
              uint32_t texChannel, uint32_t bindLoc, bool generateMipmap2D, bool enableMsaa,
             AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1,bool ignoreDescPool=false,
@@ -186,7 +187,8 @@ namespace Anthem::Core{
 
         bool drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal,const AnthemFence* fenceToSignal);
 
-        bool drSetViewportScissor(uint32_t cmdIdx);
+        bool drSetViewportScissorFromSwapchain(uint32_t cmdIdx);
+        bool drSetViewportScissor(AnthemViewport* custVp,uint32_t cmdIdx);
         bool drSetLineWidth(float lineWidth, uint32_t cmdIdx);
         bool drBindGraphicsPipeline(AnthemGraphicsPipeline* pipeline,uint32_t cmdIdx);
         bool drBindComputePipeline(AnthemComputePipeline* pipeline,uint32_t cmdIdx);

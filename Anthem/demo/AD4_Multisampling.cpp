@@ -159,7 +159,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
 void recordCommandsOffscreen(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, OffscreenPass& offscreen,int i){
     //Prepare Command
     renderer.drStartRenderPass(offscreen.pass,(AnthemFramebuffer *)(offscreen.framebuffer->getFramebufferObject(i)),i,true);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(offscreen.pipeline,i);
     for(int j=0;j<offscreen.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {

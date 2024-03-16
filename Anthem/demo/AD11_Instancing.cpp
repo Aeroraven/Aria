@@ -85,7 +85,7 @@ void buildPipeline() {
 void recordCommandBufferDrw(int i) {
 	auto& renderer = core.renderer;
 	renderer.drStartRenderPass(drw.renderPass, (AnthemFramebuffer*)(drw.framebuffer->getFramebufferObject(i)),i, false);
-	renderer.drSetViewportScissor(i);
+	renderer.drSetViewportScissorFromSwapchain(i);
 	renderer.drBindGraphicsPipeline(drw.pipeline,i);
 	renderer.drBindVertexBufferMultiple({ drw.vvbuf,drw.vibuf }, i);
 	renderer.drBindIndexBuffer(drw.ibuf, i);

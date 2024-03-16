@@ -197,7 +197,7 @@ void prepareSSRPass(){
 void recordOffscreenStage(int i){
     auto& renderer = shared.renderer;
     renderer.drStartRenderPass(offscreenPass.pass,(AnthemFramebuffer *)(offscreenPass.framebuffer),i,false);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(offscreenPass.pipeline,i);
     for(int j=0;j<meshes.numMeshes;j++){
         AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
@@ -224,7 +224,7 @@ void recordSSRStage(int i){
     auto& target = ssrPass;
 
     renderer.drStartRenderPass(target.pass,(AnthemFramebuffer *)(target.framebuffer->getFramebufferObject(i)),i,false);
-    renderer.drSetViewportScissor(i);
+    renderer.drSetViewportScissorFromSwapchain(i);
     renderer.drBindGraphicsPipeline(target.pipeline,i);
 
     AnthemDescriptorSetEntry samplerNormal = {

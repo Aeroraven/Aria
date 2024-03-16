@@ -177,7 +177,7 @@ void recordCommand() {
 		st.rd.drStartCommandRecording(i);
 		st.rd.drStartRenderPass(st.pass, st.fb->getFramebufferObjectUnsafe(i), i, false);
 		st.rd.drBindGraphicsPipeline(st.pipe, i);
-		st.rd.drSetViewportScissor(i);
+		st.rd.drSetViewportScissorFromSwapchain(i);
 		st.rd.drSetLineWidth(1, i);
 		st.rd.drBindVertexBuffer(st.vx, i);
 		st.rd.drBindIndexBuffer(st.ix, i);

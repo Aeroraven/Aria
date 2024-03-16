@@ -104,6 +104,11 @@ namespace Anthem::Core{
         validationLayer->destroyDebugMsgLayer(this->instance->getInstance());
         windowSurface->destroyWindowSurface(this->instance->getInstance());
 
+        // Viewports
+        for (auto& p : this->customViewports) {
+            delete p;
+        }
+
         //Destroy Instance
         this->instance->destroyInstance();
         this->instance->destroyWindow();
@@ -178,7 +183,7 @@ namespace Anthem::Core{
         this->viewport = ANTH_MAKE_UNIQUE(AnthemViewport)();
         this->viewport->specifyLogicalDevice(this->logicalDevice.get());
         this->viewport->specifySwapChain(this->swapChain.get());
-        this->viewport->prepareViewportState();
+        this->viewport->prepareViewportStateFromSwapchain();
 
         //Step10. Create Draw Helper (Need to Remove)
         this->drawingCommandHelper = ANTH_MAKE_UNIQUE(AnthemDrawingCommandHelper)();
@@ -545,7 +550,7 @@ namespace Anthem::Core{
         this->swapChain->createSwapChain(this->logicalDevice.get(),this->phyDevice.get());
         this->swapChain->retrieveSwapChainImages(this->logicalDevice.get());
         this->swapChain->createSwapChainImageViews(this->logicalDevice.get());
-        this->viewport->prepareViewportState();
+        this->viewport->prepareViewportStateFromSwapchain();
         for(const auto& p:this->depthBuffers){
             p->createDepthBuffer();
         }
@@ -722,9 +727,14 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::drSetViewportScissor(uint32_t cmdIdx){
+    bool AnthemSimpleToyRenderer::drSetViewportScissorFromSwapchain(uint32_t cmdIdx){
         vkCmdSetViewport(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,viewport->getViewport());
         vkCmdSetScissor(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,viewport->getScissor());
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drSetViewportScissor(AnthemViewport* custVp, uint32_t cmdIdx) {
+        vkCmdSetViewport(*this->commandBuffers->getCommandBuffer(cmdIdx), 0, 1, custVp->getViewport());
+        vkCmdSetScissor(*this->commandBuffers->getCommandBuffer(cmdIdx), 0, 1, custVp->getScissor());
         return true;
     }
     bool AnthemSimpleToyRenderer::drSetLineWidth(float lineWidth, uint32_t cmdIdx) {
@@ -902,6 +912,15 @@ namespace Anthem::Core{
         descPool->addSampler(depthBuffer, bindLoc, this->imageDescPoolIdx);
         this->depthBuffers.push_back(depthBuffer);
         *pDepthBuffer = depthBuffer;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createViewportCustom(AnthemViewport** pViewport, float width, float height, float minDepth, float maxDepth) {
+        auto vp = new AnthemViewport();
+        vp->specifyLogicalDevice(this->logicalDevice.get());
+        vp->specifySwapChain(this->swapChain.get());
+        vp->prepareViewportStateCustom(width, height, minDepth, maxDepth);
+        this->customViewports.push_back(vp);
+        *pViewport = vp;
         return true;
     }
     bool AnthemSimpleToyRenderer::createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa){

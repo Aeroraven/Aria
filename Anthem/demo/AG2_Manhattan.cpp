@@ -287,7 +287,7 @@ void recordCommandBufferComp(int i) {
 void recordCommandBufferDrw(int i) {
 	auto& renderer = core.renderer;
 	renderer.drStartRenderPass(vis.renderPass, (AnthemFramebuffer*)(vis.framebuffer->getFramebufferObject(i)), i, false);
-	renderer.drSetViewportScissor(i);
+	renderer.drSetViewportScissorFromSwapchain(i);
 	renderer.drBindGraphicsPipeline(vis.pipeline, i);
 	renderer.drBindVertexBufferFromSsbo(comp.ssbo, 0, i);
 	renderer.drBindIndexBuffer(vis.ix, i);

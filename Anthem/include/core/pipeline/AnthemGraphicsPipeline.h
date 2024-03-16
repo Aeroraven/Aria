@@ -48,6 +48,9 @@ namespace Anthem::Core{
 
         // Mesh Shader
         bool emptyVertexStage = false;
+
+        // Viewport
+        std::optional<AnthemViewport*> customViewport = std::nullopt;
     };
 
     class AnthemGraphicsPipeline{     

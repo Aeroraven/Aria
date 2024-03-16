@@ -147,7 +147,7 @@ int main(){
         renderer->drClearCommands(i);
         renderer->drStartCommandRecording(i);
         renderer->drStartRenderPass(pass,(AnthemFramebuffer *)(framebuffer->getFramebufferObject(i)),i,false);
-        renderer->drSetViewportScissor(i);
+        renderer->drSetViewportScissorFromSwapchain(i);
         renderer->drBindGraphicsPipeline(pipeline,i);
         for(int j=0;j<gltfResult.size();j++){
             AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {

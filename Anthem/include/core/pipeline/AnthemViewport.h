@@ -13,7 +13,8 @@ namespace Anthem::Core{
     public:
         bool specifyLogicalDevice(const AnthemLogicalDevice* device);
         bool specifySwapChain(const AnthemSwapChain* swapChain);
-        bool prepareViewportState();
+        bool prepareViewportStateFromSwapchain();
+        bool prepareViewportStateCustom(float width,float height,float minDepth,float maxDepth);
         
         const VkViewport* getViewport() const;
         const VkRect2D* getScissor() const;

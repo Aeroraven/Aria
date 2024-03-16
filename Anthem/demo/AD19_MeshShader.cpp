@@ -58,7 +58,7 @@ void recordCommand() {
 	for (int i = 0; i < st.inFlight; i++) {
 		r.drStartCommandRecording(i);
 		r.drStartRenderPass(st.pass, st.fb->getFramebufferObjectUnsafe(i), i, false);
-		r.drSetViewportScissor(i);
+		r.drSetViewportScissorFromSwapchain(i);
 		r.drBindGraphicsPipeline(st.pipe, i);
 		r.drDrawMesh(1, 1, 1, i);
 		r.drEndRenderPass(i);

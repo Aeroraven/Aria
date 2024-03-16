@@ -11,7 +11,7 @@ set(AT_REQ_FREETYPE_BASE "C:/Program Files (x86)/freetype/")
 set(AT_REQ_OPENCV_INSTALL "C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install")
 
 if(MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Od")
 endif()
 
 set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
