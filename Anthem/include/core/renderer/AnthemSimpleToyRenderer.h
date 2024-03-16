@@ -125,7 +125,7 @@ namespace Anthem::Core{
         bool setupRenderPass(AnthemRenderPass** pRenderPass, AnthemRenderPassSetupOption* setupOption, AnthemDepthBuffer* depthBuffer);
         bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa);
         bool createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa);
-        bool createDepthBufferCubicWithSampler(AnthemDepthBuffer** pDepthBuffer, AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa);
+        bool createDepthBufferCubicWithSampler(AnthemDepthBuffer** pDepthBuffer, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t height, bool enableMsaa);
         
         bool createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,uint32_t texHeight,
              uint32_t texChannel, uint32_t bindLoc, bool generateMipmap2D, bool enableMsaa,
@@ -155,11 +155,10 @@ namespace Anthem::Core{
         bool createSemaphore(AnthemSemaphore** pSemaphore);
         bool createFence(AnthemFence** pFence);
 
-
-        bool addSamplerArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,
-            uint32_t bindLoc, uint32_t descId);
-        bool addStorageImageArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,
-            uint32_t bindLoc, uint32_t descId);
+        // Descriptor Pool
+        bool addSamplerArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,uint32_t bindLoc, uint32_t descId);
+        bool addStorageImageArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,uint32_t bindLoc, uint32_t descId);
+        bool addUniformBufferArrayToDescriptor(std::vector<AnthemUniformBuffer*>& buffers, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId);
 
         // Integration
         bool registerPipelineSubComponents();
@@ -210,6 +209,7 @@ namespace Anthem::Core{
         bool drDrawMesh(uint32_t groupX, uint32_t groupY, uint32_t groupZ, uint32_t cmdIdx);
         bool drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ);
         
+        // Queue
         bool quGetComputeQueueIdx(uint32_t* queue);
         bool quGetGraphicsQueueIdx(uint32_t* queue);
 
@@ -271,7 +271,7 @@ namespace Anthem::Core{
                 descId = this->uniformDescPoolIdx;
             }
 
-            descPool->addUniformBuffer(ubuf,bindLoc,this->uniformDescPoolIdx);
+            if (descPool != nullptr) descPool->addUniformBuffer(ubuf,bindLoc,this->uniformDescPoolIdx);
 
             *pUniformBuffer = ubuf;
             this->uniformBuffers.push_back(ubuf);

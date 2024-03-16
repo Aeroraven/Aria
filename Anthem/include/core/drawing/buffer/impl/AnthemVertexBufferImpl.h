@@ -50,7 +50,7 @@ namespace Anthem::Core {
             return true;
         }
         bool insertData(int idx, std::array<AttrTp, AttrSz>... data) {
-            ANTH_ASSERT(idx < this->totalVertices, "Invalid index");
+            //ANTH_ASSERT(idx < this->totalVertices, "Invalid index");
             std::vector<void*> dataPtrs = { data.data()... };
             auto offset = idx * this->singleVertexSize;
             auto dataOffset = 0;

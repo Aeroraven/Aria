@@ -18,7 +18,7 @@ namespace Anthem::Core{
             this->image.desiredLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
         }
         bool createDepthBuffer();
-        bool createDepthBufferWithSampler();
+        bool createDepthBufferWithSampler(uint32_t height, uint32_t width);
         bool destroyDepthBuffer();
         bool enableMsaa();
         bool enableCubic();

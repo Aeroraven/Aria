@@ -21,6 +21,7 @@ namespace Anthem::Core{
         AnthemDepthBuffer* depthBuffer = nullptr;
         const AnthemRenderPass* ctRenderPass = nullptr;
         AnthemFramebufferUsage framebufferUsage = AT_AFU_UNDEFINED;
+        VkExtent2D framebufferExtent;
     public:
         bool virtual setDepthBuffer(AnthemDepthBuffer* depthBuffer);
         bool virtual specifyLogicalDevice(const AnthemLogicalDevice* device);
@@ -30,5 +31,6 @@ namespace Anthem::Core{
         bool virtual destroyFramebuffers();
         bool virtual recreateFramebuffer();
         VkFramebuffer* getFramebuffer() const;
+        VkExtent2D getExtent() const;
     };
 }

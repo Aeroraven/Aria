@@ -26,8 +26,8 @@ namespace Anthem::Core{
 
     struct AnthemRenderPassSetupOption{
         //Infos
-        AnthemRenderPassUsageType renderPassUsage;
-        AnthemRenderPassMultisampleType msaaType;
+        AnthemRenderPassUsageType renderPassUsage = AT_ARPAA_FINAL_PASS;
+        AnthemRenderPassMultisampleType msaaType = AT_ARPMT_NO_MSAA;
         std::vector<std::optional<AnthemImageFormat>> colorAttachmentFormats = {std::nullopt};
 
         //Objects

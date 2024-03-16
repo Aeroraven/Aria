@@ -76,7 +76,7 @@ void buildPipeline() {
 	core.renderer.createSwapchainImageFramebuffers(&drw.framebuffer, drw.renderPass, drw.depthBuffer);
 	
 	drw.cprop.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
-	drw.cprop.blendPreset = AnthemBlendPreset::AT_ABP_NO_BLEND;
+	drw.cprop.blendPreset = { AnthemBlendPreset::AT_ABP_NO_BLEND };
 	drw.cprop.vertStageLayout = { drw.vvbuf,drw.vibuf };
 
 	core.renderer.createGraphicsPipelineCustomized(&drw.pipeline, {}, {}, drw.renderPass, drw.shader, drw.vvbuf, &drw.cprop);

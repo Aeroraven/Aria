@@ -481,6 +481,8 @@ namespace Anthem::Core{
         auto fb = new AnthemFramebuffer();
         fb->specifyLogicalDevice(this->logicalDevice.get());
         fb->setDepthBuffer((AnthemDepthBuffer*)depthBuffer);
+        const static std::vector<const IAnthemImageViewContainer*> tp;
+        if (colorAttachment == nullptr) colorAttachment = &tp;
         fb->createFromColorAttachment(colorAttachment,renderPass);
         *pFramebuffer = fb;
         this->simpleFramebuffers.push_back(fb);
@@ -512,6 +514,14 @@ namespace Anthem::Core{
         }
         return descPool->addStorageImageArray(images, bindLoc, descId);
     }
+    bool  AnthemSimpleToyRenderer::addUniformBufferArrayToDescriptor(std::vector<AnthemUniformBuffer*>& buffers, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
+        if (descId == -1) {
+            ANTH_LOGW("Descriptor pool index not specified for Uniform, using the default value", this->uniformDescPoolIdx);
+            descId = this->uniformDescPoolIdx;
+        }
+        return descPool->addUniformBufferMultiple(buffers, bindLoc, descId);
+    }
+
     bool AnthemSimpleToyRenderer::destroySwapChain(){
         for(const auto& p:this->simpleFramebuffers){
             p->destroyFramebuffers();
@@ -662,7 +672,7 @@ namespace Anthem::Core{
             .framebufferList = framebuffer,
             .framebufferIdx = 0,
             .clearValue = {{{0.0f,0.0f,0.0f,1.0f}}},
-            .depthClearValue = {{1.0f, 0}},
+            .depthClearValue = {{0.0f, 0}},
             .usingMsaa = enableMsaa
         };
         //this->drawingCommandHelper->startRenderPass(&startInfo,frameIdx);
@@ -673,7 +683,7 @@ namespace Anthem::Core{
         renderPassBeginInfo.renderPass = *(startInfo.renderPass->getRenderPass());
         renderPassBeginInfo.framebuffer = *(startInfo.framebufferList->getFramebuffer());
         renderPassBeginInfo.renderArea.offset = {0,0};
-        renderPassBeginInfo.renderArea.extent = *(swapChain->getSwapChainExtent());
+        renderPassBeginInfo.renderArea.extent = startInfo.framebufferList->getExtent();//*(swapChain->getSwapChainExtent());
         
         auto renderPassClearValue = startInfo.renderPass->getDefaultClearValue();
         renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(renderPassClearValue->size());
@@ -872,13 +882,13 @@ namespace Anthem::Core{
         if(enableMsaa){
             depthBuffer->enableMsaa();
         }
-        depthBuffer->createDepthBufferWithSampler();
+        depthBuffer->createDepthBufferWithSampler(0,0);
         descPool->addSampler(depthBuffer,bindLoc,this->imageDescPoolIdx);
         this->depthBuffers.push_back(depthBuffer);
         *pDepthBuffer = depthBuffer;
         return true;
     }
-    bool AnthemSimpleToyRenderer::createDepthBufferCubicWithSampler(AnthemDepthBuffer** pDepthBuffer, AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa) {
+    bool AnthemSimpleToyRenderer::createDepthBufferCubicWithSampler(AnthemDepthBuffer** pDepthBuffer, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t height, bool enableMsaa) {
         auto depthBuffer = new AnthemDepthBuffer();
         depthBuffer->specifyLogicalDevice(this->logicalDevice.get());
         depthBuffer->specifyPhyDevice(this->phyDevice.get());
@@ -888,7 +898,7 @@ namespace Anthem::Core{
             depthBuffer->enableMsaa();
         }
         depthBuffer->enableCubic();
-        depthBuffer->createDepthBufferWithSampler();
+        depthBuffer->createDepthBufferWithSampler(height, height);
         descPool->addSampler(depthBuffer, bindLoc, this->imageDescPoolIdx);
         this->depthBuffers.push_back(depthBuffer);
         *pDepthBuffer = depthBuffer;

@@ -53,6 +53,7 @@ namespace Anthem::Core {
             for (auto& x : uniformBuffer) {
                 this->uniformBuffers.back().buffer.push_back(x->getBuffers());
                 this->uniformBuffers.back().size.push_back(static_cast<uint32_t>(x->getBufferSize()));
+                this->uniformBuffers.back().bufferInfo.push_back({});
             }
             this->uniformBuffers.back().descPoolId = descPoolId;
 

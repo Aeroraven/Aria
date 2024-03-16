@@ -56,6 +56,8 @@ namespace Anthem::Core{
             ANTH_LOGE("Failed to create framebuffer");
             return false;
         }
+        this->framebufferExtent.height = framebufferInfo.height;
+        this->framebufferExtent.width = framebufferInfo.width;
         ANTH_LOGI("Framebuffer created, ", "Width=",framebufferInfo.width," Height=",framebufferInfo.height);
         return true;
     }
@@ -81,6 +83,9 @@ namespace Anthem::Core{
             ANTH_LOGE("Failed to create framebuffer");
             return false;
         }
+        this->framebufferExtent.height = framebufferInfo.height;
+        this->framebufferExtent.width = framebufferInfo.width;
+
         ANTH_LOGI("Framebuffer created, ", "Width=",framebufferInfo.width," Height=",framebufferInfo.height);
         return true;
     }
@@ -98,5 +103,8 @@ namespace Anthem::Core{
     }
     VkFramebuffer* AnthemFramebuffer::getFramebuffer() const{
         return (VkFramebuffer*) & (this->framebuffer);
+    }
+    VkExtent2D AnthemFramebuffer::getExtent() const {
+        return this->framebufferExtent;
     }
 }

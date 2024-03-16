@@ -64,8 +64,9 @@ namespace Anthem::Core {
 
             ANTH_LOGI("Start Create Layout");
             ANTH_CHECK_NULL(logicalDevice);
-            if (vkCreateDescriptorSetLayout(logicalDevice->getLogicalDevice(), &layoutCreateInfo, nullptr, &(this->samplersDesc.back().layout)) != VK_SUCCESS) {
-                ANTH_LOGE("Failed to create descriptor set layout");
+            auto result = vkCreateDescriptorSetLayout(logicalDevice->getLogicalDevice(), &layoutCreateInfo, nullptr, &(this->samplersDesc.back().layout));
+            if ( result != VK_SUCCESS) {
+                ANTH_LOGE("Failed to create descriptor set layout: ",result);
                 return false;
             }
             return true;
