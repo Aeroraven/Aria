@@ -26,23 +26,59 @@ namespace Anthem::Core{
         createInfo.enabledLayerCount = 0;
         createInfo.pEnabledFeatures = &(this->creatingFeats);
 
+        VkPhysicalDeviceFeatures2 sPhyFeats = {};
+        sPhyFeats.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        sPhyFeats.features = this->creatingFeats;
+        sPhyFeats.pNext = nullptr;
+
+        void** lastCreateInfo = (void**)&createInfo.pNext;
+        auto appendFeatureEnabler = [&](auto* ptr) {
+            if (lastCreateInfo == (&createInfo.pNext)) {
+                createInfo.pNext = &sPhyFeats;
+                createInfo.pEnabledFeatures = nullptr;
+                sPhyFeats.pNext = ptr;
+            }
+            else {
+                *lastCreateInfo = ptr;
+            }
+            lastCreateInfo = &ptr->pNext;
+            ptr->pNext = nullptr;
+        };
+
 #ifdef VK_EXT_mesh_shader
         VkPhysicalDeviceMeshShaderFeaturesEXT extMeshShader = {};
         extMeshShader.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
         extMeshShader.meshShader = VK_TRUE;
         extMeshShader.taskShader = VK_TRUE;
-
-        VkPhysicalDeviceFeatures2 sPhyFeats = {};
-        sPhyFeats.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-        sPhyFeats.features = this->creatingFeats;
-        sPhyFeats.pNext = &extMeshShader;
-
-        createInfo.pEnabledFeatures = nullptr;
-        createInfo.pNext = &sPhyFeats;
+        appendFeatureEnabler(&extMeshShader);
+#endif
+        
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+#ifdef VK_KHR_acceleration_structure
+        VkPhysicalDeviceAccelerationStructureFeaturesKHR extAccStruct = {};
+        extAccStruct.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+        extAccStruct.accelerationStructure = VK_TRUE;
+        appendFeatureEnabler(&extAccStruct);
 #endif
 
-        if(vkCreateDevice(phyDevice->getPhysicalDevice(), &createInfo, nullptr, &logicalDevice)!=VK_SUCCESS){
-            ANTH_LOGI("Failed to create logical device");
+#ifdef VK_KHR_buffer_device_address
+        VkPhysicalDeviceBufferDeviceAddressFeatures extBda = {};
+        extBda.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+        extBda.bufferDeviceAddress = VK_TRUE;
+        appendFeatureEnabler(&extBda);
+#endif 
+
+#ifdef VK_KHR_ray_tracing_pipeline
+        VkPhysicalDeviceRayTracingPipelineFeaturesKHR extRtPipe = {};
+        extRtPipe.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+        extRtPipe.rayTracingPipeline = VK_TRUE;
+        appendFeatureEnabler(&extRtPipe);
+#endif
+#endif
+
+        auto res = vkCreateDevice(phyDevice->getPhysicalDevice(), &createInfo, nullptr, &logicalDevice);
+        if(res!=VK_SUCCESS){
+            ANTH_LOGI("Failed to create logical device", res);
             return false;
         }
         ANTH_LOGI("Logical device created");

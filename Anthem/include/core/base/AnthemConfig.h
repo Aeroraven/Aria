@@ -15,6 +15,8 @@ namespace Anthem{
             bool VKCFG_ENABLE_VALIDATION_LAYERS = true;
             int VKCFG_MAX_IMAGES_IN_FLIGHT = 2;
 
+            bool VKCFG_ENABLE_RAYTRACING = true;
+
         public:
             AnthemConfig();
         };

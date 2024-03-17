@@ -36,7 +36,7 @@ float calculateShadow(float4 pos)
     float refDepth = texShadowMap.Sample(sampShadowMap, dirx).r;
     float curDepth = length(pos.xyz - lightConf.pos.xyz) / 1000.0;
 
-    if (curDepth - refDepth > 1e-3)
+    if (curDepth - refDepth > 1e-6)
     {
         return 1.0;
     }

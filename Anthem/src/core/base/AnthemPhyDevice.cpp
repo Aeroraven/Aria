@@ -16,10 +16,22 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->physicalDevice != VK_NULL_HANDLE,"Physical device not specified");
         return this->deviceProperties;
     }
+    VkPhysicalDeviceRayTracingPipelinePropertiesKHR AnthemPhyDevice::getDeivceRaytracingProperties() const{
+        return this->rtPipelineProperty;
+    }
     bool AnthemPhyDevice::specifyDevice(VkPhysicalDevice device,AnthemPhyQueueFamilyIdx* queueFamilyIdx){
         this->physicalDevice = device;
         vkGetPhysicalDeviceFeatures(device,&this->deviceFeatures);
         vkGetPhysicalDeviceProperties(device,&this->deviceProperties);
+
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+        rtPipelineProperty.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+        VkPhysicalDeviceProperties2 deviceProperties2{};
+        deviceProperties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+        deviceProperties2.pNext = &rtPipelineProperty;
+        vkGetPhysicalDeviceProperties2(physicalDevice, &deviceProperties2);
+#endif
+
         this->queueFamilyIdx.graphicsFamily = queueFamilyIdx->graphicsFamily;
         this->queueFamilyIdx.presentFamily = queueFamilyIdx->presentFamily;
         this->queueFamilyIdx.computeFamily = queueFamilyIdx->computeFamily;

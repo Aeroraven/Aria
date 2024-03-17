@@ -39,6 +39,8 @@
 #include <stacktrace>
 #endif
 
+// Options
+#define AT_FEATURE_RAYTRACING_ENABLED 1
 
 
 // Backend

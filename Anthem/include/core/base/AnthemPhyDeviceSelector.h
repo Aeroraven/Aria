@@ -13,7 +13,22 @@ namespace Anthem::Core{
 
         AnthemWindowSurface* surface;
         AnthemSwapChain*  swapChain;
-        std::vector<const char*> requiredDeviceSupportedExtension = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+        std::vector<const char*> requiredDeviceSupportedExtension = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+            VK_KHR_SPIRV_1_4_EXTENSION_NAME,
+            VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME,
+            //Mesh Shader
+            VK_EXT_MESH_SHADER_EXTENSION_NAME,
+
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+            //Ray Tracing
+            VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+            VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+            VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+            VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
+            VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME
+#endif
+        };
         
     public:
         bool virtual selectPhyDevice(const VkInstance* instance, AnthemWindowSurface* surface);

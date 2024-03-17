@@ -78,9 +78,7 @@ namespace Anthem::Core{
 
             for(uint32_t i=0;i<deviceMemoryProperties.memoryHeapCount;i++){
                 rating += 1;
-                //ANTH_LOGI("Heap ",i,":",deviceMemoryProperties.memoryHeaps[i].size,",",deviceMemoryProperties.memoryHeaps[i].flags);
             }
-            //ANTH_LOGI("Extension Support:",extSupportAssert);
  
             availFlag = (deviceProperties.deviceType==VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) && 
                  famQueueIdx->graphicsFamily.has_value() &&
