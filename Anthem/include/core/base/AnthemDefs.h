@@ -83,6 +83,8 @@
 
 // Sugars
 #define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
+#define AT_RANGE(s,t) (std::views::iota(s,t))
+#define AT_RANGE(t) (std::views::iota(0,t))
 
 #ifdef _HAS_CXX23
     #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().classNameTrack(std::stacktrace::current().at(0).description()).c_str())

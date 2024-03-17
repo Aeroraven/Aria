@@ -73,37 +73,37 @@ namespace Anthem::Core{
 
         return true;
     }
-    void AnthemLogicalDevice::vkCall_vkCmdDrawMeshTaskExt(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+    void AnthemLogicalDevice::vkCall_vkCmdDrawMeshTaskExt(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) const {
         (*this->procCmdDrawMesh)(commandBuffer, groupCountX, groupCountY, groupCountZ);
     }
-    VkDeviceAddress AnthemLogicalDevice::vkCall_vkGetBufferDeviceAddressKHR(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) {
+    VkDeviceAddress AnthemLogicalDevice::vkCall_vkGetBufferDeviceAddressKHR(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) const {
         return (*this->procGetBufferDeviceAddressKHR)(device, pInfo);
     }
-    void AnthemLogicalDevice::vkCall_vkCmdBuildAccelerationStructuresKHR(VkCommandBuffer  commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) {
+    void AnthemLogicalDevice::vkCall_vkCmdBuildAccelerationStructuresKHR(VkCommandBuffer  commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) const {
         return (*this->procCmdBuildAccelerationStructuresKHR)(commandBuffer, infoCount, pInfos, ppBuildRangeInfos);
     }
-    VkResult AnthemLogicalDevice::vkCall_vkBuildAccelerationStructuresKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) {
+    VkResult AnthemLogicalDevice::vkCall_vkBuildAccelerationStructuresKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) const {
         return (*this->procBuildAccelerationStructuresKHR)(device, deferredOperation, infoCount, pInfos, ppBuildRangeInfos);
     }
-    VkResult AnthemLogicalDevice::vkCall_vkCreateAccelerationStructureKHR(VkDevice device, const VkAccelerationStructureCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkAccelerationStructureKHR* pAccelerationStructure) {
+    VkResult AnthemLogicalDevice::vkCall_vkCreateAccelerationStructureKHR(VkDevice device, const VkAccelerationStructureCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkAccelerationStructureKHR* pAccelerationStructure) const {
         return (*this->procCreateAccelerationStructureKHR)(device, pCreateInfo, pAllocator, pAccelerationStructure);
     }
-    void  AnthemLogicalDevice::vkCall_vkDestroyAccelerationStructureKHR(VkDevice device, VkAccelerationStructureKHR accelerationStructure, const VkAllocationCallbacks* pAllocator) {
+    void  AnthemLogicalDevice::vkCall_vkDestroyAccelerationStructureKHR(VkDevice device, VkAccelerationStructureKHR accelerationStructure, const VkAllocationCallbacks* pAllocator)const {
         return (*this->procDestroyAccelerationStructureKHR)(device, accelerationStructure, pAllocator);
     }
-    void AnthemLogicalDevice::vkCall_vkGetAccelerationStructureBuildSizesKHR(VkDevice device, VkAccelerationStructureBuildTypeKHR  buildType, const VkAccelerationStructureBuildGeometryInfoKHR* pBuildInfo, const uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo) {
+    void AnthemLogicalDevice::vkCall_vkGetAccelerationStructureBuildSizesKHR(VkDevice device, VkAccelerationStructureBuildTypeKHR  buildType, const VkAccelerationStructureBuildGeometryInfoKHR* pBuildInfo, const uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo) const {
         return (*this->procGetAccelerationStructureBuildSizesKHR)(device, buildType, pBuildInfo, pMaxPrimitiveCounts, pSizeInfo);
     }
-    VkDeviceAddress AnthemLogicalDevice::vkCall_vkGetAccelerationStructureDeviceAddressKHR(VkDevice device, const VkAccelerationStructureDeviceAddressInfoKHR* pInfo) {
+    VkDeviceAddress AnthemLogicalDevice::vkCall_vkGetAccelerationStructureDeviceAddressKHR(VkDevice device, const VkAccelerationStructureDeviceAddressInfoKHR* pInfo) const {
         return (*this->procGetAccelerationStructureDeviceAddressKHR)(device, pInfo);
     }
-    void AnthemLogicalDevice::vkCall_vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) {
+    void AnthemLogicalDevice::vkCall_vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) const {
         return (*this->procCmdTraceRaysKHR)(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
     }
-    VkResult AnthemLogicalDevice::vkCall_vkGetRayTracingShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) {
+    VkResult AnthemLogicalDevice::vkCall_vkGetRayTracingShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) const {
         return (*this->procGetRayTracingShaderGroupHandlesKHR)(device, pipeline, firstGroup, groupCount, dataSize, pData);
     }
-    VkResult AnthemLogicalDevice::vkCall_vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) {
+    VkResult AnthemLogicalDevice::vkCall_vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines)const {
         return (*this->procCreateRayTracingPipelinesKHR)(device, deferredOperation, pipelineCache, createInfoCount, pCreateInfos, pAllocator, pPipelines);
     }
 }

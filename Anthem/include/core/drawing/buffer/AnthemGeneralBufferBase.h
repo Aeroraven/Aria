@@ -18,9 +18,10 @@ namespace Anthem::Core{
     public virtual Util::AnthemUtlPhyDeviceReqBase{
     protected:
         uint32_t virtual calculateBufferSize() = 0;
-        bool virtual createBufferInternal(AnthemGeneralBufferProp* bufProp, VkBufferUsageFlags usage, VkMemoryPropertyFlags memProp);
+        bool virtual createBufferInternal(AnthemGeneralBufferProp* bufProp, VkBufferUsageFlags usage, VkMemoryPropertyFlags memProp,void* memAllocFlags=nullptr, uint32_t size=0);
         bool virtual bindBufferInternal(AnthemGeneralBufferProp* bufProp);
         bool virtual setupBufferBarrierInternal(VkCommandBuffer cmdBuf,AnthemGeneralBufferProp* bufProp, AnthemBufferBarrierProp* src, AnthemBufferBarrierProp* dst);
-        
+        VkDeviceAddress virtual getBufferDeviceAddress(AnthemGeneralBufferProp* bufProp);
+        bool virtual copyDataToBuffer(AnthemGeneralBufferProp* bufProp, void* data, uint32_t size, bool flush);
     };
 }
