@@ -64,11 +64,23 @@ struct Stage {
 	AnthemFence* dbgFence;
 	uint32_t cmdIdx[2];
 
+	// Light Conf
+	AnthemUniformBufferImpl<AtUniformVecf<4>, AtUniformVecf<4>>* uniLightConf;
+	AnthemDescriptorPool* descLightConf;
+
+	// Geometry 
+	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>, AtAttributeVecf<4>>* vxFloor;
+	AnthemIndexBuffer* ixFloor;
+
 	// Debug Pipeline
 	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>, AtAttributeVecf<4>>* sbox;
 	AnthemIndexBuffer* ix;
 	
-	const bool debugEnable = true;
+	const bool debugEnable = false;
+	const float lightX = 70.0f;
+
+	AnthemDescriptorPool* descImage = nullptr;
+	AnthemImage** image = nullptr;
 }st;
 
 inline std::string getShader(auto x) {
@@ -85,19 +97,31 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 
-	st.camera.specifyFrustum((float)AT_PI * 2.0f / 3.0f, 0.1f, 500.0f, 1.0f );
-	st.camera.specifyPosition(0, 0, -200);
+	st.camera.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
+	st.camera.specifyPosition(0, 70, -100);
 	if (st.debugEnable) {
 		st.camera.specifyPosition(0, 0, 0);
 	}
 	st.camera.specifyFrontEyeRay(0, 0, 1);
 
 	st.camLight.specifyFrustum((float)AT_PI  / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camLight.specifyPosition(0, 70, -150);
+	st.camLight.specifyPosition(70, 70, -150);
 	st.camLight.specifyFrontEyeRay(0, 0, 1);
 
 	st.rd.createSemaphore(&st.shadowMapped);
 	st.rd.createFence(&st.dbgFence);
+
+	st.rd.createDescriptorPool(&st.descLightConf);
+	st.rd.createUniformBuffer(&st.uniLightConf, 0, st.descLightConf, -1);
+	float lightPos[4] = { st.lightX,150,-100,1 };
+	float ambient[4] =  { 0.1f,0.1f,0.1f,0.1f };
+	st.uniLightConf->specifyUniforms(lightPos, ambient);
+	for (auto i : ATRANGE(0, st.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+		st.uniLightConf->updateBuffer(i);
+	}
+
+	st.rd.createDescriptorPool(&st.descMain);
+	st.rd.createUniformBuffer(&st.uniStage, 0, st.descMain, -1);
 }
 
 void loadModel() {
@@ -110,11 +134,28 @@ void loadModel() {
 	std::vector<AnthemUtlSimpleModelStruct> rp;
 	for (auto& p : st.model)rp.push_back(p);
 	st.ldModel.loadModel(&st.rd, rp, -1);
+
+	st.rd.createDescriptorPool(&st.descImage);
+	st.image = new AnthemImage * [st.model.size()];
+	std::vector<AnthemImageContainer*> imgContainer;
+	for (int i = 0; i < st.model.size(); i++) {
+		AnthemImageLoader* loader = new AnthemImageLoader();
+		uint32_t texWidth, texHeight, texChannels;
+		uint8_t* texData;
+		std::string texPath = st.model[i].basePath + st.model[i].pbrBaseColorTexPath;
+		if (st.model[i].pbrBaseColorTexPath == "") {
+			texPath = ANTH_ASSET_DIR;
+			texPath += "cat.jpg";
+		}
+		loader->loadImage(texPath.c_str(), &texWidth, &texHeight, &texChannels, &texData);
+		st.rd.createTexture(&st.image[i], st.descImage, texData, texWidth, texHeight, texChannels, 0, false, false, AT_IF_SRGB_UINT8, -1, true);
+		imgContainer.push_back(st.image[i]);
+	}
+	st.rd.addSamplerArrayToDescriptor(imgContainer, st.descImage, 0, -1);
 }
 
 void createMainStage() {
-	st.rd.createDescriptorPool(&st.descMain);
-	st.rd.createUniformBuffer(&st.uniStage, 0, st.descMain, -1);
+
 
 	st.spMain.fragmentShader = getShader("main.frag");
 	st.spMain.vertexShader = getShader("main.vert");
@@ -126,7 +167,14 @@ void createMainStage() {
 
 	AnthemDescriptorSetEntry dseCam{ st.descMain,AT_ACDS_UNIFORM_BUFFER,0 };
 	AnthemDescriptorSetEntry dseSampler{ st.descShadowMap,AT_ACDS_SAMPLER,0 };
-	st.rd.createGraphicsPipelineCustomized(&st.pipeMain, { dseCam,dseSampler }, {}, st.passMain, st.sdMain, st.ldModel.getVertexBuffer(), &st.coptMain);
+	AnthemDescriptorSetEntry dseLight{ st.descLight,AT_ACDS_UNIFORM_BUFFER,0 };
+	AnthemDescriptorSetEntry dseLightConf{ st.descLightConf,AT_ACDS_UNIFORM_BUFFER,0 };
+	AnthemDescriptorSetEntry dseImage{ st.descImage,AT_ACDS_SAMPLER,0 };
+	st.rd.createGraphicsPipelineCustomized(&st.pipeMain, { dseCam,dseSampler,dseLight,dseLightConf,dseImage }, {}, st.passMain, st.sdMain, st.ldModel.getVertexBuffer(), &st.coptMain);
+
+	for (auto i : ATRANGE(0, 2)) {
+		st.rd.drAllocateCommandBuffer(&st.cmdIdx[i]);
+	}
 }
 
 void createDebug() {
@@ -194,8 +242,20 @@ void createShadowMap() {
 	st.rd.createSimpleFramebuffer(&st.fbShadow, nullptr, st.passShadow, st.depthCubic);
 
 	AnthemDescriptorSetEntry dseLight{ st.descLight,AT_ACDS_UNIFORM_BUFFER,0 };
+	AnthemDescriptorSetEntry dseUniform{ st.descMain,AT_ACDS_UNIFORM_BUFFER,0 };
 	st.coptShadow.customViewport = st.vpCubic;
-	st.rd.createGraphicsPipelineCustomized(&st.pipeShadow, { dseLight }, {}, st.passShadow, st.sdShadow, st.ldModel.getVertexBuffer(), &st.coptShadow);
+	st.rd.createGraphicsPipelineCustomized(&st.pipeShadow, { dseLight, dseUniform }, {}, st.passShadow, st.sdShadow, st.ldModel.getVertexBuffer(), &st.coptShadow);
+}
+
+void createGeometry(){
+	st.rd.createVertexBuffer(&st.vxFloor);
+	st.rd.createIndexBuffer(&st.ixFloor);
+	st.vxFloor->setTotalVertices(4);
+	st.vxFloor->insertData(0, { -160,0,160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
+	st.vxFloor->insertData(1, { 160,0,160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
+	st.vxFloor->insertData(2, { 160,0,-160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
+	st.vxFloor->insertData(3, { -160,0,-160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
+	st.ixFloor->setIndices({ 0,1,2,2,3,0 });
 }
 
 void recordCommand() {
@@ -211,8 +271,14 @@ void recordCommand() {
 		r.drBindVertexBuffer(st.ldModel.getVertexBuffer(), st.cmdIdx[i]);
 		r.drBindIndexBuffer(st.ldModel.getIndexBuffer(), st.cmdIdx[i]);
 		AnthemDescriptorSetEntry dseLight{ st.descLight,AT_ACDS_UNIFORM_BUFFER,0 };
-		r.drBindDescriptorSetCustomizedGraphics({ dseLight }, st.pipeShadow, st.cmdIdx[i]);
+		AnthemDescriptorSetEntry dseUniform{ st.descMain,AT_ACDS_UNIFORM_BUFFER,0 };
+		r.drBindDescriptorSetCustomizedGraphics({ dseLight,dseUniform }, st.pipeShadow, st.cmdIdx[i]);
 		r.drDrawIndexedIndirect(st.ldModel.getIndirectBuffer(), st.cmdIdx[i]);
+
+		r.drBindVertexBuffer(st.vxFloor, st.cmdIdx[i]);
+		r.drBindIndexBuffer(st.ixFloor, st.cmdIdx[i]);
+		r.drDraw(st.ixFloor->getIndexCount(), st.cmdIdx[i]);
+
 		r.drEndRenderPass(st.cmdIdx[i]);
 		r.drEndCommandRecording(st.cmdIdx[i]);
 
@@ -224,24 +290,28 @@ void recordCommand() {
 		if (st.debugEnable) {
 			r.drBindVertexBuffer(st.sbox, i);
 			r.drBindIndexBuffer(st.ix, i);
-			//r.drBindVertexBuffer(st.ldModel.getVertexBuffer(), i);
-			//r.drBindIndexBuffer(st.ldModel.getIndexBuffer(), i);
-
 			AnthemDescriptorSetEntry dseUniform{ st.descMain,AT_ACDS_UNIFORM_BUFFER,i };
 			AnthemDescriptorSetEntry dseSampler{ st.descShadowMap,AT_ACDS_SAMPLER,i };
 			AnthemDescriptorSetEntry dseLight{ st.descLight,AT_ACDS_UNIFORM_BUFFER,0 };
 
 			r.drBindDescriptorSetCustomizedGraphics({ dseUniform,dseSampler,dseLight }, st.pipeMain, i);
 			r.drDraw(st.ix->getIndexCount(), i);
-			//r.drDrawIndexedIndirect(st.ldModel.getIndirectBuffer(), i);
 		}
 		else {
 			r.drBindVertexBuffer(st.ldModel.getVertexBuffer(), i);
 			r.drBindIndexBuffer(st.ldModel.getIndexBuffer(), i);
 			AnthemDescriptorSetEntry dseUniform{ st.descMain,AT_ACDS_UNIFORM_BUFFER,i };
 			AnthemDescriptorSetEntry dseSampler{ st.descShadowMap,AT_ACDS_SAMPLER,i };
-			r.drBindDescriptorSetCustomizedGraphics({ dseUniform,dseSampler }, st.pipeMain, i);
+			AnthemDescriptorSetEntry dseLight{ st.descLight,AT_ACDS_UNIFORM_BUFFER,0 };
+			AnthemDescriptorSetEntry dseLightConf{ st.descLightConf,AT_ACDS_UNIFORM_BUFFER,0 };
+			AnthemDescriptorSetEntry dseImage{ st.descImage,AT_ACDS_SAMPLER,0 };
+			r.drBindDescriptorSetCustomizedGraphics({ dseUniform,dseSampler,dseLight,dseLightConf,dseImage }, st.pipeMain, i);
 			r.drDrawIndexedIndirect(st.ldModel.getIndirectBuffer(), i);
+
+			r.drBindVertexBuffer(st.vxFloor, i);
+			r.drBindIndexBuffer(st.ixFloor, i);
+			r.drDraw(st.ixFloor->getIndexCount(),i);
+
 		}
 		r.drEndRenderPass(i);
 		r.drEndCommandRecording(i);
@@ -253,7 +323,7 @@ void updateUniform() {
 	AtMatf4 proj, view, local;
 	st.camera.getProjectionMatrix(proj);
 	st.camera.getViewMatrix(view);
-	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 1.0f,0.0f,0.0f },
+	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({0.0f,1.0f,0.0f},
 		0.5f * static_cast<float>(glfwGetTime()));
 	//local = AnthemLinAlg::eye<float, 4>();
 
@@ -261,6 +331,8 @@ void updateUniform() {
 	proj.columnMajorVectorization(pm);
 	view.columnMajorVectorization(vm);
 	local.columnMajorVectorization(lm);
+
+	
 
 	st.uniStage->specifyUniforms(pm, vm, lm);
 	for (int i = 0; i < st.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
@@ -288,8 +360,8 @@ void updateUniformLights() {
 	float pm[6][16], vm[6][16], lm[6][16];
 	for (auto k : ATRANGE(0, 6)) {
 		AtMatf4 proj, view, local;
-		st.camLight.specifyFrustum((float)AT_PI * 2.0 / 3.0f, 0.1f, 500.0f, 1.0f );
-		st.camLight.specifyPosition(0, 70, -100);
+		st.camLight.specifyFrustum((float)AT_PI * 1.0 / 2.0f, 0.1f, 500.0f, 1.0f );
+		st.camLight.specifyPosition(st.lightX, 150, -100);
 
 		st.camLight.specifyFrontEyeRay(dirs[k][0], dirs[k][1], dirs[k][2]);
 		st.camLight.specifyUp(up[k][0], up[k][1], up[k][2]);
@@ -297,10 +369,11 @@ void updateUniformLights() {
 		st.camLight.getProjectionMatrix(proj);
 		st.camLight.getViewMatrix(view);
 		local = AnthemLinAlg::eye<float, 4>();
+		
+
 		ANTH_LOGI(k);
 		proj.print();
-		view.print();
-		
+
 		proj.columnMajorVectorization(pm[k]);
 		view.columnMajorVectorization(vm[k]);
 		local.columnMajorVectorization(lm[k]);
@@ -331,6 +404,7 @@ int main() {
 	initialize();
 	loadModel();
 	createShadowMap();
+	createGeometry();
 	if (!st.debugEnable) {
 		createMainStage();
 	}

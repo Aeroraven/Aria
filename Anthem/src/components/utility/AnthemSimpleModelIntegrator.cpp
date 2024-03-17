@@ -19,7 +19,7 @@ namespace Anthem::Components::Utility {
 				vx->insertData(i + prs[k],
 					{ model[k].positions[i * 3],model[k].positions[i * 3 + 1],model[k].positions[i * 3 + 2],1.0 },
 					{ model[k].normals[i * 3],model[k].normals[i * 3 + 1],model[k].normals[i * 3 + 2],0.0 },
-					{ model[k].texCoords[i * 2],model[k].texCoords[i * 2 + 1], k * 1.0f,1.00 });
+					{ model[k].texCoords[i * 2],model[k].texCoords[i * 2 + 1], k * 1.0f + 0.5f,1.00 });
 			}
 
 		};

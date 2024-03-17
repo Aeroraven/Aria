@@ -10,6 +10,7 @@ struct Camera
 };
 
 ConstantBuffer<Camera> cam[6] : register(b0, space0);
+ConstantBuffer<Camera> globalCam : register(b0, space1);
 
 struct GSOutput
 {
@@ -27,8 +28,8 @@ void main(triangle VSOutput vsOut[3], inout TriangleStream<GSOutput> gsOutStream
         {
             GSOutput gsOut;
             gsOut.slice = k;
-            gsOut.orgPosition = vsOut[i].position;
-            gsOut.position = mul(cam[k].proj, mul(cam[k].view, mul(cam[k].model, vsOut[i].position)));
+            gsOut.orgPosition = mul(globalCam.model, vsOut[i].position);
+            gsOut.position = mul(cam[k].proj, mul(cam[k].view, mul(globalCam.model, vsOut[i].position)));
             gsOutStream.Append(gsOut);
         }
         gsOutStream.RestartStrip();

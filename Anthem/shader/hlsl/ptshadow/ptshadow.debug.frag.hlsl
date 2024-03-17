@@ -27,6 +27,5 @@ PSOutput main(VSOutput vsOut)
     PSOutput psOut;
     psOut.color = float4(texSkybox.Sample(sampSkybox, vsOut.texCoord.xyz).rgb, 1.0) * 0.5;
     psOut.color += float4(abs(vsOut.texCoord.xyz), 1.0) * 0.5;
-    
     return psOut;
 }
