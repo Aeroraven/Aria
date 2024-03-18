@@ -238,6 +238,7 @@ namespace Anthem::Core{
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
+        textureImage->specifySwapchain(this->swapChain.get());
         textureImage->loadImageData(texData, texWidth, texHeight, texChannel);
         textureImage->specifyUsage(usage);
         if(generateMipmap2D){
@@ -250,11 +251,13 @@ namespace Anthem::Core{
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
-        if (descId == -1) {
-            ANTH_LOGW("Descriptor pool index not specified for Tex2D, using the default value", this->imageDescPoolIdx);
-            descId = this->imageDescPoolIdx;
+        if (!ignoreDescPool) {
+            if (descId == -1) {
+                ANTH_LOGW("Descriptor pool index not specified for Tex2D, using the default value", this->imageDescPoolIdx);
+                descId = this->imageDescPoolIdx;
+            }
+            descPool->addSampler(textureImage, bindLoc, descId);
         }
-        if(!ignoreDescPool) descPool->addSampler(textureImage,bindLoc, descId);
         *pImage = textureImage;
         this->textures.push_back(textureImage);
         return true;
@@ -265,6 +268,7 @@ namespace Anthem::Core{
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
+        textureImage->specifySwapchain(this->swapChain.get());
         textureImage->loadImageData(prop->texData, prop->texWidth, prop->texHeight, prop->texChannel);
         textureImage->specifyUsage(prop->usage);
         if (prop->mipmap2d) {
@@ -293,6 +297,7 @@ namespace Anthem::Core{
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
+
         textureImage->loadImageData(data, texWidth, texHeight, texChannel);
         textureImage->specifyUsage(AT_IU_TEXTURE);
         textureImage->setImageFormat(AT_IF_SRGB_UINT8);
@@ -314,6 +319,7 @@ namespace Anthem::Core{
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
+        textureImage->specifySwapchain(this->swapChain.get());
         textureImage->loadImageData3(texData, texWidth, texHeight, texChannel, texDepth);
         textureImage->specifyUsage(AnthemImageUsage::AT_IU_TEXTURE);
         textureImage->setImageFormat(imageFmt);
@@ -336,6 +342,7 @@ namespace Anthem::Core{
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
+        textureImage->specifySwapchain(this->swapChain.get());
         textureImage->setImageSize(this->swapChain->getSwapChainExtentWidth(),this->swapChain->getSwapChainExtentHeight());
         textureImage->specifyUsage(AT_IU_COLOR_ATTACHMENT);
         if(enableMsaa){
@@ -960,5 +967,82 @@ namespace Anthem::Core{
         *queue = phyDevice->getPhyQueueGraphicsFamilyIndice().value();
         return true;
     }
+    bool AnthemSimpleToyRenderer::getSwapchainImageExtent(uint32_t* width, uint32_t* height) {
+        *width = swapChain->getSwapChainExtentWidth();
+        *height = swapChain->getSwapChainExtentHeight();
+    }
+
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+    bool AnthemSimpleToyRenderer::drTraceRays(uint32_t cmdIdx, AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,
+        int32_t raygenId, int32_t missId, int32_t closeHitId, int32_t callableId) {
+        auto bindingTables = pipeline->getTraceRayRegions(raygenId, missId, closeHitId, callableId);
+        this->logicalDevice->vkCall_vkCmdTraceRaysKHR(
+            *this->commandBuffers->getCommandBuffer(cmdIdx),
+            &bindingTables[0], &bindingTables[1], &bindingTables[2], &bindingTables[3], width, height, 1);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createTopLevelAS(AnthemTopLevelAccStruct** pTlas) {
+        auto tlas = new AnthemTopLevelAccStruct();
+        tlas->specifyCommandBuffers(this->commandBuffers.get());
+        tlas->specifyPhyDevice(this->phyDevice.get());
+        tlas->specifyLogicalDevice(this->logicalDevice.get());
+        rtTlasList.push_back(tlas);
+        *pTlas = tlas;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createBottomLevelAS(AnthemBottomLevelAccStruct** pBlas) {
+        auto blas = new AnthemBottomLevelAccStruct();
+        blas->specifyCommandBuffers(this->commandBuffers.get());
+        blas->specifyPhyDevice(this->phyDevice.get());
+        blas->specifyLogicalDevice(this->logicalDevice.get());
+        rtBlasList.push_back(blas);
+        *pBlas = blas;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createRayTracingPipeline(AnthemRayTracingPipeline** pPipeline, const std::vector<AnthemDescriptorSetEntry>& descriptors,
+        const std::vector<AnthemPushConstant*> pconst, AnthemRayTracingShaders* shader, uint32_t rayRecursion) {
+        auto pp = new AnthemRayTracingPipeline();
+        pp->specifyPhyDevice(this->phyDevice.get());
+        pp->specifyLogicalDevice(this->logicalDevice.get());
+        pp->specifyShaderModule(shader);
+        pp->createPipelineLayoutCustomized(descriptors);
+        pp->setRayRecursion(rayRecursion);
+        pp->createPipeline();
+        pp->createBindingTable();
+        rtPipelines.push_back(pp);
+        *pPipeline = pp;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createRayTracingGeometry(AnthemAccStructGeometry** pAsGeo, uint32_t vertexStride, std::vector<float> vertices,
+        std::vector<uint32_t>indices, std::vector<float>transform) {
+        auto pGeo = new AnthemAccStructGeometry();
+        pGeo->specifyLogicalDevice(this->logicalDevice.get());
+        pGeo->specifyPhyDevice(this->phyDevice.get());
+        pGeo->createGeometryInfoBuffers(static_cast<int>(vertexStride), vertices, indices, transform);
+        pGeo->createTriangularGeometry();
+        rtGeometries.push_back(pGeo);
+        *pAsGeo = pGeo;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createRayTracingInstance(AnthemAccStructInstance** pAsInst, AnthemBottomLevelAccStruct* bottomAs, std::vector<float> transform) {
+        auto pIns = new AnthemAccStructInstance();
+        pIns->specifyLogicalDevice(this->logicalDevice.get());
+        pIns->specifyPhyDevice(this->phyDevice.get());
+        pIns->createInstanceInfoBuffers(bottomAs, transform);
+        rtInstances.push_back(pIns);
+        *pAsInst = pIns;
+        return true;
+    }
+
+    bool AnthemSimpleToyRenderer::createRayTracingShaderGroup(AnthemRayTracingShaders** pShader, std::vector<std::pair<std::string, AnthemRayTracingShaderType>>& shaderFile) {
+        auto sd = new AnthemRayTracingShaders();
+        for (auto& p : shaderFile) {
+            sd->loadShader(this->logicalDevice.get(), p.first, p.second);
+        }
+        rtShaders.push_back(sd);
+        *pShader = sd;
+        return  true;
+    }
+#endif 
 
 }

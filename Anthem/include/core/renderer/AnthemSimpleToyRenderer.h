@@ -32,6 +32,16 @@
 #include "../drawing/buffer/AnthemIndirectDrawBuffer.h"
 #include "../drawing/image/AnthemImageCubic.h"
 
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+#include "../pipeline/raytracing/AnthemRayTracingPipeline.h"
+#include "../pipeline/raytracing/AnthemRayTracingShaders.h"
+#include "../drawing/buffer/acceleration/AnthemAccelerationStruct.h"
+#include "../drawing/buffer/acceleration/AnthemAccStructGeometry.h"
+#include "../drawing/buffer/acceleration/AnthemAccStructInstance.h"
+#include "../drawing/buffer/acceleration/AnthemBottomLevelAccStruct.h"
+#include "../drawing/buffer/acceleration/AnthemTopLevelAccStruct.h"
+#endif
+
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
@@ -57,6 +67,15 @@ namespace Anthem::Core{
 
         ANTH_UNIQUE_PTR(AnthemSwapchainFramebuffer) framebufferList;
         ANTH_UNIQUE_PTR(AnthemDrawingCommandHelper) drawingCommandHelper;
+
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+        std::vector<AnthemRayTracingShaders*> rtShaders;
+        std::vector<AnthemRayTracingPipeline*> rtPipelines;
+        std::vector<AnthemTopLevelAccStruct*> rtTlasList;
+        std::vector<AnthemBottomLevelAccStruct*> rtBlasList;
+        std::vector<AnthemAccStructGeometry*> rtGeometries;
+        std::vector<AnthemAccStructInstance*> rtInstances;
+#endif
 
 
         std::vector<AnthemRenderPass*> renderPasses;
@@ -146,7 +165,6 @@ namespace Anthem::Core{
         bool createDescriptorPool(AnthemDescriptorPool** pDescriptorPool);
         bool createIndirectDrawBuffer(AnthemIndirectDrawBuffer** pBuffer);
 
-
         bool createGraphicsPipeline(AnthemGraphicsPipeline** pPipeline,  AnthemDescriptorPool* descPool, AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule, IAnthemVertexBufferAttrLayout* vertexBuffer,AnthemUniformBuffer* uniformBuffer);
         bool createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,
             std::vector<AnthemDescriptorSetEntry> descSetEntries, std::vector<AnthemPushConstant*> pushConstants,
@@ -155,6 +173,19 @@ namespace Anthem::Core{
         
         bool createSemaphore(AnthemSemaphore** pSemaphore);
         bool createFence(AnthemFence** pFence);
+
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+        bool createTopLevelAS(AnthemTopLevelAccStruct** pTlas);
+        bool createBottomLevelAS(AnthemBottomLevelAccStruct** pBlas);
+        bool createRayTracingPipeline(AnthemRayTracingPipeline** pPipeline, const std::vector<AnthemDescriptorSetEntry>& descriptors,
+            const std::vector<AnthemPushConstant*> pconst, AnthemRayTracingShaders* shader,uint32_t rayRecursion);
+        bool createRayTracingGeometry(AnthemAccStructGeometry** pAsGeo, uint32_t vertexStride, std::vector<float> vertices, std::vector<uint32_t>indices, std::vector<float>transform);
+        bool createRayTracingInstance(AnthemAccStructInstance** pAsInst, AnthemBottomLevelAccStruct* bottomAs, std::vector<float> transform);
+        bool createRayTracingShaderGroup(AnthemRayTracingShaders** pShader, std::vector<std::pair<std::string, AnthemRayTracingShaderType>>& shaderFile);
+#endif
+
+        // Swapchain Info
+        bool getSwapchainImageExtent(uint32_t* width, uint32_t* height);
 
         // Descriptor Pool
         bool addSamplerArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,uint32_t bindLoc, uint32_t descId);
@@ -186,7 +217,6 @@ namespace Anthem::Core{
 
 
         bool drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal,const AnthemFence* fenceToSignal);
-
         bool drSetViewportScissorFromSwapchain(uint32_t cmdIdx);
         bool drSetViewportScissor(AnthemViewport* custVp,uint32_t cmdIdx);
         bool drSetLineWidth(float lineWidth, uint32_t cmdIdx);
@@ -211,6 +241,11 @@ namespace Anthem::Core{
         bool drDrawMesh(uint32_t groupX, uint32_t groupY, uint32_t groupZ, uint32_t cmdIdx);
         bool drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ);
         
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+        bool drTraceRays(uint32_t cmdIdx, AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,
+            int32_t raygenId,int32_t missId,int32_t closeHitId,int32_t callableId);
+#endif
+
         // Queue
         bool quGetComputeQueueIdx(uint32_t* queue);
         bool quGetGraphicsQueueIdx(uint32_t* queue);
@@ -272,9 +307,7 @@ namespace Anthem::Core{
                 ANTH_LOGW("Descriptor pool index not specified for UBO, using the default value", this->uniformDescPoolIdx);
                 descId = this->uniformDescPoolIdx;
             }
-
             if (descPool != nullptr) descPool->addUniformBuffer(ubuf,bindLoc,this->uniformDescPoolIdx);
-
             *pUniformBuffer = ubuf;
             this->uniformBuffers.push_back(ubuf);
             return true;

@@ -1,6 +1,6 @@
 #pragma once
 #include "../../base/AnthemBaseImports.h"
-
+#include "../../base/AnthemSwapChain.h"
 namespace Anthem::Core {
 
     enum AnthemImageUsage {
@@ -8,6 +8,7 @@ namespace Anthem::Core {
         AT_IU_TEXTURE = 1,
         AT_IU_COLOR_ATTACHMENT = 2,
         AT_IU_COMPUTE_OUTPUT = 3,
+        AT_IU_RAYTRACING_DEST = 4
     };
     enum AnthemImageFormat {
         AT_IF_UNDEFINED,
@@ -15,10 +16,11 @@ namespace Anthem::Core {
         AT_IF_SRGB_FLOAT32,
         AT_IF_SBGR_UINT8,
         AT_IF_R_UINT8,
+        AT_IF_SWAPCHAIN
     };
     class AnthemImageInfoProcessing {
     public:
-        static VkFormat getPendingFormat(AnthemImageFormat formatx) {
+        static VkFormat getPendingFormat(AnthemImageFormat formatx,AnthemSwapChain* swapchain = nullptr) {
             VkFormat pendingFormat = VK_FORMAT_R8G8B8A8_SRGB;
             if (formatx == AT_IF_SRGB_UINT8) {
                 pendingFormat = VK_FORMAT_R8G8B8A8_SRGB;
@@ -31,6 +33,10 @@ namespace Anthem::Core {
             }
             else if (formatx == AT_IF_R_UINT8) {
                 pendingFormat = VK_FORMAT_R8_SRGB;
+            }
+            else if (formatx == AT_IF_SWAPCHAIN) {
+                ANTH_ASSERT(swapchain != nullptr, "Empty swapchain ptr");
+                pendingFormat = *swapchain->getFormat();
             }
             else {
                 ANTH_LOGE("Unknown pending format");

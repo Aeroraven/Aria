@@ -41,7 +41,8 @@
 
 // Options
 #define AT_FEATURE_RAYTRACING_ENABLED 1
-
+#define AT_ENABLE_LOG 1 
+#define AT_LOG_IGNORE_VERBOSE 1
 
 // Backend
 #include <vulkan/vulkan.h>
@@ -83,8 +84,11 @@
 
 // Sugars
 #define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
+
 #define AT_RANGE(s,t) (std::views::iota(s,t))
-#define AT_RANGE(t) (std::views::iota(0,t))
+#define AT_RANGE(t) (std::views::iota(static_cast<decltype(t)>(0),t))
+#define AT_ALIGN(s,t) (((s)+(t)-1)&~((t)-1))
+#define AT_LOWBIT(s) ((s)&~(s))
 
 #ifdef _HAS_CXX23
     #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().classNameTrack(std::stacktrace::current().at(0).description()).c_str())
@@ -97,11 +101,8 @@
 #endif
 
 // Logger
-#define ANTH_ENABLE_LOG
-#define ANTH_LOG_IGNORE_VERBOSE
-
-#ifdef ANTH_ENABLE_LOG
-    #ifdef ANTH_LOG_IGNORE_VERBOSE
+#ifdef AT_ENABLE_LOG
+    #ifdef AT_LOG_IGNORE_VERBOSE
         #define ANTH_LOGV(...)
     #else
         #define ANTH_LOGV(...) Anthem::Core::AnthemLogger::getInstance().logv2(ANTH_CLASSNAME,std::make_tuple(__VA_ARGS__))

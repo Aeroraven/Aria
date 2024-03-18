@@ -47,20 +47,7 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->definedUsage != AT_IU_UNDEFINED,"Image usage not specified");
         ANTH_ASSERT(this->desiredFormat != AT_IF_UNDEFINED, "Image format should not be empty");
 
-        VkFormat pendingFormat;
-        if(this->desiredFormat == AT_IF_SRGB_UINT8){
-            pendingFormat = VK_FORMAT_R8G8B8A8_SRGB;
-        }else if(this->desiredFormat == AT_IF_SRGB_FLOAT32){
-            pendingFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
-        }else if(this->desiredFormat == AT_IF_SBGR_UINT8){
-            pendingFormat = VK_FORMAT_B8G8R8A8_SRGB;
-        }else if (this->desiredFormat == AT_IF_R_UINT8) {
-            pendingFormat = VK_FORMAT_R8_SRGB;
-        }
-        else {
-            ANTH_LOGE("Unknown pending format");
-            return false;
-        }
+        VkFormat pendingFormat = AnthemImageInfoProcessing::getPendingFormat(this->desiredFormat, this->swapchain);
         if (this->definedUsage == AT_IU_TEXTURE){
             
             this->createStagingBuffer();
@@ -89,6 +76,10 @@ namespace Anthem::Core{
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
             this->createSampler();
             this->image.reqStageFlags |= VK_SHADER_STAGE_COMPUTE_BIT;
+        }
+        else if (this->definedUsage == AT_IU_RAYTRACING_DEST) {
+            this->createImageInternal(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, pendingFormat, this->width, this->height, this->depth);
+            this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
         }
         return true;
     }
@@ -167,6 +158,10 @@ namespace Anthem::Core{
 
     bool AnthemImage::specifyUsage(AnthemImageUsage usage){
         this->definedUsage = usage;
+        return true;
+    }
+    bool AnthemImage::specifySwapchain(AnthemSwapChain* sc) {
+        this->swapchain = sc;
         return true;
     }
     uint32_t AnthemImage::getWidth() const{

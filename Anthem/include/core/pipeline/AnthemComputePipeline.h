@@ -4,17 +4,13 @@
 #include "../drawing/AnthemDescriptorPool.h"
 #include "./AnthemDescriptorSetEntry.h"
 #include "../utils/AnthemUtlLogicalDeviceReqBase.h"
-
+#include "./AnthemPipelineBase.h"
 namespace Anthem::Core{
-    class AnthemComputePipeline:public virtual Util::AnthemUtlLogicalDeviceReqBase{
+    class AnthemComputePipeline:public virtual AnthemPipelineBase {
     public:
         bool pipelineCreated = false;
-
         bool prerequisiteInfoSpecified = false;
-        VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
-        VkPipelineLayout pipelineLayout = {};
-        std::vector<VkDescriptorSetLayout> layouts;
-
+  
         VkPipeline pipeline = nullptr;
         VkComputePipelineCreateInfo pipelineCreateInfo = {};
         const AnthemShaderModule* shaderModule = nullptr;

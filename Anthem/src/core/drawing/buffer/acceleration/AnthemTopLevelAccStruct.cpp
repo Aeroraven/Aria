@@ -1,6 +1,10 @@
 #include "../../../../../include/core/drawing/buffer/acceleration/AnthemTopLevelAccStruct.h"
 
 namespace Anthem::Core {
+	bool AnthemTopLevelAccStruct::addInstance(std::vector<AnthemAccStructInstance*> ls) {
+		this->instances.insert(this->instances.end(), ls.begin(), ls.end());
+		return true;
+	}
 	bool AnthemTopLevelAccStruct::buildTLAS() {
 		VkAccelerationStructureBuildGeometryInfoKHR asBuildGeoInfo{};
 		std::vector<VkAccelerationStructureGeometryKHR> structGeos;

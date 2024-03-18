@@ -38,6 +38,7 @@ namespace Anthem::Core{
         AnthemImageUsage definedUsage = AT_IU_UNDEFINED;
         AnthemImageFormat desiredFormat = AT_IF_UNDEFINED;
         
+        AnthemSwapChain* swapchain = nullptr;
 
     protected: 
         uint32_t virtual calculateBufferSize() override;
@@ -50,6 +51,7 @@ namespace Anthem::Core{
             this->image.desiredLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         }
         bool specifyUsage(AnthemImageUsage usage);
+        bool specifySwapchain(AnthemSwapChain* sc);
         bool prepareImage();
         bool destroyImage();
         bool enableMipMapping();
@@ -73,5 +75,6 @@ namespace Anthem::Core{
             this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
             return true;
         }
+        
     };
 }

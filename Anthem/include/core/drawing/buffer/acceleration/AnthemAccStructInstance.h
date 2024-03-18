@@ -20,5 +20,6 @@ namespace Anthem::Core {
 		bool createInstanceInfoBuffers(AnthemBottomLevelAccStruct* bottomAs, std::vector<float> transform);
 		VkAccelerationStructureGeometryKHR getGeometry() const;
 		uint32_t getPrimitiveCounts() const;
+		uint32_t virtual calculateBufferSize() override { return 0; }
 	};
 }
