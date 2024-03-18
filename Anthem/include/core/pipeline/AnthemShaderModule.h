@@ -2,6 +2,7 @@
 #include "../base/AnthemBaseImports.h"
 #include "../utils/AnthemUtlFileReaderBase.h"
 #include "../base/AnthemLogicalDevice.h"
+#include "./AnthemShaderModuleBase.h"
 
 namespace Anthem::Core{
 
@@ -28,12 +29,14 @@ namespace Anthem::Core{
         std::optional<VkShaderModule> taskShader = std::nullopt;
     };
 
-    class AnthemShaderModule: private Util::AnthemUtlFileReaderBase{
+    class AnthemShaderModule: 
+    private Util::AnthemUtlFileReaderBase,
+    private AnthemShaderModuleBase{
     private:
         ANTH_UNIQUE_PTR(AnthemShaderModulesGroup) shaderModules = std::make_unique<AnthemShaderModulesGroup>();
     public:
         bool createShaderModules(AnthemLogicalDevice* device,const AnthemShaderFilePaths* filename); 
-        bool createSingleShaderModule(AnthemLogicalDevice* device,std::vector<char>* shaderCode,std::optional<VkShaderModule>* shaderModule);
+        
         bool destroyShaderModules(AnthemLogicalDevice* device);
         bool specifyShaderStageCreateInfo(std::vector<VkPipelineShaderStageCreateInfo>* shaderStageCreateInfo) const;
     };

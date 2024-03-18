@@ -17,3 +17,4 @@ lib/
 .vs/
 *.ttf
 imgui2/*
+ref.cpp
