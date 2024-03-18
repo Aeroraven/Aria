@@ -19,8 +19,14 @@ namespace Anthem::Core {
 
 		uint32_t vertexStride = 0;
 		uint32_t maxVertex = 0;
+		uint32_t primitiveCounts = 0;
+
+		VkAccelerationStructureGeometryKHR asGeometry = {};
 	public:
 		bool createGeometryInfoBuffers(int vertexStride, std::vector<float> vertices, std::vector<uint32_t>indices, std::vector<float>transform);
 		bool createTriangularGeometry();
+
+		VkAccelerationStructureGeometryKHR getGeometry() const;
+		uint32_t getPrimitiveCounts() const;
 	};
 }

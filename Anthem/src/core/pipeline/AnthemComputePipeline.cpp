@@ -46,15 +46,8 @@ namespace Anthem::Core{
                 ANTH_LOGE("Invalid layout type");
             }
         }
-
-        for(auto x:layouts){
-            ANTH_LOGI("Layouts Are:",(long long)(x));
-        }
-
         this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
         this->pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
-        ANTH_LOGI("Specified pipeline layout",layouts.size());
-
         //Create Layout
         auto result = vkCreatePipelineLayout(this->logicalDevice->getLogicalDevice(),&(this->pipelineLayoutCreateInfo),nullptr,&(this->pipelineLayout));
         if(result != VK_SUCCESS){

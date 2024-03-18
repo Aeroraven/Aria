@@ -7,12 +7,19 @@
 
 namespace Anthem::Core {
 	class AnthemAccelerationStruct:
-	public virtual AnthemGeneralBufferBase{
+	public virtual AnthemGeneralBufferBase,
+	public virtual Util::AnthemUtlCommandBufferReqBase{
 	protected:
 		AnthemGeneralBufferProp asBuffer;
 		VkAccelerationStructureKHR asHandle;
+		VkDeviceOrHostAddressKHR asDeviceAddr;
+
+		AnthemGeneralBufferProp scratchBuffer;
+		VkDeviceOrHostAddressKHR scratchDevice;
 
 	public:
-		bool createAccelerationStruct(uint32_t bufferSize);
+		bool createAccelerationStructBuffer(uint32_t bufferSize);
+		bool createScratchBuffer(uint32_t bufferSize);
+		VkDeviceAddress getDeviceAddress() const;
 	};
 }

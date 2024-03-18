@@ -22,6 +22,7 @@ namespace Anthem::Core{
         bool virtual bindBufferInternal(AnthemGeneralBufferProp* bufProp);
         bool virtual setupBufferBarrierInternal(VkCommandBuffer cmdBuf,AnthemGeneralBufferProp* bufProp, AnthemBufferBarrierProp* src, AnthemBufferBarrierProp* dst);
         VkDeviceAddress virtual getBufferDeviceAddress(AnthemGeneralBufferProp* bufProp);
-        bool virtual copyDataToBuffer(AnthemGeneralBufferProp* bufProp, void* data, uint32_t size, bool flush);
+        bool virtual copyDataToBufferInternal(AnthemGeneralBufferProp* bufProp, void* data, uint32_t size, bool flush);
+        bool virtual destroyBufferInternal(AnthemGeneralBufferProp* bufProp);
     };
 }

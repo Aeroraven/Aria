@@ -56,7 +56,7 @@ namespace Anthem::Core{
         bdaInfo.buffer = bufProp->buffer;
         return this->logicalDevice->vkCall_vkGetBufferDeviceAddressKHR(this->logicalDevice->getLogicalDevice(), &bdaInfo);
     }
-    bool AnthemGeneralBufferBase::copyDataToBuffer(AnthemGeneralBufferProp* bufProp, void* data, uint32_t size, bool flush) {
+    bool AnthemGeneralBufferBase::copyDataToBufferInternal(AnthemGeneralBufferProp* bufProp, void* data, uint32_t size, bool flush) {
         void* dest;
         vkMapMemory(this->logicalDevice->getLogicalDevice(), bufProp->bufferMem, 0, size, 0, &dest);
         memcpy(dest, data, size);
@@ -72,5 +72,9 @@ namespace Anthem::Core{
         vkUnmapMemory(this->logicalDevice->getLogicalDevice(), bufProp->bufferMem);
         return true;
     }
-
+    bool AnthemGeneralBufferBase::destroyBufferInternal(AnthemGeneralBufferProp* bufProp) {
+        vkFreeMemory(logicalDevice->getLogicalDevice(), bufProp->bufferMem, nullptr);
+        vkDestroyBuffer(logicalDevice->getLogicalDevice(), bufProp->buffer, nullptr);
+        return true;
+    }
 }

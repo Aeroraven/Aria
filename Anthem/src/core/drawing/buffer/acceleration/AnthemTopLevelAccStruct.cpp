@@ -1,19 +1,16 @@
-#include "../../../../../include/core/drawing/buffer/acceleration/AnthemBottomLevelAccStruct.h"
+#include "../../../../../include/core/drawing/buffer/acceleration/AnthemTopLevelAccStruct.h"
+
 namespace Anthem::Core {
-	bool AnthemBottomLevelAccStruct::addGeometry(std::vector<AnthemAccStructGeometry*> ls) {
-		this->geometries.insert(this->geometries.end(), ls.begin(), ls.end());
-		return true;
-	}
-	bool AnthemBottomLevelAccStruct::buildBLAS() {
+	bool AnthemTopLevelAccStruct::buildTLAS() {
 		VkAccelerationStructureBuildGeometryInfoKHR asBuildGeoInfo{};
 		std::vector<VkAccelerationStructureGeometryKHR> structGeos;
 		std::vector<uint32_t> primitiveCnts;
-		for (auto& p : geometries) {
+		for (auto& p : instances) {
 			structGeos.push_back(p->getGeometry());
 			primitiveCnts.push_back(p->getPrimitiveCounts());
 		}
 		asBuildGeoInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-		asBuildGeoInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+		asBuildGeoInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
 		asBuildGeoInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
 		asBuildGeoInfo.geometryCount = structGeos.size();
 		asBuildGeoInfo.pGeometries = structGeos.data();
@@ -30,19 +27,19 @@ namespace Anthem::Core {
 
 		VkAccelerationStructureCreateInfoKHR asCreateInfo{};
 		asCreateInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR;
-		asCreateInfo.buffer = this->asBuffer.buffer;
+		asCreateInfo.buffer = this->asBuffer.buffer,
 		asCreateInfo.size = asBuildSize.accelerationStructureSize;
-		asCreateInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+		asCreateInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
 
 		this->logicalDevice->vkCall_vkCreateAccelerationStructureKHR(
 			this->logicalDevice->getLogicalDevice(),
 			&asCreateInfo, nullptr, &this->asHandle
 		);
 		this->createScratchBuffer(asBuildSize.buildScratchSize);
-		
+
 		VkAccelerationStructureBuildGeometryInfoKHR asBuildGeoInfo2{};
 		asBuildGeoInfo2.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-		asBuildGeoInfo2.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+		asBuildGeoInfo2.type = VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
 		asBuildGeoInfo2.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
 		asBuildGeoInfo2.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
 		asBuildGeoInfo2.dstAccelerationStructure = this->asHandle;
@@ -59,7 +56,6 @@ namespace Anthem::Core {
 			asBuildRange->transformOffset = 0;
 			asBuildRanges.push_back(asBuildRange);
 		}
-
 		uint32_t cmdBuf;
 		this->cmdBufs->createCommandBuffer(&cmdBuf);
 		this->logicalDevice->vkCall_vkCmdBuildAccelerationStructuresKHR(
@@ -77,5 +73,6 @@ namespace Anthem::Core {
 		);
 		this->destroyBufferInternal(&this->scratchBuffer);
 		return true;
+
 	}
 }
