@@ -116,7 +116,7 @@ void initialize() {
 	float lightPos[4] = { st.lightX,150,-100,1 };
 	float ambient[4] =  { 0.1f,0.1f,0.1f,0.1f };
 	st.uniLightConf->specifyUniforms(lightPos, ambient);
-	for (auto i : ATRANGE(0, st.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	for (auto i : ATRANGE(0, st.cfg.vkcfgMaxImagesInFlight)) {
 		st.uniLightConf->updateBuffer(i);
 	}
 
@@ -260,7 +260,7 @@ void createGeometry(){
 
 void recordCommand() {
 	auto& r = st.rd;
-	for (int i = 0; i < st.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		ANTH_LOGI("Recording Command", i);
 
 		// Shadow Pass
@@ -335,7 +335,7 @@ void updateUniform() {
 	
 
 	st.uniStage->specifyUniforms(pm, vm, lm);
-	for (int i = 0; i < st.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.uniStage->updateBuffer(i);
 	}
 }
@@ -379,7 +379,7 @@ void updateUniformLights() {
 		local.columnMajorVectorization(lm[k]);
 
 		st.uniLight[k]->specifyUniforms(pm[k], vm[k], lm[k]);
-		for (int i = 0; i < st.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+		for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 			st.uniLight[k]->updateBuffer(i);
 		}
 	}

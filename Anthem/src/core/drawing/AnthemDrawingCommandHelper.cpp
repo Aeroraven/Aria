@@ -2,7 +2,7 @@
 
 namespace Anthem::Core{
     bool AnthemDrawingCommandHelper::initializeHelper(){
-        for(auto i=0;i<config->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+        for(auto i=0;i<config->vkcfgMaxImagesInFlight;i++){
             uint32_t frameCmdBufIdx;
             if(!cmdBufs->createCommandBuffer(&frameCmdBufIdx)){
                 ANTH_LOGE("Failed to request command buffer");

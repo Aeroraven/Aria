@@ -157,12 +157,12 @@ namespace Anthem::Core{
             this->windowWidth = w;
         });
 
-        if(this->config->VKCFG_ENABLE_VALIDATION_LAYERS){
+        if(this->config->vkcgEnableValidationLayers){
             this->validationLayer->fillingPointerData(this->instance->getCreateInfoPNext());
             this->validationLayer->createDebugMsgLayer(this->instance->getInstance());
         }
-        this->windowHeight = this->config->APP_RESLOUTION_H;
-        this->windowWidth = this->config->APP_RESLOUTION_W;
+        this->windowHeight = this->config->appcfgResolutionHeight;
+        this->windowWidth = this->config->appcfgResolutionWidth;
 
         //Step2. Create Window Surface
         this->windowSurface->createWindowSurface(this->instance->getInstance());
@@ -182,6 +182,7 @@ namespace Anthem::Core{
         this->logicalDevice->preparePFNs();
 
         //Step5. Prepare Swapchain
+        this->swapChain->setSrgbPreference(this->config->vkcfgPreferSrgbImagePresentation);
         this->swapChain->specifySwapChainDetails(this->phyDevice.get(),this->instance->getWindow());
         this->swapChain->createSwapChain(this->logicalDevice.get(),this->phyDevice.get());
         this->swapChain->retrieveSwapChainImages(this->logicalDevice.get());
@@ -222,12 +223,12 @@ namespace Anthem::Core{
     bool AnthemSimpleToyRenderer::createDescriptorPool(AnthemDescriptorPool** pDescPool){
         auto descriptorPool = new AnthemDescriptorPool();
         descriptorPool->specifyLogicalDevice(this->logicalDevice.get());
-        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&(this->uniformDescPoolIdx));
-        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ,&(this->imageDescPoolIdx));
-        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &(this->ssboDescPoolIdx));
-        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &(this->storageImgDescPoolIdx));
+        descriptorPool->createDescriptorPool(this->config->vkcfgMaxImagesInFlight,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,&(this->uniformDescPoolIdx));
+        descriptorPool->createDescriptorPool(this->config->vkcfgMaxImagesInFlight, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ,&(this->imageDescPoolIdx));
+        descriptorPool->createDescriptorPool(this->config->vkcfgMaxImagesInFlight, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &(this->ssboDescPoolIdx));
+        descriptorPool->createDescriptorPool(this->config->vkcfgMaxImagesInFlight, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &(this->storageImgDescPoolIdx));
 #ifdef AT_FEATURE_RAYTRACING_ENABLED
-        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, &(this->asPoolIdx));
+        descriptorPool->createDescriptorPool(this->config->vkcfgMaxImagesInFlight, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, &(this->asPoolIdx));
 #endif
         *pDescPool = descriptorPool;
         this->descriptorPools.push_back(descriptorPool);
@@ -408,7 +409,7 @@ namespace Anthem::Core{
         
         //Prepare Descriptor Sets
         for(const auto& p:descriptorPools){
-            p->createDescriptorSet(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
+            p->createDescriptorSet(this->config->vkcfgMaxImagesInFlight);
         }
         return true;
     }

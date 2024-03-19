@@ -311,7 +311,7 @@ namespace Anthem::Core{
             auto ubuf = new AnthemUniformBufferImpl<AnthemUBDesc<T,Rk,Sz,ArrSz>...>();
             ubuf->specifyLogicalDevice(this->logicalDevice.get());
             ubuf->specifyPhyDevice(this->phyDevice.get());
-            ubuf->createBuffer(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
+            ubuf->createBuffer(this->config->vkcfgMaxImagesInFlight);
 
             //Allocate Descriptor Set
             if (descId == -1) {
@@ -335,7 +335,7 @@ namespace Anthem::Core{
             ssbo->specifyCommandBuffers(this->commandBuffers.get());
             ssbo->specifyLogicalDevice(this->logicalDevice.get());
             ssbo->specifyPhyDevice(this->phyDevice.get());
-            ssbo->specifyNumCopies(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT);
+            ssbo->specifyNumCopies(this->config->vkcfgMaxImagesInFlight);
             ssbo->setTotalElements(totSize);
             ssbo->specifyUsage(AnthemSSBOUsage::AT_ASBU_VERTEX);
             if (dataPrepareProc.has_value()) {

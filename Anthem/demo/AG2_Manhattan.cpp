@@ -96,7 +96,7 @@ inline std::string getShader(auto x) {
 }
 
 void prepareCore() {
-	core.cfg.APP_NAME = "Anthem [AG2_Manhattan]";
+	core.cfg.appName = "Anthem [AG2_Manhattan]";
 	core.renderer.setConfig(&core.cfg);
 	core.renderer.initialize();
 }
@@ -149,7 +149,7 @@ void setupComputePipeline() {
 		&expParam.rectH,
 		&expParam.rectW
 	);
-	for (int i : std::views::iota(0,core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	for (int i : std::views::iota(0,core.cfg.vkcfgMaxImagesInFlight)) {
 		comp.uniform->updateBuffer(i);
 	}
 
@@ -173,15 +173,15 @@ void setupComputePipeline() {
 	core.renderer.createComputePipelineCustomized(&comp.pipeline, vct, comp.shader);
 
 	// Allocate Command Buffers
-	comp.computeCmdBufIdx = new uint32_t[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	comp.computeCmdBufIdx = new uint32_t[core.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : std::ranges::views::iota(0, core.cfg.vkcfgMaxImagesInFlight)) {
 		core.renderer.drAllocateCommandBuffer(&comp.computeCmdBufIdx[i]);
 	}
 
 	// Create Sync Objects
-	comp.computeProgress = new AnthemFence * [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	comp.computeDone = new AnthemSemaphore * [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	comp.computeProgress = new AnthemFence * [core.cfg.vkcfgMaxImagesInFlight];
+	comp.computeDone = new AnthemSemaphore * [core.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : std::ranges::views::iota(0, core.cfg.vkcfgMaxImagesInFlight)) {
 		core.renderer.createFence(&comp.computeProgress[i]);
 		core.renderer.createSemaphore(&comp.computeDone[i]);
 	}
@@ -307,7 +307,7 @@ void recordCommandBufferDrw(int i) {
 
 void recordCommandBufferAll() {
 	auto& renderer = core.renderer;
-	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < core.cfg.vkcfgMaxImagesInFlight; i++) {
 		renderer.drStartCommandRecording(comp.computeCmdBufIdx[i]);
 		ANTH_LOGI("Start Recording:", comp.computeCmdBufIdx[i]);
 		recordCommandBufferComp(i);

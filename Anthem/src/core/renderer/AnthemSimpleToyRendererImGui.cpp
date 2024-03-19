@@ -103,9 +103,9 @@ namespace Anthem::Core {
         ImGui_ImplVulkan_Init(&init_info, g_RenderPass);
 
         // Sync & Rd
-        this->g_CommandBufferIdx = new uint32_t[this->config->VKCFG_MAX_IMAGES_IN_FLIGHT];
-        this->g_RenderComplete = new AnthemSemaphore * [this->config->VKCFG_MAX_IMAGES_IN_FLIGHT];
-        for (int i = 0; i < this->config->VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+        this->g_CommandBufferIdx = new uint32_t[this->config->vkcfgMaxImagesInFlight];
+        this->g_RenderComplete = new AnthemSemaphore * [this->config->vkcfgMaxImagesInFlight];
+        for (int i = 0; i < this->config->vkcfgMaxImagesInFlight; i++) {
             this->drAllocateCommandBuffer(&this->g_CommandBufferIdx[i]);
             this->createSemaphore(&this->g_RenderComplete[i]);
         }

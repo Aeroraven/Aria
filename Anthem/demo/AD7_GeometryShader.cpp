@@ -135,7 +135,7 @@ void recordCommandsStage(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, St
     renderer.drEndRenderPass(i);
 }
 void recordCommandsAll(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, StagePass& target){
-    for(int i=0;i<cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+    for(int i=0;i<cfg->vkcfgMaxImagesInFlight;i++){
         renderer.drClearCommands(i);
         renderer.drStartCommandRecording(i);
         recordCommandsStage(cfg, renderer, target,i);

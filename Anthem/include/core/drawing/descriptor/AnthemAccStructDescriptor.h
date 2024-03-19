@@ -106,6 +106,9 @@ namespace Anthem::Core {
                 }
             }
 
+            descWriteASEx.reserve(numSets * static_cast<uint32_t>(this->accStructs.size()));
+            descWriteASEx.resize(numSets * static_cast<uint32_t>(this->accStructs.size()));
+            uint32_t fvp = 0;
             for (uint32_t i = 0; i < numSets; i++) {
                 for (uint32_t j = 0; j < static_cast<uint32_t>(this->accStructs.size()); j++) {
 
@@ -113,11 +116,11 @@ namespace Anthem::Core {
                     tpx.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
                     tpx.accelerationStructureCount = accStructs.at(j).handles.size();
                     tpx.pAccelerationStructures = accStructs.at(j).handles.data();
-                    descWriteASEx.push_back(std::move(tpx));
+                    descWriteASEx[fvp] = std::move(tpx);
 
                     VkWriteDescriptorSet descCp = {};
                     descCp.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                    descCp.pNext = &descWriteASEx[-1];
+                    descCp.pNext = &descWriteASEx[fvp++];
                     descCp.dstSet = descriptorSetsAS.at(i);
                     descCp.dstBinding = accStructs.at(j).bindLoc;
                     descCp.dstArrayElement = 0;

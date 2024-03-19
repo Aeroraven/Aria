@@ -104,6 +104,7 @@ namespace Anthem::Core{
         ANTH_LOGI("Chosen Hardaware: ",std::get<3>(chosenDevice));
         this->physicalDevice = std::get<1>(chosenDevice);
         this->physicalDeviceQueueFamily = std::get<2>(chosenDevice);
+
         return true;
     }
     const std::vector<const char*>* const AnthemPhyDeviceSelector::getRequiredDevSupportedExts() const{

@@ -355,7 +355,7 @@ void recordCommandsAll(){
     auto& target = offscreenPass;
     auto& renderer = shared.renderer;
     auto& cfg = shared.config;
-    for(int i=0;i<cfg.VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+    for(int i=0;i<cfg.vkcfgMaxImagesInFlight;i++){
         renderer.drClearCommands(i);
         renderer.drStartCommandRecording(i);
         recordCommandsShadowCalcStage(i);

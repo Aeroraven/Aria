@@ -23,13 +23,15 @@ namespace Anthem::Core {
         return &(this->pipeline);
     }
      
-    bool AnthemRayTracingPipeline::createPipeline() {
-        pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    bool AnthemRayTracingPipeline::createPipeline(){
+        auto shaderStages = this->shaderModule->getShaderStages();
+        auto shaderGroups = this->shaderModule->getShaderGroups();
+        pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
         pipelineCreateInfo.layout = this->pipelineLayout;
-        pipelineCreateInfo.stageCount = this->shaderModule->getShaderStages().size();
-        pipelineCreateInfo.pStages = this->shaderModule->getShaderStages().data();
-        pipelineCreateInfo.groupCount = this->shaderModule->getShaderGroups().size();
-        pipelineCreateInfo.pGroups = this->shaderModule->getShaderGroups().data();
+        pipelineCreateInfo.stageCount = shaderStages.size();
+        pipelineCreateInfo.pStages = shaderStages.data();
+        pipelineCreateInfo.groupCount = shaderGroups.size();
+        pipelineCreateInfo.pGroups = shaderGroups.data();
         pipelineCreateInfo.layout = this->pipelineLayout;
         pipelineCreateInfo.maxPipelineRayRecursionDepth = rayRecursion;
 
@@ -62,9 +64,13 @@ namespace Anthem::Core {
         ANTH_ASSERT(result == VK_SUCCESS, "Failed to create SBT");
         const VkBufferUsageFlags bufferUsageFlags = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
         const VkMemoryPropertyFlags memoryUsageFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        VkMemoryAllocateFlagsInfo allocFlags{};
+        allocFlags.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+        allocFlags.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
         for (auto i : AT_RANGE2(shaderGroups.size())) {
             AnthemGeneralBufferProp prop;
-            this->createBufferInternalUt(this->logicalDevice, this->phyDevice, &prop, bufferUsageFlags, memoryUsageFlags, nullptr, this->handleSize);
+            this->createBufferInternalUt(this->logicalDevice, this->phyDevice, &prop, bufferUsageFlags, memoryUsageFlags,
+                &allocFlags, this->handleSize);
             this->copyDataToBufferInternalUt(this->logicalDevice, &prop,
                 shaderHandleStorage.data() + i * this->handleSizeAligned, this->handleSize, true);
             this->bindingTableBuffer.push_back(prop);

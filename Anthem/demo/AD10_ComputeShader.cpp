@@ -128,15 +128,15 @@ void prepareCompute() {
     renderer.createDescriptorPool(&comp.descPoolUniform);
 
     ANTH_LOGI("Allocating Command Buffer");
-    comp.allocCmdBuf = new std::remove_pointer_t<decltype(comp.allocCmdBuf)>[shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT];
-    for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+    comp.allocCmdBuf = new std::remove_pointer_t<decltype(comp.allocCmdBuf)>[shared.config.vkcfgMaxImagesInFlight];
+    for (int i = 0; i < shared.config.vkcfgMaxImagesInFlight; i++) {
         renderer.drAllocateCommandBuffer(&comp.allocCmdBuf[i]);
     }
 
     ANTH_LOGI("Creating Sync Fence");
-    comp.computeInFlight = new std::remove_pointer_t<decltype(comp.computeInFlight)>[shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT];
-    comp.computeFinish = new std::remove_pointer_t<decltype(comp.computeFinish)>[shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT];
-    for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+    comp.computeInFlight = new std::remove_pointer_t<decltype(comp.computeInFlight)>[shared.config.vkcfgMaxImagesInFlight];
+    comp.computeFinish = new std::remove_pointer_t<decltype(comp.computeFinish)>[shared.config.vkcfgMaxImagesInFlight];
+    for (int i = 0; i < shared.config.vkcfgMaxImagesInFlight; i++) {
         renderer.createFence(&comp.computeInFlight[i]);
         renderer.createSemaphore(&comp.computeFinish[i]);
     }
@@ -153,7 +153,7 @@ void prepareCompute() {
     renderer.createUniformBuffer(&comp.ubuf, 0, comp.descPoolUniform);
     float ubufData = 0.0005;
     comp.ubuf->specifyUniforms(&ubufData);
-    for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT;i++) {
+    for (int i = 0; i < shared.config.vkcfgMaxImagesInFlight;i++) {
         comp.ubuf->updateBuffer(i);
     }
     
@@ -217,7 +217,7 @@ void recordCommandBufferComp(int i) {
 
 void recordCommandBufferCompAll() {
     auto& renderer = shared.renderer;
-    for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+    for (int i = 0; i < shared.config.vkcfgMaxImagesInFlight; i++) {
         renderer.drStartCommandRecording(comp.allocCmdBuf[i]);
         ANTH_LOGI("Start Recording:", comp.allocCmdBuf[i]);
         recordCommandBufferComp(i);
@@ -227,7 +227,7 @@ void recordCommandBufferCompAll() {
 
 void recordCommandBufferAll() {
     auto& renderer = shared.renderer;
-    for (int i = 0; i < shared.config.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+    for (int i = 0; i < shared.config.vkcfgMaxImagesInFlight; i++) {
         renderer.drStartCommandRecording(i);
         recordCommandBufferDrw(i);
         renderer.drEndCommandRecording(i);

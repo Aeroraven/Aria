@@ -16,9 +16,6 @@ namespace Anthem::Core {
         uint32_t rayRecursion = 1;
         bool pipelineCreated = false;
         bool prerequisiteInfoSpecified = false;
-        VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
-        VkPipelineLayout pipelineLayout = {};
-        std::vector<VkDescriptorSetLayout> layouts;
 
         VkPipeline pipeline = nullptr;
         VkRayTracingPipelineCreateInfoKHR pipelineCreateInfo = {};

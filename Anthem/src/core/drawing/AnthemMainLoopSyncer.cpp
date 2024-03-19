@@ -11,13 +11,13 @@ namespace Anthem::Core{
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for(auto i=0;i<this->config->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+        for(auto i=0;i<this->config->vkcfgMaxImagesInFlight;i++){
             this->inFlightFence.push_back(VK_NULL_HANDLE);
             this->imageAvailableSp.push_back(VK_NULL_HANDLE);
             this->drawFinishedSp.push_back(VK_NULL_HANDLE);
         }
 
-        for(auto i=0;i<this->config->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+        for(auto i=0;i<this->config->vkcfgMaxImagesInFlight;i++){
             auto inFlightCreatRes = vkCreateFence(this->logicalDevice->getLogicalDevice(),&fenceInfo,nullptr,&this->inFlightFence.at(i));
             auto imageAvailableCreatRes = vkCreateSemaphore(this->logicalDevice->getLogicalDevice(),&semaphoreInfo,nullptr,&this->imageAvailableSp.at(i));
             auto drawFinishedCreatRes = vkCreateSemaphore(this->logicalDevice->getLogicalDevice(),&semaphoreInfo,nullptr,&this->drawFinishedSp.at(i));
@@ -37,7 +37,7 @@ namespace Anthem::Core{
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         ANTH_ASSERT(this->syncObjectAvailable,"Sync objects not created");
         ANTH_LOGV("Destroying sync objects");
-        for(auto i=0;i<this->config->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+        for(auto i=0;i<this->config->vkcfgMaxImagesInFlight;i++){
             vkDestroySemaphore(this->logicalDevice->getLogicalDevice(),this->imageAvailableSp.at(i),nullptr);
             vkDestroySemaphore(this->logicalDevice->getLogicalDevice(),this->drawFinishedSp.at(i),nullptr);
             vkDestroyFence(this->logicalDevice->getLogicalDevice(),this->inFlightFence.at(i),nullptr);

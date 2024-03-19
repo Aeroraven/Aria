@@ -289,7 +289,7 @@ void updateTextPipeUniform() {
 		local.columnMajorVectorization(localRaw);
 
 		textPipe.strings[i].uBuf->specifyUniforms(projRaw, viewRaw, localRaw);
-		for (auto j : std::ranges::iota_view(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+		for (auto j : std::ranges::iota_view(0, core.cfg.vkcfgMaxImagesInFlight)) {
 			textPipe.strings[i].uBuf->updateBuffer(j);
 		}
 	}
@@ -418,15 +418,15 @@ void prepareComputePipeline() {
 	core.renderer.createComputePipelineCustomized(&comp.pipeline, vct, comp.shader);
 
 	// Allocate Command Buffers
-	comp.computeCmdBufIdx = new uint32_t[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	for (auto i : std::ranges::views::iota(0,core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	comp.computeCmdBufIdx = new uint32_t[core.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : std::ranges::views::iota(0,core.cfg.vkcfgMaxImagesInFlight)) {
 		core.renderer.drAllocateCommandBuffer(&comp.computeCmdBufIdx[i]);
 	}
 
 	// Create Sync Objects
-	comp.computeProgress = new AnthemFence*[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	comp.computeDone = new AnthemSemaphore*[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	for (auto i : std::ranges::views::iota(0,core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	comp.computeProgress = new AnthemFence*[core.cfg.vkcfgMaxImagesInFlight];
+	comp.computeDone = new AnthemSemaphore*[core.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : std::ranges::views::iota(0,core.cfg.vkcfgMaxImagesInFlight)) {
 		core.renderer.createFence(&comp.computeProgress[i]);
 		core.renderer.createSemaphore(&comp.computeDone[i]);
 	}
@@ -455,7 +455,7 @@ void updateCompUniform() {
 	float translationFirst = ExpParams::translationFirst;
 	comp.uniform->specifyUniforms(&ExpParams::centerTranslation[0], &ExpParams::rotationAxis[0], &ExpParams::moveFocal, &selAngleId, &translationFirst,
 		&ExpParams::moveDistance, &ExpParams::rectW, &ExpParams::rectH, &ExpParams::rotExtZ);
-	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < core.cfg.vkcfgMaxImagesInFlight; i++) {
 		comp.uniform->updateBuffer(i);
 	}
 }
@@ -572,14 +572,14 @@ void prepareVisualization() {
 	core.renderer.createGraphicsPipelineCustomized(&vis.pipelinePoint, descSetEntriesRegPipeline, {}, vis.renderPass, vis.shader,
 		comp.samples, &vis.cpropPoint);
 
-	vis.pointVisCmdBuf = new uint32_t[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	vis.pointVisCmdBuf = new uint32_t[core.cfg.vkcfgMaxImagesInFlight];
+	for (int i = 0; i < core.cfg.vkcfgMaxImagesInFlight; i++) {
 		core.renderer.drAllocateCommandBuffer(&vis.pointVisCmdBuf[i]);
 	}
 
 	// Create Sync
-	vis.firstStageDone = new AnthemSemaphore * [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	vis.firstStageDone = new AnthemSemaphore * [core.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : std::ranges::views::iota(0, core.cfg.vkcfgMaxImagesInFlight)) {
 		core.renderer.createSemaphore(&vis.firstStageDone[i]);
 	}
 }
@@ -623,9 +623,9 @@ void prepareTextVis() {
 		textPipe.strings[0].vxBuf, &textPipe.cprop);
 
 	// Create Sync
-	textPipe.fontCmdBuf = new uint32_t[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	textPipe.drawAvailable = new AnthemSemaphore*[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	for (auto i : std::ranges::views::iota(0,core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	textPipe.fontCmdBuf = new uint32_t[core.cfg.vkcfgMaxImagesInFlight];
+	textPipe.drawAvailable = new AnthemSemaphore*[core.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : std::ranges::views::iota(0,core.cfg.vkcfgMaxImagesInFlight)) {
 		core.renderer.drAllocateCommandBuffer(&textPipe.fontCmdBuf[i]);
 		core.renderer.createSemaphore(&textPipe.drawAvailable[i]);
 	}
@@ -716,16 +716,16 @@ void prepareAxisVis() {
 	core.renderer.createGraphicsPipelineCustomized(&axis.pipeline, descSetEntriesRegPipeline, {}, axis.renderPass, axis.shader,
 		axis.vxBuf, &axis.cprop);
 
-	axis.drawProgress = new AnthemFence * [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	axis.drawAvailable = new AnthemSemaphore* [core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	axis.drawProgress = new AnthemFence * [core.cfg.vkcfgMaxImagesInFlight];
+	axis.drawAvailable = new AnthemSemaphore* [core.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : std::ranges::views::iota(0, core.cfg.vkcfgMaxImagesInFlight)) {
 		core.renderer.createFence(&axis.drawProgress[i]);
 		core.renderer.createSemaphore(&axis.drawAvailable[i]);
 	}
 
 	// Allocate Command Buffers
-	axis.axisCmdBuf = new uint32_t[core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT];
-	for (auto i : std::ranges::views::iota(0, core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	axis.axisCmdBuf = new uint32_t[core.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : std::ranges::views::iota(0, core.cfg.vkcfgMaxImagesInFlight)) {
 		core.renderer.drAllocateCommandBuffer(&axis.axisCmdBuf[i]);
 	}
 }
@@ -857,7 +857,7 @@ void recordCommandBufferComp(int i) {
 
 void recordCommandBufferCompAll() {
 	auto& renderer = core.renderer;
-	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < core.cfg.vkcfgMaxImagesInFlight; i++) {
 		renderer.drStartCommandRecording(comp.computeCmdBufIdx[i]);
 		ANTH_LOGI("Start Recording:", comp.computeCmdBufIdx[i]);
 		recordCommandBufferComp(i);
@@ -867,7 +867,7 @@ void recordCommandBufferCompAll() {
 
 void recordCommandBufferAll() {
 	auto& renderer = core.renderer;
-	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < core.cfg.vkcfgMaxImagesInFlight; i++) {
 
 		renderer.drStartCommandRecording(i);
 		recordCommandBufferDrw(i);

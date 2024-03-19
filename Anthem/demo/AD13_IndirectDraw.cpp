@@ -187,13 +187,13 @@ void updateUniform() {
 
 	stage.ubuf->specifyUniforms(pm, vm, lm);
 
-	for (int i = 0; i < stage.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < stage.cfg.vkcfgMaxImagesInFlight; i++) {
 		stage.ubuf->updateBuffer(i);
 	}
 }
 
 void recordCommand() {
-	for (int i = 0; i < stage.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < stage.cfg.vkcfgMaxImagesInFlight; i++) {
 		ANTH_LOGI("Recording Command", i);
 		stage.renderer.drStartCommandRecording(i);
 		stage.renderer.drStartRenderPass(stage.renderPass,

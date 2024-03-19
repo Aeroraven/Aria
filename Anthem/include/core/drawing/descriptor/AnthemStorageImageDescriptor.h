@@ -90,7 +90,7 @@ namespace Anthem::Core {
                     for (uint32_t k = 0; k < storageImgDesc.at(j).imageInfo.size(); k++) {
                         storageImgDesc.at(j).imageInfo[k].imageLayout = storageImgDesc.at(j).img[k]->getDesiredLayout();
                         storageImgDesc.at(j).imageInfo[k].imageView = *(storageImgDesc.at(j).img[k]->getImageView());
-                        storageImgDesc.at(j).imageInfo[k].sampler = *(storageImgDesc.at(j).img[k]->getSampler());
+                        storageImgDesc.at(j).imageInfo[k].sampler = VK_NULL_HANDLE;  //*(storageImgDesc.at(j).img[k]->getSampler());
                     }
 
                     VkWriteDescriptorSet descCp = {};

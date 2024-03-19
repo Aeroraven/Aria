@@ -80,6 +80,7 @@ namespace Anthem::Core{
         else if (this->definedUsage == AT_IU_RAYTRACING_DEST) {
             this->createImageInternal(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, pendingFormat, this->width, this->height, this->depth);
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
+            this->image.reqStageFlags |= VK_SHADER_STAGE_RAYGEN_BIT_KHR;
         }
         return true;
     }

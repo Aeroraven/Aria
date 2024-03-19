@@ -8,19 +8,18 @@ namespace Anthem::Core {
         for (const auto& p : entry) {
             if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER) {
                 p.descPool->appendSamplerDescriptorLayoutIdx(&layouts, p.inTypeIndex);
-                ANTH_LOGI("Sampler:", p.inTypeIndex);
             }
             else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER) {
                 p.descPool->appendUniformDescriptorLayoutIdx(&layouts, p.inTypeIndex);
-                ANTH_LOGI("Uniform:", p.inTypeIndex);
             }
             else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SHADER_STORAGE_BUFFER) {
                 p.descPool->appendSsboDescriptorLayoutIdx(&layouts, p.inTypeIndex);
-                ANTH_LOGI("SSBO:", p.inTypeIndex);
             }
             else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_STORAGE_IMAGE) {
                 p.descPool->appendStorageImageDescriptorLayoutIdx(&layouts, p.inTypeIndex);
-
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_ACC_STRUCT) {
+                p.descPool->appendAccStructDescriptorLayoutIdx(&layouts, p.inTypeIndex);
             }
             else {
                 ANTH_LOGE("Invalid layout type");

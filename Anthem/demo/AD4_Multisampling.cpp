@@ -216,7 +216,7 @@ int main(){
     renderer->registerPipelineSubComponents();
 
     ANTH_LOGI("Start Rec Commands");
-    for(int i=0;i<cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+    for(int i=0;i<cfg->vkcfgMaxImagesInFlight;i++){
         renderer->drStartCommandRecording(i);
         recordCommandsOffscreen(cfg.get(),*renderer.get(),offscr,i);
         renderer->drEndCommandRecording(i);

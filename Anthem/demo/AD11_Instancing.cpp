@@ -96,7 +96,7 @@ void recordCommandBufferDrw(int i) {
 
 void recordCommandBufferAll() {
 	auto& renderer = core.renderer;
-	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < core.cfg.vkcfgMaxImagesInFlight; i++) {
 		renderer.drStartCommandRecording(i);
 		recordCommandBufferDrw(i);
 		renderer.drEndCommandRecording(i);

@@ -98,8 +98,6 @@ namespace Anthem::Core{
         createInfo.imageExtent = this->scExtent;
         createInfo.imageArrayLayers = 1;
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-        ANTH_TODO("Add image usage support!!!!!!!!");
         if(phyDevice->getPhyQueueGraphicsFamilyIndice() != phyDevice->getPhyQueuePresentFamilyIndice()){
             uint32_t queueFamilyIndices[] = {phyDevice->getPhyQueueGraphicsFamilyIndice().value(),phyDevice->getPhyQueuePresentFamilyIndice().value()};
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;

@@ -341,7 +341,7 @@ void recordCommandsTarget(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, A
 }
 
 void recordCommandsAll(AnthemConfig* cfg,AnthemSimpleToyRenderer& renderer, DeferPass& offscreen,AOPass& target){
-    for(int i=0;i<cfg->VKCFG_MAX_IMAGES_IN_FLIGHT;i++){
+    for(int i=0;i<cfg->vkcfgMaxImagesInFlight;i++){
         renderer.drClearCommands(i);
         renderer.drStartCommandRecording(i);
         ANTH_LOGI("First");

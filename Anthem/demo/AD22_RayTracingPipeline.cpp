@@ -56,6 +56,7 @@ inline std::string getShader(auto x) {
 }
 
 void initialize() {
+	st.cfg.vkcfgPreferSrgbImagePresentation = false;
 	st.rd.setConfig(&st.cfg);
 	st.rd.initialize();
 
@@ -120,7 +121,7 @@ void createUniformBuffer() {
 	view.columnMajorVectorization(vm);
 
 	st.uniformBuffer->specifyUniforms(pm, vm);
-	for (int i = 0; i < st.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.uniformBuffer->updateBuffer(i);
 	}
 }
@@ -138,7 +139,7 @@ void createPipeline() {
 }
 
 void recordCommands() {
-	for (auto i : AT_RANGE2(st.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT)) {
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.rd.drStartCommandRecording(i);
 		// Ray Tracing
 		st.rd.drBindRayTracingPipeline(st.pipeline, i);
@@ -177,6 +178,8 @@ int main() {
 	createPipeline();
 
 	st.rd.registerPipelineSubComponents();
+	recordCommands();
+
 	st.rd.setDrawFunction(mainLoop);
 	st.rd.startDrawLoopDemo();
 

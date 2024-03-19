@@ -74,6 +74,12 @@ namespace Anthem::Core{
         extRtPipe.rayTracingPipeline = VK_TRUE;
         appendFeatureEnabler(&extRtPipe);
 #endif
+#ifdef VK_KHR_ray_query
+        VkPhysicalDeviceRayQueryFeaturesKHR extRayQuery = {};
+        extRayQuery.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR;
+        extRayQuery.rayQuery = VK_TRUE;
+        appendFeatureEnabler(&extRayQuery);
+#endif
 #endif
 
         auto res = vkCreateDevice(phyDevice->getPhysicalDevice(), &createInfo, nullptr, &logicalDevice);

@@ -24,12 +24,14 @@ namespace Anthem::Core{
 
         bool reqInfoSpecified = false;
         bool swapChainImageRetrieved = false;
+        bool preferSrgbColor = false;
 
         std::vector<VkImage> swapChainImages;
         std::vector<VkImageView> swapChainImageViews;
 
     public:
         AnthemSwapChain(AnthemWindowSurface* windowSurface);
+        bool virtual setSrgbPreference(bool preference);
         bool virtual prepareSwapChainInfo(VkPhysicalDevice phyDevice,AnthemSwapChainDetails& outDetails);
         bool virtual specifySwapChainDetails(AnthemPhyDevice* phyDevice,const GLFWwindow* window);
         bool virtual createSwapChain(AnthemLogicalDevice* device,AnthemPhyDevice* phyDevice);

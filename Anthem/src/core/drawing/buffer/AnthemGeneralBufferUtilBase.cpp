@@ -42,13 +42,13 @@ namespace Anthem::Core{
     }
     bool AnthemGeneralBufferUtilBase::copyDataToBufferInternalUt(const AnthemLogicalDevice* logicalDevice, AnthemGeneralBufferProp* bufProp, void* data, uint32_t size, bool flush) const {
         void* dest;
-        vkMapMemory(logicalDevice->getLogicalDevice(), bufProp->bufferMem, 0, size, 0, &dest);
+        vkMapMemory(logicalDevice->getLogicalDevice(), bufProp->bufferMem, 0, VK_WHOLE_SIZE, 0, &dest);
         memcpy(dest, data, size);
         if (flush) {
             VkMappedMemoryRange range{};
             range.memory = bufProp->bufferMem;
             range.offset = 0;
-            range.size = size;
+            range.size = VK_WHOLE_SIZE;
             range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
             auto result = vkFlushMappedMemoryRanges(logicalDevice->getLogicalDevice(), 1, &range);
             ANTH_ASSERT(result == VK_SUCCESS, "Failed to flush memory:", result);

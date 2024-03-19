@@ -20,8 +20,8 @@ namespace Anthem::Core{
     }
     bool AnthemInstance::createWindow(){
         ANTH_ASSERT(config != nullptr, "Config not specified");
-        auto w = config->APP_RESLOUTION_W;
-        auto h = config->APP_RESLOUTION_H;
+        auto w = config->appcfgResolutionWidth;
+        auto h = config->appcfgResolutionHeight;
         ANTH_LOGI("Creating window with width ",w," and height ",h);
         if(glfwInit()==GLFW_FALSE){
             ANTH_LOGI("Failed to initialize GLFW");
@@ -29,7 +29,7 @@ namespace Anthem::Core{
         }
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        this->window = glfwCreateWindow(w, h, config->APP_NAME, NULL, NULL);
+        this->window = glfwCreateWindow(w, h, config->appName, NULL, NULL);
 
         if(window==nullptr){
             ANTH_LOGI("Failed to create window");
@@ -69,9 +69,9 @@ namespace Anthem::Core{
             return false;
         }
         this->appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        this->appInfo.pApplicationName = config->APP_NAME;
+        this->appInfo.pApplicationName = config->appName;
         this->appInfo.applicationVersion = VK_MAKE_VERSION(1,0,0);
-        this->appInfo.pEngineName = config->ENGINE_NAME;
+        this->appInfo.pEngineName = config->engineName;
         this->appInfo.engineVersion = VK_MAKE_VERSION(1,0,0);
         this->appInfo.apiVersion = VK_API_VERSION_1_2;
 
@@ -82,9 +82,9 @@ namespace Anthem::Core{
         this->createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         this->createInfo.ppEnabledExtensionNames = extensions.data();
 
-        if(config->VKCFG_ENABLE_VALIDATION_LAYERS){
-            this->createInfo.enabledLayerCount = static_cast<uint32_t>(config->VKCFG_VALIDATION_LAYERS.size());
-            this->createInfo.ppEnabledLayerNames = config->VKCFG_VALIDATION_LAYERS.data();
+        if(config->vkcgEnableValidationLayers){
+            this->createInfo.enabledLayerCount = static_cast<uint32_t>(config->vkcfgValidationLayers.size());
+            this->createInfo.ppEnabledLayerNames = config->vkcfgValidationLayers.data();
         }else{
             this->createInfo.enabledLayerCount = 0;
         }
@@ -108,7 +108,7 @@ namespace Anthem::Core{
         const char** glfwExtensions;
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
         std::vector<const char*> extensions(glfwExtensions,glfwExtensions+glfwExtensionCount);
-        if(config->VKCFG_ENABLE_VALIDATION_LAYERS){
+        if(config->vkcgEnableValidationLayers){
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
         extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);

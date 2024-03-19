@@ -2,14 +2,14 @@
 
 namespace Anthem::Core{
     bool AnthemValLayer::checkValidLayerSupport(){
-        if(cfg->VKCFG_ENABLE_VALIDATION_LAYERS==false){
+        if(cfg->vkcgEnableValidationLayers==false){
             return true;
         }
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
         std::vector<VkLayerProperties> availableLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-        for(const char* layerName : cfg->VKCFG_VALIDATION_LAYERS){
+        for(const char* layerName : cfg->vkcfgValidationLayers){
             bool layerFound = false;
             for(const auto& layerProperties : availableLayers){
                 if(strcmp(layerName, layerProperties.layerName)==0){
@@ -25,7 +25,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemValLayer::destroyDebugMsgLayer(const VkInstance* instance){
-        if(!cfg->VKCFG_ENABLE_VALIDATION_LAYERS){
+        if(!cfg->vkcgEnableValidationLayers){
             return true;
         }
         auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT");
@@ -39,7 +39,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemValLayer::createDebugMsgLayer(const VkInstance* instance){
-        if(!cfg->VKCFG_ENABLE_VALIDATION_LAYERS){
+        if(!cfg->vkcgEnableValidationLayers){
             return true;
         }
         auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT");
@@ -52,14 +52,14 @@ namespace Anthem::Core{
         }
     }
     bool AnthemValLayer::fillingPointerData(const void** p){
-        if(!cfg->VKCFG_ENABLE_VALIDATION_LAYERS){
+        if(!cfg->vkcgEnableValidationLayers){
             return true;
         }
         *p = &debugCreateInfo;
         return true;
     }
     bool AnthemValLayer::createDebugMsgLayerInfo(){
-        if(!cfg->VKCFG_ENABLE_VALIDATION_LAYERS){
+        if(!cfg->vkcgEnableValidationLayers){
             return true;
         }
         debugCreateInfo = {};

@@ -203,7 +203,7 @@ void createCube() {
 }
 
 void recordCube() {
-	for (int i = 0; i < core.cfg.VKCFG_MAX_IMAGES_IN_FLIGHT; i++) {
+	for (int i = 0; i < core.cfg.vkcfgMaxImagesInFlight; i++) {
 		core.renderer.drStartCommandRecording(i);
 		
 		// Pass 1: Endpoint of ray
