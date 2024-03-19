@@ -38,9 +38,6 @@ namespace Anthem::Core {
         bool destroyPipelineLayout();
         bool setRayRecursion(uint32_t rayRec);
         std::vector<VkStridedDeviceAddressRegionKHR> getTraceRayRegions(int32_t raygenId,int32_t missId,int32_t closeHitId,int32_t callableId) const;
-        const VkPipelineLayout* getPipelineLayout() const {
-            ANTH_ASSERT(this->pipelineCreated, "Invalid pipeline");
-            return &(this->pipelineLayout);
-        }
+        const VkPipelineLayout* getPipelineLayout() const;
     };
 }

@@ -2,7 +2,7 @@
 
 namespace Anthem::Core{
     bool AnthemGeneralBufferUtilBase::createBufferInternalUt(const AnthemLogicalDevice* logicalDevice,const AnthemPhyDevice* phyDevice, 
-        AnthemGeneralBufferProp* bufProp, VkBufferUsageFlags usage, VkMemoryPropertyFlags memProp,void* memAllocFlags = nullptr, uint32_t size = 0){
+        AnthemGeneralBufferProp* bufProp, VkBufferUsageFlags usage, VkMemoryPropertyFlags memProp,void* memAllocFlags, uint32_t size){
         bufProp->bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufProp->bufferCreateInfo.size = size ? size : this->calculateBufferSize();
         bufProp->bufferCreateInfo.usage = usage;
@@ -56,7 +56,7 @@ namespace Anthem::Core{
         vkUnmapMemory(logicalDevice->getLogicalDevice(), bufProp->bufferMem);
         return true;
     }
-    VkDeviceAddress AnthemGeneralBufferUtilBase::getBufferDeviceAddressUt(const AnthemLogicalDevice* logicalDevice, AnthemGeneralBufferProp* bufProp) const{
+    VkDeviceAddress AnthemGeneralBufferUtilBase::getBufferDeviceAddressUt(const AnthemLogicalDevice* logicalDevice, const AnthemGeneralBufferProp* bufProp) const{
         VkBufferDeviceAddressInfoKHR bdaInfo = {};
         bdaInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO_KHR;
         bdaInfo.pNext = nullptr;

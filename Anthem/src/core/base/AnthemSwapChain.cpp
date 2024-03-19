@@ -180,4 +180,7 @@ namespace Anthem::Core{
     const VkFormat* AnthemSwapChain::getFormat() const {
         return &(this->specifiedSurfaceFormat.format);
     }
+    const VkImage* AnthemSwapChain::getSwapChainImage(uint32_t idx) const {
+        return &this->swapChainImages.at(idx);
+    }
 }

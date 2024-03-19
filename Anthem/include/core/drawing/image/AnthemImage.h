@@ -64,15 +64,17 @@ namespace Anthem::Core{
 
         bool addAccessStage(uint32_t stageFlag);
         
+        virtual const VkImage* getImage() const;
         virtual const VkImageView* getImageView() const override;
         virtual uint32_t getWidth() const override;
         virtual uint32_t getHeight() const override;
         virtual uint32_t getLayers() const override;
+        virtual uint32_t getMipLevels() const;
         uint32_t getDepth() const;
 
         bool toGeneralLayout() {
             this->image.desiredLayout = VK_IMAGE_LAYOUT_GENERAL;
-            this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+            this->createImageTransitionLayoutLegacy(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
             return true;
         }
         

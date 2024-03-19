@@ -52,12 +52,12 @@ namespace Anthem::Core{
             
             this->createStagingBuffer();
             this->createImageInternal( VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, pendingFormat, this->width, this->height, this->depth);
-            this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            this->createImageTransitionLayoutLegacy(VK_IMAGE_LAYOUT_UNDEFINED,VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
             this->copyBufferToImage();
             if(this->image.mipmapLodLevels > 1){
                 this->generateMipmap2D(this->width,this->height);
             }else{
-                this->createImageTransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                this->createImageTransitionLayoutLegacy(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT,this->depth>1);
             this->createSampler();
@@ -155,7 +155,9 @@ namespace Anthem::Core{
     const VkImageView* AnthemImage::getImageView() const{
         return AnthemImageContainer::getImageView();
     }
-
+    const VkImage* AnthemImage::getImage() const {
+        return &this->image.image;
+    }
     bool AnthemImage::specifyUsage(AnthemImageUsage usage){
         this->definedUsage = usage;
         return true;
@@ -175,5 +177,8 @@ namespace Anthem::Core{
     }
     uint32_t AnthemImage::getLayers() const {
         return this->image.layerCounts;
+    }
+    uint32_t AnthemImage::getMipLevels() const {
+        return this->image.mipmapLodLevels;
     }
 }

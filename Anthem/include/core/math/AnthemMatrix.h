@@ -42,6 +42,17 @@ namespace Anthem::Core::Math{
                 }
             }
         }
+        AnthemMatrix(std::initializer_list<std::initializer_list<T>> f) {
+            int i = 0, j = 0;
+            for (auto x : f) {
+                for (auto y : x) {
+                    data[i][j] = y;
+                    j++;
+                }
+                i++;
+                j = 0;
+            }
+        }
         AnthemMatrix(const AnthemMatrix<T,R,C>& other){
             this->deepCopy(other);
         }
@@ -53,6 +64,7 @@ namespace Anthem::Core::Math{
             return *this;
         }
         const AnthemMatrix<T,R,C>& operator=(AnthemMatrix<T,R,C>&& other){
+            //TODO: Move
             this->deepCopy(other);
             return *this;
         }

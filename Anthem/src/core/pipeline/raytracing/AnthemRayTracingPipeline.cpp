@@ -7,13 +7,14 @@ namespace Anthem::Core {
         return true;
     }
     bool AnthemRayTracingPipeline::destroyPipeline() {
-        ANTH_LOGI("Destroying raytracing pipeline");
+        for (auto& p : this->bindingTableBuffer) {
+            this->destroyBufferInternalUt(this->logicalDevice, &p);
+        }
         vkDestroyPipeline(this->logicalDevice->getLogicalDevice(), this->pipeline, nullptr);
         this->pipelineCreated = false;
         return true;
     }
     bool AnthemRayTracingPipeline::destroyPipelineLayout() {
-        ANTH_LOGI("Destroying pipeline layout");
         vkDestroyPipelineLayout(this->logicalDevice->getLogicalDevice(), this->pipelineLayout, nullptr);
         return true;
     }
@@ -61,7 +62,7 @@ namespace Anthem::Core {
         ANTH_ASSERT(result == VK_SUCCESS, "Failed to create SBT");
         const VkBufferUsageFlags bufferUsageFlags = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
         const VkMemoryPropertyFlags memoryUsageFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-        for (auto i : AT_RANGE(shaderGroups.size())) {
+        for (auto i : AT_RANGE2(shaderGroups.size())) {
             AnthemGeneralBufferProp prop;
             this->createBufferInternalUt(this->logicalDevice, this->phyDevice, &prop, bufferUsageFlags, memoryUsageFlags, nullptr, this->handleSize);
             this->copyDataToBufferInternalUt(this->logicalDevice, &prop,
@@ -70,13 +71,17 @@ namespace Anthem::Core {
         }
         return true;
     }
+    const VkPipelineLayout* AnthemRayTracingPipeline::getPipelineLayout() const {
+        ANTH_ASSERT(this->pipelineCreated, "Invalid pipeline");
+        return &(this->pipelineLayout);
+    }
     std::vector<VkStridedDeviceAddressRegionKHR> AnthemRayTracingPipeline::getTraceRayRegions(int32_t raygenId, int32_t missId, int32_t closeHitId, int32_t callableId) const {
         std::vector< VkStridedDeviceAddressRegionKHR> ret;
         std::vector<int32_t> pv = { raygenId,missId,closeHitId,callableId };
         for (auto& x : pv) {
             VkStridedDeviceAddressRegionKHR region{};
             if (x != -1) {
-                region.deviceAddress = getBufferDeviceAddressUt(this->logicalDevice, this->bindingTableBuffer[x]);
+                region.deviceAddress = getBufferDeviceAddressUt(this->logicalDevice, &this->bindingTableBuffer[x]);
                 region.size = this->handleSizeAligned;
                 region.stride = this->handleSizeAligned;
             }

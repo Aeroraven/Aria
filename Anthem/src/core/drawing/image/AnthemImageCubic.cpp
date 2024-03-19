@@ -77,9 +77,9 @@ namespace Anthem::Core {
 		auto pendingFormat = AnthemImageInfoProcessing::getPendingFormat(this->desiredFormat);
 		this->createStagingBuffer();
 		this->createImageInternal(VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, pendingFormat, this->width, this->height, this->depth);
-		this->createImageTransitionLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		this->createImageTransitionLayoutLegacy(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		this->copyBufferToImage();
-		this->createImageTransitionLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		this->createImageTransitionLayoutLegacy(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 		this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
 		this->createSampler();
 		this->destroyStagingBuffer();

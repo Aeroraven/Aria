@@ -86,9 +86,10 @@
 #define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
 
 #define AT_RANGE(s,t) (std::views::iota(s,t))
-#define AT_RANGE(t) (std::views::iota(static_cast<decltype(t)>(0),t))
+#define AT_RANGE2(t) (std::views::iota(static_cast<decltype(t)>(0),t))
 #define AT_ALIGN(s,t) (((s)+(t)-1)&~((t)-1))
 #define AT_LOWBIT(s) ((s)&~(s))
+#define AT_CHECKRES(expr) if(auto atRes = (expr);atRes!=VK_SUCCESS){ANTH_LOGE("Returned:",atRes);}
 
 #ifdef _HAS_CXX23
     #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().classNameTrack(std::stacktrace::current().at(0).description()).c_str())

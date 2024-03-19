@@ -47,5 +47,6 @@ namespace Anthem::Core{
 
         const std::vector<VkImageView>* getSwapChainImageViews() const;
         const VkSwapchainKHR* getSwapChain() const;
+        const VkImage* getSwapChainImage(uint32_t idx) const;
     };
 }

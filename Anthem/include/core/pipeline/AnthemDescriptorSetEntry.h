@@ -10,6 +10,7 @@ namespace Anthem::Core{
         AT_ACDS_SAMPLER = 2,
         AT_ACDS_SHADER_STORAGE_BUFFER = 3,
         AT_ACDS_STORAGE_IMAGE = 4,
+        AT_ACDS_ACC_STRUCT = 5
     };
     struct AnthemDescriptorSetEntry{
         AnthemDescriptorPool* descPool = nullptr;

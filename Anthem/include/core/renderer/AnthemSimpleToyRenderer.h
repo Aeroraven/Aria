@@ -108,6 +108,7 @@ namespace Anthem::Core{
         uint32_t imageDescPoolIdx = -1;
         uint32_t ssboDescPoolIdx = -1;
         uint32_t storageImgDescPoolIdx = -1;
+        uint32_t asPoolIdx = -1;
 
         VkDeviceSize emptyOffsetPlaceholder[1] = {0};
 
@@ -181,17 +182,20 @@ namespace Anthem::Core{
             const std::vector<AnthemPushConstant*> pconst, AnthemRayTracingShaders* shader,uint32_t rayRecursion);
         bool createRayTracingGeometry(AnthemAccStructGeometry** pAsGeo, uint32_t vertexStride, std::vector<float> vertices, std::vector<uint32_t>indices, std::vector<float>transform);
         bool createRayTracingInstance(AnthemAccStructInstance** pAsInst, AnthemBottomLevelAccStruct* bottomAs, std::vector<float> transform);
-        bool createRayTracingShaderGroup(AnthemRayTracingShaders** pShader, std::vector<std::pair<std::string, AnthemRayTracingShaderType>>& shaderFile);
+        bool createRayTracingShaderGroup(AnthemRayTracingShaders** pShader, const std::vector<std::pair<std::string, AnthemRayTracingShaderType>>& shaderFile);
 #endif
 
         // Swapchain Info
         bool getSwapchainImageExtent(uint32_t* width, uint32_t* height);
 
         // Descriptor Pool
-        bool addSamplerArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,uint32_t bindLoc, uint32_t descId);
-        bool addStorageImageArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,uint32_t bindLoc, uint32_t descId);
-        bool addUniformBufferArrayToDescriptor(std::vector<AnthemUniformBuffer*>& buffers, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId);
+        bool addSamplerArrayToDescriptor(const std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,uint32_t bindLoc, uint32_t descId);
+        bool addStorageImageArrayToDescriptor(const std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool,uint32_t bindLoc, uint32_t descId);
+        bool addUniformBufferArrayToDescriptor(const std::vector<AnthemUniformBuffer*>& buffers, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId);
 
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+        bool addTopLevelASToDescriptor(AnthemTopLevelAccStruct* tlas, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId);
+#endif 
         // Integration
         bool registerPipelineSubComponents();
 
@@ -239,11 +243,18 @@ namespace Anthem::Core{
         bool drDrawInstancedAll(uint32_t vertices, uint32_t instances, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance, uint32_t cmdIdx);
         bool drDrawIndexedIndirect(AnthemIndirectDrawBuffer* buffer, uint32_t cmdIdx);
         bool drDrawMesh(uint32_t groupX, uint32_t groupY, uint32_t groupZ, uint32_t cmdIdx);
+
         bool drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ);
+
+        bool drCopyImageToSwapchainImage(AnthemImage* image,uint32_t swapchainImageIdx, uint32_t cmdIdx);
+        bool drSetImageLayoutSimple(AnthemImage* image, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx);
+        bool drSetSwapchainImageLayoutSimple(uint32_t swapchainImageIdx, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx);
         
 #ifdef AT_FEATURE_RAYTRACING_ENABLED
-        bool drTraceRays(uint32_t cmdIdx, AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,
-            int32_t raygenId,int32_t missId,int32_t closeHitId,int32_t callableId);
+        bool drBindDescriptorSetCustomizedRayTracing(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemRayTracingPipeline* pipeline, uint32_t cmdIdx);
+        bool drBindRayTracingPipeline(AnthemRayTracingPipeline* pipeline, uint32_t cmdIdx);
+        bool drTraceRays(AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,
+            int32_t raygenId,int32_t missId,int32_t closeHitId,int32_t callableId, uint32_t cmdIdx);
 #endif
 
         // Queue

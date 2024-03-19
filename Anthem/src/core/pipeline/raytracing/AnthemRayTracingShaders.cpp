@@ -2,6 +2,12 @@
 #include "../../../../include/core/pipeline/raytracing/AnthemRayTracingShaders.h"
 
 namespace Anthem::Core {
+	bool AnthemRayTracingShaders::destroyShader(AnthemLogicalDevice* device) {
+		for (auto p : this->shaderModules) {
+			vkDestroyShaderModule(device->getLogicalDevice(), p, nullptr);
+		}
+		return true;
+	}
 	void AnthemRayTracingShaders::loadShader(AnthemLogicalDevice* device,std::string path, AnthemRayTracingShaderType type) {
 		std::vector<char> data;
 		this->readFile(path, &data);

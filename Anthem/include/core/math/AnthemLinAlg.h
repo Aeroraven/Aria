@@ -238,6 +238,41 @@ namespace Anthem::Core::Math{
             return minv;
         }
 
+        template<typename T,uint32_t R>
+        requires ALinAlgIsNumericTp<T>
+        inline static ALinAlgMat<T, R, R> gaussJordan(const ALinAlgMat<T, R, R>& a) {
+            //Gauss
+            auto ret = identity<T, R>();
+            auto src = a;
+            for (auto i : AT_RANGE2(R)) {
+                auto factor = src[i][i];
+                for (auto j : AT_RANGE(i + 1, R)) {
+                    auto redFactor = src[j][i] / factor;
+                    for (auto k : AT_RANGE2(R)) {
+                        src[j][k] -= src[i][k] * redFactor;
+                        ret[j][k] -= ret[i][k] * redFactor;
+                    }
+                }
+            }
+            //Jordan
+            for (int i = R - 1; i >= 0; i--) {
+                ANTH_LOGI(i);
+                auto factor = src[i][i];
+                for (auto j : AT_RANGE2(R)) {
+                    src[i][j] /= factor;
+                    ret[i][j] /= factor;
+                }
+                for (auto j : AT_RANGE2(i)) {
+                    auto cf = src[j][i];
+                    for (auto k : AT_RANGE2(R)) {
+                        src[j][k] -= src[i][k] * cf;
+                        ret[j][k] -= ret[i][k] * cf;
+                    }
+                }
+            }
+            return ret;
+        }
+
         template<typename T>
         requires ALinAlgIsNumericTp<T>
         inline static ALinAlgVec<T,3> randomVector3(){

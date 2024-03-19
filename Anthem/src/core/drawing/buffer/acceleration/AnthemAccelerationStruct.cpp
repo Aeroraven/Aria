@@ -1,6 +1,9 @@
 #include "../../../../../include/core/drawing/buffer/acceleration/AnthemAccelerationStruct.h"
 
 namespace Anthem::Core {
+	bool AnthemAccelerationStruct::destroyBuffer() {
+		return this->destroyBufferInternal(&this->asBuffer);;
+	}
 	bool AnthemAccelerationStruct::createAccelerationStructBuffer(uint32_t bufferSize) {
 		VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo{};
 		memoryAllocateFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;

@@ -24,6 +24,6 @@ namespace Anthem::Core {
 		void loadShader(AnthemLogicalDevice* device,std::string path, AnthemRayTracingShaderType type);
 		std::vector<VkPipelineShaderStageCreateInfo> getShaderStages() const;
 		std::vector<VkRayTracingShaderGroupCreateInfoKHR> getShaderGroups() const;
-		
+		bool destroyShader(AnthemLogicalDevice* device);
 	};
 }

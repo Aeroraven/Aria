@@ -230,7 +230,6 @@ namespace Anthem::Core{
             ANTH_LOGE("Failed to present swap chain image",result);
             return false;
         }
-        ANTH_LOGV("Swap chain image presented");
         return true;
     }
 }

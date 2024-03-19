@@ -102,7 +102,7 @@ namespace Anthem{
                     std::cout << "    " << p.description() << std::endl;
                 }
 #endif
-                throw;
+                throw std::runtime_error("");
             }
             template<typename... _Args>
             void loge2(const char* func, std::tuple<_Args...> args){

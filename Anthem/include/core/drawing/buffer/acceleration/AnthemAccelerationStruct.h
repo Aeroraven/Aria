@@ -21,6 +21,8 @@ namespace Anthem::Core {
 		bool createAccelerationStructBuffer(uint32_t bufferSize);
 		bool createScratchBuffer(uint32_t bufferSize);
 		VkDeviceAddress getDeviceAddress() const;
+		VkAccelerationStructureKHR getHandle() const { return this->asHandle; }
 		uint32_t virtual calculateBufferSize() { return 0; }
+		bool destroyBuffer();
 	};
 }

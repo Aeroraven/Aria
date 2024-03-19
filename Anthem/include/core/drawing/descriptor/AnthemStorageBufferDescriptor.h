@@ -52,7 +52,7 @@ namespace Anthem::Core {
             layoutBindingDesc.binding = bindLoc;
             layoutBindingDesc.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
             layoutBindingDesc.descriptorCount = 1;
-            layoutBindingDesc.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            layoutBindingDesc.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR;
             layoutBindingDesc.pImmutableSamplers = nullptr;
 
             layoutCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;

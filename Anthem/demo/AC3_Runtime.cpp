@@ -1,5 +1,7 @@
 #include "../include/core/base/AnthemBaseImports.h"
+#include "../include/core/math/AnthemMathAbbrs.h"
 #include <initializer_list>
+
 using namespace Anthem::Core;
 
 static int exampleCounter = 0;
@@ -12,6 +14,9 @@ static int exampleCounter = 0;
 #define PRINT(...) ANTH_LOGI(__VA_ARGS__);
 
 namespace Anthem::AcStage::Runtime{
+    using namespace Anthem::Core;
+    using namespace Anthem::Core::Math;
+    using namespace Anthem::Core::Math::Abbr;
     void run(){
         BEGIN_EXAMPLE("Generic lambda");
             auto foo = []<typename T,typename U>(T a,U b)->decltype(a+b){

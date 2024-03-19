@@ -100,6 +100,29 @@ namespace Anthem::Core{
         }
         ANTH_LOGV("Render Passes Destroyed");
 
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+        for (auto& p : this->rtPipelines) {
+            p->destroyPipeline();
+            p->destroyPipelineLayout();
+            delete p;
+        }
+        for (auto& p : this->rtShaders) {
+            p->destroyShader(this->logicalDevice.get());
+            delete p;
+        }
+        auto destroyRtBuffers = [&](auto& container)->void {
+            for (auto& p : container) {
+                p->destroyBuffer();
+                delete p;
+            }
+        };
+        destroyRtBuffers(this->rtTlasList);
+        destroyRtBuffers(this->rtInstances);
+        destroyRtBuffers(this->rtBlasList);
+        destroyRtBuffers(this->rtGeometries);
+
+#endif
+
         logicalDevice->destroyLogicalDevice(this->instance->getInstance());
         validationLayer->destroyDebugMsgLayer(this->instance->getInstance());
         windowSurface->destroyWindowSurface(this->instance->getInstance());
@@ -203,6 +226,9 @@ namespace Anthem::Core{
         descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ,&(this->imageDescPoolIdx));
         descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &(this->ssboDescPoolIdx));
         descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, &(this->storageImgDescPoolIdx));
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+        descriptorPool->createDescriptorPool(this->config->VKCFG_MAX_IMAGES_IN_FLIGHT, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR, &(this->asPoolIdx));
+#endif
         *pDescPool = descriptorPool;
         this->descriptorPools.push_back(descriptorPool);
         return true;
@@ -512,21 +538,21 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::addSamplerArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
+    bool AnthemSimpleToyRenderer::addSamplerArrayToDescriptor(const std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
         if (descId == -1) {
             ANTH_LOGW("Descriptor pool index not specified for Sampler, using the default value", this->imageDescPoolIdx);
             descId = this->imageDescPoolIdx;
         }
         return descPool->addSamplerArray(images, bindLoc, descId);
     }
-    bool AnthemSimpleToyRenderer::addStorageImageArrayToDescriptor(std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
+    bool AnthemSimpleToyRenderer::addStorageImageArrayToDescriptor(const std::vector<AnthemImageContainer*>& images, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
         if (descId == -1) {
             ANTH_LOGW("Descriptor pool index not specified for Sampler, using the default value", this->storageImgDescPoolIdx);
             descId = this->storageImgDescPoolIdx;
         }
         return descPool->addStorageImageArray(images, bindLoc, descId);
     }
-    bool  AnthemSimpleToyRenderer::addUniformBufferArrayToDescriptor(std::vector<AnthemUniformBuffer*>& buffers, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
+    bool  AnthemSimpleToyRenderer::addUniformBufferArrayToDescriptor(const std::vector<AnthemUniformBuffer*>& buffers, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
         if (descId == -1) {
             ANTH_LOGW("Descriptor pool index not specified for Uniform, using the default value", this->uniformDescPoolIdx);
             descId = this->uniformDescPoolIdx;
@@ -813,7 +839,19 @@ namespace Anthem::Core{
                 p.descPool->appendDescriptorSetSampler(p.inTypeIndex,descSets);
             }else if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER){
                 p.descPool->appendDescriptorSetUniform(p.inTypeIndex,descSets);
-            }else{
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SHADER_STORAGE_BUFFER) {
+                p.descPool->appendDescriptorSetSsbo(p.inTypeIndex, descSets);
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_STORAGE_IMAGE) {
+                p.descPool->appendDescriptorSetStorageImage(p.inTypeIndex, descSets);
+            }
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_ACC_STRUCT) {
+                p.descPool->appendDescriptorSetAccStruct(p.inTypeIndex, descSets);
+            }
+#endif
+            else{
                 ANTH_LOGE("Unknown Descriptor Set Type");
             }
         }
@@ -949,6 +987,29 @@ namespace Anthem::Core{
         vkCmdDispatch(*this->commandBuffers->getCommandBuffer(cmdIdx), workgroupX, workgroupY, workgroupZ);
         return true;
     }
+    bool AnthemSimpleToyRenderer::drCopyImageToSwapchainImage(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx) {
+        VkImageCopy imgCp{};
+        imgCp.dstOffset = { 0,0,0 };
+        imgCp.srcOffset = { 0,0,0 };
+        imgCp.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+        imgCp.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+        imgCp.extent = { this->swapChain->getSwapChainExtentWidth(),this->swapChain->getSwapChainExtentHeight(),1 };
+        vkCmdCopyImage(*this->commandBuffers->getCommandBuffer(cmdIdx), *image->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            *swapChain->getSwapChainImage(swapchainImageIdx), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imgCp);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drSetImageLayoutSimple(AnthemImage* image, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx) {
+        return AnthemImageInfoProcessing::setImageLayout(
+            *image->getImage(), *commandBuffers->getCommandBuffer(cmdIdx),
+            srcLayout, dstLayout, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            image->getLayers(), image->getMipLevels());
+    }
+    bool AnthemSimpleToyRenderer::drSetSwapchainImageLayoutSimple(uint32_t swapchainImageIdx, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx) {
+        return AnthemImageInfoProcessing::setImageLayout(
+            *swapChain->getSwapChainImage(swapchainImageIdx), *commandBuffers->getCommandBuffer(cmdIdx),
+            srcLayout, dstLayout, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            1, 1);
+    }
     bool AnthemSimpleToyRenderer::exGetWindowSize(int& height,int& width){
         height = this->windowHeight;
         width = this->windowWidth;
@@ -970,11 +1031,45 @@ namespace Anthem::Core{
     bool AnthemSimpleToyRenderer::getSwapchainImageExtent(uint32_t* width, uint32_t* height) {
         *width = swapChain->getSwapChainExtentWidth();
         *height = swapChain->getSwapChainExtentHeight();
+        return true;
     }
 
 #ifdef AT_FEATURE_RAYTRACING_ENABLED
-    bool AnthemSimpleToyRenderer::drTraceRays(uint32_t cmdIdx, AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,
-        int32_t raygenId, int32_t missId, int32_t closeHitId, int32_t callableId) {
+    bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomizedRayTracing(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemRayTracingPipeline* pipeline, uint32_t cmdIdx) {
+        std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
+        for (const auto& p : descSetEntries) {
+            if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER) {
+                p.descPool->appendDescriptorSetSampler(p.inTypeIndex, descSets);
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_UNIFORM_BUFFER) {
+                p.descPool->appendDescriptorSetUniform(p.inTypeIndex, descSets);
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SHADER_STORAGE_BUFFER) {
+                p.descPool->appendDescriptorSetSsbo(p.inTypeIndex, descSets);
+            }
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_STORAGE_IMAGE) {
+                p.descPool->appendDescriptorSetStorageImage(p.inTypeIndex, descSets);
+            }
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
+            else if (p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_ACC_STRUCT) {
+                p.descPool->appendDescriptorSetAccStruct(p.inTypeIndex, descSets);
+            }
+#endif
+            else {
+                ANTH_LOGE("Unknown Descriptor Set Type");
+            }
+        }
+        vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, *(pipeline->getPipelineLayout()), 0,
+            static_cast<uint32_t>(descSets->size()), descSets->data(), 0, nullptr);
+        delete descSets;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drBindRayTracingPipeline(AnthemRayTracingPipeline* pipeline, uint32_t cmdIdx) {
+        vkCmdBindPipeline(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, *(pipeline->getPipeline()));
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drTraceRays(AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,
+        int32_t raygenId, int32_t missId, int32_t closeHitId, int32_t callableId, uint32_t cmdIdx) {
         auto bindingTables = pipeline->getTraceRayRegions(raygenId, missId, closeHitId, callableId);
         this->logicalDevice->vkCall_vkCmdTraceRaysKHR(
             *this->commandBuffers->getCommandBuffer(cmdIdx),
@@ -1034,7 +1129,7 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::createRayTracingShaderGroup(AnthemRayTracingShaders** pShader, std::vector<std::pair<std::string, AnthemRayTracingShaderType>>& shaderFile) {
+    bool AnthemSimpleToyRenderer::createRayTracingShaderGroup(AnthemRayTracingShaders** pShader,const std::vector<std::pair<std::string, AnthemRayTracingShaderType>>& shaderFile) {
         auto sd = new AnthemRayTracingShaders();
         for (auto& p : shaderFile) {
             sd->loadShader(this->logicalDevice.get(), p.first, p.second);
@@ -1042,6 +1137,14 @@ namespace Anthem::Core{
         rtShaders.push_back(sd);
         *pShader = sd;
         return  true;
+    }
+
+    bool AnthemSimpleToyRenderer::addTopLevelASToDescriptor(AnthemTopLevelAccStruct* tlas, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t descId) {
+        if (descId == -1) {
+            ANTH_LOGW("Descriptor pool index not specified for TLAS, using the default value", this->asPoolIdx);
+            descId = this->asPoolIdx;
+        }
+        return descPool->addAS(tlas, bindLoc, descId);
     }
 #endif 
 

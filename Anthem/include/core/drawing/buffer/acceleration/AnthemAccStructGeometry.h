@@ -28,7 +28,7 @@ namespace Anthem::Core {
 
 		VkAccelerationStructureGeometryKHR getGeometry() const;
 		uint32_t getPrimitiveCounts() const;
-
 		uint32_t virtual calculateBufferSize() override { return 0; }
+		bool destroyBuffer();
 	};
 }

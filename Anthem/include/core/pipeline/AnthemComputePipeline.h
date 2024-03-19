@@ -18,7 +18,7 @@ namespace Anthem::Core{
         std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo = {};
 
         bool specifyShaderModule(const AnthemShaderModule* shaderModule);
-        bool createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry);
+        
         bool createPipeline();
         const VkPipeline* getPipeline() const;
 

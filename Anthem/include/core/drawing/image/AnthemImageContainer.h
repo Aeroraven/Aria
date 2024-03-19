@@ -3,7 +3,7 @@
 #include "../../utils/AnthemUtlLogicalDeviceReqBase.h"
 #include "../../utils/AnthemUtlPhyDeviceReqBase.h"
 #include "../../utils/AnthemUtlCommandBufferReqBase.h"
-
+#include "./AnthemImageInfo.h"
 
 namespace Anthem::Core{
     struct AnthemImageProp{
@@ -40,7 +40,8 @@ namespace Anthem::Core{
     protected:
         bool createImageInternal(VkImageUsageFlags usage, VkFormat format, uint32_t width, uint32_t height, uint32_t depth);
         bool createImageViewInternal(VkImageAspectFlags aspectFlags,bool use3d = false);
-        bool createImageTransitionLayout(VkImageLayout oldLayout,VkImageLayout newLayout);
+        bool createImageTransitionLayoutLegacy(VkImageLayout oldLayout,VkImageLayout newLayout);
+        bool createImageTransitionLayoutInternal(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcFlag, VkPipelineStageFlags dstFlag);
         bool createSampler();
         bool destroyImageInternal();
         bool destroyImageViewInternal();

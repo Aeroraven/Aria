@@ -1,18 +1,26 @@
 #include "../../../../../include/core/drawing/buffer/acceleration/AnthemAccStructGeometry.h"
 namespace Anthem::Core {
-
+	bool AnthemAccStructGeometry::destroyBuffer() {
+		AnthemGeneralBufferProp* props[3] = { &this->vertexBuffer,&this->indexBuffer,&this->transformBuffer };
+		bool ret = true;
+		for (auto i : AT_RANGE2(3)) ret &= this->destroyBufferInternal(props[i]);
+		return ret;
+	}
 	bool AnthemAccStructGeometry::createGeometryInfoBuffers(int vertexStride, std::vector<float> vertices, std::vector<uint32_t>indices, std::vector<float>transform) {
 		void* dataVectors[3] = { vertices.data(),indices.data(),transform.data()};
 		AnthemGeneralBufferProp* destBuffer[3] = { &vertexBuffer,&indexBuffer,&transformBuffer };
 		size_t bufferSizes[3] = { vertices.size() * sizeof(float),indices.size() * sizeof(uint32_t),transform.size() * sizeof(float) };
 		VkDeviceOrHostAddressConstKHR* deviceAddrRecv[3] = { &vertexBda,&indexBda,&transformBda };
 
-		for (auto i : AT_RANGE(3)) {
+		for (auto i : AT_RANGE2(3)) {
+			VkMemoryAllocateFlagsInfo allocFlags{};
+			allocFlags.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+			allocFlags.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
 			auto cbRes = this->createBufferInternal(
 				destBuffer[i],
 				VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				nullptr, bufferSizes[i]
+				&allocFlags, bufferSizes[i]
 			);
 			auto cpRes = this->copyDataToBufferInternal(destBuffer[i], dataVectors[i], bufferSizes[i], true);
 			deviceAddrRecv[i]->deviceAddress = this->getBufferDeviceAddress(destBuffer[i]);
@@ -44,6 +52,7 @@ namespace Anthem::Core {
 		asGeometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
 		asGeometry.geometry.triangles.indexData = indexBda;
 		asGeometry.geometry.triangles.transformData = transformBda;
+		return true;
 	}
 	VkAccelerationStructureGeometryKHR AnthemAccStructGeometry::getGeometry() const {
 		return asGeometry;

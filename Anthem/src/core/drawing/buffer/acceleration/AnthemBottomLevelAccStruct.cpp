@@ -20,7 +20,7 @@ namespace Anthem::Core {
 
 		VkAccelerationStructureBuildSizesInfoKHR asBuildSize{};
 		asBuildSize.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR;
-		vkGetAccelerationStructureBuildSizesKHR(
+		this->logicalDevice->vkCall_vkGetAccelerationStructureBuildSizesKHR(
 			logicalDevice->getLogicalDevice(),
 			VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
 			&asBuildGeoInfo,
