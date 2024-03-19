@@ -18,7 +18,7 @@ namespace Anthem::Core {
 		memoryAllocateFlagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
 		memoryAllocateFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR;
 		auto cbRes = this->createBufferInternal(
-			&this->scratchBuffer, VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
+			&this->scratchBuffer, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &memoryAllocateFlagsInfo,bufferSize);
 		if (!cbRes) return false;
 		this->scratchDevice.deviceAddress = this->getBufferDeviceAddress(&this->scratchBuffer);

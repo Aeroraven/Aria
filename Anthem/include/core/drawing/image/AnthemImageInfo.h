@@ -64,9 +64,6 @@ namespace Anthem::Core {
             barrier.subresourceRange.baseArrayLayer = 0;
             barrier.subresourceRange.layerCount = layers;
 
-            VkPipelineStageFlags sourceStage = 0;
-            VkPipelineStageFlags destinationStage = 0;
-
             switch (oldLayout) {
             case VK_IMAGE_LAYOUT_UNDEFINED:
                 barrier.srcAccessMask = 0;
@@ -98,7 +95,7 @@ namespace Anthem::Core {
                 break;
             }
             //
-            vkCmdPipelineBarrier(cmdBuf, sourceStage, destinationStage,
+            vkCmdPipelineBarrier(cmdBuf, srcFlag, dstFlag,
                 0, 0, nullptr, 0, nullptr, 1, &barrier);
             return true;
         }

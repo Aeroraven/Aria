@@ -62,10 +62,12 @@ namespace Anthem::Core {
 		}
 		uint32_t cmdBuf;
 		this->cmdBufs->createCommandBuffer(&cmdBuf);
+		this->cmdBufs->startCommandRecording(cmdBuf);
 		this->logicalDevice->vkCall_vkCmdBuildAccelerationStructuresKHR(
 			*this->cmdBufs->getCommandBuffer(cmdBuf),
 			1, &asBuildGeoInfo2, asBuildRanges.data()
 		);
+		this->cmdBufs->endCommandRecording(cmdBuf);
 		this->cmdBufs->submitTaskToGraphicsQueue(cmdBuf, true);
 
 		VkAccelerationStructureDeviceAddressInfoKHR asDeviceAddrInfo{};
