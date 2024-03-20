@@ -64,16 +64,16 @@ void initialize() {
 	st.rd.exGetWindowSize(rdH, rdW);
 
 	st.camera.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 0, -1);
+	st.camera.specifyPosition(0, 0, -4);
 	st.camera.specifyFrontEyeRay(0, 0, 1);
 }
 
 void createAccelerationStruct(){
 	// Bottom-level AS
 	std::vector<float> vertex = {
-		 1.0f,  1.0f, 0.0f,
-		-1.0f,  1.0f, 0.0f,
-		 0.0f, -1.0f, 0.0f
+		 1.0f, -1.0f, 0.0f,
+		-1.0f, -1.0f, 0.0f,
+		 0.0f,  1.0f, 0.0f
 	};
 	std::vector<uint32_t> index = { 0,1,2 };
 	std::vector<float> transform = {

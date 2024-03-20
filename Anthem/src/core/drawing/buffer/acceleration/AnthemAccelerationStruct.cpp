@@ -2,6 +2,7 @@
 
 namespace Anthem::Core {
 	bool AnthemAccelerationStruct::destroyBuffer() {
+		this->logicalDevice->vkCall_vkDestroyAccelerationStructureKHR(this->logicalDevice->getLogicalDevice(), this->asHandle, nullptr);
 		return this->destroyBufferInternal(&this->asBuffer);;
 	}
 	bool AnthemAccelerationStruct::createAccelerationStructBuffer(uint32_t bufferSize) {

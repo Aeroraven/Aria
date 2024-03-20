@@ -87,8 +87,10 @@ namespace Anthem::Core{
         this->reqInfoSpecified = true;
         return true;
     }
-    bool AnthemSwapChain::createSwapChain(AnthemLogicalDevice* device,AnthemPhyDevice* phyDevice){
-        ANTH_ASSERT(this->reqInfoSpecified,"Swap Chain Details not specified");
+    bool AnthemSwapChain::createSwapChain(AnthemLogicalDevice* device, AnthemPhyDevice* phyDevice) {
+        ANTH_ASSERT(this->reqInfoSpecified, "Swap Chain Details not specified");
+
+
         VkSwapchainCreateInfoKHR createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createInfo.surface = this->windowSurface->getWindowSurface();
@@ -98,8 +100,13 @@ namespace Anthem::Core{
         createInfo.imageExtent = this->scExtent;
         createInfo.imageArrayLayers = 1;
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        if (this->specifiedSwapChainDetails->capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
+            createInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        }
+        if (this->specifiedSwapChainDetails->capabilities.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
+            createInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        }
 
-        ANTH_TODO("Add image usage support!!!!!!!!");
         if(phyDevice->getPhyQueueGraphicsFamilyIndice() != phyDevice->getPhyQueuePresentFamilyIndice()){
             uint32_t queueFamilyIndices[] = {phyDevice->getPhyQueueGraphicsFamilyIndice().value(),phyDevice->getPhyQueuePresentFamilyIndice().value()};
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
