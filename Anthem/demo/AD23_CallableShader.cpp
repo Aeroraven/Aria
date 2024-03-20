@@ -147,7 +147,7 @@ void createPipeline() {
 		{AT_RTSG_MISS,{{getShader("rmiss"),AT_RTST_MISS}}},
 		{AT_RTSG_HIT,{{getShader("rchit"),AT_RTST_CLOSEHIT}}},
 		{AT_RTSG_CALLABLE,{{getShader("first.rcall"),AT_RTST_CALLABLE}}},
-		//{AT_RTSG_CALLABLE,{{getShader("second.rcall"),AT_RTST_CALLABLE}}},
+		{AT_RTSG_CALLABLE,{{getShader("second.rcall"),AT_RTST_CALLABLE}}},
 	});
 	AnthemDescriptorSetEntry dseAs{ st.descAs,AT_ACDS_ACC_STRUCT,0 };
 	AnthemDescriptorSetEntry dseImg{ st.descImg,AT_ACDS_STORAGE_IMAGE,0 };
