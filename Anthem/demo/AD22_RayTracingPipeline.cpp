@@ -87,7 +87,7 @@ void createAccelerationStruct(){
 	st.blas->buildBLAS();
 
 	// Top-level AS
-	st.rd.createRayTracingInstance(&st.tlasInst, st.blas, transform);
+	st.rd.createRayTracingInstance(&st.tlasInst, { st.blas }, { transform });
 	st.rd.createTopLevelAS(&st.tlas);
 	st.tlas->addInstance({ st.tlasInst });
 	st.tlas->buildTLAS();

@@ -14,10 +14,10 @@ namespace Anthem::Core {
 		VkDeviceOrHostAddressConstKHR instanceBda;
 		AnthemBottomLevelAccStruct* blas;
 
-		VkAccelerationStructureInstanceKHR asInstance;
+		uint32_t primCnts = 0;
 		VkAccelerationStructureGeometryKHR asGeometry;
 	public:
-		bool createInstanceInfoBuffers(AnthemBottomLevelAccStruct* bottomAs, std::vector<float> transform);
+		bool createInstanceInfoBuffers(std::vector<AnthemBottomLevelAccStruct*> bottomAs, std::vector<std::vector<float>> transform);
 		VkAccelerationStructureGeometryKHR getGeometry() const;
 		uint32_t getPrimitiveCounts() const;
 		uint32_t virtual calculateBufferSize() override { return 0; }

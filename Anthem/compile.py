@@ -14,7 +14,7 @@ if __name__ == "__main__":
             continue
         print("Compiling :",x)
         subfiles = os.listdir("./shader/"+args.lang+"/"+x)
-        req_suffix = [".vert",".frag",".geom",".comp",".tesc",".tese",".mesh",".task",".rgen",".rmiss",".rchit"]
+        req_suffix = [".vert",".frag",".geom",".comp",".tesc",".tese",".mesh",".task",".rgen",".rmiss",".rchit",".rcall"]
 
         for y in subfiles:
             for pv in req_suffix:
@@ -30,7 +30,8 @@ if __name__ == "__main__":
                         "task.hlsl": "as_6_6",
                         "rgen.hlsl": "lib_6_3",
                         "miss.hlsl": "lib_6_3",
-                        "chit.hlsl": "lib_6_3"
+                        "chit.hlsl": "lib_6_3",
+                        "call.hlsl": "lib_6_3"
                     }
                     extra_args = {
                         "vert.hlsl": "",
@@ -43,7 +44,8 @@ if __name__ == "__main__":
                         "task.hlsl": "-fspv-target-env=vulkan1.2",
                         "rgen.hlsl": "-fspv-target-env=vulkan1.2",
                         "miss.hlsl": "-fspv-target-env=vulkan1.2",
-                        "chit.hlsl": "-fspv-target-env=vulkan1.2"
+                        "chit.hlsl": "-fspv-target-env=vulkan1.2",
+                        "call.hlsl": "-fspv-target-env=vulkan1.2"
                     }
                     w = 1
                     if args.lang == "glsl":

@@ -251,10 +251,11 @@ void createGeometry(){
 	st.rd.createVertexBuffer(&st.vxFloor);
 	st.rd.createIndexBuffer(&st.ixFloor);
 	st.vxFloor->setTotalVertices(4);
-	st.vxFloor->insertData(0, { -160,0,160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
-	st.vxFloor->insertData(1, { 160,0,160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
-	st.vxFloor->insertData(2, { 160,0,-160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
-	st.vxFloor->insertData(3, { -160,0,-160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
+	float elevation = 5.0f;
+	st.vxFloor->insertData(0, { -160,elevation,160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
+	st.vxFloor->insertData(1, { 160,elevation,160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
+	st.vxFloor->insertData(2, { 160,elevation,-160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
+	st.vxFloor->insertData(3, { -160,elevation,-160,1 }, { 0,1,0,0 }, { 0,0,10,1 });
 	st.ixFloor->setIndices({ 0,1,2,2,3,0 });
 }
 

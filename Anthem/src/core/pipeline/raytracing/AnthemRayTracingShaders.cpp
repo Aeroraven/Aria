@@ -32,7 +32,7 @@ namespace Anthem::Core {
 		}
 		if (groupType == AT_RTSG_CALLABLE) {
 			shaderGroup.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
-			shaderGroupSize.missSize++;
+			shaderGroupSize.callableSize++;
 		}
 
 		for (auto p : loadCfg) {

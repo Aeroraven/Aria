@@ -47,14 +47,14 @@ namespace Anthem::Core {
 		asBuildGeoInfo2.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
 		asBuildGeoInfo2.mode = VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR;
 		asBuildGeoInfo2.dstAccelerationStructure = this->asHandle;
-		asBuildGeoInfo2.geometryCount = structGeos.size();
+		asBuildGeoInfo2.geometryCount = 1;
 		asBuildGeoInfo2.pGeometries = structGeos.data();
 		asBuildGeoInfo2.scratchData.deviceAddress = scratchDevice.deviceAddress;
 
 		std::vector<VkAccelerationStructureBuildRangeInfoKHR*> asBuildRanges;
 		for (auto x : primitiveCnts) {
 			VkAccelerationStructureBuildRangeInfoKHR* asBuildRange = new VkAccelerationStructureBuildRangeInfoKHR();
-			asBuildRange->primitiveCount = x;
+			asBuildRange->primitiveCount = primitiveCnts[0];
 			asBuildRange->primitiveOffset = 0;
 			asBuildRange->firstVertex = 0;
 			asBuildRange->transformOffset = 0;

@@ -1119,7 +1119,7 @@ namespace Anthem::Core{
         *pAsGeo = pGeo;
         return true;
     }
-    bool AnthemSimpleToyRenderer::createRayTracingInstance(AnthemAccStructInstance** pAsInst, AnthemBottomLevelAccStruct* bottomAs, std::vector<float> transform) {
+    bool AnthemSimpleToyRenderer::createRayTracingInstance(AnthemAccStructInstance** pAsInst, std::vector<AnthemBottomLevelAccStruct*> bottomAs, std::vector<std::vector<float>> transform) {
         auto pIns = new AnthemAccStructInstance();
         pIns->specifyLogicalDevice(this->logicalDevice.get());
         pIns->specifyPhyDevice(this->phyDevice.get());

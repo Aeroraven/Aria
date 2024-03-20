@@ -181,7 +181,7 @@ namespace Anthem::Core{
         bool createRayTracingPipeline(AnthemRayTracingPipeline** pPipeline, const std::vector<AnthemDescriptorSetEntry>& descriptors,
             const std::vector<AnthemPushConstant*> pconst, AnthemRayTracingShaders* shader,uint32_t rayRecursion);
         bool createRayTracingGeometry(AnthemAccStructGeometry** pAsGeo, uint32_t vertexStride, std::vector<float> vertices, std::vector<uint32_t>indices, std::vector<float>transform);
-        bool createRayTracingInstance(AnthemAccStructInstance** pAsInst, AnthemBottomLevelAccStruct* bottomAs, std::vector<float> transform);
+        bool createRayTracingInstance(AnthemAccStructInstance** pAsInst, std::vector<AnthemBottomLevelAccStruct*> bottomAs, std::vector<std::vector<float>> transform);
         bool createRayTracingShaderGroup(AnthemRayTracingShaders** pShader, const std::vector<std::pair<AnthemRayTracingShaderGroupType, std::vector<std::pair<std::string, AnthemRayTracingShaderType>>>>& shaderFile);
 #endif
 
