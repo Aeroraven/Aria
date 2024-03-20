@@ -53,6 +53,9 @@ namespace Anthem::Core{
         constexpr static bool dynamicSize = true;
     };
 
+    template<uint32_t ArrSz = 1>
+    using AtBufVecUint = AnthemBufferVarDef<uint, 1, 1, ArrSz>;
+
     template<uint32_t ArrSz= 1>
     using AtBufVecFloat = AnthemBufferVarDef<float,1,1,ArrSz>;
 
@@ -67,6 +70,9 @@ namespace Anthem::Core{
 
     template<uint32_t ArrSz= 1>
     using AtBufMat4f = AnthemBufferVarDef<float,2,4,ArrSz>;
+
+    template<uint32_t ArrSz = 1>
+    using AtBufVecdUint = AnthemBufferVarDynamicDef<uint, 1, 1, ArrSz>;
 
     template<uint32_t ArrSz = 1>
     using AtBufVecdFloat = AnthemBufferVarDynamicDef<float, 1, 1, ArrSz>;
