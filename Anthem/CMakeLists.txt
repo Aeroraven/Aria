@@ -11,7 +11,9 @@ set(AT_REQ_FREETYPE_BASE "C:/Program Files (x86)/freetype/")
 set(AT_REQ_OPENCV_INSTALL "C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install")
 
 if(MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Od")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
+elseif(MINGW)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 endif()
 
 set(RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -26,7 +28,11 @@ set(Vulkan_INCLUDE_DIR ${AT_REQ_VULKAN_BASE}/Include)
 find_package(Vulkan REQUIRED)
 
 set(glfw3_DIR ${AT_REQ_GLFW3_BASE}/lib/cmake/glfw3/)
-set(glfw3_LIB ${AT_REQ_GLFW3_BASE}/lib/glfw3.lib)
+if(MSVC)
+    set(glfw3_LIB ${AT_REQ_GLFW3_BASE}/lib/glfw3.lib)
+elseif(MINGW)
+    set(glfw3_LIB ${AT_REQ_GLFW3_BASE}/lib/libglfw3.a)
+endif()
 find_package(glfw3 3.3 REQUIRED)
 
 

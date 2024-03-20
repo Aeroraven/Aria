@@ -9,6 +9,19 @@
 #include "../AnthemPipelineBase.h"
 #include "../../utils/AnthemUtlPhyDeviceReqBase.h"
 namespace Anthem::Core {
+
+    struct AnthemRayTracingShaderBindingTable {
+        AnthemGeneralBufferProp raygenSbt;
+        AnthemGeneralBufferProp missSbt;
+        AnthemGeneralBufferProp hitSbt;
+        AnthemGeneralBufferProp callableSbt;
+
+        bool raygenCreated;
+        bool missCreated;
+        bool hitCreated;
+        bool callableCreated;
+    };
+
     class AnthemRayTracingPipeline :public virtual AnthemPipelineBase,
         public virtual Util::AnthemUtlPhyDeviceReqBase,
     public virtual AnthemGeneralBufferUtilBase {
@@ -24,7 +37,7 @@ namespace Anthem::Core {
         std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfo = {};
         uint32_t handleSize = 0;
         uint32_t handleSizeAligned = 0;
-        std::vector<AnthemGeneralBufferProp> bindingTableBuffer;
+        AnthemRayTracingShaderBindingTable bindingTableBuffer;
 
         bool specifyShaderModule(const AnthemRayTracingShaders* shaderModule);
         bool createBindingTable();
@@ -34,7 +47,7 @@ namespace Anthem::Core {
         bool destroyPipeline();
         bool destroyPipelineLayout();
         bool setRayRecursion(uint32_t rayRec);
-        std::vector<VkStridedDeviceAddressRegionKHR> getTraceRayRegions(int32_t raygenId,int32_t missId,int32_t closeHitId,int32_t callableId) const;
+        std::vector<VkStridedDeviceAddressRegionKHR> getTraceRayRegions() const;
         const VkPipelineLayout* getPipelineLayout() const;
     };
 }

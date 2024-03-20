@@ -127,10 +127,10 @@ void createUniformBuffer() {
 }
 
 void createPipeline() {
-	st.rd.createRayTracingShaderGroup(&st.shader, {
-		{getShader("rgen"),AT_RTST_RAYGEN},
-		{getShader("rmiss"),AT_RTST_MISS},
-		{getShader("rchit"),AT_RTST_CLOSEHIT},
+	st.rd.createRayTracingShaderGroup(&st.shader, { 
+		{AT_RTSG_RAYGEN,{{getShader("rgen"),AT_RTST_RAYGEN}}},
+		{AT_RTSG_MISS,{{getShader("rmiss"),AT_RTST_MISS}}},
+		{AT_RTSG_HIT,{{getShader("rchit"),AT_RTST_CLOSEHIT}}},
 	});
 	AnthemDescriptorSetEntry dseAs{ st.descAs,AT_ACDS_ACC_STRUCT,0 };
 	AnthemDescriptorSetEntry dseImg{ st.descImg,AT_ACDS_STORAGE_IMAGE,0 };
@@ -149,7 +149,7 @@ void recordCommands() {
 		st.rd.drBindDescriptorSetCustomizedRayTracing({ dseAs,dseImg,dseUni }, st.pipeline, i);
 		uint32_t sH, sW;
 		st.rd.getSwapchainImageExtent(&sW, &sH);
-		st.rd.drTraceRays(st.pipeline, sH, sW, 0, 1, 2, -1, i);
+		st.rd.drTraceRays(st.pipeline, sH, sW, i);
 
 		// Present
 		st.rd.drSetImageLayoutSimple(st.storageImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, i);

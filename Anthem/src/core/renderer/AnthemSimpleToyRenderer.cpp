@@ -1069,9 +1069,8 @@ namespace Anthem::Core{
         vkCmdBindPipeline(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, *(pipeline->getPipeline()));
         return true;
     }
-    bool AnthemSimpleToyRenderer::drTraceRays(AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,
-        int32_t raygenId, int32_t missId, int32_t closeHitId, int32_t callableId, uint32_t cmdIdx) {
-        auto bindingTables = pipeline->getTraceRayRegions(raygenId, missId, closeHitId, callableId);
+    bool AnthemSimpleToyRenderer::drTraceRays(AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,uint32_t cmdIdx) {
+        auto bindingTables = pipeline->getTraceRayRegions();
         this->logicalDevice->vkCall_vkCmdTraceRaysKHR(
             *this->commandBuffers->getCommandBuffer(cmdIdx),
             &bindingTables[0], &bindingTables[1], &bindingTables[2], &bindingTables[3], width, height, 1);
@@ -1130,10 +1129,11 @@ namespace Anthem::Core{
         return true;
     }
 
-    bool AnthemSimpleToyRenderer::createRayTracingShaderGroup(AnthemRayTracingShaders** pShader,const std::vector<std::pair<std::string, AnthemRayTracingShaderType>>& shaderFile) {
+    bool AnthemSimpleToyRenderer::createRayTracingShaderGroup(AnthemRayTracingShaders** pShader,
+        const std::vector<std::pair<AnthemRayTracingShaderGroupType,std::vector<std::pair<std::string, AnthemRayTracingShaderType>>>>& shaderFile) {
         auto sd = new AnthemRayTracingShaders();
         for (auto& p : shaderFile) {
-            sd->loadShader(this->logicalDevice.get(), p.first, p.second);
+            sd->loadShaderGroup(this->logicalDevice.get(), p.first, p.second);
         }
         rtShaders.push_back(sd);
         *pShader = sd;

@@ -182,7 +182,7 @@ namespace Anthem::Core{
             const std::vector<AnthemPushConstant*> pconst, AnthemRayTracingShaders* shader,uint32_t rayRecursion);
         bool createRayTracingGeometry(AnthemAccStructGeometry** pAsGeo, uint32_t vertexStride, std::vector<float> vertices, std::vector<uint32_t>indices, std::vector<float>transform);
         bool createRayTracingInstance(AnthemAccStructInstance** pAsInst, AnthemBottomLevelAccStruct* bottomAs, std::vector<float> transform);
-        bool createRayTracingShaderGroup(AnthemRayTracingShaders** pShader, const std::vector<std::pair<std::string, AnthemRayTracingShaderType>>& shaderFile);
+        bool createRayTracingShaderGroup(AnthemRayTracingShaders** pShader, const std::vector<std::pair<AnthemRayTracingShaderGroupType, std::vector<std::pair<std::string, AnthemRayTracingShaderType>>>>& shaderFile);
 #endif
 
         // Swapchain Info
@@ -253,8 +253,7 @@ namespace Anthem::Core{
 #ifdef AT_FEATURE_RAYTRACING_ENABLED
         bool drBindDescriptorSetCustomizedRayTracing(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemRayTracingPipeline* pipeline, uint32_t cmdIdx);
         bool drBindRayTracingPipeline(AnthemRayTracingPipeline* pipeline, uint32_t cmdIdx);
-        bool drTraceRays(AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,
-            int32_t raygenId,int32_t missId,int32_t closeHitId,int32_t callableId, uint32_t cmdIdx);
+        bool drTraceRays(AnthemRayTracingPipeline* pipeline, uint32_t height, uint32_t width,uint32_t cmdIdx);
 #endif
 
         // Queue
