@@ -6,6 +6,7 @@ namespace Anthem{
         class AnthemConfig {
         public:
             const char* appName = "Anthem";
+            const char* demoName = "Untitled";
             const char* engineName = "No Engine?";
             
             int appcfgResolutionWidth = 1440;

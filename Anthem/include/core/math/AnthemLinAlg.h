@@ -256,7 +256,6 @@ namespace Anthem::Core::Math{
             }
             //Jordan
             for (int i = R - 1; i >= 0; i--) {
-                ANTH_LOGI(i);
                 auto factor = src[i][i];
                 for (auto j : AT_RANGE2(R)) {
                     src[i][j] /= factor;

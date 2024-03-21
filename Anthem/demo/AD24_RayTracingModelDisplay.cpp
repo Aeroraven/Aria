@@ -24,6 +24,7 @@ struct Stage {
 	AnthemSimpleToyRenderer rd;
 	AnthemConfig cfg;
 	AnthemCamera camera = AnthemCamera(AT_ACPT_PERSPECTIVE);
+	AnthemFrameRateMeter fpsMeter = AnthemFrameRateMeter(10);
 
 	std::vector<AnthemGLTFLoaderParseResult> model;
 	AnthemSimpleModelIntegrator ldModel;
@@ -61,6 +62,7 @@ inline std::string getShader(auto x) {
 
 void initialize() {
 	st.cfg.vkcfgPreferSrgbImagePresentation = false;
+	st.cfg.demoName = "24. Ray-tracing-based Model Drawing";
 	st.rd.setConfig(&st.cfg);
 	st.rd.initialize();
 
@@ -68,8 +70,8 @@ void initialize() {
 	st.rd.exGetWindowSize(rdH, rdW);
 
 	st.camera.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 70, -100);
-	st.camera.specifyFrontEyeRay(0, 0, 1);
+	st.camera.specifyPosition(0, 90, 90);
+	st.camera.specifyFrontEyeRay(0, -0.0, -1);
 }
 
 
@@ -191,6 +193,13 @@ void createStorageImage() {
 }
 
 void mainLoop() {
+	st.fpsMeter.record();
+	static int fx = 0;
+	fx = (fx + 1) % 100;
+	if (fx == 0) {
+		ANTH_LOGI("FPS:", st.fpsMeter.getFrameRate());
+	}
+
 	static int cur = 0;
 	uint32_t imgIdx;
 	st.rd.drPrepareFrame(cur, &imgIdx);

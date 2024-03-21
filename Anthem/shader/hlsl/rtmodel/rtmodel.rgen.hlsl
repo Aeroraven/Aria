@@ -1,16 +1,19 @@
 RaytracingAccelerationStructure accStruct : register(t0,space0);
 RWTexture2D<float4> outImage : register(u0,space1);
-struct Camera
-{
+struct Camera{
     float4x4 projInv;
     float4x4 viewInv;
 };
 
 ConstantBuffer<Camera> cam : register(b0, space2);
-struct Payload
-{
+struct Payload{
     [[vk::location(0)]] float3 hitv;
 };
+
+float4 gammaCorrection(float4 base){
+    float b = 1.0 / 2.2;
+    return pow(base, float4(b, b, b, b));
+}
 
 [shader("raygeneration")]
 void main()
@@ -32,5 +35,5 @@ void main()
     Payload payload;
     TraceRay(accStruct, 0x01, 0xff, 0, 0, 0, ray, payload);
 
-    outImage[int2(lId.xy)] = float4(payload.hitv, 0.0);
+    outImage[int2(lId.xy)] = gammaCorrection(float4(payload.hitv, 0.0));
 }

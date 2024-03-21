@@ -29,7 +29,11 @@ namespace Anthem::Core{
         }
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        this->window = glfwCreateWindow(w, h, config->appName, NULL, NULL);
+        std::string resw = config->appName;
+        resw += " [";
+        resw += config->demoName;
+        resw += "]";
+        this->window = glfwCreateWindow(w, h, resw.c_str(), NULL, NULL);
 
         if(window==nullptr){
             ANTH_LOGI("Failed to create window");

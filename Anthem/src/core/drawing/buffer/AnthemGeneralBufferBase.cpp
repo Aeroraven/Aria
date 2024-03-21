@@ -24,7 +24,7 @@ namespace Anthem::Core{
             ANTH_LOGE("Failed to allocate memory");
             return false;
         }
-        ANTH_LOGI("Created buffer:", bufProp->bufferCreateInfo.size);
+        ANTH_LOGV("Created buffer:", bufProp->bufferCreateInfo.size);
         this->bindBufferInternal(bufProp);
         return true;
     }
