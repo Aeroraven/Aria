@@ -9,8 +9,8 @@ namespace Anthem{
             const char* demoName = "Untitled";
             const char* engineName = "No Engine?";
             
-            int appcfgResolutionWidth = 1440;
-            int appcfgResolutionHeight = 900;
+            int appcfgResolutionWidth = 1920;
+            int appcfgResolutionHeight = 1080;
 
             std::vector<const char*> vkcfgValidationLayers = {"VK_LAYER_KHRONOS_validation"};
             bool vkcgEnableValidationLayers = true;

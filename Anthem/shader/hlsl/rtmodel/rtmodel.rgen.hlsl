@@ -8,6 +8,7 @@ struct Camera{
 ConstantBuffer<Camera> cam : register(b0, space2);
 struct Payload{
     [[vk::location(0)]] float3 hitv;
+    [[vk::location(1)]] float shadow;
 };
 
 float4 gammaCorrection(float4 base){

@@ -70,7 +70,7 @@ void initialize() {
 	st.rd.exGetWindowSize(rdH, rdW);
 
 	st.camera.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 90, 90);
+	st.camera.specifyPosition(0, 90, 100);
 	st.camera.specifyFrontEyeRay(0, -0.0, -1);
 }
 
@@ -84,7 +84,16 @@ void loadModel() {
 	st.model.pop_back();
 	std::vector<AnthemUtlSimpleModelStruct> rp;
 	for (auto& p : st.model)rp.push_back(p);
-	//rp.push_back(st.model[2]);
+
+	// Add Ground
+	AnthemUtlSimpleModelStruct ground;
+	float dx = 80.0, dy = 5.0;
+	ground.positions = { -dx,dy,-dx,-dx,dy,dx,dx,dy,dx,dx,dy,-dx };
+	ground.normals = { 0,1,0,0,1,0,0,1,0,0,1,0 };
+	ground.texCoords = { 0,0,0,0,0,0,0,0 };
+	ground.indices = { 0,1,2,2,3,0 };
+	rp.push_back(ground);
+
 	st.ldModel.loadModelRayTracing(&st.rd, rp);
 	st.modelRt = st.ldModel.getRayTracingParsedResult();
 
@@ -137,6 +146,7 @@ void createPipeline() {
 	st.rd.createRayTracingShaderGroup(&st.shader, {
 		{AT_RTSG_RAYGEN,{{getShader("rgen"),AT_RTST_RAYGEN}}},
 		{AT_RTSG_MISS,{{getShader("rmiss"),AT_RTST_MISS}}},
+		{AT_RTSG_MISS,{{getShader("shadow.rmiss"),AT_RTST_MISS}}},
 		{AT_RTSG_HIT,{{getShader("rchit"),AT_RTST_CLOSEHIT}}},
 	});
 	
