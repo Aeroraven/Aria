@@ -18,3 +18,5 @@ lib/
 *.ttf
 imgui2/*
 ref.cpp
+*.bin
+*.jpeg

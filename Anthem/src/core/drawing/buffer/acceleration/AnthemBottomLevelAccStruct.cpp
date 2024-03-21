@@ -11,7 +11,6 @@ namespace Anthem::Core {
 		for (auto& p : geometries) {
 			structGeos.push_back(p->getGeometry());
 			primitiveCnts.push_back(p->getPrimitiveCounts());
-			ANTH_LOGI("Blas Prims:", p->getPrimitiveCounts());
 		}
 		asBuildGeoInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
 		asBuildGeoInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;

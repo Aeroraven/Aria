@@ -91,8 +91,9 @@ namespace Anthem::Core{
         };
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
-        if (vkQueueSubmit(this->logicalDevice->getGraphicsQueue(), 1, &submitInfo, this->inFlightFence[frameIdx]) != VK_SUCCESS) {
-            ANTH_LOGE("Failed to submit draw command buffer");
+        auto res = vkQueueSubmit(this->logicalDevice->getGraphicsQueue(), 1, &submitInfo, this->inFlightFence[frameIdx]);
+        if (res != VK_SUCCESS) {
+            ANTH_LOGE("Failed to submit draw command buffer:",res);
             return false;
         }
         ANTH_LOGV("Draw command buffer submitted");

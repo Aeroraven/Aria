@@ -101,6 +101,7 @@ namespace Anthem::External{
             ANTH_LOGI("TexCoord Primitive Type:",curResult.texCoordPrimitiveType, "Dimension:",curResult.texCoordDim,"Length",curResult.texCoords.size());
             ANTH_LOGI("Tex Path",curResult.pbrBaseColorTexPath);
         }
+        ANTH_LOGI("Parsed ", model.meshes.size(), " Models");
         return true;
     }
 }

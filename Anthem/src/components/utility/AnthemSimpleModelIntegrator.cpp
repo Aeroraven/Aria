@@ -51,6 +51,9 @@ namespace Anthem::Components::Utility {
 			totalIndices += model[i].indices.size();
 			totalVerts += model[i].positions.size() / 3;
 		}
+		ANTH_LOGI("Total Indices:", totalIndices);
+		ANTH_LOGI("Total Triangles:", totalIndices / 3);
+		ANTH_LOGI("Total Instances:", model.size());
 
 		// Offset Buffer
 		rd->createDescriptorPool(&descOffset);
@@ -64,7 +67,7 @@ namespace Anthem::Components::Utility {
 				
 				accu += numVerts[i];
 				accuIdx += model[i].indices.size();
-				ANTH_LOGI("OB->", accu, ",", accuIdx);
+
 			}
 		};
 		rd->createShaderStorageBuffer(&offsetBuffer, numVerts.size() * 2, 0, descOffset, std::make_optional(offsetBufferPrepare), -1);
@@ -110,10 +113,16 @@ namespace Anthem::Components::Utility {
 		using texBufferSType = std::remove_cv_t<decltype(texBuffer)>;
 		std::function<void(texBufferSType)> texBufferPrepare = [&](texBufferSType w)->void {
 			uint32_t ci = 0;
-			for (auto x : model)
+			for (auto x : model) {
 				for (int i = 0; i < x.texCoords.size(); i += 2) {
 					w->setInput(ci++, { x.texCoords[i + 0],x.texCoords[i + 1] });
 				}
+				if (x.texCoords.size() == 0) {
+					for (int i = 0; i < x.normals.size(); i += 3) {
+						w->setInput(ci++, { 0,0 });
+					}
+				}
+			}
 		};
 		rd->createShaderStorageBuffer(&texBuffer, totalVerts, 0, descTex, std::make_optional(texBufferPrepare), -1);
 
