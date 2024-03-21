@@ -61,8 +61,10 @@ namespace Anthem::Components::Utility {
 			for (auto i : AT_RANGE2(numVerts.size())) {
 				w->setInput(i, { accu });
 				w->setInput(i + numVerts.size(), { accuIdx });
+				
 				accu += numVerts[i];
 				accuIdx += model[i].indices.size();
+				ANTH_LOGI("OB->", accu, ",", accuIdx);
 			}
 		};
 		rd->createShaderStorageBuffer(&offsetBuffer, numVerts.size() * 2, 0, descOffset, std::make_optional(offsetBufferPrepare), -1);
@@ -100,6 +102,7 @@ namespace Anthem::Components::Utility {
 					w->setInput(ci++, { x.normals[i + 0],x.normals[i + 1],x.normals[i + 2],1.0 });
 				}
 		};
+		
 		rd->createShaderStorageBuffer(&normalBuffer, totalVerts, 0, descNormal, std::make_optional(normalBufferPrepare), -1);
 
 		// Tex Buffer
@@ -109,7 +112,7 @@ namespace Anthem::Components::Utility {
 			uint32_t ci = 0;
 			for (auto x : model)
 				for (int i = 0; i < x.texCoords.size(); i += 2) {
-					w->setInput(ci++, { x.normals[i + 0],x.normals[i + 1] });
+					w->setInput(ci++, { x.texCoords[i + 0],x.texCoords[i + 1] });
 				}
 		};
 		rd->createShaderStorageBuffer(&texBuffer, totalVerts, 0, descTex, std::make_optional(texBufferPrepare), -1);

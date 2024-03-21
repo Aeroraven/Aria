@@ -27,7 +27,7 @@ namespace Anthem::Core {
 		}
 		this->vertexStride = vertexStride;
 		this->maxVertex = vertices.size() - 1;
-		this->primitiveCounts = vertices.size() / vertexStride;
+		this->primitiveCounts = indices.size() / 3;
 		return true;
 	}
 	bool AnthemAccStructGeometry::createTriangularGeometry() {

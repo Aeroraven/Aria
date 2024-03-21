@@ -43,6 +43,11 @@ struct Stage {
 	AnthemDescriptorPool* descAs = nullptr;
 	AnthemRayTracingShaders* shader = nullptr;
 	AnthemRayTracingPipeline* pipeline = nullptr;
+
+	// Image
+	AnthemDescriptorPool* descImage = nullptr;
+	AnthemImage** image = nullptr;
+
 }st;
 
 inline std::string getShader(auto x) {
@@ -77,9 +82,27 @@ void loadModel() {
 	st.model.pop_back();
 	std::vector<AnthemUtlSimpleModelStruct> rp;
 	for (auto& p : st.model)rp.push_back(p);
-
+	//rp.push_back(st.model[2]);
 	st.ldModel.loadModelRayTracing(&st.rd, rp);
 	st.modelRt = st.ldModel.getRayTracingParsedResult();
+
+	st.rd.createDescriptorPool(&st.descImage);
+	st.image = new AnthemImage * [st.model.size()];
+	std::vector<AnthemImageContainer*> imgContainer;
+	for (int i = 0; i < st.model.size(); i++) {
+		AnthemImageLoader* loader = new AnthemImageLoader();
+		uint32_t texWidth, texHeight, texChannels;
+		uint8_t* texData;
+		std::string texPath = st.model[i].basePath + st.model[i].pbrBaseColorTexPath;
+		if (st.model[i].pbrBaseColorTexPath == "") {
+			texPath = ANTH_ASSET_DIR;
+			texPath += "cat.jpg";
+		}
+		loader->loadImage(texPath.c_str(), &texWidth, &texHeight, &texChannels, &texData);
+		st.rd.createTexture(&st.image[i], st.descImage, texData, texWidth, texHeight, texChannels, 0, false, false, AT_IF_SRGB_UINT8, -1, true);
+		imgContainer.push_back(st.image[i]);
+	}
+	st.rd.addSamplerArrayToDescriptor(imgContainer, st.descImage, 0, -1);
 }
 
 
@@ -118,7 +141,13 @@ void createPipeline() {
 	AnthemDescriptorSetEntry dseAs{ st.descAs,AT_ACDS_ACC_STRUCT,0 };
 	AnthemDescriptorSetEntry dseImg{ st.descImg,AT_ACDS_STORAGE_IMAGE,0 };
 	AnthemDescriptorSetEntry dseUni{ st.descUniform,AT_ACDS_UNIFORM_BUFFER,0 };
-	st.rd.createRayTracingPipeline(&st.pipeline, { dseAs,dseImg,dseUni }, {}, st.shader, 1);
+	AnthemDescriptorSetEntry dseTex{ st.descImage,AT_ACDS_SAMPLER ,0 };
+	AnthemDescriptorSetEntry dsePos{ st.modelRt.descPos,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+	AnthemDescriptorSetEntry dseNormal{ st.modelRt.descNormal,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+	AnthemDescriptorSetEntry dseTexCoord{ st.modelRt.descTex,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+	AnthemDescriptorSetEntry dseIdx{ st.modelRt.descIndex,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+	AnthemDescriptorSetEntry dseOff{ st.modelRt.descOffset,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+	st.rd.createRayTracingPipeline(&st.pipeline, { dseAs,dseImg,dseUni,dseTex,dsePos,dseNormal,dseTexCoord,dseIdx,dseOff }, {}, st.shader, 1);
 }
 
 void recordCommands() {
@@ -129,7 +158,14 @@ void recordCommands() {
 		AnthemDescriptorSetEntry dseAs{ st.descAs,AT_ACDS_ACC_STRUCT,0 };
 		AnthemDescriptorSetEntry dseImg{ st.descImg,AT_ACDS_STORAGE_IMAGE,0 };
 		AnthemDescriptorSetEntry dseUni{ st.descUniform,AT_ACDS_UNIFORM_BUFFER,0 };
-		st.rd.drBindDescriptorSetCustomizedRayTracing({ dseAs,dseImg,dseUni }, st.pipeline, i);
+		AnthemDescriptorSetEntry dseTex{ st.descImage,AT_ACDS_SAMPLER ,0 };
+		AnthemDescriptorSetEntry dsePos{ st.modelRt.descPos,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+		AnthemDescriptorSetEntry dseNormal{ st.modelRt.descNormal,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+		AnthemDescriptorSetEntry dseTexCoord{ st.modelRt.descTex,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+		AnthemDescriptorSetEntry dseIdx{ st.modelRt.descIndex,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+		AnthemDescriptorSetEntry dseOff{ st.modelRt.descOffset,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+		st.rd.drBindDescriptorSetCustomizedRayTracing({ dseAs,dseImg,dseUni,dseTex,dsePos,dseNormal,dseTexCoord,dseIdx,dseOff }, st.pipeline, i);
+
 		uint32_t sH, sW;
 		st.rd.getSwapchainImageExtent(&sW, &sH);
 		st.rd.drTraceRays(st.pipeline, sH, sW, i);

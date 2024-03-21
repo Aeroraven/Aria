@@ -64,7 +64,7 @@ namespace Anthem::Core {
             layoutBindingDesc.stageFlags = VK_SHADER_STAGE_VERTEX_BIT |
                 VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT |
                 VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT |
-                VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+                VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT | VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
             layoutBindingDesc.pImmutableSamplers = nullptr;
 
             //Create Layout
