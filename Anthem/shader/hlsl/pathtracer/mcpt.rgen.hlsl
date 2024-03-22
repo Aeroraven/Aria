@@ -59,12 +59,9 @@ void main()
     float share = 1 / (float(od) + 1);
    
     float4 orgColor = gammaCorrection(outImage[int2(lId.xy)], true);
-    outImage[int2(lId.xy)] = float4(accuColor / float(samples), 0.0) * share + (1 - share) * orgColor;
-    outImage[int2(lId.xy)] = gammaCorrection(outImage[int2(lId.xy)],false);
+    float4 newColor = float4(accuColor / float(samples), 1.0) * share + (1 - share) * orgColor;
+    newColor = gammaCorrection(newColor, false);
     
-    float4 dest = outImage[int2(lId.xy)];
-    if (dest.x < 0 || dest.y < 0 || dest.z < 0)
-    {
-        outImage[int2(lId.xy)] = float4(1.0, 0.0, 0.0, 1.0);
-    }
+    outImage[int2(lId.xy)] = clamp(newColor, float4(0, 0, 0, 0), float4(1, 1, 1, 1));
+
 }

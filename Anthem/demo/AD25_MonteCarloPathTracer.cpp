@@ -41,7 +41,7 @@ struct Stage {
 	AnthemUniformBufferImpl<AtUniformMatf<4>, AtUniformMatf<4>>* uniformBuffer = nullptr;
 
 	AnthemDescriptorPool* descCounter = nullptr;
-	AnthemUniformBufferImpl<AtUniformVecf<1>, AtUniformVecf<1>, AtUniformVecf<1>>* uniCounter = nullptr;
+	AnthemUniformBufferImpl<AtUniformVecf<1>, AtUniformVecf<1>, AtUniformVecf<1>, AtUniformVecf<1>>* uniCounter = nullptr;
 	float counter = 0;
 
 	// Pipeline
@@ -133,7 +133,8 @@ void createUniformBuffer() {
 
 	st.uniformBuffer->specifyUniforms(pm, vm);
 	float totalLights = st.ldModel.getLightFaces(), totalAreas = st.ldModel.getLightAreas();
-	st.uniCounter->specifyUniforms(&st.counter,&totalLights,&totalAreas);
+	float timex = 0;
+	st.uniCounter->specifyUniforms(&st.counter,&totalLights,&totalAreas,&timex);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.uniformBuffer->updateBuffer(i);
 		st.uniCounter->updateBuffer(i);
@@ -214,7 +215,8 @@ void createStorageImage() {
 void updateUniformCounter() {
 	st.counter += 1;
 	float totalLights = st.ldModel.getLightFaces(), totalAreas = st.ldModel.getLightAreas();
-	st.uniCounter->specifyUniforms(&st.counter, &totalLights, &totalAreas);
+	float timex = glfwGetTime();
+	st.uniCounter->specifyUniforms(&st.counter, &totalLights, &totalAreas,&timex);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.uniCounter->updateBuffer(i);
 	}

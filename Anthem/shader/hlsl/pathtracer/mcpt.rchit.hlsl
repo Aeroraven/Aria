@@ -17,6 +17,7 @@ struct Counter{
     float counter;
     float totalLights;
     float totalLightAreas;
+    float time;
 };
 
 ConstantBuffer<Camera> cam : register(b0, space2);
@@ -35,19 +36,21 @@ StructuredBuffer<uint> sbLightIndices : register(t0, space10);
 static const float PI = 3.1415926;
 static const float PI2 = 6.28318530717;
 static const int TOTAL_INSTANCES = 17;
-static const float NON_IMP_SAMP_WEIGHT = 1.0;
+static const float NON_IMP_SAMP_WEIGHT = 0.5;
 static const float EPS = 1e-4;
 
 static float debugInst = 0;
 static float debugLightId = 0;
-
+static float debugWarn = 0;
+static float3 debugWarn3 = float3(0, 0, 0);
+static float sd = 0;
 // Random
 float random(float2 seeds){
     //Random function from https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl;
     float a = 12.9898;
     float b = 78.233;
     float c = 43758.5453;
-    float dt = dot(seeds * cnt.counter, float2(a, b));
+    float dt = dot(seeds, float2(a, b));
     float sn = fmod(dt, PI);
     return frac(sin(sn) * c);
 }
@@ -150,15 +153,19 @@ bool isChosenLight(uint primitive, uint instance)
 }
 // Lambertian Reflection
 float3 lambertOutRay(float3 normal, float seed1, float seed2){
-    float3 randomVec = randomHemisphereCosine(seed1, seed2);
-    float3 a = randomUnitVector(seed1+seed2, seed2-seed1);
+    float3 randomVec = randomHemisphereCosine(float2(seed1, seed2), float2(seed2, seed1));
+    float3 a = randomUnitVector(float2(seed1, seed2), float2(seed2, seed1));
     float3 t = normalize(cross(normal, a));
-    float3 s = cross(normal, t);
+    float3 s = normalize(cross(normal, t));
+    if (length(a-normal) < EPS){
+        debugWarn = a.y;
+    }
+    debugWarn3 = abs(a);
     return t * randomVec.x + s * randomVec.y + normal * randomVec.z;
 }
 
 float lambertPdf(float3 normal, float3 outDir){
-    return max(0, dot(outDir, normal) / PI);
+    return max(0, abs(dot(outDir, normal)) / PI);
 }
 
 // Importance Sampling
@@ -172,8 +179,8 @@ float3 importanceOutRay(float3 hitPoint, uint lightIdx, float prevTri1, float pr
         v[i] = sbPosition[vertexOffset + sbLightIndices[lightIdx * 4 + i]].xyz;
     }
     
-    float r1 = random(prevTri1);
-    float r2 = random(prevTri2);
+    float r1 = random(float2(prevTri1, prevTri2));
+    float r2 = random(float2(prevTri2, prevTri1));
     float3 samplePt = (1 - sqrt(r1)) * v[0] + sqrt(r1) * r2 * v[1] + sqrt(r1) * (1 - r2) * v[2];
     
     targetSamplePt = samplePt;
@@ -216,12 +223,12 @@ float3 srgbToLinear(float3 x){
 
 // Scatter
 float scatterPdf(float3 normal, float3 outDir){
-    return max(0, dot(outDir, normal) / PI);
+    return max(0, abs(dot(outDir, normal)) / PI);
 }
 
 float3 scatter(float3 hitPoint,float3 hitnorm, uint impSampId,float rndSamp, float rnd1, float rnd2, inout float weight){
     float3 nextRay;
-    float sampCriteria = random(rndSamp);
+    float sampCriteria = random(float2(rndSamp, rndSamp));
     if (sampCriteria < NON_IMP_SAMP_WEIGHT){
         nextRay = lambertOutRay(hitnorm, rnd1, rnd2);
     }
@@ -239,7 +246,7 @@ float3 scatter(float3 hitPoint,float3 hitnorm, uint impSampId,float rndSamp, flo
     }
     pdf += (1 - NON_IMP_SAMP_WEIGHT) * impPdf;
 
-    weight = scatterPdf(hitnorm, nextRay) / (0+pdf);
+    weight = scatterPdf(hitnorm, nextRay) / (EPS+pdf);
     return nextRay;
 }
 
@@ -260,7 +267,6 @@ void main(inout Payload p, in Attributes at){
     if (dot(WorldRayDirection(), norm) > 0){
         norm = -norm;
     }
-    //color = float4(0.5, 0.5, 0.5, 0.5);
     color = float4((texColor.xyz), 1.0);
 
     
@@ -268,12 +274,12 @@ void main(inout Payload p, in Attributes at){
     float srd = random(RayTCurrent() * fmod(cnt.counter * 1.41, 3.14));
     uint lightIdx = uint( srd * cnt.totalLights);
     float colorWeight = 0;
+    
+    float rndX = 2.1 * p.innerIter + WorldRayOrigin().y + frac(cos(4.12 * cnt.time + float(RayTCurrent())) * 2145.17) + frac(sin(6.77 * cnt.counter)) - frac(cos(float(primId)));
+    float rndY = 7.9 * p.innerIter + WorldRayOrigin().x + frac(cos(1.27 * pow(cnt.time, 1.1) + float(RayTCurrent())) * 145.17) + frac(sin(6.77 * sqrt(cnt.counter))) - frac(cos(float(primId)));
+    float rndW = 1.4 * p.innerIter + WorldRayOrigin().x + WorldRayOrigin().y + frac(sin(cnt.time) * 1145.14) + WorldRayDirection().y * WorldRayDirection().x;
     float3 nextRayDir = scatter(WorldRayDirection() * RayTCurrent() + WorldRayOrigin(),
-        norm, lightIdx,
-        RayTCurrent() * fmod(sin(cnt.counter) * 412.41, 3.14) + float(p.innerIter) * 2.1 + sin(float(PrimitiveIndex()) / 251.0),
-        RayTCurrent() * fmod(cos(cnt.counter) * 516.41, 3.14) + float(p.innerIter) * 2.1 + sin(float(PrimitiveIndex()) / 251.0),
-        RayTCurrent() * fmod(sin(cnt.counter) * 699.21, 5.17) * 7.41 + float(p.innerIter) + sin(float(PrimitiveIndex()) / 151.0),
-        colorWeight);
+        norm, lightIdx,rndW,rndX,rndY,colorWeight);
     
     Payload nextPayload;
     float3 nextDir = nextRayDir;
@@ -282,7 +288,7 @@ void main(inout Payload p, in Attributes at){
     nextPayload.hitv = float3(0.0, 0.0, 0.0);
     nextPayload.innerIter = p.innerIter;
     
-    const float lumin = 40.0;
+    const float lumin = 20.0;
     if (InstanceID() == 3){
         p.hitv = float3(lumin, lumin, lumin);
     }
@@ -300,6 +306,7 @@ void main(inout Payload p, in Attributes at){
             TraceRay(accStruct, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, newRay, nextPayload);
         }
         p.hitv = color.rgb * nextPayload.hitv * colorWeight;
+        
     }
 
 }
