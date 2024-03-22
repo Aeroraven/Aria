@@ -36,8 +36,8 @@ StructuredBuffer<uint> sbLightIndices : register(t0, space10);
 static const float PI = 3.1415926;
 static const float PI2 = 6.28318530717;
 static const int TOTAL_INSTANCES = 17;
-static const float NON_IMP_SAMP_WEIGHT = 0.5;
-static const float EPS = 1e-4;
+static const float IMP_SAMP_WEIGHT = 0.5;
+static const float EPS = 1e-3;
 
 static float debugInst = 0;
 static float debugLightId = 0;
@@ -47,6 +47,8 @@ static float sd = 0;
 // Random
 float random(float2 seeds){
     //Random function from https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl;
+    return frac(sin(dot(seeds, float2(12.9898, 4.1414))) * 43758.5453);
+    
     float a = 12.9898;
     float b = 78.233;
     float c = 43758.5453;
@@ -55,11 +57,20 @@ float random(float2 seeds){
     return frac(sin(sn) * c);
 }
 
-float3 randomUnitVector(float2 seeds1, float2 seeds2){
-    float up = random(seeds1) * 2.0 - 1.0;
+float3 randomUnitVectorLegacy(float2 seeds1, float2 seeds2){
+    float up = random(seeds2) * 2.0 - 1.0;
     float over = sqrt(max(0.0, 1.0 - up * up));
-    float around = random(seeds2) * PI2;
-    return normalize(float3(cos(around) * over, up, sin(around) * over));
+    float around = random(seeds1) * PI2;
+    float x = cos(around) * over;
+    float y = up;
+    float z = sin(around) * over;
+    return normalize(float3(z, x,y ));
+}
+
+float3 randomUnitVector(float2 seed1, float2 seed2)
+{
+    float3 randVec = float3(random(seed1), random(seed2 + 1.0), random(seed1 + seed2 + 2.0));
+    return normalize(randVec * 2.0 - 1.0);
 }
 
 float3 randomHemisphereCosine(float2 seeds1, float2 seeds2){
@@ -154,13 +165,25 @@ bool isChosenLight(uint primitive, uint instance)
 // Lambertian Reflection
 float3 lambertOutRay(float3 normal, float seed1, float seed2){
     float3 randomVec = randomHemisphereCosine(float2(seed1, seed2), float2(seed2, seed1));
-    float3 a = randomUnitVector(float2(seed1, seed2), float2(seed2, seed1));
+    float3 a = randomUnitVector(float2(sin(seed1) + seed2, sin(seed2) + seed1), float2(seed2, seed1));
+    for (uint i = 0; i < 2; i++)
+    {
+        debugWarn = 0;
+        seed2 += random(seed1);
+        seed1 += random(seed2);
+        a = randomUnitVector(float2(sin(seed1) + seed2, sin(seed2) + seed1), float2(seed2, seed1));
+        if (length(a - normal) < EPS || length(a + normal) < EPS)
+        {
+            debugWarn = 1;
+            continue;
+        }
+        break;
+    }
+        
     float3 t = normalize(cross(normal, a));
     float3 s = normalize(cross(normal, t));
-    if (length(a-normal) < EPS){
-        debugWarn = a.y;
-    }
-    debugWarn3 = abs(a);
+    
+    debugWarn3 = t * randomVec.x + s * randomVec.y + normal * randomVec.z;
     return t * randomVec.x + s * randomVec.y + normal * randomVec.z;
 }
 
@@ -226,27 +249,34 @@ float scatterPdf(float3 normal, float3 outDir){
     return max(0, abs(dot(outDir, normal)) / PI);
 }
 
-float3 scatter(float3 hitPoint,float3 hitnorm, uint impSampId,float rndSamp, float rnd1, float rnd2, inout float weight){
+float3 scatter(float3 hitPoint, float3 hitnorm, uint impSampId, float rndSamp, float rnd1, float rnd2, inout float weight, inout float impSample){
     float3 nextRay;
-    float sampCriteria = random(float2(rndSamp, rndSamp));
-    if (sampCriteria < NON_IMP_SAMP_WEIGHT){
+    float sampCriteria = random(float2(rndSamp+rnd1, rndSamp+rnd2));
+    if (sampCriteria <= 1 - IMP_SAMP_WEIGHT * impSample){
         nextRay = lambertOutRay(hitnorm, rnd1, rnd2);
     }
     else{
         //Importance Sampling
         float3 tgt;
         nextRay = importanceOutRay(hitPoint, impSampId, rnd1, rnd2, tgt);
+        debugWarn3 = nextRay;
+
     }
 
-    float pdf = lambertPdf(hitnorm, nextRay) * NON_IMP_SAMP_WEIGHT;
+    float pdf = lambertPdf(hitnorm, nextRay) * (1 - IMP_SAMP_WEIGHT * impSample);
     float impPdf = 0;
     for (uint i = 0; i < uint(cnt.totalLights+0.1); i++)
     {
         impPdf += importancePdf(hitPoint, hitnorm, nextRay, i) / cnt.totalLights;
     }
-    pdf += (1 - NON_IMP_SAMP_WEIGHT) * impPdf;
+    pdf += IMP_SAMP_WEIGHT * impSample * impPdf;
 
     weight = scatterPdf(hitnorm, nextRay) / (EPS+pdf);
+    if (pdf < EPS)
+    {
+        weight = 0;
+    }
+
     return nextRay;
 }
 
@@ -268,18 +298,24 @@ void main(inout Payload p, in Attributes at){
         norm = -norm;
     }
     color = float4((texColor.xyz), 1.0);
-
+    //color = float4(0.5, 0.5, 0.5, 1.0);
     
     // Generate Next Ray
-    float srd = random(RayTCurrent() * fmod(cnt.counter * 1.41, 3.14));
-    uint lightIdx = uint( srd * cnt.totalLights);
+   
     float colorWeight = 0;
+    float drX = frac(cos(52.1 * p.iter)) + WorldRayOrigin().y + frac(cos(9.12 * pow(cnt.time, 1.1) + float(RayTCurrent())) * 0.17) + frac(sin(3.737 * cnt.counter)) - frac(sin(float(primId)));
+    float drY = frac(sin(15.4 * p.iter)) + WorldRayOrigin().x + frac(cos(4.89 * sqrt(cnt.time) + float(RayTCurrent())) * 0.29) + frac(cos(3.737 * cnt.counter)) - frac(PI * cos(float(primId)));
+    float srd = random(float2(drX,drY));
+    uint lightIdx = uint(srd * cnt.totalLights);
     
-    float rndX = 2.1 * p.innerIter + WorldRayOrigin().y + frac(cos(4.12 * cnt.time + float(RayTCurrent())) * 2145.17) + frac(sin(6.77 * cnt.counter)) - frac(cos(float(primId)));
-    float rndY = 7.9 * p.innerIter + WorldRayOrigin().x + frac(cos(1.27 * pow(cnt.time, 1.1) + float(RayTCurrent())) * 145.17) + frac(sin(6.77 * sqrt(cnt.counter))) - frac(cos(float(primId)));
-    float rndW = 1.4 * p.innerIter + WorldRayOrigin().x + WorldRayOrigin().y + frac(sin(cnt.time) * 1145.14) + WorldRayDirection().y * WorldRayDirection().x;
-    float3 nextRayDir = scatter(WorldRayDirection() * RayTCurrent() + WorldRayOrigin(),
-        norm, lightIdx,rndW,rndX,rndY,colorWeight);
+    float rndX = frac(sin(2.1 * p.innerIter)) + WorldRayOrigin().y + frac(cos(4.12 * cnt.time + float(RayTCurrent())) * 745.17) + frac(sin(6.77 * cnt.counter)) - frac(cos(float(primId)));
+    float rndY = frac(sin(7.9 * p.innerIter)) + WorldRayOrigin().x + frac(cos(1.27 * pow(cnt.time, 1.1) + float(RayTCurrent())) * 145.17) + frac(sin(6.77 * sqrt(cnt.counter))) - frac(cos(float(primId)));
+    float rndW = frac(sin(1.4 * p.innerIter)) + WorldRayOrigin().x + WorldRayOrigin().y + frac(sin(cnt.time) * 1149.14) + WorldRayDirection().y * WorldRayDirection().x;
+    float impSample = 1.0;
+    if (InstanceID() == 3){
+        impSample = 0.0;
+    }
+    float3 nextRayDir = scatter(WorldRayDirection() * RayTCurrent() + WorldRayOrigin(), norm, lightIdx, rndW, rndX, rndY, colorWeight, impSample);
     
     Payload nextPayload;
     float3 nextDir = nextRayDir;
@@ -288,25 +324,23 @@ void main(inout Payload p, in Attributes at){
     nextPayload.hitv = float3(0.0, 0.0, 0.0);
     nextPayload.innerIter = p.innerIter;
     
-    const float lumin = 20.0;
+    const float lumin = 40.0;
     if (InstanceID() == 3){
         p.hitv = float3(lumin, lumin, lumin);
     }
-    else
-    {
-        RayDesc newRay;
-        newRay.Direction = nextDir;
-        newRay.Origin = nextOrigin;
-        newRay.TMax = 10000.0;
-        newRay.TMin = 0.01;
+
+    RayDesc newRay;
+    newRay.Direction = nextDir;
+    newRay.Origin = nextOrigin;
+    newRay.TMax = 10000.0;
+    newRay.TMin = 0.01;
     
-        if (p.iter <= 5)
-        {
-            nextPayload.iter = p.iter + 1;
-            TraceRay(accStruct, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, newRay, nextPayload);
-        }
-        p.hitv = color.rgb * nextPayload.hitv * colorWeight;
-        
+    if (p.iter <= 5)
+    {
+        nextPayload.iter = p.iter + 1;
+        TraceRay(accStruct, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, newRay, nextPayload);
     }
+    p.hitv += color.rgb * nextPayload.hitv * colorWeight;
+    //p.hitv = abs(norm.xyz);
 
 }

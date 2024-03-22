@@ -999,6 +999,19 @@ namespace Anthem::Core{
             *swapChain->getSwapChainImage(swapchainImageIdx), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imgCp);
         return true;
     }
+    bool AnthemSimpleToyRenderer::drCopyImageToSwapchainImageWithFormatConv(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx) {
+        VkImageBlit imgBlit;
+        imgBlit.dstOffsets[0] = { 0,0,0 };
+        imgBlit.dstOffsets[1] = { (int)this->swapChain->getSwapChainExtentWidth(), (int)this->swapChain->getSwapChainExtentHeight(),1 };
+        imgBlit.srcOffsets[0] = { 0,0,0 };
+        imgBlit.srcOffsets[1] = { (int)this->swapChain->getSwapChainExtentWidth(), (int)this->swapChain->getSwapChainExtentHeight(),1 };
+        imgBlit.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+        imgBlit.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+        vkCmdBlitImage(*this->commandBuffers->getCommandBuffer(cmdIdx), *image->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+            *swapChain->getSwapChainImage(swapchainImageIdx), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imgBlit, VK_FILTER_LINEAR);
+        return true;
+
+    }
     bool AnthemSimpleToyRenderer::drSetImageLayoutSimple(AnthemImage* image, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx) {
         return AnthemImageInfoProcessing::setImageLayout(
             *image->getImage(), *commandBuffers->getCommandBuffer(cmdIdx),

@@ -23,10 +23,20 @@ struct Payload
 
 float4 gammaCorrection(float4 base,bool inv)
 {
-    float b = 1.0 / 2.4;
+    float b = 1.0 / 2.2;
     if (inv)
         b = 1 / b;
     return pow(base, float4(b, b, b, b));
+}
+
+float4 toneMapping(float4 base, bool inv)
+{
+    return base;
+    if (!inv)
+    {
+        return base / (base + 1);
+    }
+    return base / (1 - base);
 }
 
 [shader("raygeneration")]
@@ -50,18 +60,27 @@ void main()
 
         Payload payload;
         payload.iter = 1;
+        payload.hitv = float3(0, 0, 0);
         payload.innerIter = i;
         TraceRay(accStruct, 0x01, 0xff, 0, 0, 0, ray, payload);
+        
+        if (payload.hitv.x < 0 || payload.hitv.y < 0 || payload.hitv.z < 0)
+        {
+            outImage[int2(lId.xy)] = float4(1.0, 0.0, 10.0, 0.0);
+
+        }
         accuColor += payload.hitv;
     }
     int od = int(cnt.counter - 0.5);
     
-    float share = 1 / (float(od) + 1);
+    float share = 1 / (1 + float(od));
    
-    float4 orgColor = gammaCorrection(outImage[int2(lId.xy)], true);
+    float4 orgColor = toneMapping(gammaCorrection(outImage[int2(lId.xy)], true), true);
     float4 newColor = float4(accuColor / float(samples), 1.0) * share + (1 - share) * orgColor;
     newColor = gammaCorrection(newColor, false);
+    newColor = toneMapping(newColor, false);
     
-    outImage[int2(lId.xy)] = clamp(newColor, float4(0, 0, 0, 0), float4(1, 1, 1, 1));
+    //outImage[int2(lId.xy)] = clamp(newColor, float4(0, 0, 0, 0), float4(1, 1, 1, 1));
+    outImage[int2(lId.xy)] = newColor;
 
 }

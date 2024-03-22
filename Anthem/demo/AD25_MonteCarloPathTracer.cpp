@@ -195,7 +195,7 @@ void recordCommands() {
 		// Present
 		st.rd.drSetImageLayoutSimple(st.storageImage, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, i);
 		st.rd.drSetSwapchainImageLayoutSimple(i, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, i);
-		st.rd.drCopyImageToSwapchainImage(st.storageImage, i, i);
+		st.rd.drCopyImageToSwapchainImageWithFormatConv(st.storageImage, i, i);
 		st.rd.drSetImageLayoutSimple(st.storageImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, i);
 		st.rd.drSetSwapchainImageLayoutSimple(i, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, i);
 		st.rd.drEndCommandRecording(i);
@@ -205,7 +205,7 @@ void recordCommands() {
 void createStorageImage() {
 	st.rd.getSwapchainImageExtent(&st.imgWidth, &st.imgHeight);
 	st.rd.createTexture(&st.storageImage, nullptr, nullptr,
-		st.imgWidth, st.imgHeight, 4, 0, false, false, AT_IF_SWAPCHAIN, -1, true, AT_IU_RAYTRACING_DEST);
+		st.imgWidth, st.imgHeight, 4, 0, false, false, AT_IF_SRGB_FLOAT32, -1, true, AT_IU_RAYTRACING_DEST);
 	st.storageImage->toGeneralLayout();
 
 	st.rd.createDescriptorPool(&st.descImg);
