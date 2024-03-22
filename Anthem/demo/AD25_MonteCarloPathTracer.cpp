@@ -41,7 +41,7 @@ struct Stage {
 	AnthemUniformBufferImpl<AtUniformMatf<4>, AtUniformMatf<4>>* uniformBuffer = nullptr;
 
 	AnthemDescriptorPool* descCounter = nullptr;
-	AnthemUniformBufferImpl<AtUniformVecf<1>>* uniCounter = nullptr;
+	AnthemUniformBufferImpl<AtUniformVecf<1>, AtUniformVecf<1>, AtUniformVecf<1>>* uniCounter = nullptr;
 	float counter = 0;
 
 	// Pipeline
@@ -85,10 +85,9 @@ void loadModel() {
 	loader.loadModel((path + "\\indoor3\\scene.gltf").c_str());
 	loader.parseModel(config, st.model);
 	std::vector<AnthemUtlSimpleModelStruct> rp;
-	//std::reverse(st.model.begin(), st.model.end());
 	for (auto& p : st.model)rp.push_back(p);
 
-	st.ldModel.loadModelRayTracing(&st.rd, rp);
+	st.ldModel.loadModelRayTracing(&st.rd, rp, { 3 });
 	st.modelRt = st.ldModel.getRayTracingParsedResult();
 
 	st.rd.createDescriptorPool(&st.descImage);
@@ -133,7 +132,8 @@ void createUniformBuffer() {
 	view.columnMajorVectorization(vm);
 
 	st.uniformBuffer->specifyUniforms(pm, vm);
-	st.uniCounter->specifyUniforms(&st.counter);
+	float totalLights = st.ldModel.getLightFaces(), totalAreas = st.ldModel.getLightAreas();
+	st.uniCounter->specifyUniforms(&st.counter,&totalLights,&totalAreas);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.uniformBuffer->updateBuffer(i);
 		st.uniCounter->updateBuffer(i);
@@ -162,7 +162,9 @@ void createPipeline() {
 	AnthemDescriptorSetEntry dseIdx{ st.modelRt.descIndex,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
 	AnthemDescriptorSetEntry dseOff{ st.modelRt.descOffset,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
 	AnthemDescriptorSetEntry dseUniCounter{ st.descCounter,AT_ACDS_UNIFORM_BUFFER,0 };
-	st.rd.createRayTracingPipeline(&st.pipeline, { dseAs,dseImg,dseUni,dseTex,dsePos,dseNormal,dseTexCoord,dseIdx,dseOff,dseUniCounter },
+	AnthemDescriptorSetEntry dseLightTri{ st.modelRt.descLightIdx,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+	st.rd.createRayTracingPipeline(&st.pipeline,
+		{ dseAs,dseImg,dseUni,dseTex,dsePos,dseNormal,dseTexCoord,dseIdx,dseOff,dseUniCounter,dseLightTri },
 		{}, st.shader, 9);
 }
 
@@ -181,7 +183,9 @@ void recordCommands() {
 		AnthemDescriptorSetEntry dseIdx{ st.modelRt.descIndex,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
 		AnthemDescriptorSetEntry dseOff{ st.modelRt.descOffset,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
 		AnthemDescriptorSetEntry dseUniCounter{ st.descCounter,AT_ACDS_UNIFORM_BUFFER,0 };
-		st.rd.drBindDescriptorSetCustomizedRayTracing({ dseAs,dseImg,dseUni,dseTex,dsePos,dseNormal,dseTexCoord,dseIdx,dseOff,dseUniCounter }, st.pipeline, i);
+		AnthemDescriptorSetEntry dseLightTri{ st.modelRt.descLightIdx,AT_ACDS_SHADER_STORAGE_BUFFER ,0 };
+		st.rd.drBindDescriptorSetCustomizedRayTracing(
+			{ dseAs,dseImg,dseUni,dseTex,dsePos,dseNormal,dseTexCoord,dseIdx,dseOff,dseUniCounter,dseLightTri }, st.pipeline, i);
 
 		uint32_t sH, sW;
 		st.rd.getSwapchainImageExtent(&sW, &sH);
@@ -209,7 +213,8 @@ void createStorageImage() {
 
 void updateUniformCounter() {
 	st.counter += 1;
-	st.uniCounter->specifyUniforms(&st.counter);
+	float totalLights = st.ldModel.getLightFaces(), totalAreas = st.ldModel.getLightAreas();
+	st.uniCounter->specifyUniforms(&st.counter, &totalLights, &totalAreas);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.uniCounter->updateBuffer(i);
 	}

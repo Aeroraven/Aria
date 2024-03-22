@@ -1,7 +1,12 @@
 #include "../../../include/components/utility/AnthemSimpleModelIntegrator.h"
+#include "../../../include/core/math/AnthemLinAlg.h"
+#include "../../../include/core/math/AnthemMathAbbrs.h"
 
 namespace Anthem::Components::Utility {
 	bool AnthemSimpleModelIntegrator::loadModel(AnthemSimpleToyRenderer* renderer, std::vector<AnthemUtlSimpleModelStruct> model, uint32_t cpuJobs) {
+		using namespace Anthem::Core::Math::Abbr;
+		using namespace Anthem::Core::Math;
+
 		auto& rd = renderer;
 		rd->createVertexBuffer(&vx);
 		rd->createIndexBuffer(&ix);
@@ -41,18 +46,35 @@ namespace Anthem::Components::Utility {
 		ix->setIndices(ixList);
 		return true;
 	}
-	bool AnthemSimpleModelIntegrator::loadModelRayTracing(AnthemSimpleToyRenderer* renderer, const std::vector<AnthemUtlSimpleModelStruct>& model) {
+	float AnthemSimpleModelIntegrator::getLightAreas() {
+		return this->totalLightAreas;
+	}
+	uint32_t AnthemSimpleModelIntegrator::getLightFaces() {
+		return this->totalLightFaces;
+	}
+	bool AnthemSimpleModelIntegrator::loadModelRayTracing(AnthemSimpleToyRenderer* renderer, const std::vector<AnthemUtlSimpleModelStruct>& model,
+		const std::set<int> lightIds) {
+		using namespace Anthem::Core::Math::Abbr;
+		using namespace Anthem::Core::Math;
+
+
 		auto& rd = renderer;
 		std::vector<uint32_t> numVerts;
 		uint32_t totalIndices = 0;
 		uint32_t totalVerts = 0;
+
+		uint32_t totalLightInds = 0;
 		for (auto i : AT_RANGE2(model.size())) {
 			numVerts.push_back(model[i].positions.size() / 3);
 			totalIndices += model[i].indices.size();
 			totalVerts += model[i].positions.size() / 3;
+			if (lightIds.count(i)) {
+				totalLightInds += model[i].indices.size();
+			}
 		}
 		ANTH_LOGI("Total Indices:", totalIndices);
 		ANTH_LOGI("Total Triangles:", totalIndices / 3);
+		ANTH_LOGI("Total Lighting Triangles:", totalLightInds / 3);
 		ANTH_LOGI("Total Instances:", model.size());
 
 		// Offset Buffer
@@ -82,6 +104,37 @@ namespace Anthem::Components::Utility {
 					w->setInput(ci++, { i });
 		};
 		rd->createShaderStorageBuffer(&indexBuffer, totalIndices, 0, descIndex, std::make_optional(indexBufferPrepare), -1);
+
+		// Light Index Bufer
+		rd->createDescriptorPool(&descLightIdx);
+		using idLightBufSType = std::remove_cv_t<decltype(lightIndexBuffer)>;
+		std::function<void(idLightBufSType)> indLightBufferPrepare= [&](idLightBufSType w)->void {
+			uint32_t ci = 0;
+			for (auto i : AT_RANGE2(model.size())) {
+				if (lightIds.count(i) == 0)continue;
+				for (int j = 0; j < model[i].indices.size(); j += 3) {
+					w->setInput(ci++, { model[i].indices[j] });
+					w->setInput(ci++, { model[i].indices[j+1] });
+					w->setInput(ci++, { model[i].indices[j+2] });
+					w->setInput(ci++, { static_cast<uint32_t>(i) });
+
+					AtVecf3 v0 = { model[i].positions[model[i].indices[j] * 3],
+						model[i].positions[model[i].indices[j] * 3 + 1] ,model[i].positions[model[i].indices[j] * 3 + 2] };
+					AtVecf3 v1 = { model[i].positions[model[i].indices[j + 1] * 3],
+						model[i].positions[model[i].indices[j + 1] * 3 + 1] ,model[i].positions[model[i].indices[j + 1] * 3 + 2] };
+					AtVecf3 v2 = { model[i].positions[model[i].indices[j + 2] * 3],
+						model[i].positions[model[i].indices[j + 2] * 3 + 1] ,model[i].positions[model[i].indices[j + 2] * 3 + 2] };
+
+					AtVecf3 a1 = v1 - v0;
+					AtVecf3 a2 = v2 - v0;
+					AtVecf3 cr = AnthemLinAlg::cross3(a1, a2);
+					totalLightAreas += cr.len() / 2;
+					totalLightFaces++;
+				}
+			}
+			ANTH_LOGI("Total Light Faces:", totalLightFaces);
+		};
+		rd->createShaderStorageBuffer(&lightIndexBuffer, totalLightInds/3*4, 0, descLightIdx, std::make_optional(indLightBufferPrepare), -1);
 
 		// Pos Buffer
 		rd->createDescriptorPool(&descPos);
@@ -184,6 +237,9 @@ namespace Anthem::Components::Utility {
 		ret.posBuffer = posBuffer;
 		ret.texBuffer = texBuffer;
 		ret.tlasObj = tlasObj;
+
+		ret.descLightIdx = descLightIdx;
+		ret.lightIndexBuffer = lightIndexBuffer;
 		return ret;
 	}
 }

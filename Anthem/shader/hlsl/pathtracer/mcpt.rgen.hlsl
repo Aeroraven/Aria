@@ -8,6 +8,8 @@ struct Camera
 struct Counter
 {
     float counter;
+    float totalLights;
+    float totalLightAreas;
 };
 
 ConstantBuffer<Counter> cnt : register(b0, space9);
@@ -19,9 +21,11 @@ struct Payload
     [[vk::location(2)]] uint innerIter;
 };
 
-float4 gammaCorrection(float4 base)
+float4 gammaCorrection(float4 base,bool inv)
 {
-    float b = 1.0 / 2.2;
+    float b = 1.0 / 2.4;
+    if (inv)
+        b = 1 / b;
     return pow(base, float4(b, b, b, b));
 }
 
@@ -53,6 +57,14 @@ void main()
     int od = int(cnt.counter - 0.5);
     
     float share = 1 / (float(od) + 1);
-
-    outImage[int2(lId.xy)] = gammaCorrection(float4(accuColor / float(samples), 0.0)) * share + (1 - share) * outImage[int2(lId.xy)];
+   
+    float4 orgColor = gammaCorrection(outImage[int2(lId.xy)], true);
+    outImage[int2(lId.xy)] = float4(accuColor / float(samples), 0.0) * share + (1 - share) * orgColor;
+    outImage[int2(lId.xy)] = gammaCorrection(outImage[int2(lId.xy)],false);
+    
+    float4 dest = outImage[int2(lId.xy)];
+    if (dest.x < 0 || dest.y < 0 || dest.z < 0)
+    {
+        outImage[int2(lId.xy)] = float4(1.0, 0.0, 0.0, 1.0);
+    }
 }

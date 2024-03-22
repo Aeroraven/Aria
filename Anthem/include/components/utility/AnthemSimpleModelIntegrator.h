@@ -19,12 +19,14 @@ namespace Anthem::Components::Utility {
 		AnthemShaderStorageBufferImpl<AtBufVecd2f<1>>* texBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* indexBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* offsetBuffer;
+		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* lightIndexBuffer;
 
 		AnthemDescriptorPool* descPos;
 		AnthemDescriptorPool* descNormal;
 		AnthemDescriptorPool* descTex;
 		AnthemDescriptorPool* descIndex;
 		AnthemDescriptorPool* descOffset;
+		AnthemDescriptorPool* descLightIdx;
 
 		std::vector<AnthemAccStructGeometry*> asGeo;
 		std::vector<AnthemBottomLevelAccStruct*> blasObj;
@@ -47,12 +49,14 @@ namespace Anthem::Components::Utility {
 		AnthemShaderStorageBufferImpl<AtBufVecd2f<1>>* texBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* indexBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* offsetBuffer;
+		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* lightIndexBuffer;
 
 		AnthemDescriptorPool* descPos;
 		AnthemDescriptorPool* descNormal;
 		AnthemDescriptorPool* descTex;
 		AnthemDescriptorPool* descIndex;
 		AnthemDescriptorPool* descOffset;
+		AnthemDescriptorPool* descLightIdx;
 
 		std::vector<AnthemAccStructGeometry*> asGeo;
 		std::vector<AnthemBottomLevelAccStruct*> blasObj;
@@ -60,14 +64,19 @@ namespace Anthem::Components::Utility {
 		AnthemAccStructInstance* asInst;
 		AnthemTopLevelAccStruct* tlasObj;
 
+		float totalLightAreas = 0;
+		uint32_t totalLightFaces = 0;
+
 	public:
 		bool loadModel(AnthemSimpleToyRenderer* renderer,std::vector<AnthemUtlSimpleModelStruct> model, uint32_t cpuJobs);
-		bool loadModelRayTracing(AnthemSimpleToyRenderer* renderer, const std::vector<AnthemUtlSimpleModelStruct>& model);
+		bool loadModelRayTracing(AnthemSimpleToyRenderer* renderer, const std::vector<AnthemUtlSimpleModelStruct>& model, const std::set<int> lightIds);
 		
 		AnthemVertexBuffer* getVertexBuffer();
 		AnthemIndexBuffer* getIndexBuffer();
 		AnthemIndirectDrawBuffer* getIndirectBuffer();
 
 		AnthemSimpleModelIntegratorRayTracingStructs getRayTracingParsedResult();
+		float getLightAreas();
+		uint32_t getLightFaces();
 	};
 }
