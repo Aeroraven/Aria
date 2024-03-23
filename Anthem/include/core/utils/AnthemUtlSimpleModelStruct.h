@@ -13,6 +13,7 @@ namespace Anthem::Core {
         std::string texCoordPrimitiveType = "";
 
         std::string pbrBaseColorTexPath = "";
+        std::vector<double> pbrBaseColorFactor = {0,0,0,1};
         std::string basePath = "";
 
         uint32_t numVertices = 0;

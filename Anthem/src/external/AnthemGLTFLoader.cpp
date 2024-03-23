@@ -66,8 +66,9 @@ namespace Anthem::External{
             if(materialIndex!=-1){
                 auto imageIdx = textures.at(materialIndex).source;
                 curResult.pbrBaseColorTexPath = model.images.at(imageIdx).uri;
+                
             }
-
+            curResult.pbrBaseColorFactor = materialEntry.pbrMetallicRoughness.baseColorFactor;
             // Attribute Accessor
             for(auto& attr : curPrimitive.attributes){
                 auto& attrAccessor = accessor.at(attr.second);

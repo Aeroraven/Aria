@@ -20,6 +20,8 @@ namespace Anthem::Components::Utility {
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* indexBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* offsetBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* lightIndexBuffer;
+		AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* colorBuffer;
+
 
 		AnthemDescriptorPool* descPos;
 		AnthemDescriptorPool* descNormal;
@@ -27,6 +29,7 @@ namespace Anthem::Components::Utility {
 		AnthemDescriptorPool* descIndex;
 		AnthemDescriptorPool* descOffset;
 		AnthemDescriptorPool* descLightIdx;
+		AnthemDescriptorPool* descColor;
 
 		std::vector<AnthemAccStructGeometry*> asGeo;
 		std::vector<AnthemBottomLevelAccStruct*> blasObj;
@@ -50,6 +53,7 @@ namespace Anthem::Components::Utility {
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* indexBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* offsetBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecdUint<1>>* lightIndexBuffer;
+		AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* colorBuffer;
 
 		AnthemDescriptorPool* descPos;
 		AnthemDescriptorPool* descNormal;
@@ -57,6 +61,7 @@ namespace Anthem::Components::Utility {
 		AnthemDescriptorPool* descIndex;
 		AnthemDescriptorPool* descOffset;
 		AnthemDescriptorPool* descLightIdx;
+		AnthemDescriptorPool* descColor;
 
 		std::vector<AnthemAccStructGeometry*> asGeo;
 		std::vector<AnthemBottomLevelAccStruct*> blasObj;

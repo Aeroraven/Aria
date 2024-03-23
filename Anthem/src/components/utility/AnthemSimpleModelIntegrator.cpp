@@ -158,8 +158,25 @@ namespace Anthem::Components::Utility {
 					w->setInput(ci++, { x.normals[i + 0],x.normals[i + 1],x.normals[i + 2],1.0 });
 				}
 		};
-		
 		rd->createShaderStorageBuffer(&normalBuffer, totalVerts, 0, descNormal, std::make_optional(normalBufferPrepare), -1);
+
+		// Color Buffer
+		rd->createDescriptorPool(&descColor);
+		using colorBufferSType = std::remove_cv_t<decltype(colorBuffer)>;
+		std::function<void(colorBufferSType)> colorBufferPrepare = [&](colorBufferSType w)->void {
+			uint32_t ci = 0;
+			for (auto x : model)
+				for (int i = 0; i < x.positions.size(); i += 3) {
+					w->setInput(ci++, { 
+						static_cast<float>(x.pbrBaseColorFactor[0]),
+						static_cast<float>(x.pbrBaseColorFactor[1]),
+						static_cast<float>(x.pbrBaseColorFactor[2]),
+						1.0 });
+					//ANTH_LOGI(static_cast<float>(x.pbrBaseColorFactor[i + 0])," ", static_cast<float>(x.pbrBaseColorFactor[i + 1]));
+				}
+			};
+		rd->createShaderStorageBuffer(&colorBuffer, totalVerts, 0, descColor, std::make_optional(colorBufferPrepare), -1);
+
 
 		// Tex Buffer
 		rd->createDescriptorPool(&descTex);
@@ -240,6 +257,9 @@ namespace Anthem::Components::Utility {
 
 		ret.descLightIdx = descLightIdx;
 		ret.lightIndexBuffer = lightIndexBuffer;
+
+		ret.descColor = descColor;
+		ret.colorBuffer = colorBuffer;
 		return ret;
 	}
 }

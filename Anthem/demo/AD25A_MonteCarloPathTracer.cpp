@@ -19,9 +19,8 @@ using namespace Anthem::Components::Camera;
 using namespace Anthem::External;
 using namespace Anthem::Core;
 
-
 struct Stage {
-	AnthemSimpleToyRenderer rd;
+	AnthemSimpleToyRendearer rd;
 	AnthemConfig cfg;
 	AnthemCamera camera = AnthemCamera(AT_ACPT_PERSPECTIVE);
 	AnthemFrameRateMeter fpsMeter = AnthemFrameRateMeter(10);
