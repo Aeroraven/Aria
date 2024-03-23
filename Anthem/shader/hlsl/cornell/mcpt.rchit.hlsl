@@ -150,8 +150,7 @@ float3 lambertOutRay(float3 normal, float seed1, float seed2){
         seed2 += random(seed1);
         seed1 += random(seed2);
         a = randomUnitVector(float2(sin(seed1) + seed2, sin(seed2) + seed1), float2(seed2, seed1));
-        if (length(a - normal) < EPS || length(a + normal) < EPS)
-        {
+        if (length(a - normal) < EPS || length(a + normal) < EPS){
             continue;
         }
         break;

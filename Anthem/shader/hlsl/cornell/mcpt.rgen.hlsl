@@ -50,7 +50,7 @@ void main()
     uint3 lId = DispatchRaysIndex();
     uint3 lSize = DispatchRaysDimensions();
     
-    int samples = 5;
+    int samples = 10;
     float3 accuColor = float3(0.0, 0.0, 0.0);
     
     for (int i = 0; i < samples; i++){
