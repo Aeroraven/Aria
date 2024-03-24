@@ -527,6 +527,9 @@ namespace Anthem::Core{
         this->simpleFramebuffers.push_back(fb);
         return true;
     }
+    bool AnthemSimpleToyRenderer::createSimpleFramebufferA(AnthemFramebuffer** pFramebuffer, const std::vector<const IAnthemImageViewContainer*>& colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer) {
+        return createSimpleFramebuffer(pFramebuffer, &colorAttachment, renderPass, depthBuffer);
+    }
 
     bool AnthemSimpleToyRenderer::createSwapchainImageFramebuffers(AnthemSwapchainFramebuffer** pFramebufferList,const AnthemRenderPass* renderPass,const AnthemDepthBuffer* depthBuffer){
         ANTH_TODO("Forced type cast");

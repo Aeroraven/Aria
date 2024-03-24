@@ -164,6 +164,8 @@ namespace Anthem::Core{
         bool createShader(AnthemShaderModule** pShaderModule,AnthemShaderFilePaths* filename);
         bool createSwapchainImageFramebuffers(AnthemSwapchainFramebuffer** pFramebufferList,const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
         bool createSimpleFramebuffer(AnthemFramebuffer** pFramebuffer, const std::vector<const IAnthemImageViewContainer*>* colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
+        bool createSimpleFramebufferA(AnthemFramebuffer** pFramebuffer, const std::vector<const IAnthemImageViewContainer*>& colorAttachment, const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);
+
         bool createDescriptorPool(AnthemDescriptorPool** pDescriptorPool);
         bool createIndirectDrawBuffer(AnthemIndirectDrawBuffer** pBuffer);
 
