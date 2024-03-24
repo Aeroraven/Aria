@@ -79,7 +79,7 @@ void loadModel() {
 	AnthemGLTFLoader loader;
 	AnthemGLTFLoaderParseConfig config;
 	std::string path = ANTH_ASSET_DIR;
-	loader.loadModel((path + "\\gsk\\untitled.gltf").c_str());
+	loader.loadModel((path + "\\klee\\untitled.gltf").c_str());
 	loader.parseModel(config, st.model);
 	st.model.pop_back();
 	std::vector<AnthemUtlSimpleModelStruct> rp;

@@ -37,6 +37,7 @@ namespace Anthem::Core{
         //Clear attachments
         std::vector<int> clearColorAttachmentOnLoad = { true };
         bool clearDepthAttachmentOnLoad = true;
+        bool clearStencilAttachmentOnLoad = true;
         std::optional<std::array<float, 4>> predefinedClearColor = std::nullopt;
         std::vector<std::array<float, 4>> clearColors = { {0,0,0,0} };
     };

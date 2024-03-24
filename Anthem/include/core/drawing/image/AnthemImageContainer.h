@@ -41,7 +41,8 @@ namespace Anthem::Core{
         bool createImageInternal(VkImageUsageFlags usage, VkFormat format, uint32_t width, uint32_t height, uint32_t depth);
         bool createImageViewInternal(VkImageAspectFlags aspectFlags,bool use3d = false);
         bool createImageTransitionLayoutLegacy(VkImageLayout oldLayout,VkImageLayout newLayout);
-        bool createImageTransitionLayoutInternal(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcFlag, VkPipelineStageFlags dstFlag);
+        bool createImageTransitionLayoutInternal(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcFlag,
+            VkPipelineStageFlags dstFlag,VkImageAspectFlags aspectFlag);
         bool createSampler();
         bool destroyImageInternal();
         bool destroyImageViewInternal();

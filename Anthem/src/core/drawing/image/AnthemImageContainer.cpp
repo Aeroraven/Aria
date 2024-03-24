@@ -119,14 +119,15 @@ namespace Anthem::Core{
         ANTH_LOGI("Image view created");
         return true;
     }
-    bool  AnthemImageContainer::createImageTransitionLayoutInternal(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcFlag, VkPipelineStageFlags dstFlag) {
+    bool  AnthemImageContainer::createImageTransitionLayoutInternal(VkImageLayout oldLayout, VkImageLayout newLayout,
+        VkPipelineStageFlags srcFlag, VkPipelineStageFlags dstFlag, VkImageAspectFlags aspectFlag) {
         uint32_t cmdBufIdx;
         this->cmdBufs->createCommandBuffer(&cmdBufIdx);
         this->cmdBufs->startCommandRecording(cmdBufIdx);
         
         AnthemImageInfoProcessing::setImageLayout(this->image.image,
             *(this->cmdBufs->getCommandBuffer(cmdBufIdx)), oldLayout, newLayout, srcFlag, dstFlag,
-            this->image.layerCounts, this->image.mipmapLodLevels);
+            this->image.layerCounts, this->image.mipmapLodLevels,aspectFlag);
 
         this->cmdBufs->endCommandRecording(cmdBufIdx);
         this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx, true);
@@ -136,13 +137,13 @@ namespace Anthem::Core{
     }
     bool AnthemImageContainer::createImageTransitionLayoutLegacy(VkImageLayout oldLayout,VkImageLayout newLayout){
         if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-            return this->createImageTransitionLayoutInternal(oldLayout, newLayout, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+            return this->createImageTransitionLayoutInternal(oldLayout, newLayout, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,VK_IMAGE_ASPECT_COLOR_BIT);
         else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) 
-            return  this->createImageTransitionLayoutInternal(oldLayout, newLayout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+            return  this->createImageTransitionLayoutInternal(oldLayout, newLayout, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
         else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) 
-            return  this->createImageTransitionLayoutInternal(oldLayout, newLayout, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
+            return  this->createImageTransitionLayoutInternal(oldLayout, newLayout, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
         else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_GENERAL) 
-            return  this->createImageTransitionLayoutInternal(oldLayout, newLayout, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+            return  this->createImageTransitionLayoutInternal(oldLayout, newLayout, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
         throw std::invalid_argument("unsupported layout transition!");
     }
     bool AnthemImageContainer::createSampler(){

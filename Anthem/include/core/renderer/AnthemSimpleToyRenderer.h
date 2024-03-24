@@ -145,6 +145,7 @@ namespace Anthem::Core{
         bool setupDemoRenderPass(AnthemRenderPass** pRenderPass, AnthemDepthBuffer* depthBuffer, bool retain=false);
         bool setupRenderPass(AnthemRenderPass** pRenderPass, AnthemRenderPassSetupOption* setupOption, AnthemDepthBuffer* depthBuffer);
         bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa);
+        bool createDepthStencilBuffer(AnthemDepthBuffer** pBuffer, bool enableMsaa);
         bool createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa);
         bool createDepthBufferCubicWithSampler(AnthemDepthBuffer** pDepthBuffer, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t height, bool enableMsaa);
         bool createViewportCustom(AnthemViewport** pViewport, float width, float height, float minDepth, float maxDepth);
@@ -215,15 +216,26 @@ namespace Anthem::Core{
         bool drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx,
             const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,
             AnthemFence* customFence=nullptr, bool customImageAvailableSemaphore=false);
+
+        bool drSubmitCommandBufferGraphicsQueueGeneralA(uint32_t cmdIdx, uint32_t frameIdx,
+            const std::vector<const AnthemSemaphore*>& semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>& semaphoreWaitStages,
+            AnthemFence* customFence = nullptr, bool customImageAvailableSemaphore = false);
+
         bool drSubmitCommandBufferGraphicsQueueGeneral2(uint32_t cmdIdx, uint32_t frameIdx,
             const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,
             AnthemFence* customFence, const std::vector<const AnthemSemaphore*>* semaphoreToSignal);
 
+        bool drSubmitCommandBufferGraphicsQueueGeneral2A(uint32_t cmdIdx, uint32_t frameIdx,
+            const std::vector<const AnthemSemaphore*>& semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>& semaphoreWaitStages,
+            AnthemFence* customFence, const std::vector<const AnthemSemaphore*>& semaphoreToSignal);
 
         bool drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal,const AnthemFence* fenceToSignal);
+       
         bool drSetViewportScissorFromSwapchain(uint32_t cmdIdx);
         bool drSetViewportScissor(AnthemViewport* custVp,uint32_t cmdIdx);
         bool drSetLineWidth(float lineWidth, uint32_t cmdIdx);
+        bool drSetStencilOp(VkStencilOp fail, VkStencilOp pass, VkStencilOp depthFail, VkCompareOp comp, uint8_t reference, uint32_t cmdIdx);
+
         bool drBindGraphicsPipeline(AnthemGraphicsPipeline* pipeline,uint32_t cmdIdx);
         bool drBindComputePipeline(AnthemComputePipeline* pipeline,uint32_t cmdIdx);
 

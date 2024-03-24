@@ -1,6 +1,10 @@
 
 ## Materials Referenced / Acknowledgements
 
+**Kirara MMD Model**: By 观海子, Re-exported using Blender, with assistance from `blender_mmd_tools`. https://www.bilibili.com/blackboard/activity-QEEZ1nL6Jv.html, https://github.com/UuuNyaa/blender_mmd_tools
+
+**Room GLTF Model**: By Anex. https://sketchfab.com/3d-models/room-6417cbc1870a4a1691cca06912ae0369
+
 **Wavefront African Model and Textures**  : By Dmitry V. Sokolov. In Project "TinyRenderer" https://github.com/ssloy/tinyrenderer
 
 **Bonzai Volume Texture**: By Leandro Barbagallo. In Project "WebGLVolumeRendering" https://github.com/lebarba/WebGLVolumeRendering/
@@ -49,6 +53,7 @@ Kawase Blur: https://zhuanlan.zhihu.com/p/125744132
 SMAA: https://iryoku.com/smaa/downloads/SMAA-Enhanced-Subpixel-Morphological-Antialiasing.pdf
 
 Path Tracing: https://raytracing.github.io/books/RayTracingInOneWeekend.html
+
 
 ## Rectification
 

@@ -95,7 +95,7 @@ void prepareOffscreen(OffscreenPass& offscreen,AnthemSimpleToyRenderer& renderer
     AnthemGLTFLoader loader;
     AnthemGLTFLoaderParseConfig gltfConfig;
     std::vector<AnthemGLTFLoaderParseResult> gltfResult;
-    loader.loadModel("C:\\WR\\Aria\\Anthem\\assets\\gsk\\untitled.gltf");
+    loader.loadModel("C:\\WR\\Aria\\Anthem\\assets\\klee\\untitled.gltf");
     loader.parseModel(gltfConfig,gltfResult);
     ANTH_LOGI("Model Loaded");
 

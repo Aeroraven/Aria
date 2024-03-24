@@ -586,7 +586,7 @@ namespace Anthem::Core{
         this->swapChain->createSwapChainImageViews(this->logicalDevice.get());
         this->viewport->prepareViewportStateFromSwapchain();
         for(const auto& p:this->depthBuffers){
-            p->createDepthBuffer();
+            p->createDepthBuffer(p->isStencilEnabled());
         }
         for(const auto& p:this->framebufferListObjs){
             p->createFramebuffersFromSwapChain(this->swapChain.get(),this->renderPasses.at(0));
@@ -634,6 +634,14 @@ namespace Anthem::Core{
         return this->mainLoopSyncer->submitCommandBufferGeneral(this->commandBuffers->getCommandBuffer(cmdIdx), frameIdx,
             semaphoreToWait, semaphoreWaitStages,vf,customImageAvailableSemaphore);
     }
+
+    bool AnthemSimpleToyRenderer::drSubmitCommandBufferGraphicsQueueGeneralA(uint32_t cmdIdx, uint32_t frameIdx,
+        const std::vector<const AnthemSemaphore*>& semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>& semaphoreWaitStages,
+        AnthemFence* customFence, bool customImageAvailableSemaphore) {
+
+        return drSubmitCommandBufferGraphicsQueueGeneral(cmdIdx, frameIdx, &semaphoreToWait, &semaphoreWaitStages, customFence, customImageAvailableSemaphore);
+    }
+
     bool AnthemSimpleToyRenderer::drSubmitCommandBufferGraphicsQueueGeneral2(uint32_t cmdIdx, uint32_t frameIdx,
         const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,
         AnthemFence* customFence, const std::vector<const AnthemSemaphore*>* semaphoreToSignal) {
@@ -641,6 +649,14 @@ namespace Anthem::Core{
         return this->mainLoopSyncer->submitCommandBufferGeneral2(this->commandBuffers->getCommandBuffer(cmdIdx), frameIdx,
             semaphoreToWait, semaphoreWaitStages, &vf, semaphoreToSignal);
     }
+
+    bool AnthemSimpleToyRenderer::drSubmitCommandBufferGraphicsQueueGeneral2A(uint32_t cmdIdx, uint32_t frameIdx,
+        const std::vector<const AnthemSemaphore*>& semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>& semaphoreWaitStages,
+        AnthemFence* customFence, const std::vector<const AnthemSemaphore*>& semaphoreToSignal) {
+
+        return drSubmitCommandBufferGraphicsQueueGeneral2(cmdIdx, frameIdx, &semaphoreToWait, &semaphoreWaitStages, customFence, &semaphoreToSignal);
+    }
+
     bool AnthemSimpleToyRenderer::drPushConstants(AnthemPushConstant* pushConstant, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx) {
         vkCmdPushConstants(
             *this->commandBuffers->getCommandBuffer(cmdIdx),
@@ -773,6 +789,13 @@ namespace Anthem::Core{
     }
     bool AnthemSimpleToyRenderer::drSetLineWidth(float lineWidth, uint32_t cmdIdx) {
         vkCmdSetLineWidth(*this->commandBuffers->getCommandBuffer(cmdIdx), lineWidth);
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drSetStencilOp(VkStencilOp fail,VkStencilOp pass,VkStencilOp depthFail,VkCompareOp comp, uint8_t reference, uint32_t cmdIdx) {
+        vkCmdSetStencilWriteMask(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_STENCIL_FACE_FRONT_AND_BACK, 0xff);
+        vkCmdSetStencilCompareMask(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_STENCIL_FACE_FRONT_AND_BACK, 0xff);
+        vkCmdSetStencilReference(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_STENCIL_FACE_FRONT_AND_BACK, reference);
+        vkCmdSetStencilOp(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_STENCIL_FACE_FRONT_AND_BACK, fail, pass, depthFail, comp);
         return true;
     }
 
@@ -978,10 +1001,25 @@ namespace Anthem::Core{
         if(enableMsaa){
             depthBuffer->enableMsaa();
         }
-        depthBuffer->createDepthBuffer();
+        depthBuffer->createDepthBuffer(false);
         this->depthBuffers.push_back(depthBuffer);
         
         *pDepthBuffer = depthBuffer;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::createDepthStencilBuffer(AnthemDepthBuffer** pBuffer, bool enableMsaa) {
+        auto depthBuffer = new AnthemDepthBuffer();
+        depthBuffer->specifyLogicalDevice(this->logicalDevice.get());
+        depthBuffer->specifyPhyDevice(this->phyDevice.get());
+        depthBuffer->specifyCommandBuffers(this->commandBuffers.get());
+        depthBuffer->specifySwapChain(this->swapChain.get());
+        if (enableMsaa) {
+            depthBuffer->enableMsaa();
+        }
+        depthBuffer->createDepthBuffer(true);
+        this->depthBuffers.push_back(depthBuffer);
+
+        *pBuffer = depthBuffer;
         return true;
     }
     bool AnthemSimpleToyRenderer::drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ) {
@@ -1016,13 +1054,13 @@ namespace Anthem::Core{
         return AnthemImageInfoProcessing::setImageLayout(
             *image->getImage(), *commandBuffers->getCommandBuffer(cmdIdx),
             srcLayout, dstLayout, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            image->getLayers(), image->getMipLevels());
+            image->getLayers(), image->getMipLevels(),VK_IMAGE_ASPECT_COLOR_BIT);
     }
     bool AnthemSimpleToyRenderer::drSetSwapchainImageLayoutSimple(uint32_t swapchainImageIdx, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx) {
         return AnthemImageInfoProcessing::setImageLayout(
             *swapChain->getSwapChainImage(swapchainImageIdx), *commandBuffers->getCommandBuffer(cmdIdx),
             srcLayout, dstLayout, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            1, 1);
+            1, 1,VK_IMAGE_ASPECT_COLOR_BIT);
     }
     bool AnthemSimpleToyRenderer::exGetWindowSize(int& height,int& width){
         height = this->windowHeight;

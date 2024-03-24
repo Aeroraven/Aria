@@ -21,7 +21,12 @@ namespace Anthem::External{
         return true;
     }
     bool AnthemGLTFLoader::parseModel(AnthemGLTFLoaderParseConfig config,std::vector<AnthemGLTFLoaderParseResult>& result){
-        result.resize(model.meshes.size());
+        int totalResultSize = 0;
+        for (auto subMesh : model.meshes) {
+            totalResultSize += subMesh.primitives.size();
+        }
+        result.reserve(totalResultSize);
+        result.resize(totalResultSize);
         const auto& accessor = model.accessors;
         const auto& materials = model.materials;
         const auto& textures = model.textures;
@@ -49,60 +54,70 @@ namespace Anthem::External{
             }
             return 0;
         };
+        uint32_t curResultSlot = 0;
         for(int i=0;i<model.meshes.size();i++){
             ANTH_LOGI("Parsing Mesh",i);
             auto& curMesh = model.meshes.at(i);
-            auto& curResult = result.at(i);
-            auto& curPrimitive = curMesh.primitives.at(0);
-            // Index Accessor
-            auto& indexAccessor = accessor.at(curPrimitive.indices);
-            auto& indexBufferView = model.bufferViews.at(indexAccessor.bufferView);
-            auto stride = indexBufferView.byteStride;
-            bufferParse<uint32_t,uint16_t>(indexAccessor.bufferView,2,curResult.indices);
+            auto k = 0;
+            for (auto & curPrimitive : curMesh.primitives) {
+                ANTH_LOGI("Parsing Submesh", k++);
+                auto& curResult = result.at(curResultSlot++);
+                // auto& curPrimitive = curMesh.primitives.at(0);
+                // Index Accessor
+                auto& indexAccessor = accessor.at(curPrimitive.indices);
+                auto& indexBufferView = model.bufferViews.at(indexAccessor.bufferView);
+                auto stride = indexBufferView.byteStride;
+                bufferParse<uint32_t, uint16_t>(indexAccessor.bufferView, 2, curResult.indices);
 
-            // Material Entry
-            auto& materialEntry = materials.at(curPrimitive.material);
-            auto& materialIndex = materialEntry.pbrMetallicRoughness.baseColorTexture.index;
-            if(materialIndex!=-1){
-                auto imageIdx = textures.at(materialIndex).source;
-                curResult.pbrBaseColorTexPath = model.images.at(imageIdx).uri;
-                
-            }
-            curResult.pbrBaseColorFactor = materialEntry.pbrMetallicRoughness.baseColorFactor;
-            // Attribute Accessor
-            for(auto& attr : curPrimitive.attributes){
-                auto& attrAccessor = accessor.at(attr.second);
-                auto& attrBufferView = model.bufferViews.at(attrAccessor.bufferView);
-                auto& attrBuffer = model.buffers.at(attrBufferView.buffer);
-                auto& attrBufferOffset = attrBufferView.byteOffset;
-                auto& attrBufferLength = attrBufferView.byteLength;
-                auto& attrBufferStride = attrBufferView.byteStride;
-                auto& attrName = attr.first;
-                if(attrName==config.positionPrimitiveName){
-                    curResult.positionPrimitiveType = attrAccessor.type;
-                    bufferParse<float,float>(attrAccessor.bufferView,4,curResult.positions);
-                    specifyStride(attrAccessor.type,curResult.positionDim,curResult.positionPrimitiveType);
-                }else if(attrName==config.normalPrimitiveName){
-                    curResult.normalPrimitiveType = attrAccessor.type;
-                    bufferParse<float,float>(attrAccessor.bufferView,4,curResult.normals);
-                    specifyStride(attrAccessor.type,curResult.normalDim,curResult.normalPrimitiveType);
-                }else if(attrName==config.texCoordPrimitiveName){
-                    curResult.texCoordPrimitiveType = attrAccessor.type;
-                    bufferParse<float,float>(attrAccessor.bufferView,4,curResult.texCoords);
-                    specifyStride(attrAccessor.type,curResult.texCoordDim,curResult.texCoordPrimitiveType);
+                // Material Entry
+                auto& materialEntry = materials.at(curPrimitive.material);
+                auto& materialIndex = materialEntry.pbrMetallicRoughness.baseColorTexture.index;
+                if (materialIndex != -1) {
+                    auto imageIdx = textures.at(materialIndex).source;
+                    std::string dest;
+                    tinygltf::URIDecode(model.images.at(imageIdx).uri, &dest, nullptr);
+                    curResult.pbrBaseColorTexPath = dest;
+
                 }
+                curResult.pbrBaseColorFactor = materialEntry.pbrMetallicRoughness.baseColorFactor;
+                // Attribute Accessor
+                for (auto& attr : curPrimitive.attributes) {
+                    auto& attrAccessor = accessor.at(attr.second);
+                    auto& attrBufferView = model.bufferViews.at(attrAccessor.bufferView);
+                    auto& attrBuffer = model.buffers.at(attrBufferView.buffer);
+                    auto& attrBufferOffset = attrBufferView.byteOffset;
+                    auto& attrBufferLength = attrBufferView.byteLength;
+                    auto& attrBufferStride = attrBufferView.byteStride;
+                    auto& attrName = attr.first;
+                    if (attrName == config.positionPrimitiveName) {
+                        curResult.positionPrimitiveType = attrAccessor.type;
+                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.positions);
+                        specifyStride(attrAccessor.type, curResult.positionDim, curResult.positionPrimitiveType);
+                    }
+                    else if (attrName == config.normalPrimitiveName) {
+                        curResult.normalPrimitiveType = attrAccessor.type;
+                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.normals);
+                        specifyStride(attrAccessor.type, curResult.normalDim, curResult.normalPrimitiveType);
+                    }
+                    else if (attrName == config.texCoordPrimitiveName) {
+                        curResult.texCoordPrimitiveType = attrAccessor.type;
+                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.texCoords);
+                        specifyStride(attrAccessor.type, curResult.texCoordDim, curResult.texCoordPrimitiveType);
+                    }
+                }
+                curResult.basePath = this->modelDirectory + "/";
+                if (curResult.positions.size()) {
+                    curResult.numVertices = curResult.positions.size() / 3;
+                }
+                ANTH_LOGI("Parse done.");
+                ANTH_LOGI("Position Primitive Type:", curResult.positionPrimitiveType, "Dimension:", curResult.positionDim, "Length", curResult.positions.size());
+                ANTH_LOGI("Normal Primitive Type:", curResult.normalPrimitiveType, "Dimension:", curResult.normalDim, "Length", curResult.normals.size());
+                ANTH_LOGI("TexCoord Primitive Type:", curResult.texCoordPrimitiveType, "Dimension:", curResult.texCoordDim, "Length", curResult.texCoords.size());
+                ANTH_LOGI("Tex Path", curResult.pbrBaseColorTexPath);
             }
-            curResult.basePath = this->modelDirectory+"/";
-            if (curResult.positions.size()) {
-                curResult.numVertices = curResult.positions.size() / 3;
-            }
-            ANTH_LOGI("Parse done.");
-            ANTH_LOGI("Position Primitive Type:",curResult.positionPrimitiveType, "Dimension:",curResult.positionDim,"Length",curResult.positions.size());
-            ANTH_LOGI("Normal Primitive Type:",curResult.normalPrimitiveType, "Dimension:",curResult.normalDim,"Length",curResult.normals.size());
-            ANTH_LOGI("TexCoord Primitive Type:",curResult.texCoordPrimitiveType, "Dimension:",curResult.texCoordDim,"Length",curResult.texCoords.size());
-            ANTH_LOGI("Tex Path",curResult.pbrBaseColorTexPath);
+            
         }
-        ANTH_LOGI("Parsed ", model.meshes.size(), " Models");
+        ANTH_LOGI("Parsed ", totalResultSize , " Models");
         return true;
     }
 }

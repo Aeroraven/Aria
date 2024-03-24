@@ -40,12 +40,12 @@ if __name__ == "__main__":
                         "comp.hlsl": "",
                         "tesc.hlsl": "",
                         "tese.hlsl": "",
-                        "mesh.hlsl": "-fspv-target-env=vulkan1.2",
-                        "task.hlsl": "-fspv-target-env=vulkan1.2",
-                        "rgen.hlsl": "-fspv-target-env=vulkan1.2",
-                        "miss.hlsl": "-fspv-target-env=vulkan1.2",
-                        "chit.hlsl": "-fspv-target-env=vulkan1.2",
-                        "call.hlsl": "-fspv-target-env=vulkan1.2"
+                        "mesh.hlsl": "-fspv-target-env=vulkan1.3",
+                        "task.hlsl": "-fspv-target-env=vulkan1.3",
+                        "rgen.hlsl": "-fspv-target-env=vulkan1.3",
+                        "miss.hlsl": "-fspv-target-env=vulkan1.3",
+                        "chit.hlsl": "-fspv-target-env=vulkan1.3",
+                        "call.hlsl": "-fspv-target-env=vulkan1.3"
                     }
                     w = 1
                     if args.lang == "glsl":

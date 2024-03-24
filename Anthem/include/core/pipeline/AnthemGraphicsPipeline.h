@@ -37,7 +37,7 @@ namespace Anthem::Core{
         AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
         std::optional<std::vector<IAnthemVertexBufferAttrLayout*>> vertStageLayout = std::nullopt;
         std::vector<AnthemBlendPreset> blendPreset = { AnthemBlendPreset::AT_ABP_NO_BLEND };
-        bool writeDepthStencil = true;
+
 
         // Tessellation
         bool enableTessellation = false;
@@ -51,6 +51,10 @@ namespace Anthem::Core{
 
         // Viewport
         std::optional<AnthemViewport*> customViewport = std::nullopt;
+
+        // Depth / Stencil Testing
+        bool enableDepthTestsing = true;
+        bool enableDynamicStencilTesting = false;
     };
 
     class AnthemGraphicsPipeline{     

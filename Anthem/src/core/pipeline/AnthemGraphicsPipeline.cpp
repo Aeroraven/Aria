@@ -57,6 +57,13 @@ namespace Anthem::Core{
         this->dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         this->dynamicStateCreateInfo.pNext = nullptr;
         this->dynamicStateCreateInfo.flags = 0;
+        if (this->extraProps.enableDynamicStencilTesting) {
+            this->reqiredDynamicStates.push_back(VK_DYNAMIC_STATE_STENCIL_OP);
+            this->reqiredDynamicStates.push_back(VK_DYNAMIC_STATE_STENCIL_WRITE_MASK);
+            this->reqiredDynamicStates.push_back(VK_DYNAMIC_STATE_STENCIL_COMPARE_MASK);
+            this->reqiredDynamicStates.push_back(VK_DYNAMIC_STATE_STENCIL_REFERENCE);
+        }
+
         this->dynamicStateCreateInfo.dynamicStateCount = static_cast<uint32_t>(this->reqiredDynamicStates.size());
         this->dynamicStateCreateInfo.pDynamicStates = this->reqiredDynamicStates.data();
         
@@ -210,7 +217,7 @@ namespace Anthem::Core{
         this->depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         this->depthStencilStateCreateInfo.pNext = nullptr;  
         this->depthStencilStateCreateInfo.flags = 0;
-        if (!this->extraProps.writeDepthStencil) {
+        if (!this->extraProps.enableDepthTestsing) {
             this->depthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
             this->depthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
         }
@@ -221,6 +228,9 @@ namespace Anthem::Core{
         this->depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
         this->depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
         this->depthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+        if (this->extraProps.enableDynamicStencilTesting) {
+            this->depthStencilStateCreateInfo.stencilTestEnable = VK_TRUE;
+        }
         this->depthStencilStateCreateInfo.front = {};
         this->depthStencilStateCreateInfo.back = {};
         this->depthStencilStateCreateInfo.minDepthBounds = 0.0f;

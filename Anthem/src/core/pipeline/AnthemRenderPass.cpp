@@ -244,12 +244,25 @@ namespace Anthem::Core{
                 depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
                 depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             }
-            
             depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-            depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            //depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+            if (depthBuffer->isStencilEnabled()) {
+                if (opt.clearStencilAttachmentOnLoad) {
+                    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+                }
+                else {
+                    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+                    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+                }
+            }
+            else {
+                depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+                depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            }
+
             depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
             if(opt.renderPassUsage == AT_ARPAA_DEPTH_STENCIL_ONLY_PASS){
                 depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             }
