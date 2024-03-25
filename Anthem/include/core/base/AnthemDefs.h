@@ -153,9 +153,10 @@ namespace Anthem::Core::BaseUtility {
 #define AT_RANGE(s,t) (std::views::iota(s,t))
 #define AT_RANGE2(t) (std::views::iota(static_cast<decltype(t)>(0),t))
 
-#define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
 #define AT_ALIGN(s,t) (((s)+(t)-1)&~((t)-1))
 #define AT_LOWBIT(s) ((s)&~(s))
+
+#define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
 
 #define AT_CHECKRES(expr) if(auto atRes = (expr);atRes!=VK_SUCCESS){ANTH_LOGE("Returned:",atRes);}
 

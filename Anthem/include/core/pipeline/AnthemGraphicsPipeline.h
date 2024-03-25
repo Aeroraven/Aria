@@ -12,7 +12,7 @@
 #include "./AnthemDescriptorSetEntry.h"
 
 namespace Anthem::Core{
-    enum class AnthemInputAssemblerTopology {
+    enum AnthemInputAssemblerTopology {
         AT_AIAT_UNDEFINED = 0,
         AT_AIAT_TRIANGLE_LIST = 1,
         AT_AIAT_POINT_LIST = 2,
@@ -20,7 +20,7 @@ namespace Anthem::Core{
         AT_AIAT_PATCH_LIST = 4
     };
 
-    enum class AnthemBlendPreset {
+    enum AnthemBlendPreset {
         AT_ABP_NO_BLEND = 0,
         AT_ABP_MANUAL = 1,
         AT_ABP_DEFAULT_TRANSPARENCY = 2,
@@ -28,7 +28,7 @@ namespace Anthem::Core{
         AT_ABP_WEIGHTED_BLENDED_REVEAL = 4
     };
 
-    enum class AnthemRasterizerPolygonMode {
+    enum AnthemRasterizerPolygonMode {
         AT_ARPM_POLYGON_FILL = 1,
         AT_ARPM_WIREFRAME = 2
     };

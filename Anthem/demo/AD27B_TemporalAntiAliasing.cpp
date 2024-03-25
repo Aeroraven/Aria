@@ -56,11 +56,15 @@ struct Stage {
 	AnthemDescriptorPool* descMain;
 	AnthemUniformBufferImpl<
 		AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>,
-		AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>
+		AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>,
+		AtUniformMatf<4>
 	>* uniStage;
 
 	AnthemDescriptorPool** descTgt;
 	AnthemImage** target;
+
+	AnthemDescriptorPool** descMotionVec;
+	AnthemImage** motionImage;
 
 	uint32_t* cmdIdx;
 	AnthemSemaphore* drawComplete;
@@ -70,6 +74,7 @@ struct Stage {
 	std::unique_ptr<AnthemTAA> taa;
 	std::vector<std::pair<float, float>> halton;
 	uint32_t counter = 0;
+	float lastTime = 0;
 }st;
 
 void initialize() {
@@ -132,7 +137,11 @@ void createMainStage() {
 	st.roptMain.clearDepthAttachmentOnLoad = true;
 	st.roptMain.clearStencilAttachmentOnLoad = true;
 	st.roptMain.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.roptMain.clearColorAttachmentOnLoad = { true,true };
+	st.roptMain.colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 };
+	st.roptMain.clearColors = { {0,0,0,1},{0,0,0,1} };
 	st.coptMain.enableDynamicStencilTesting = false;
+	st.coptMain.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
 
 	st.rd.createDepthStencilBuffer(&st.depthMain, false);
 	st.rd.setupRenderPass(&st.passMain, &st.roptMain, st.depthMain);
@@ -140,11 +149,15 @@ void createMainStage() {
 	st.descTgt = new AnthemDescriptorPool * [st.cfg.vkcfgMaxImagesInFlight];
 	st.target = new AnthemImage * [st.cfg.vkcfgMaxImagesInFlight];
 	st.fbMain = new AnthemFramebuffer * [st.cfg.vkcfgMaxImagesInFlight];
+	st.descMotionVec = new AnthemDescriptorPool * [st.cfg.vkcfgMaxImagesInFlight];
+	st.motionImage = new AnthemImage * [st.cfg.vkcfgMaxImagesInFlight];
 
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.rd.createDescriptorPool(&st.descTgt[i]);
-		st.rd.createColorAttachmentImage(&st.target[i], st.descTgt[i], 0, AT_IF_SWAPCHAIN, false, -1);
-		st.rd.createSimpleFramebufferA(&st.fbMain[i], { st.target[i] }, st.passMain, st.depthMain);
+		st.rd.createColorAttachmentImage(&st.target[i], st.descTgt[i], 0, AT_IF_SRGB_FLOAT32, false, -1);
+		st.rd.createDescriptorPool(&st.descMotionVec[i]);
+		st.rd.createColorAttachmentImage(&st.motionImage[i], st.descMotionVec[i], 0, AT_IF_SRGB_FLOAT32, false, -1);
+		st.rd.createSimpleFramebufferA(&st.fbMain[i], { st.target[i],st.motionImage[i] }, st.passMain, st.depthMain);
 	}
 
 	AnthemDescriptorSetEntry dseCam{ st.descMain,AT_ACDS_UNIFORM_BUFFER,0 };
@@ -161,8 +174,8 @@ void createMainStage() {
 
 void prepareTAA() {
 	st.taa = std::make_unique<AnthemTAA>(&st.rd, 2);
-	st.taa->addInput({ {st.descTgt[0],AT_ACDS_SAMPLER,0},{st.descTgt[1],AT_ACDS_SAMPLER,0} }, 0);
-	st.taa->addInput({ {st.descTgt[1],AT_ACDS_SAMPLER,0},{st.descTgt[0],AT_ACDS_SAMPLER,0} }, 1);
+	st.taa->addInput({ {st.descTgt[0],AT_ACDS_SAMPLER,0},{st.descTgt[1],AT_ACDS_SAMPLER,0},{st.descMotionVec[0],AT_ACDS_SAMPLER,0} }, 0);
+	st.taa->addInput({ {st.descTgt[1],AT_ACDS_SAMPLER,0},{st.descTgt[0],AT_ACDS_SAMPLER,0},{st.descMotionVec[1],AT_ACDS_SAMPLER,0} }, 1);
 	st.taa->prepare();
 }
 
@@ -172,17 +185,16 @@ void recordCommand() {
 		ANTH_LOGI("Recording Command", i);
 		r.drStartCommandRecording(st.cmdIdx[i]);
 
-		// Write Image
+		// History Image
 		int k = (i - 1 + st.cfg.vkcfgMaxImagesInFlight) % st.cfg.vkcfgMaxImagesInFlight;
 		r.drSetImageLayoutSimple(st.target[k], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, st.cmdIdx[i]);
 		r.drSetSwapchainImageLayoutSimple(k, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, st.cmdIdx[i]);
-		r.drCopySwapchainImageToImage(st.target[k], k, st.cmdIdx[i]);
+		r.drCopySwapchainImageToImageWithFormatConv(st.target[k], k, st.cmdIdx[i]);
 		r.drSetSwapchainImageLayoutSimple(k, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL, st.cmdIdx[i]);
 		r.drSetImageLayoutSimple(st.target[k], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, st.cmdIdx[i]);
 
 
 		// Main Pass
-
 		r.drStartRenderPass(st.passMain, st.fbMain[i], st.cmdIdx[i], false);
 		r.drSetViewportScissorFromSwapchain(st.cmdIdx[i]);
 		r.drBindGraphicsPipeline(st.pipeMain, st.cmdIdx[i]);
@@ -202,18 +214,20 @@ void recordCommand() {
 
 void updateUniform() {
 	AtMatf4 projOld,projNew, view, local;
+
 	st.camera.getProjectionMatrix(projOld);
 	st.camera.getProjectionMatrix(projNew);
 	st.camera.getViewMatrix(view);
 
-	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f },
-		AT_PI * 0.5f);
+	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f },st.lastTime * 0.8);
 
-	float pm[16], vm[16], lm[16],pmNew[16], lmNew[16];
+	float pm[16], vm[16], lm[16], pmNew[16], lmNew[16], pmRaw[16];
 	int oldHaltonIdx = (st.counter - 1 + 8) % 8;
 	int curHaltonIdx = (st.counter) % 8;
 	int scrW, scrH;
 	st.rd.exGetWindowSize(scrH, scrW);
+
+	projNew.columnMajorVectorization(pmRaw);
 
 	projOld[0][2] += (st.halton[oldHaltonIdx].first * 2.0 - 1.0) / scrW;
 	projOld[1][2] += (st.halton[oldHaltonIdx].second * 2.0 - 1.0) / scrH;
@@ -227,11 +241,11 @@ void updateUniform() {
 	view.columnMajorVectorization(vm);
 	local.columnMajorVectorization(lm);
 
-	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f },
-		AT_PI * 0.75f);
+	st.lastTime = glfwGetTime();
+	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f }, st.lastTime * 0.8); //
 	local.columnMajorVectorization(lmNew);
 
-	st.uniStage->specifyUniforms(pm, vm, lm, pmNew, vm, lmNew);
+	st.uniStage->specifyUniforms(pm, vm, lm, pmNew, vm, lmNew, pmRaw);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.uniStage->updateBuffer(i);
 	}
