@@ -65,7 +65,7 @@ struct Stage {
 }st;
 
 void initialize() {
-	st.cfg.demoName = "26-A. Stencil Buffer / Object Outline";
+	st.cfg.demoName = "26. Stencil Buffer / Object Outline";
 	st.rd.setConfig(&st.cfg);
 	st.rd.initialize();
 	int rdH, rdW;

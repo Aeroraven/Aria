@@ -82,13 +82,81 @@
 // Math Constants
 #define AT_PI 3.1415926535897934384626
 
-// Sugars
-#define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
+// Base Utilities
 
+namespace Anthem::Core::BaseUtility {
+    template<typename... Args>
+    class AtZipContainer {
+    private:
+        template <typename T>
+        using ContainerIteratorTp = decltype(std::begin(std::declval<T&>()));
+        template <typename T>
+        using ContainerIteratorValTp = std::iterator_traits<ContainerIteratorTp<T>>::value_type;
+
+        using GroupIteratorTp = std::tuple<ContainerIteratorTp<Args>...>;
+        using GroupIteratorValTp = std::tuple<ContainerIteratorValTp<Args>...>;
+        
+        std::unique_ptr<std::tuple<Args...>> tuples;
+    public:
+        class iterator {
+        public:
+            using iterator_category = std::input_iterator_tag;
+            using difference_type = std::ptrdiff_t;
+            using value_type = GroupIteratorValTp;
+            using reference = const GroupIteratorValTp&;
+            using pointer = GroupIteratorValTp*;
+
+        private:
+            std::unique_ptr<GroupIteratorTp> curIters;
+        
+        public:
+            iterator(const GroupIteratorTp& iterators) {
+                this->curIters = std::make_unique<GroupIteratorTp>(iterators);
+            }
+            iterator (const iterator& other) {
+                GroupIteratorTp pIters = *other.curIters;
+                this->curIters = std::make_unique<GroupIteratorTp>(pIters);
+            }
+            iterator& operator++() {
+                std::apply([](auto&... p) {(++p, ... ); }, *(this->curIters));
+                return *this;
+            }
+            iterator operator++(int) {
+                iterator copyIter(*this);
+                std::apply([](auto&... p) {(++p, ...); }, *(this->curIters));
+                return copyIter;
+            }
+            bool operator==(iterator p) const {
+                return *curIters == *p.curIters;
+            }
+            bool operator!=(iterator p) const {
+                return *curIters != *p.curIters;
+            }
+            GroupIteratorValTp operator*() const {
+                return std::apply([](auto&... p) {return std::make_tuple(*p...); }, *(this->curIters));
+            }
+        };
+    public:
+        AtZipContainer(Args... args) {
+            this->tuples = std::make_unique<std::tuple<Args...>>(std::make_tuple(args...));
+        }
+        iterator begin() {
+            return iterator(std::apply([](auto&... p) { return std::make_tuple((p.begin())...); }, *(this->tuples)));
+        }
+        iterator end() {
+            return iterator(std::apply([](auto&... p) { return std::make_tuple((p.end())...); }, *(this->tuples)));
+        }
+
+    };
+}
+#define AT_ZIP(...)  Anthem::Core::BaseUtility::AtZipContainer(__VA_ARGS__)
 #define AT_RANGE(s,t) (std::views::iota(s,t))
 #define AT_RANGE2(t) (std::views::iota(static_cast<decltype(t)>(0),t))
+
+#define ANTH_CLASSTP std::remove_reference<decltype(*this)>::type
 #define AT_ALIGN(s,t) (((s)+(t)-1)&~((t)-1))
 #define AT_LOWBIT(s) ((s)&~(s))
+
 #define AT_CHECKRES(expr) if(auto atRes = (expr);atRes!=VK_SUCCESS){ANTH_LOGE("Returned:",atRes);}
 
 #ifdef _HAS_CXX23
@@ -100,6 +168,9 @@
         #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().className(__PRETTY_FUNCTION__).c_str())
     #endif
 #endif
+
+
+//===================== END OF CORE DEFINITIONS ===================== 
 
 // Logger
 #ifdef AT_ENABLE_LOG

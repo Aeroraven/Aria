@@ -1040,6 +1040,17 @@ namespace Anthem::Core{
             *swapChain->getSwapChainImage(swapchainImageIdx), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imgCp);
         return true;
     }
+    bool AnthemSimpleToyRenderer::drCopySwapchainImageToImage(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx) {
+        VkImageCopy imgCp{};
+        imgCp.dstOffset = { 0,0,0 };
+        imgCp.srcOffset = { 0,0,0 };
+        imgCp.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+        imgCp.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+        imgCp.extent = { this->swapChain->getSwapChainExtentWidth(),this->swapChain->getSwapChainExtentHeight(),1 };
+        vkCmdCopyImage(*this->commandBuffers->getCommandBuffer(cmdIdx), *swapChain->getSwapChainImage(swapchainImageIdx), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+             *image->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imgCp);
+        return true;
+    }
     bool AnthemSimpleToyRenderer::drCopyImageToSwapchainImageWithFormatConv(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx) {
         VkImageBlit imgBlit;
         imgBlit.dstOffsets[0] = { 0,0,0 };
@@ -1051,7 +1062,18 @@ namespace Anthem::Core{
         vkCmdBlitImage(*this->commandBuffers->getCommandBuffer(cmdIdx), *image->getImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
             *swapChain->getSwapChainImage(swapchainImageIdx), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imgBlit, VK_FILTER_LINEAR);
         return true;
-
+    }
+    bool AnthemSimpleToyRenderer::drCopySwapchainImageToImageWithFormatConv(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx) {
+        VkImageBlit imgBlit;
+        imgBlit.dstOffsets[0] = { 0,0,0 };
+        imgBlit.dstOffsets[1] = { (int)this->swapChain->getSwapChainExtentWidth(), (int)this->swapChain->getSwapChainExtentHeight(),1 };
+        imgBlit.srcOffsets[0] = { 0,0,0 };
+        imgBlit.srcOffsets[1] = { (int)this->swapChain->getSwapChainExtentWidth(), (int)this->swapChain->getSwapChainExtentHeight(),1 };
+        imgBlit.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+        imgBlit.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+        vkCmdBlitImage(*this->commandBuffers->getCommandBuffer(cmdIdx), *swapChain->getSwapChainImage(swapchainImageIdx),
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, *image->getImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &imgBlit, VK_FILTER_LINEAR);
+        return true;
     }
     bool AnthemSimpleToyRenderer::drSetImageLayoutSimple(AnthemImage* image, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx) {
         return AnthemImageInfoProcessing::setImageLayout(
@@ -1086,6 +1108,10 @@ namespace Anthem::Core{
     bool AnthemSimpleToyRenderer::getSwapchainImageExtent(uint32_t* width, uint32_t* height) {
         *width = swapChain->getSwapChainExtentWidth();
         *height = swapChain->getSwapChainExtentHeight();
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::forceCpuWaitDraw(uint32_t frameIdx) {
+        vkDeviceWaitIdle(this->logicalDevice->getLogicalDevice());
         return true;
     }
 

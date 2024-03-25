@@ -12,5 +12,6 @@ namespace Anthem::Core{
         bool resetFence();
         bool waitForFence();
         bool destroyFence();
+        bool waitAndReset();
     };
 }

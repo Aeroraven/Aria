@@ -204,7 +204,11 @@ namespace Anthem::Core{
         ANTH_LOGV("Draw command buffer submitted");
         return true;
     }
-
+    bool AnthemMainLoopSyncer::forceCPUSync(uint32_t frameIdx) {
+        vkWaitForFences(this->logicalDevice->getLogicalDevice(), 1, &this->inFlightFence[frameIdx], VK_TRUE, UINT64_MAX);
+        vkResetFences(this->logicalDevice->getLogicalDevice(), 1, &this->inFlightFence[frameIdx]);
+        return true;
+    }
 
     bool AnthemMainLoopSyncer::presentFrame(uint32_t imageIndex,uint32_t frameIdx,std::function<void()> swapChainOutdatedHandler){
         VkPresentInfoKHR presentInfo = {};

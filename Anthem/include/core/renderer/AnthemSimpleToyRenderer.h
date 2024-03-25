@@ -261,7 +261,9 @@ namespace Anthem::Core{
         bool drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ);
 
         bool drCopyImageToSwapchainImage(AnthemImage* image,uint32_t swapchainImageIdx, uint32_t cmdIdx);
+        bool drCopySwapchainImageToImage(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx);
         bool drCopyImageToSwapchainImageWithFormatConv(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx);
+        bool drCopySwapchainImageToImageWithFormatConv(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx);
         bool drSetImageLayoutSimple(AnthemImage* image, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx);
         bool drSetSwapchainImageLayoutSimple(uint32_t swapchainImageIdx, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx);
         
@@ -275,6 +277,8 @@ namespace Anthem::Core{
         bool quGetComputeQueueIdx(uint32_t* queue);
         bool quGetGraphicsQueueIdx(uint32_t* queue);
 
+        // Sync
+        bool forceCpuWaitDraw(uint32_t frameIdx);
 
         // Legacy
         bool presentFrameDemo(uint32_t currentFrame, AnthemRenderPass* renderPass,

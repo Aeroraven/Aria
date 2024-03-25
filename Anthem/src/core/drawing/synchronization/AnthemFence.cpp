@@ -39,4 +39,9 @@ namespace Anthem::Core{
         vkDestroyFence(this->logicalDevice->getLogicalDevice(), this->fence, nullptr);
         return true;
     }
+    bool AnthemFence::waitAndReset() {
+        bool ret = waitForFence();
+        ret |= resetFence();
+        return ret;
+    }
 }

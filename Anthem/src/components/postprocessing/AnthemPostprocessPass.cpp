@@ -6,6 +6,8 @@ namespace Anthem::Components::Postprocessing {
 		this->cmdCopies = cmdCopies;
 		this->cmdIdx.reserve(cmdCopies);
 		this->cmdIdx.resize(cmdCopies);
+		this->inputs.reserve(cmdCopies);
+		this->inputs.resize(cmdCopies);
 	}
 	void AnthemPostprocessPass::prepareGeometry() {
 		rd->createVertexBuffer(&vx);
@@ -18,8 +20,16 @@ namespace Anthem::Components::Postprocessing {
 		ix->setIndices({ 0,1,2,2,3,0 });
 	}
 
-	void AnthemPostprocessPass::addInput(std::vector<AnthemDescriptorSetEntry> ins) {
-		inputs.insert(inputs.end(), ins.begin(), ins.end());
+	void AnthemPostprocessPass::addInput(std::vector<AnthemDescriptorSetEntry> ins,int target) {
+		if (target == -1) {
+			for (auto& inx : inputs) {
+				inx.insert(inx.end(), ins.begin(), ins.end());
+			}
+		}
+		else {
+			inputs[target].insert(inputs[target].end(), ins.begin(), ins.end());
+		}
+		
 	}
 	void AnthemPostprocessPass::prepare() {
 		for (auto i : AT_RANGE2(cmdCopies)) {
@@ -30,7 +40,7 @@ namespace Anthem::Components::Postprocessing {
 		prepareShader();
 		prepareRenderPass();
 		rd->createSwapchainImageFramebuffers(&fbSwapchain, pass, depthStencil);
-		rd->createGraphicsPipelineCustomized(&pipeline, inputs, {}, pass, shader, vx, &copt);
+		rd->createGraphicsPipelineCustomized(&pipeline, inputs[0], {}, pass, shader, vx, &copt);
 	}
 
 	void AnthemPostprocessPass::prepareRenderPass() {
@@ -43,7 +53,7 @@ namespace Anthem::Components::Postprocessing {
 			rd->drStartRenderPass(pass, fbSwapchain->getFramebufferObjectUnsafe(k), i, false);
 			rd->drBindGraphicsPipeline(pipeline, i);
 			rd->drSetViewportScissorFromSwapchain(i);
-			rd->drBindDescriptorSetCustomizedGraphics(inputs, pipeline, i);
+			rd->drBindDescriptorSetCustomizedGraphics(inputs[k], pipeline, i);
 			rd->drBindVertexBuffer(vx, i);
 			rd->drBindIndexBuffer(ix, i);
 			rd->drDraw(ix->getIndexCount(), i);

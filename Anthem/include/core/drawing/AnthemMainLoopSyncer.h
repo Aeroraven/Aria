@@ -6,7 +6,7 @@
 #include "../drawing/synchronization/AnthemSemaphore.h"
 
 namespace Anthem::Core{
-    enum class AtSyncSemaphoreWaitStage {
+    enum AtSyncSemaphoreWaitStage {
         AT_SSW_UNDEFINED = 0,
         AT_SSW_COLOR_ATTACH_OUTPUT = 1,
         AT_SSW_VERTEX_INPUT = 2
@@ -34,5 +34,6 @@ namespace Anthem::Core{
             const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages, VkFence* signalFence, const std::vector<const AnthemSemaphore*>* semaphoreToSignal);
 
         bool presentFrame(uint32_t imageIndex,uint32_t frameIdx,std::function<void()> swapChainOutdatedHandler = ANTH_ERROR_RAISE_DEFAULT_FUNC);
+        bool forceCPUSync(uint32_t frameIdx);
     };
 }

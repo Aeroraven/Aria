@@ -64,9 +64,9 @@ namespace Anthem::Core{
             this->destroyStagingBuffer();
         }else if(this->definedUsage == AT_IU_COLOR_ATTACHMENT){
             if(this->msaaOn){
-                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT , pendingFormat, this->width, this->height,this->depth);
+                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, pendingFormat, this->width, this->height,this->depth);
             }else{
-                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT , pendingFormat, this->width, this->height, this->depth);
+                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, pendingFormat, this->width, this->height, this->depth);
             }
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
             this->createSampler();

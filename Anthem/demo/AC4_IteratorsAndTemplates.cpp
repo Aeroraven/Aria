@@ -15,21 +15,24 @@ static int exampleCounter = 0;
 #define EVAL_EXPRESSION(x) ANTH_LOGI("Value of ",#x," is ",(x));
 #define PRINT(...) ANTH_LOGI(__VA_ARGS__);
 
-namespace Anthem::AcStage::Runtime{
+namespace Anthem::AcStage::TemplateIterators {
     using namespace Anthem::Core;
     using namespace Anthem::Core::Math;
     using namespace Anthem::Core::Math::Abbr;
-    void run(){
-        BEGIN_EXAMPLE("Generic lambda");
-            auto foo = []<typename T,typename U>(T a,U b)->decltype(a+b){
-                return a+b;
-            };
-            EVAL_EXPRESSION(foo(1,2));
+    void run() {
+
+        BEGIN_EXAMPLE("Range Zip");
+            std::vector<int> wx = { 1,2,3 };
+            std::set<int> st = { 8,5,1 };
+            AnthemHaltonSequence bx(2, 3);
+            for (const auto& [a, b, c] : AT_ZIP(wx, bx, st)) {
+                PRINT(a, b, c);
+            }
         END_EXAMPLE();
 
-    }   
+    }
 }
 
-int main(){
-    Anthem::AcStage::Runtime::run();
+int main() {
+    Anthem::AcStage::TemplateIterators::run();
 }

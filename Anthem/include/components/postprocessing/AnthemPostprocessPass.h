@@ -21,7 +21,7 @@ namespace Anthem::Components::Postprocessing {
         AnthemVertexBufferImpl<AtAttributeVecf<4>>* vx;
         AnthemIndexBuffer* ix;
 
-        std::vector<AnthemDescriptorSetEntry> inputs;
+        std::vector<std::vector<AnthemDescriptorSetEntry>> inputs;
 
         AnthemSimpleToyRenderer* rd;
         uint32_t cmdCopies = 2;
@@ -35,7 +35,7 @@ namespace Anthem::Components::Postprocessing {
         virtual void prepareRenderPass();
         virtual void prepareGeometry();
         virtual void prepare();
-        virtual void addInput(std::vector<AnthemDescriptorSetEntry> ins);
+        virtual void addInput(std::vector<AnthemDescriptorSetEntry> ins,int target=-1);
 
         virtual void recordCommand();
          
