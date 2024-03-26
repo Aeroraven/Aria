@@ -61,6 +61,23 @@ namespace Anthem::Components::Postprocessing {
 			k++;
 		}
 	}
+
+	void AnthemPostprocessPass::recordCommandOffscreen() {
+		for (auto k = 0; auto i : cmdIdx) {
+			rd->drStartCommandRecording(i);
+			rd->drStartRenderPass(pass, fbTarget[k], i, false);
+			rd->drBindGraphicsPipeline(pipeline, i);
+			rd->drSetViewportScissorFromSwapchain(i);
+			rd->drBindDescriptorSetCustomizedGraphics(inputs[k], pipeline, i);
+			rd->drBindVertexBuffer(vx, i);
+			rd->drBindIndexBuffer(ix, i);
+			rd->drDraw(ix->getIndexCount(), i);
+			rd->drEndRenderPass(i);
+			rd->drEndCommandRecording(i);
+			k++;
+		}
+	}
+
 	uint32_t AnthemPostprocessPass::getCommandIdx(uint32_t id) const {
 		return this->cmdIdx[id];
 	}

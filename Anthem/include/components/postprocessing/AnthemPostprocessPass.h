@@ -42,6 +42,7 @@ namespace Anthem::Components::Postprocessing {
         virtual void addInput(std::vector<AnthemDescriptorSetEntry> ins,int target=-1);
 
         virtual void recordCommand();
+        virtual void recordCommandOffscreen();
          
         uint32_t getCommandIdx(uint32_t id) const;
 
