@@ -29,7 +29,6 @@ namespace Anthem::Components::Postprocessing {
 		else {
 			inputs[target].insert(inputs[target].end(), ins.begin(), ins.end());
 		}
-		
 	}
 	void AnthemPostprocessPass::prepare() {
 		for (auto i : AT_RANGE2(cmdCopies)) {

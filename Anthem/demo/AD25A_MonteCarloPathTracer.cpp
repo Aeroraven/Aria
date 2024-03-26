@@ -1,3 +1,4 @@
+#define AT_FEATURE_RAYTRACING_ENABLED
 #include "../include/core/renderer/AnthemSimpleToyRenderer.h"
 #include "../include/core/math/AnthemMathAbbrs.h"
 #include "../include/external/AnthemGLTFLoader.h"
@@ -20,7 +21,7 @@ using namespace Anthem::External;
 using namespace Anthem::Core;
 
 struct Stage {
-	AnthemSimpleToyRendearer rd;
+	AnthemSimpleToyRenderer rd;
 	AnthemConfig cfg;
 	AnthemCamera camera = AnthemCamera(AT_ACPT_PERSPECTIVE);
 	AnthemFrameRateMeter fpsMeter = AnthemFrameRateMeter(10);

@@ -15,7 +15,7 @@ namespace Anthem::Components::Postprocessing {
         AnthemRenderPassSetupOption ropt;
         AnthemGraphicsPipelineCreateProps copt;
 
-        AnthemFramebuffer* fbTarget;
+
         AnthemSwapchainFramebuffer* fbSwapchain;
 
         AnthemVertexBufferImpl<AtAttributeVecf<4>>* vx;
@@ -28,6 +28,10 @@ namespace Anthem::Components::Postprocessing {
         std::vector<uint32_t> cmdIdx;
 
         std::vector<AnthemSemaphore*> procComplete;
+
+        AnthemFramebuffer** fbTarget;
+        AnthemDescriptorPool** descTarget;
+        AnthemImage** targetImage;
     public:
         AnthemPostprocessPass(AnthemSimpleToyRenderer* p, uint32_t cmdCopies);
 

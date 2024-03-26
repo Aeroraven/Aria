@@ -19,15 +19,32 @@ namespace Anthem::Components::Utility {
 			prx += p.numVertices;
 		}
 		vx->setTotalVertices(prx);
+
+		int tId = 0;
+		std::map<std::string,int> usedTexFile;
+		std::vector<int> texMaps(model.size());
+		std::vector<std::string> requiredTex;
+		for (int i = 0; i < model.size(); i++) {
+			if (usedTexFile.count(model[i].pbrBaseColorTexPath)) {
+				texMaps[i] = usedTexFile[model[i].pbrBaseColorTexPath];
+			}
+			else {
+				usedTexFile[model[i].pbrBaseColorTexPath] = tId++;
+				texMaps[i] = usedTexFile[model[i].pbrBaseColorTexPath];
+				requiredTex.push_back(model[i].pbrBaseColorTexPath);
+			}
+		}
+		requiredTexturePaths = requiredTex;
+
 		auto childJob = [&](int k)->void {
 			for (int i = 0; i < model[k].numVertices; i++) {
 				vx->insertData(i + prs[k],
 					{ model[k].positions[i * 3],model[k].positions[i * 3 + 1],model[k].positions[i * 3 + 2],1.0 },
 					{ model[k].normals[i * 3],model[k].normals[i * 3 + 1],model[k].normals[i * 3 + 2],0.0 },
-					{ model[k].texCoords[i * 2],model[k].texCoords[i * 2 + 1], k * 1.0f + 0.5f,1.00 });
+					{ model[k].texCoords[i * 2],model[k].texCoords[i * 2 + 1], k * 1.0f + 0.5f,texMaps[k] + 0.5f });
 			}
-
 		};
+
 		std::vector<std::thread> th;
 		for (int k = 0; k < prs.size(); k++) {
 			std::thread childExec(childJob, k);
@@ -46,6 +63,7 @@ namespace Anthem::Components::Utility {
 		ix->setIndices(ixList);
 		return true;
 	}
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
 	float AnthemSimpleModelIntegrator::getLightAreas() {
 		return this->totalLightAreas;
 	}
@@ -229,6 +247,7 @@ namespace Anthem::Components::Utility {
 		tlasObj->buildTLAS();
 		return true;
 	}
+#endif
 	AnthemVertexBuffer* AnthemSimpleModelIntegrator::getVertexBuffer() {
 		return this->vx;
 	}
@@ -238,6 +257,10 @@ namespace Anthem::Components::Utility {
 	AnthemIndirectDrawBuffer* AnthemSimpleModelIntegrator::getIndirectBuffer() {
 		return this->indirect;
 	}
+	std::vector<std::string> AnthemSimpleModelIntegrator::getRequiredTextures() {
+		return this->requiredTexturePaths;
+	}
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
 	AnthemSimpleModelIntegratorRayTracingStructs AnthemSimpleModelIntegrator::getRayTracingParsedResult() {
 		AnthemSimpleModelIntegratorRayTracingStructs ret;
 		ret.asGeo = asGeo;
@@ -262,4 +285,5 @@ namespace Anthem::Components::Utility {
 		ret.colorBuffer = colorBuffer;
 		return ret;
 	}
+#endif
 }

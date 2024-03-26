@@ -1,3 +1,4 @@
+#define AT_FEATURE_RAYTRACING_ENABLED
 #include "../include/core/renderer/AnthemSimpleToyRenderer.h"
 #include "../include/core/math/AnthemMathAbbrs.h"
 #include "../include/external/AnthemGLTFLoader.h"

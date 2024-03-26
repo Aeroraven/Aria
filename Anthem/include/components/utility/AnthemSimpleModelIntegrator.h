@@ -13,6 +13,7 @@
 namespace Anthem::Components::Utility {
 	using namespace Anthem::Core;
 
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
 	struct AnthemSimpleModelIntegratorRayTracingStructs {
 		AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* posBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* normalBuffer;
@@ -37,16 +38,16 @@ namespace Anthem::Components::Utility {
 		AnthemAccStructInstance* asInst;
 		AnthemTopLevelAccStruct* tlasObj;
 	};
-
+#endif
 	class AnthemSimpleModelIntegrator {
 	private:
 		AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>, AtAttributeVecf<4>>* vx = nullptr;
 		AnthemIndexBuffer* ix = nullptr;
 		AnthemIndirectDrawBuffer* indirect = nullptr;
-
+		std::vector<std::string> requiredTexturePaths = {};
 
 		// Raytracing
-
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
 		AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* posBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* normalBuffer;
 		AnthemShaderStorageBufferImpl<AtBufVecd2f<1>>* texBuffer;
@@ -71,6 +72,7 @@ namespace Anthem::Components::Utility {
 
 		float totalLightAreas = 0;
 		uint32_t totalLightFaces = 0;
+#endif
 
 	public:
 		bool loadModel(AnthemSimpleToyRenderer* renderer,std::vector<AnthemUtlSimpleModelStruct> model, uint32_t cpuJobs);
@@ -79,9 +81,12 @@ namespace Anthem::Components::Utility {
 		AnthemVertexBuffer* getVertexBuffer();
 		AnthemIndexBuffer* getIndexBuffer();
 		AnthemIndirectDrawBuffer* getIndirectBuffer();
+		std::vector<std::string> getRequiredTextures();
 
+#ifdef AT_FEATURE_RAYTRACING_ENABLED
 		AnthemSimpleModelIntegratorRayTracingStructs getRayTracingParsedResult();
 		float getLightAreas();
 		uint32_t getLightFaces();
+#endif
 	};
 }

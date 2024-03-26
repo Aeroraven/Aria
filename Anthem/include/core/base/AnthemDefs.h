@@ -40,7 +40,7 @@
 #endif
 
 // Options
-#define AT_FEATURE_RAYTRACING_ENABLED 1
+//#define AT_FEATURE_RAYTRACING_ENABLED 1
 #define AT_ENABLE_LOG 1 
 #define AT_LOG_IGNORE_VERBOSE 1
 
@@ -63,6 +63,7 @@
 #define ANTH_SHADER_DIR "C:\\WR\\Aria\\Anthem\\shader\\glsl\\"
 #define ANTH_SHADER_DIR_HLSL "C:\\WR\\Aria\\Anthem\\shader\\hlsl\\"
 #define ANTH_ASSET_DIR "C:\\WR\\Aria\\Anthem\\assets\\"
+#define ANTH_ASSET_TEMP_DIR "C:\\WR\\Aria\\Anthem\\assets\\"
 
 // Pointerrs
 #define ANTH_SHARED_PTR(T) std::shared_ptr<T>
@@ -152,6 +153,7 @@ namespace Anthem::Core::BaseUtility {
 #define AT_ZIP(...)  Anthem::Core::BaseUtility::AtZipContainer(__VA_ARGS__)
 #define AT_RANGE(s,t) (std::views::iota(s,t))
 #define AT_RANGE2(t) (std::views::iota(static_cast<decltype(t)>(0),t))
+#define AT_CLAMP(v,s,t) ((v)>(s)?( (v)<(t)?(v):(t) ):(s));
 
 #define AT_ALIGN(s,t) (((s)+(t)-1)&~((t)-1))
 #define AT_LOWBIT(s) ((s)&~(s))
