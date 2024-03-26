@@ -21,6 +21,7 @@ struct PSOutput
 {
     float4 color : SV_Target0;
     float4 motionVec : SV_Target1;
+    float4 depth : SV_Target2;
 };
 
 PSOutput main(VSOutput vsOut)
@@ -34,7 +35,8 @@ PSOutput main(VSOutput vsOut)
     float4 lastPos = vsOut.legacyPositionRaw / vsOut.legacyPositionRaw.w;
     float4 curPos = vsOut.curPositionRaw / vsOut.curPositionRaw.w;
     float2 offset = (curPos - lastPos).xy;
-    psOut.motionVec = float4((abs(offset) * 0.5 + 0.5)*100, 0, 0);
+    psOut.motionVec = float4((offset * 0.5 + 0.5), 1, 0);
+    psOut.depth = float4(1 - curPos.z / curPos.w, 0, 0, 1);
     
     return psOut;
 }

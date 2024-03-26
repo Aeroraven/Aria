@@ -2,11 +2,27 @@
 
 namespace Anthem::Core{
     bool AnthemInstance::callResizeHandler(int w,int h){
-        this->resizeHandler(w,h);\
+        this->resizeHandler(w,h);
+        return true;
+    }
+    bool AnthemInstance::callMouseHander(int a, int b, int c) {
+        this->mouseHandler(a, b, c);
+        return true;
+    }
+    bool AnthemInstance::callKeyboardHander(int a, int b, int c, int d) {
+        this->keyboardHandler(a, b, c, d);
         return true;
     }
     bool AnthemInstance::specifyResizeHandler(std::function<void(int,int)> handler){
         this->resizeHandler = handler;
+        return true;
+    }
+    bool AnthemInstance::specifyMouseHandler(std::function<void(int, int, int)> handler) {
+        this->mouseHandler = handler;
+        return true;
+    }
+    bool AnthemInstance::specifyKeyHandler(std::function<void(int, int, int, int)> handler) {
+        this->keyboardHandler = handler;
         return true;
     }
     bool AnthemInstance::waitForFramebufferReady(){
@@ -45,9 +61,18 @@ namespace Anthem::Core{
             auto app = reinterpret_cast<AnthemInstance*>(glfwGetWindowUserPointer(window));
             app->callResizeHandler(width,height);
         };
+        auto mouseActionCallback = [](GLFWwindow* window, int button, int action, int mods) {
+            auto app = reinterpret_cast<AnthemInstance*>(glfwGetWindowUserPointer(window));
+            app->callMouseHander(button, action, mods);
+        };
+        auto keyActionCallback = [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+            auto app = reinterpret_cast<AnthemInstance*>(glfwGetWindowUserPointer(window));
+            app->callKeyboardHander(key,scancode,action,mods);
+        };
         glfwSetWindowUserPointer(window,this);
         glfwSetFramebufferSizeCallback(this->window,fbResizeCallback);
-        
+        glfwSetMouseButtonCallback(this->window, mouseActionCallback);
+        glfwSetKeyCallback(this->window, keyActionCallback);
         return true;
     }
     bool AnthemInstance::destroyWindow(){

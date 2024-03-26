@@ -54,6 +54,8 @@ struct Stage {
 	AnthemGraphicsPipeline* pipeMain;
 
 	AnthemDescriptorPool* descMain;
+	AnthemDescriptorPool** descDepth;
+	AnthemImage** colDepth;
 	AnthemUniformBufferImpl<
 		AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>,
 		AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>,
@@ -137,27 +139,32 @@ void createMainStage() {
 	st.roptMain.clearDepthAttachmentOnLoad = true;
 	st.roptMain.clearStencilAttachmentOnLoad = true;
 	st.roptMain.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
-	st.roptMain.clearColorAttachmentOnLoad = { true,true };
-	st.roptMain.colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 };
-	st.roptMain.clearColors = { {0,0,0,1},{0,0,0,1} };
+	st.roptMain.clearColorAttachmentOnLoad = { true,true,true };
+	st.roptMain.colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 ,AT_IF_SRGB_FLOAT32 };
+	st.roptMain.clearColors = { {0,0,0,1},{0,0,0,1},{0,0,0,1} };
 	st.coptMain.enableDynamicStencilTesting = false;
-	st.coptMain.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.coptMain.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
 
-	st.rd.createDepthStencilBuffer(&st.depthMain, false);
+
+	st.rd.createDepthBuffer(&st.depthMain,  false);
 	st.rd.setupRenderPass(&st.passMain, &st.roptMain, st.depthMain);
 
 	st.descTgt = new AnthemDescriptorPool * [st.cfg.vkcfgMaxImagesInFlight];
+	st.descDepth = new AnthemDescriptorPool * [st.cfg.vkcfgMaxImagesInFlight];
+	st.colDepth = new AnthemImage * [st.cfg.vkcfgMaxImagesInFlight];
 	st.target = new AnthemImage * [st.cfg.vkcfgMaxImagesInFlight];
 	st.fbMain = new AnthemFramebuffer * [st.cfg.vkcfgMaxImagesInFlight];
 	st.descMotionVec = new AnthemDescriptorPool * [st.cfg.vkcfgMaxImagesInFlight];
 	st.motionImage = new AnthemImage * [st.cfg.vkcfgMaxImagesInFlight];
 
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.rd.createDescriptorPool(&st.descDepth[i]);
 		st.rd.createDescriptorPool(&st.descTgt[i]);
 		st.rd.createColorAttachmentImage(&st.target[i], st.descTgt[i], 0, AT_IF_SRGB_FLOAT32, false, -1);
+		st.rd.createColorAttachmentImage(&st.colDepth[i], st.descDepth[i], 0, AT_IF_SRGB_FLOAT32, false, -1);
 		st.rd.createDescriptorPool(&st.descMotionVec[i]);
 		st.rd.createColorAttachmentImage(&st.motionImage[i], st.descMotionVec[i], 0, AT_IF_SRGB_FLOAT32, false, -1);
-		st.rd.createSimpleFramebufferA(&st.fbMain[i], { st.target[i],st.motionImage[i] }, st.passMain, st.depthMain);
+		st.rd.createSimpleFramebufferA(&st.fbMain[i], { st.target[i],st.motionImage[i],st.colDepth[i]}, st.passMain, st.depthMain);
 	}
 
 	AnthemDescriptorSetEntry dseCam{ st.descMain,AT_ACDS_UNIFORM_BUFFER,0 };
@@ -174,8 +181,18 @@ void createMainStage() {
 
 void prepareTAA() {
 	st.taa = std::make_unique<AnthemTAA>(&st.rd, 2);
-	st.taa->addInput({ {st.descTgt[0],AT_ACDS_SAMPLER,0},{st.descTgt[1],AT_ACDS_SAMPLER,0},{st.descMotionVec[0],AT_ACDS_SAMPLER,0} }, 0);
-	st.taa->addInput({ {st.descTgt[1],AT_ACDS_SAMPLER,0},{st.descTgt[0],AT_ACDS_SAMPLER,0},{st.descMotionVec[1],AT_ACDS_SAMPLER,0} }, 1);
+	st.taa->addInput({ 
+		{st.descTgt[0],AT_ACDS_SAMPLER,0},
+		{st.descTgt[1],AT_ACDS_SAMPLER,0},
+		{st.descMotionVec[0],AT_ACDS_SAMPLER,0},
+		{st.descDepth[0],AT_ACDS_SAMPLER,0}
+	}, 0);
+	st.taa->addInput({ 
+		{st.descTgt[1],AT_ACDS_SAMPLER,0},
+		{st.descTgt[0],AT_ACDS_SAMPLER,0},
+		{st.descMotionVec[1],AT_ACDS_SAMPLER,0},
+		{st.descDepth[1],AT_ACDS_SAMPLER,0}
+	}, 1);
 	st.taa->prepare();
 }
 
