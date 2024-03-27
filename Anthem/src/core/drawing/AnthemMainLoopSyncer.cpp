@@ -154,11 +154,12 @@ namespace Anthem::Core{
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
         std::vector<VkSemaphore> waitSemaphores;
+        std::vector<VkPipelineStageFlags> waitStages;
         if (prerequisiteSemaphores != nullptr) {
             for (const auto& p : *prerequisiteSemaphores) {
                 waitSemaphores.push_back(*p->getSemaphore());
             }
-            std::vector<VkPipelineStageFlags> waitStages;
+            
             for (const auto& p : *semaphoreWaitStages) {
                 using tp = std::remove_cvref<decltype(p)>::type;
                 if (p == tp::AT_SSW_VERTEX_INPUT) {

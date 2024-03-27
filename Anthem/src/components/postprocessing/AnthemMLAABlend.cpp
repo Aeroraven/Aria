@@ -3,7 +3,7 @@ namespace Anthem::Components::Postprocessing {
 	void AnthemMLAABlend::prepareShader() {
 		auto getShader = [&](auto x) {
 			std::string st(ANTH_SHADER_DIR_HLSL);
-			st += "mlaa\\mlaa.blend";
+			st += "mlaa\\mlaa.blend.";
 			st += x;
 			st += ".hlsl.spv";
 			return st;
@@ -47,10 +47,10 @@ namespace Anthem::Components::Postprocessing {
 							if (std::abs(percent) > 1)throw;
 						}
 
-						px[0] = 0;
+						px[0] = 0; //B
 						px[3] = 255;
-						px[2] = 255 * AT_CLAMP(-percent, 0, 1);
-						px[1] = 255 * AT_CLAMP(percent, 0, 1);
+						px[2] = 255 * AT_CLAMP(-percent, 0, 1); //R
+						px[1] = 255 * AT_CLAMP(percent, 0, 1); //G
 						if (px[1] != 0 && px[2] != 0) {
 							throw;
 						}

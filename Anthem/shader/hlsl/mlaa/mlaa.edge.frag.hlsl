@@ -31,7 +31,7 @@ float4 main(VSOutput vsOut) : SV_TARGET0
     
     float thSingle = 0.05;
     float4 thresh = float4(thSingle, thSingle, thSingle, thSingle);
-    float4 delta = abs(float4(lL, lR, lT, lB) - lC);
+    float4 delta = abs(float4(lL, lT, lC, lC) - lC);
     float4 threshDelta = step(thresh, delta);
     if (dot(threshDelta, float4(1, 1, 1, 1)) < 1e-4){
         return float4(0, 0, 0, 0);

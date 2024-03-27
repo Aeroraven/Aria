@@ -14,6 +14,7 @@
 #include "../include/components/utility/AnthemSimpleModelIntegrator.h"
 #include "../include/components/postprocessing/AnthemMLAAEdge.h"
 #include "../include/components/postprocessing/AnthemMLAABlend.h"
+#include "../include/components/postprocessing/AnthemMLAAMix.h"
 
 using namespace Anthem::Components::Performance;
 using namespace Anthem::Components::Utility;
@@ -59,11 +60,18 @@ struct Stage {
 
 	uint32_t* cmdIdx;
 	AnthemSemaphore* drawComplete;
+	AnthemSemaphore* mlaaThDone;
+	AnthemSemaphore* mlaaBlendDone;
+
 	AnthemFence* drawReady;
 	std::vector<std::string> requiredTex;
 
 	std::unique_ptr<AnthemMLAAEdge> mlaaThreshold;
 	std::unique_ptr<AnthemMLAABlend> mlaaBlend;
+	std::unique_ptr<AnthemMLAAMix> mlaaMix;
+
+	AnthemDescriptorPool* descBlendFactor;
+	AnthemImage* blendFactor;
 }st;
 
 void initialize() {
@@ -74,7 +82,7 @@ void initialize() {
 	st.rd.exGetWindowSize(rdH, rdW);
 
 	st.camera.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 0.9, -1.5);
+	st.camera.specifyPosition(0, 0.9, -1.3);
 	st.camera.specifyFrontEyeRay(0, 0, 1);
 
 	st.rd.createDescriptorPool(&st.descMain);
@@ -140,15 +148,45 @@ void createMainStage() {
 		st.rd.drAllocateCommandBuffer(&st.cmdIdx[i]);
 	}
 	st.rd.createSemaphore(&st.drawComplete);
+	st.rd.createSemaphore(&st.mlaaThDone);
+	st.rd.createSemaphore(&st.mlaaBlendDone);
 	st.rd.createFence(&st.drawReady);
 }
 
 void prepareMLAA() {
 	st.mlaaThreshold = std::make_unique<AnthemMLAAEdge>((AnthemSimpleToyRenderer*)&st.rd, 2,16);
+	st.mlaaThreshold->addInput({ {st.descTgt,AT_ACDS_SAMPLER,0} });
+	st.mlaaThreshold->prepare(true);
+
 	st.mlaaBlend = std::make_unique<AnthemMLAABlend>((AnthemSimpleToyRenderer*)&st.rd, 2, 16);
 	st.mlaaBlend->prepareBlendTexture(std::string(ANTH_ASSET_TEMP_DIR) + "/mlaa16.png");
-	st.mlaaThreshold->addInput({ {st.descTgt,AT_ACDS_SAMPLER,0} });
-	st.mlaaThreshold->prepare();
+	st.rd.createDescriptorPool(&st.descBlendFactor);
+	std::unique_ptr<AnthemImageLoader> loader = std::make_unique<AnthemImageLoader>();
+	uint32_t texWidth, texHeight, texChannels;
+	uint8_t* texData;
+	loader->loadImage(ANTH_ASSET_TEMP_DIR"/mlaa16.png", &texWidth, &texHeight, &texChannels, &texData);
+	st.rd.createTexture(&st.blendFactor, st.descBlendFactor, texData, texWidth, texHeight, texChannels, 0, false, false);
+
+	st.mlaaBlend->addInput({
+		{st.mlaaThreshold->getColorAttachmentDescId(0),AT_ACDS_SAMPLER,0},
+		{st.descBlendFactor,AT_ACDS_SAMPLER,0}
+	},0);
+	st.mlaaBlend->addInput({
+		{st.mlaaThreshold->getColorAttachmentDescId(1),AT_ACDS_SAMPLER,0},
+		{st.descBlendFactor,AT_ACDS_SAMPLER,0}
+	}, 1);
+	st.mlaaBlend->prepare(true);
+
+	st.mlaaMix = std::make_unique<AnthemMLAAMix>((AnthemSimpleToyRenderer*)&st.rd, 2, 16);
+	st.mlaaMix->addInput({
+		{st.mlaaBlend->getColorAttachmentDescId(0),AT_ACDS_SAMPLER,0},
+		{st.descTgt,AT_ACDS_SAMPLER,0} 
+	},0);
+	st.mlaaMix->addInput({
+		{st.mlaaBlend->getColorAttachmentDescId(1),AT_ACDS_SAMPLER,0},
+		{st.descTgt,AT_ACDS_SAMPLER,0}
+	}, 1);
+	st.mlaaMix->prepare();
 }
 
 void recordCommand() {
@@ -178,7 +216,7 @@ void updateUniform() {
 	st.camera.getProjectionMatrix(proj);
 	st.camera.getViewMatrix(view);
 	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f },
-		0.3f * static_cast<float>(glfwGetTime()));
+		AT_PI * 1.25);
 
 	float pm[16], vm[16], lm[16];
 	proj.columnMajorVectorization(pm);
@@ -199,7 +237,12 @@ void mainLoop() {
 	updateUniform();
 	st.rd.drPrepareFrame(cur, &imgIdx);
 	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.cmdIdx[cur], -1, {}, {}, nullptr, { st.drawComplete });
-	st.rd.drSubmitCommandBufferGraphicsQueueGeneralA(st.mlaaThreshold->getCommandIdx(cur), cur, { st.drawComplete },{ AT_SSW_COLOR_ATTACH_OUTPUT });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.mlaaThreshold->getCommandIdx(cur), -1,
+		{st.drawComplete }, { AT_SSW_COLOR_ATTACH_OUTPUT }, nullptr, { st.mlaaThDone });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.mlaaBlend->getCommandIdx(cur), -1,
+		{ st.mlaaThDone }, { AT_SSW_COLOR_ATTACH_OUTPUT }, nullptr, { st.mlaaBlendDone });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneralA(st.mlaaMix->getCommandIdx(cur), cur,
+		{ st.mlaaBlendDone },{ AT_SSW_COLOR_ATTACH_OUTPUT });
 	st.rd.drPresentFrame(cur, cur);
 }
 
@@ -211,7 +254,9 @@ int main() {
 	st.rd.registerPipelineSubComponents();
 
 	recordCommand();
-	st.mlaaThreshold->recordCommand();
+	st.mlaaThreshold->recordCommandOffscreen();
+	st.mlaaBlend->recordCommandOffscreen();
+	st.mlaaMix->recordCommand();
 
 	st.rd.setDrawFunction(mainLoop);
 	st.rd.startDrawLoopDemo();
