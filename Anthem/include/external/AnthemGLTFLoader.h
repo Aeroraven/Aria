@@ -19,14 +19,14 @@ namespace Anthem::External{
         tinygltf::Model model;
     public:
         template<typename T,typename U>
-        bool bufferParse(int bufferIdx,int stride,std::vector<T>& result){
+        bool bufferParse(int bufferIdx,int stride,std::vector<T>& result,int accessorOffset,int accessorCount){
             const auto& bufferView = model.bufferViews.at(bufferIdx);
             const auto& buffer = model.buffers.at(bufferView.buffer);
             const auto& bufferData = buffer.data.data();
             const auto& bufferOffset = bufferView.byteOffset;
             const auto& bufferLength = bufferView.byteLength;
-            for(int i=0;i<bufferLength;i+=stride){
-                result.push_back(static_cast<T>(*((U*)(bufferData + bufferOffset + i))));
+            for(int i=0,j=0;j<accessorCount && i<bufferLength;j++,i+=stride){
+                result.push_back(static_cast<T>(*((U*)(bufferData + bufferOffset + i + accessorOffset))));
             }
             return true;
         }

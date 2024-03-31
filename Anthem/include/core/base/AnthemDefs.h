@@ -238,11 +238,15 @@ namespace Anthem::Core::TmplDefs{
     template<class SrcTp,int SrcDm,int SrcSz>
     concept ATpIsdUniMatVecf = ATpIsdUniEquals<SrcTp,SrcDm,SrcSz,float,1,2,1,4>;
 
+    template<class SrcTp, int SrcDm, int SrcSz>
+    concept ATpIsdUniMatVeci = ATpIsdUniEquals<SrcTp, SrcDm, SrcSz, int, 1, 2, 1, 4>;
+
+
     template<class SrcTp,int SrcDm,int SrcSz>
     concept ATpIsdValidUniform = ATpIsdUniMatVecf<SrcTp,SrcDm,SrcSz>;
 
     template<class SrcTp,int SrcDm,int SrcSz,int SrcArrSz>
-    concept ATpIsdValidUniformWithArr = ATpIsdUniMatVecf<SrcTp,SrcDm,SrcSz> && (SrcArrSz>0);
+    concept ATpIsdValidUniformWithArr = (ATpIsdUniMatVecf<SrcTp,SrcDm,SrcSz>|| ATpIsdUniMatVeci<SrcTp, SrcDm, SrcSz>) && (SrcArrSz>0);
 }
 
 

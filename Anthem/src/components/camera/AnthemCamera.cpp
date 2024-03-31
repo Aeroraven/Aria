@@ -69,4 +69,34 @@ namespace Anthem::Components::Camera{
         this->viewMatrix.markDirty();
         return true;
     }
+    std::function<void(int, int, int, int)> AnthemCamera::getKeyboardController() {
+        return [&](int key, int scancode, int action, int mods) {
+            auto sideDirection = AnthemLinAlg::cross3<float>(frontDirection, up).normalize_();
+            auto scaler = 10;
+            if (key == GLFW_KEY_W) {
+                pos = pos + frontDirection * scaler;
+                viewMatrix.markDirty();
+            }
+            else if (key == GLFW_KEY_S) {
+                pos = pos - frontDirection * scaler;
+                viewMatrix.markDirty();
+            }
+            else if (key == GLFW_KEY_A) {
+                pos = pos + sideDirection * scaler;
+                viewMatrix.markDirty();
+            }
+            else if (key == GLFW_KEY_D) {
+                pos = pos - sideDirection * scaler;
+                viewMatrix.markDirty();
+            }
+            else if (key == GLFW_KEY_Q) {
+                pos = pos - up * scaler;
+                viewMatrix.markDirty();
+            }
+            else if (key == GLFW_KEY_E) {
+                pos = pos + up * scaler;
+                viewMatrix.markDirty();
+            }
+        };
+    }
 }

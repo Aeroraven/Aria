@@ -9,7 +9,8 @@ namespace Anthem::Core{
     enum AtSyncSemaphoreWaitStage {
         AT_SSW_UNDEFINED = 0,
         AT_SSW_COLOR_ATTACH_OUTPUT = 1,
-        AT_SSW_VERTEX_INPUT = 2
+        AT_SSW_VERTEX_INPUT = 2,
+        AT_SSW_ALL_COMMAND = 3
     };
     class AnthemMainLoopSyncer:public Util::AnthemUtlLogicalDeviceReqBase,
         public Util::AnthemUtlSwapChainReqBase,public Util::AnthemUtlConfigReqBase{

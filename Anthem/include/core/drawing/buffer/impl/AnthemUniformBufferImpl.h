@@ -16,6 +16,12 @@ namespace Anthem::Core {
     template<uint32_t Rk>
     using AnthemUniformVecf = AnthemUBDesc<float, 1, Rk, 1>;
 
+    template<uint32_t Rk>
+    using AnthemUniformMati = AnthemUBDesc<int, 2, Rk, 1>;
+
+    template<uint32_t Rk>
+    using AnthemUniformVeci = AnthemUBDesc<int, 1, Rk, 1>;
+
     template<uint32_t Rk, uint32_t Ar>
     using AnthemUniformVecfArray = AnthemUBDesc<float, 1, Rk, Ar>;
 
@@ -25,6 +31,12 @@ namespace Anthem::Core {
     template<uint32_t Rk>
     using AtUniformMatf = AnthemUniformMatf<Rk>;
 
+    template<uint32_t Rk>
+    using AtUniformVeci = AnthemUniformVeci<Rk>;
+
+    template<uint32_t Rk>
+    using AtUniformMati = AnthemUniformMati<Rk>;
+
 
     template<uint32_t Rk, uint32_t Ar>
     using AtUniformVecfArray = AnthemUniformVecfArray<Rk, Ar>;
@@ -33,12 +45,12 @@ namespace Anthem::Core {
     template<typename... UniTp, uint32_t... UniRk, uint32_t... UniSz, uint32_t... UniArrSz>
     class AnthemUniformBufferImpl<AnthemUBDesc<UniTp, UniRk, UniSz, UniArrSz>...> :public AnthemUniformBuffer {
     private:
-        std::array<uint32_t, sizeof...(UniRk)> uniRanks = { UniRk... };
-        std::array<uint32_t, sizeof...(UniSz)> uniVecSize = { UniSz... };
-        std::array<uint32_t, sizeof...(UniArrSz)> uniArraySize = { UniArrSz... };
-        std::array<uint32_t, sizeof...(UniTp)> uniTpSizeOf = { sizeof(UniTp)... };
-        std::array<bool, sizeof...(UniTp)> uniIsFloat = { std::is_same<UniTp,float>::value ... };
-        std::array<bool, sizeof...(UniTp)> uniIsInt = { std::is_same<UniTp,int>::value ... };
+        constexpr static std::array<uint32_t, sizeof...(UniRk)> uniRanks = { UniRk... };
+        constexpr static std::array<uint32_t, sizeof...(UniSz)> uniVecSize = { UniSz... };
+        constexpr static std::array<uint32_t, sizeof...(UniArrSz)> uniArraySize = { UniArrSz... };
+        constexpr static std::array<uint32_t, sizeof...(UniTp)> uniTpSizeOf = { sizeof(UniTp)... };
+        constexpr static std::array<bool, sizeof...(UniTp)> uniIsFloat = { std::is_same<UniTp,float>::value ... };
+        constexpr static std::array<bool, sizeof...(UniTp)> uniIsInt = { std::is_same<UniTp,int>::value ... };
 
         std::vector<int> alignOffsets = {};
         std::vector<int> variableSize = {};

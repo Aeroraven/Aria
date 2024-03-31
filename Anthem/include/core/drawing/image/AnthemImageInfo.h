@@ -20,6 +20,17 @@ namespace Anthem::Core {
     };
     class AnthemImageInfoProcessing {
     public:
+        static uint32_t getPerChannelSize(AnthemImageFormat formatx) {
+            if (formatx == AT_IF_SRGB_UINT8 || formatx == AT_IF_SBGR_UINT8 ||
+                formatx == AT_IF_R_UINT8 || formatx == AT_IF_SWAPCHAIN) {
+                return 1;
+            }
+            else if (formatx == AT_IF_SRGB_FLOAT32) {
+                return 4;
+            }
+            ANTH_LOGE("Unknown format");
+            return 0;
+        }
         static VkFormat getPendingFormat(AnthemImageFormat formatx,AnthemSwapChain* swapchain = nullptr) {
             VkFormat pendingFormat = VK_FORMAT_R8G8B8A8_SRGB;
             if (formatx == AT_IF_SRGB_UINT8) {

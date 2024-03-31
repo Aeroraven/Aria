@@ -339,7 +339,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemSimpleToyRenderer::createTexture3d(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,
-        uint32_t texHeight, uint32_t texDepth, uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt, uint32_t descId) {
+        uint32_t texHeight, uint32_t texDepth, uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt, uint32_t descId, AnthemImageUsage usage) {
 
         //Allocate Image
         auto textureImage = new AnthemImage();
@@ -348,16 +348,18 @@ namespace Anthem::Core{
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
         textureImage->specifySwapchain(this->swapChain.get());
         textureImage->loadImageData3(texData, texWidth, texHeight, texChannel, texDepth);
-        textureImage->specifyUsage(AnthemImageUsage::AT_IU_TEXTURE);
+        textureImage->specifyUsage(usage);
         textureImage->setImageFormat(imageFmt);
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
-        if (descId == -1) {
-            ANTH_LOGW("Descriptor pool index not specified for Tex3D, using the default value", this->imageDescPoolIdx);
-            descId = this->imageDescPoolIdx;
+        if (descPool != nullptr) {
+            if (descId == -1) {
+                ANTH_LOGW("Descriptor pool index not specified for Tex3D, using the default value", this->imageDescPoolIdx);
+                descId = this->imageDescPoolIdx;
+            }
+            descPool->addSampler(textureImage, bindLoc, descId);
         }
-        descPool->addSampler(textureImage, bindLoc, descId);
         *pImage = textureImage;
         this->textures.push_back(textureImage);
         return true;
@@ -604,6 +606,10 @@ namespace Anthem::Core{
         this->commandBuffers->createCommandBuffer(commandBufferId);
         return true;
     }
+    bool AnthemSimpleToyRenderer::ctSetKeyBoardController(std::function<void(int, int, int, int)> handler) {
+        this->instance->specifyKeyHandler(handler);
+        return true;
+    }
     bool AnthemSimpleToyRenderer:: drGetCommandBufferForFrame(uint32_t* commandBufferId,uint32_t frameIdx){
         *commandBufferId = this->drawingCommandHelper->getFrameCmdBufIdx(frameIdx);
         return true;
@@ -671,7 +677,12 @@ namespace Anthem::Core{
             );
         return true;
     }
-
+    bool AnthemSimpleToyRenderer::drSubmitCommandBufferCompQueueGeneralA(uint32_t cmdIdx, const std::vector<const AnthemSemaphore*>& semaphoreToWait,
+        const std::vector<const AnthemSemaphore*>& semaphoreToSignal, const AnthemFence* fenceToSignal) {
+        std::vector<const AnthemSemaphore*> p = semaphoreToWait;
+        std::vector<const AnthemSemaphore*> q = semaphoreToSignal;
+        return drSubmitCommandBufferCompQueueGeneral(cmdIdx, &p, &q, fenceToSignal);
+    }
     bool AnthemSimpleToyRenderer::drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx, const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<const AnthemSemaphore*>* semaphoreToSignal, const AnthemFence* fenceToSignal) {
         
         VkSubmitInfo submitInfo{};

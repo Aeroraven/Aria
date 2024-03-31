@@ -52,6 +52,7 @@ namespace Anthem::External{
                 tpOutput = "float";
                 return 4;
             }
+            ANTH_LOGE("Unknown Format");
             return 0;
         };
         uint32_t curResultSlot = 0;
@@ -63,11 +64,14 @@ namespace Anthem::External{
                 ANTH_LOGI("Parsing Submesh", k++);
                 auto& curResult = result.at(curResultSlot++);
                 // auto& curPrimitive = curMesh.primitives.at(0);
+                
                 // Index Accessor
                 auto& indexAccessor = accessor.at(curPrimitive.indices);
+                auto indexOffset = indexAccessor.byteOffset;
+                auto indexCount = indexAccessor.count;
                 auto& indexBufferView = model.bufferViews.at(indexAccessor.bufferView);
                 auto stride = indexBufferView.byteStride;
-                bufferParse<uint32_t, uint16_t>(indexAccessor.bufferView, 2, curResult.indices);
+                bufferParse<uint32_t, uint16_t>(indexAccessor.bufferView, 2, curResult.indices, indexOffset, indexCount);
 
                 // Material Entry
                 auto& materialEntry = materials.at(curPrimitive.material);
@@ -83,26 +87,37 @@ namespace Anthem::External{
                 // Attribute Accessor
                 for (auto& attr : curPrimitive.attributes) {
                     auto& attrAccessor = accessor.at(attr.second);
+                    auto attrAccessorOffset = attrAccessor.byteOffset;
+                    auto attrAccessorCount = attrAccessor.count;
                     auto& attrBufferView = model.bufferViews.at(attrAccessor.bufferView);
                     auto& attrBuffer = model.buffers.at(attrBufferView.buffer);
                     auto& attrBufferOffset = attrBufferView.byteOffset;
                     auto& attrBufferLength = attrBufferView.byteLength;
                     auto& attrBufferStride = attrBufferView.byteStride;
                     auto& attrName = attr.first;
+
+                    
                     if (attrName == config.positionPrimitiveName) {
                         curResult.positionPrimitiveType = attrAccessor.type;
-                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.positions);
                         specifyStride(attrAccessor.type, curResult.positionDim, curResult.positionPrimitiveType);
+                        attrAccessorCount *= curResult.positionDim;
+                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.positions,
+                            attrAccessorOffset, attrAccessorCount);
                     }
                     else if (attrName == config.normalPrimitiveName) {
                         curResult.normalPrimitiveType = attrAccessor.type;
-                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.normals);
                         specifyStride(attrAccessor.type, curResult.normalDim, curResult.normalPrimitiveType);
+                        attrAccessorCount *= curResult.normalDim;
+                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.normals,
+                            attrAccessorOffset, attrAccessorCount);
                     }
                     else if (attrName == config.texCoordPrimitiveName) {
                         curResult.texCoordPrimitiveType = attrAccessor.type;
-                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.texCoords);
                         specifyStride(attrAccessor.type, curResult.texCoordDim, curResult.texCoordPrimitiveType);
+                        attrAccessorCount *= curResult.texCoordDim;
+                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.texCoords,
+                            attrAccessorOffset, attrAccessorCount);
+
                     }
                 }
                 curResult.basePath = this->modelDirectory + "/";

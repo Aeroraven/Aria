@@ -68,27 +68,27 @@ namespace Anthem::Core{
             }else{
                 this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, pendingFormat, this->width, this->height, this->depth);
             }
-            this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
+            this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
             this->createSampler();
         }
         else if (this->definedUsage == AT_IU_COMPUTE_OUTPUT) {
             this->createImageInternal(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, pendingFormat, this->width, this->height, this->depth);
-            this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
+            this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
             this->createSampler();
             this->image.reqStageFlags |= VK_SHADER_STAGE_COMPUTE_BIT;
         }
         else if (this->definedUsage == AT_IU_RAYTRACING_DEST) {
             this->createImageInternal(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, pendingFormat, this->width, this->height, this->depth);
-            this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT);
+            this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
             this->image.reqStageFlags |= VK_SHADER_STAGE_RAYGEN_BIT_KHR;
         }
         return true;
     }
     bool AnthemImage::createStagingBuffer(){
-        VkDeviceSize dvSize = this->width*this->height*this->channels*this->depth;
+        VkDeviceSize dvSize = this->width * this->height * this->channels * this->depth * AnthemImageInfoProcessing::getPerChannelSize(this->desiredFormat);
         createBufferInternalUt(this->logicalDevice,this->phyDevice,
             &stagingBuffer,VK_BUFFER_USAGE_TRANSFER_SRC_BIT,VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        vkMapMemory(this->logicalDevice->getLogicalDevice(),stagingBuffer.bufferMem,0,dvSize,0,&stagingBuffer.mappedMem);
+        vkMapMemory(this->logicalDevice->getLogicalDevice(),stagingBuffer.bufferMem,0, dvSize,0,&stagingBuffer.mappedMem);
         memcpy(stagingBuffer.mappedMem,this->rawImageData,dvSize);
         vkUnmapMemory(this->logicalDevice->getLogicalDevice(),stagingBuffer.bufferMem);
         return true;
@@ -151,7 +151,7 @@ namespace Anthem::Core{
 
 
     uint32_t AnthemImage::calculateBufferSize(){
-        return this->height*this->width*this->channels*this->depth;
+        return this->height * this->width * this->channels * this->depth * AnthemImageInfoProcessing::getPerChannelSize(this->desiredFormat);
     }
     const VkImageView* AnthemImage::getImageView() const{
         return AnthemImageContainer::getImageView();

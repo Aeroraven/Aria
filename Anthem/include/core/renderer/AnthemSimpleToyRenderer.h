@@ -141,7 +141,6 @@ namespace Anthem::Core{
         bool setDrawFunction(std::function<void()> drawLoopHandler);
 
         // Object Creation
-
         bool setupDemoRenderPass(AnthemRenderPass** pRenderPass, AnthemDepthBuffer* depthBuffer, bool retain=false);
         bool setupRenderPass(AnthemRenderPass** pRenderPass, AnthemRenderPassSetupOption* setupOption, AnthemDepthBuffer* depthBuffer);
         bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa);
@@ -157,7 +156,8 @@ namespace Anthem::Core{
         bool createCubicTextureSimple(AnthemImageCubic** pImage, AnthemDescriptorPool* descPool, std::array<uint8_t*, 6>data, 
             uint32_t texWidth, uint32_t texHeight, uint32_t texChannel, uint32_t bindLoc, uint32_t descId);
         bool createTexture3d(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth, uint32_t texHeight, uint32_t texDepth,
-            uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1);
+            uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1, 
+            AnthemImageUsage usage = AT_IU_TEXTURE);
         bool createColorAttachmentImage(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint32_t bindLoc,
             AnthemImageFormat format, bool enableMsaa, uint32_t descId = -1);
         bool createIndexBuffer(AnthemIndexBuffer** pIndexBuffer);
@@ -202,6 +202,9 @@ namespace Anthem::Core{
         // Integration
         bool registerPipelineSubComponents();
 
+        // Controller
+        bool ctSetKeyBoardController(std::function<void(int, int, int, int)> handler);
+
         // Command Buffer Operations
         bool drAllocateCommandBuffer(uint32_t* commandBufferId);
         bool drGetCommandBufferForFrame(uint32_t* commandBufferId,uint32_t frameIdx);
@@ -232,7 +235,9 @@ namespace Anthem::Core{
             AnthemFence* customFence, const std::vector<const AnthemSemaphore*>& semaphoreToSignal);
 
         bool drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx,const std::vector<const AnthemSemaphore*>* semaphoreToWait,const std::vector<const AnthemSemaphore*>* semaphoreToSignal,const AnthemFence* fenceToSignal);
-       
+        bool drSubmitCommandBufferCompQueueGeneralA(uint32_t cmdIdx, const std::vector<const AnthemSemaphore*>& semaphoreToWait, 
+            const std::vector<const AnthemSemaphore*>& semaphoreToSignal, const AnthemFence* fenceToSignal);
+
         bool drSetViewportScissorFromSwapchain(uint32_t cmdIdx);
         bool drSetViewportScissor(AnthemViewport* custVp,uint32_t cmdIdx);
         bool drSetLineWidth(float lineWidth, uint32_t cmdIdx);

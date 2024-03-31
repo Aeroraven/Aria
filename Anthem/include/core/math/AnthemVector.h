@@ -71,6 +71,13 @@ namespace Anthem::Core::Math{
             }
             return r;
         }
+        AnthemSameShapeVectorTp operator*(const T& second) const {
+            AnthemSameShapeVectorTp r;
+            for (int i = 0; i < R; i++) {
+                r[i] = data[i] * second;
+            }
+            return r;
+        }
         T len() const{
             T r = 0;
             for(int i=0;i<R;i++){
