@@ -3,11 +3,12 @@
 struct LightAttrs
 {
     int4 volSize;
-    float4 lightAttrs; //Density & Anisotropy
+    float4 lightAttrs; //Density & Anisotropy & Jitter & FirstRW
     float4 lightColor; //Color & Ambient
     float4 lightDir;
     float4 farNear;
     float4 camPos;
+    float4 jitter;
     float4x4 inverseVp;
 };
 
@@ -23,6 +24,7 @@ RWTexture3D<float4> scatData : register(u0, space1);
 Texture2D texShadow : register(t0, space2);
 SamplerState sampShadow : register(s0, space2);
 ConstantBuffer<LightMVP> camLight : register(b0, space3);
+RWTexture3D<float4> scatDataHistory : register(u0, space1);
 
 float isShadowed(float3 wPos)
 {
@@ -52,7 +54,7 @@ float phaseFunctionIL(float3 wIn, float3 wOut, float aniso)
 [numthreads(8, 8, 8)]
 void main(uint3 invId : SV_DispatchThreadID)
 {
-    float3 worldPos = invId2WorldPos(invId, attr.volSize.xyz, attr.inverseVp, attr.farNear.x, attr.farNear.y).xyz;
+    float3 worldPos = invId2WorldPosJitter(invId, attr.volSize.xyz, attr.inverseVp, attr.farNear.x, attr.farNear.y, attr.jitter.xyz).xyz;
     float3 rayDir = normalize(worldPos - attr.camPos.xyz);
     
     float3 light = float3(0, 0, 0);
@@ -61,5 +63,10 @@ void main(uint3 invId : SV_DispatchThreadID)
     float visibility = 1.0 - isShadowed(worldPos);
     light += visibility * attr.lightColor.xyz * phaseFunctionIL(rayDir, -attr.lightDir.xyz, attr.lightAttrs.g);
     
-    scatData[invId] = float4(light, attr.lightAttrs.r);
+    float4 lightDensity = float4(light, attr.lightAttrs.r);
+    float4 historyScat = scatDataHistory[invId];
+    float4 mixedLight = lerp(historyScat, lightDensity, float4(0.05, 0.05, 0.05, 0.05));
+    lightDensity = mixedLight;
+    scatData[invId] = lightDensity;
+
 }

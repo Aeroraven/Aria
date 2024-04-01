@@ -11,6 +11,9 @@ Tutorials references from :
 - https://vulkan-tutorial.com/.
 - https://github.com/SaschaWillems/Vulkan
 - https://learnopengl.com/Guest-Articles/2021/Tessellation/Tessellation
+- https://github.com/diharaw/volumetric-fog
+- https://pbr-book.org/4ed/contents
+- https://zhuanlan.zhihu.com/p/366083234
 
 Thanks for their tutorials!
 

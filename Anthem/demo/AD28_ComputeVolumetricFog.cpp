@@ -15,12 +15,13 @@
 #include "../include/components/passhelper/AnthemPassHelper.h"
 #include "../include/components/passhelper/AnthemComputePassHelper.h"
 #include "../include/components/postprocessing/AnthemPostIdentity.h"
-
+#include "../include/components/math/AnthemLowDiscrepancySequence.h"
 using namespace Anthem::Components::Performance;
 using namespace Anthem::Components::Utility;
 using namespace Anthem::Components::Camera;
 using namespace Anthem::Components::PassHelper;
 using namespace Anthem::Components::Postprocessing;
+using namespace Anthem::Components::Math;
 using namespace Anthem::External;
 using namespace Anthem::Core;
 
@@ -49,11 +50,12 @@ struct Stage {
 	AnthemDescriptorPool* descUniFogConsts;
 	AnthemUniformBufferImpl<
 		AtUniformVeci<4>,	//Fog Size
-		AtUniformVecf<4>,   //Density & Anisotropy
+		AtUniformVecf<4>,   //Density & Anisotropy & Jitter & FirstRW
 		AtUniformVecf<4>,   //LightColor & Ambient
 		AtUniformVecf<4>,	//Light Direction
 		AtUniformVecf<4>,	//zFar,zNear
 		AtUniformVecf<4>,	//Cam Pos
+		AtUniformVecf<4>,	//Jitter
 		AtUniformMatf<4>	//Inverse VP
 	>* uniFogConsts;
 	
@@ -70,26 +72,33 @@ struct Stage {
 	AnthemSemaphore* rayMarchComplete;
 	AnthemFence* fence;
 
-	AnthemImage* lightScatterVolume;
-	AnthemDescriptorPool* descLightScatVol;
+	AnthemImage** lightScatterVolume;
+	AnthemDescriptorPool** descLightScatVol;
 
 	AnthemImage* fogVolume;
 	AnthemDescriptorPool* descFogVolume;
 	AnthemDescriptorPool* descFogVolumeSampler;
+	float firstRW = 1.0;
+
+	AnthemHaltonSequence hseq1 = AnthemHaltonSequence(2, 16);
+	AnthemHaltonSequence hseq2 = AnthemHaltonSequence(3, 16);
+	AnthemHaltonSequence hseq3 = AnthemHaltonSequence(5, 16);
+
+	int round = 0;
 }st;
 
 #define DCONST static constexpr const
 struct StageConstants {
-	DCONST uint32_t VOLSIZE_X = 176;
-	DCONST uint32_t VOLSIZE_Y = 96;
-	DCONST uint32_t VOLSIZE_Z = 128;
-	DCONST float FOG_DENSITY = 0.01f;
+	DCONST uint32_t VOLSIZE_X = 256;
+	DCONST uint32_t VOLSIZE_Y = 144;
+	DCONST uint32_t VOLSIZE_Z = 256;
+	DCONST float FOG_DENSITY = 0.0012f;
 	DCONST float ANISOTROPY = 0.0f;
 	DCONST float LIGHT_R = 1.0f;
 	DCONST float LIGHT_G = 1.0f;
 	DCONST float LIGHT_B = 1.0f;
-	DCONST float LIGHT_I = 20.0f;
-	DCONST float AMBIENT_I = 0.1f;
+	DCONST float LIGHT_I = 40.0f;
+	DCONST float AMBIENT_I = 0.05f;
 
 	DCONST uint32_t THREAD_X = 8;
 	DCONST uint32_t THREAD_Y = 8;
@@ -100,12 +109,12 @@ struct StageConstants {
 	DCONST float LIGHTDIR_Z = 1;
 
 	DCONST float Z_NEAR = 0.1f;
-	DCONST float Z_FAR = 1500.0f;
+	DCONST float Z_FAR = 2500.0f;
 	DCONST float Z_FAR_SHADOW = 4000.0f;
 
-	DCONST float CAM_INIT_POS_X = 0;
+	DCONST float CAM_INIT_POS_X = 200;
 	DCONST float CAM_INIT_POS_Y = 550;
-	DCONST float CAM_INIT_POS_Z = 400;
+	DCONST float CAM_INIT_POS_Z = 420;
 
 }sc;
 #undef DCONST
@@ -119,7 +128,7 @@ inline std::string getShader(auto x) {
 }
 
 void initialize() {
-	st.cfg.demoName = "28. Volumetric Fog";
+	st.cfg.demoName = "28. Voxel-based Volumetric Fog";
 	st.cfg.vkcfgPreferSrgbImagePresentation = false;
 	st.rd.setConfig(&st.cfg);
 	st.rd.initialize();
@@ -127,10 +136,10 @@ void initialize() {
 	st.rd.exGetWindowSize(rdH, rdW);
 
 	st.camMain.specifyFrustum((float)AT_PI * 1.0f / 2.0f, sc.Z_NEAR, sc.Z_FAR, 1.0f * rdW / rdH);
-	st.camMain.specifyFrontEyeRay(1, 0, -0.2);
+	st.camMain.specifyFrontEyeRay(1, 0, -0.5);
 	st.camMain.specifyPosition(sc.CAM_INIT_POS_X, sc.CAM_INIT_POS_Y, sc.CAM_INIT_POS_Z);
 
-	st.camLight.specifyOrthoClipSpace(sc.Z_NEAR, sc.Z_FAR_SHADOW, 1.0f * rdW / rdH, 600.0f);
+	st.camLight.specifyOrthoClipSpace(sc.Z_NEAR, sc.Z_FAR_SHADOW, 1.0f * rdW / rdH, 300.0f);
 	st.camLight.specifyPosition(0, 1800, -550);
 	st.camLight.specifyFrontEyeRay(sc.LIGHTDIR_X, sc.LIGHTDIR_Y, sc.LIGHTDIR_Z);
 	st.camLight.specifyUp(0, 1, 0);
@@ -162,7 +171,7 @@ void loadModel() {
 	std::vector<AnthemUtlSimpleModelStruct> rp;
 	for (auto& p : st.gltfModel)rp.push_back(p);
 	st.model.loadModel(&st.rd, rp, -1);
-	st.requiredTex = st.model.getRequiredTextures();
+	st.requiredTex = st.model.getRequiredTextures(); 
 
 	st.rd.createDescriptorPool(&st.descPbrBaseTex);
 
@@ -217,11 +226,16 @@ void prepareShadow() {
 }
 
 void prepareFogVolume() {
-	st.rd.createDescriptorPool(&st.descLightScatVol);
-	st.rd.createTexture3d(&st.lightScatterVolume, nullptr, nullptr, sc.VOLSIZE_X, sc.VOLSIZE_Y, sc.VOLSIZE_Z,
-		4, 0, AT_IF_SRGB_FLOAT32, -1, AT_IU_COMPUTE_OUTPUT);
-	st.lightScatterVolume->toGeneralLayout();
-	st.rd.addStorageImageArrayToDescriptor({ st.lightScatterVolume }, st.descLightScatVol, 0, -1);
+	st.descLightScatVol = new AnthemDescriptorPool * [st.cfg.vkcfgMaxImagesInFlight];
+	st.lightScatterVolume = new AnthemImage * [st.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.rd.createDescriptorPool(&st.descLightScatVol[i]);
+		st.rd.createTexture3d(&st.lightScatterVolume[i], nullptr, nullptr, sc.VOLSIZE_X, sc.VOLSIZE_Y, sc.VOLSIZE_Z,
+			4, 0, AT_IF_SRGB_FLOAT32, -1, AT_IU_COMPUTE_OUTPUT);
+		st.lightScatterVolume[i]->toGeneralLayout();
+		st.rd.addStorageImageArrayToDescriptor({ st.lightScatterVolume[i] }, st.descLightScatVol[i], 0, -1);
+	}
+
 
 	st.rd.createDescriptorPool(&st.descFogVolume);
 	st.rd.createDescriptorPool(&st.descFogVolumeSampler);
@@ -238,9 +252,10 @@ void prepareLightParticipationPass() {
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.lightPartPass->setDescriptorLayouts({
 			{st.descUniFogConsts,AT_ACDS_UNIFORM_BUFFER,0},
-			{st.descLightScatVol,AT_ACDS_STORAGE_IMAGE,0},
+			{st.descLightScatVol[i],AT_ACDS_STORAGE_IMAGE,0},
 			{st.shadowPass->getDepthDescriptor(i),AT_ACDS_SAMPLER,0},
 			{st.descUniCamLight,AT_ACDS_UNIFORM_BUFFER,0},
+			{st.descLightScatVol[1-i],AT_ACDS_STORAGE_IMAGE,0},
 		},i);
 	}
 	st.lightPartPass->buildComputePipeline();
@@ -250,12 +265,13 @@ void prepareRayMarchingPass() {
 	st.rayMarchPass = std::make_unique<AnthemComputePassHelper>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
 	st.rayMarchPass->shaderPath.computeShader = getShader("raymarch.comp");
 	st.rayMarchPass->workGroupSize = { sc.VOLSIZE_X / sc.THREAD_X, sc.VOLSIZE_Y / sc.THREAD_Y, 1 };
-	
-	st.rayMarchPass->setDescriptorLayouts({
-		{st.descUniFogConsts,AT_ACDS_UNIFORM_BUFFER,0},
-		{st.descFogVolume,AT_ACDS_STORAGE_IMAGE,0},
-		{st.descLightScatVol,AT_ACDS_STORAGE_IMAGE,0},
-	});
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.rayMarchPass->setDescriptorLayouts({
+			{st.descUniFogConsts,AT_ACDS_UNIFORM_BUFFER,0},
+			{st.descFogVolume,AT_ACDS_STORAGE_IMAGE,0},
+			{st.descLightScatVol[i],AT_ACDS_STORAGE_IMAGE,0},
+		},i);
+	}
 	st.rayMarchPass->buildComputePipeline();
 }
 
@@ -312,20 +328,25 @@ void updateUniform() {
 	}
 
 	// For CS
+	float jitter = AnthemLinAlg::randomNumber<float>() - 0.5;
 	float invPvRaw[16];
 	float lightColor[4] = { sc.LIGHT_R * sc.LIGHT_I,sc.LIGHT_G * sc.LIGHT_I,sc.LIGHT_B * sc.LIGHT_I,sc.AMBIENT_I };
 	int fogSize[4] = { sc.VOLSIZE_X,sc.VOLSIZE_Y,sc.VOLSIZE_Z,0 };
-	float lightAttr[4] = { sc.FOG_DENSITY,sc.ANISOTROPY,0,0 };
+	float lightAttr[4] = { sc.FOG_DENSITY,sc.ANISOTROPY,jitter,st.firstRW };
 	float lightDir[4] = { sc.LIGHTDIR_X,sc.LIGHTDIR_Y,sc.LIGHTDIR_Z,0 };
 	float farNear[4] = { sc.Z_FAR,sc.Z_NEAR,0,0 };
+	float jitterSeq[4] = { 0,0 ,st.hseq1[st.round] * 0.2 - 0.5 ,0 };
 	ANTH_TODO("Dynamic camera");
 	float camPos[4] = { sc.CAM_INIT_POS_X,sc.CAM_INIT_POS_Y,sc.CAM_INIT_POS_Z,0 };
 
 	invPv.columnMajorVectorization(invPvRaw);
-	st.uniFogConsts->specifyUniforms(fogSize, lightAttr, lightColor, lightDir, farNear, camPos, invPvRaw);
+	st.uniFogConsts->specifyUniforms(fogSize, lightAttr, lightColor, lightDir, farNear, camPos, jitterSeq, invPvRaw);
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.uniFogConsts->updateBuffer(i);
 	}
+	st.firstRW = 0;
+	st.round = st.round + 1;
+	st.round %= 8;
 }
 
 void drawLoop() {

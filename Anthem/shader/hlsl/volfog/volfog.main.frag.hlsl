@@ -26,9 +26,11 @@ struct LightAttrs
     float4 lightDir;
     float4 farNear;
     float4 camPos;
+    float4 jitter;
     float4x4 inverseVp;
 };
 
+static const int PCF_RANGE = 2;
 
 Texture2D texPbrBase[25] : register(t0, space1);
 SamplerState sampPbrBase[25] : register(s0, space1);
@@ -41,6 +43,29 @@ Texture3D texFogVol : register(t0, space4);
 SamplerState sampFogVol : register(s0, space4);
 ConstantBuffer<LightAttrs> attrs : register(b0, space5);
 
+float pcfShadowMap(float2 uv,float curDepth)
+{
+    float texH, texW, texL;
+    texShadow.GetDimensions(0,texH, texW, texL);
+    float dx = 1 / texW, dy = 1 / texH;
+    
+    float totalShadow = 0;
+    float adoptedShadow = 0;
+    for (int i = -PCF_RANGE; i <= PCF_RANGE; i++)
+    {
+        for (int j = -PCF_RANGE; j <= PCF_RANGE; j++)
+        {
+            totalShadow += 1.0;
+            float refLightDepth = texShadow.Sample(sampShadow, uv + float2(float(i) * dx, float(j) * dy)).r;
+            if (curDepth > refLightDepth + 1e-4)
+            {
+                adoptedShadow += 1.0;
+            }
+        }
+    }
+    return adoptedShadow / totalShadow;
+}
+
 float4 simpleShadowColor(float4 rawPos, float4 texUV)
 {
     int texId = int(texUV.a);
@@ -49,12 +74,8 @@ float4 simpleShadowColor(float4 rawPos, float4 texUV)
     lightSrcPos = lightSrcPos / lightSrcPos.w;
     float2 lightSrcUV = lightSrcPos.xy * 0.5 + 0.5;
     float refLightDepth = texShadow.Sample(sampShadow, lightSrcUV).r;
-    float shadow = 0;
-    if (lightSrcPos.z > refLightDepth + 1e-4)
-    {
-        shadow = 1;
-    }
-    float4 finalColor = (0.2 + 0.8 * (1 - shadow)) * baseColor;
+    float shadow = pcfShadowMap(lightSrcUV, lightSrcPos.z);
+    float4 finalColor = (attrs.lightColor.a + (1 - shadow)) * baseColor;
     return finalColor;
 }
 
@@ -80,6 +101,11 @@ float4 revealTransmittance(float4 ndcPos, float4 baseColor)
     return float4(scatterColTrans.a, 0, 0, 0);
 }
 
+float4 toneMapping(float4 color)
+{
+    return color / (color + 1.0);
+}
+
 float4 gammaCorrection(float4 color)
 {
     return pow(color, float4(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
@@ -89,7 +115,7 @@ PSOutput main(VSOutput vsOut)
     PSOutput psOut;
     float4 diffuse = simpleShadowColor(vsOut.rawPos, vsOut.texCoord); //TODO: incorrect lighting
     float4 color = float4(addVolumeLighting(vsOut.ndcPos, diffuse), 1.0);
-    psOut.color = gammaCorrection(color);
+    psOut.color = gammaCorrection(toneMapping(color));
     //psOut.color = revealTransmittance(vsOut.ndcPos, diffuse);
     //psOut.color = diffuse;
     return psOut;

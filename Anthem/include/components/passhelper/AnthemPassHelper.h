@@ -26,6 +26,8 @@ namespace Anthem::Components::PassHelper {
 		uint32_t* cmdIdx;
 		uint32_t copies;
 
+		AnthemViewport* viewport;
+
 	public:
 		bool enableDepthSampler = false;
 		AnthemShaderFilePaths shaderPath;

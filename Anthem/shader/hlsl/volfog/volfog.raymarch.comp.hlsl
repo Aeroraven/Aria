@@ -8,6 +8,7 @@ struct LightAttrs
     float4 lightDir;
     float4 farNear;
     float4 camPos;
+    float4 jitter;
     float4x4 inverseVp;
 };
 
