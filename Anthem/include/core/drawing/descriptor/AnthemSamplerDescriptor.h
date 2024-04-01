@@ -52,6 +52,7 @@ namespace Anthem::Core {
                 this->samplersDesc.back().imageInfo.push_back({});
                 layoutBindingDesc.stageFlags |= imageSampler[i]->getRequiredShaderStage();
                 layoutBindingDesc.stageFlags |= VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+                layoutBindingDesc.stageFlags |= VK_SHADER_STAGE_COMPUTE_BIT;
             }
             layoutBindingDesc.binding = bindLoc;
             layoutBindingDesc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

@@ -51,6 +51,9 @@ struct Stage {
 		AtUniformVeci<4>,	//Fog Size
 		AtUniformVecf<4>,   //Density & Anisotropy
 		AtUniformVecf<4>,   //LightColor & Ambient
+		AtUniformVecf<4>,	//Light Direction
+		AtUniformVecf<4>,	//zFar,zNear
+		AtUniformVecf<4>,	//Cam Pos
 		AtUniformMatf<4>	//Inverse VP
 	>* uniFogConsts;
 	
@@ -72,6 +75,7 @@ struct Stage {
 
 	AnthemImage* fogVolume;
 	AnthemDescriptorPool* descFogVolume;
+	AnthemDescriptorPool* descFogVolumeSampler;
 }st;
 
 #define DCONST static constexpr const
@@ -79,17 +83,29 @@ struct StageConstants {
 	DCONST uint32_t VOLSIZE_X = 176;
 	DCONST uint32_t VOLSIZE_Y = 96;
 	DCONST uint32_t VOLSIZE_Z = 128;
-	DCONST float FOG_DENSITY = 5.0f;
+	DCONST float FOG_DENSITY = 0.01f;
 	DCONST float ANISOTROPY = 0.0f;
 	DCONST float LIGHT_R = 1.0f;
 	DCONST float LIGHT_G = 1.0f;
 	DCONST float LIGHT_B = 1.0f;
-	DCONST float LIGHT_I = 1.0f;
-	DCONST float AMBIENT_I = 1.0f;
+	DCONST float LIGHT_I = 20.0f;
+	DCONST float AMBIENT_I = 0.1f;
 
 	DCONST uint32_t THREAD_X = 8;
 	DCONST uint32_t THREAD_Y = 8;
 	DCONST uint32_t THREAD_Z = 8;
+
+	DCONST float LIGHTDIR_X = 0;
+	DCONST float LIGHTDIR_Y = -2.5;
+	DCONST float LIGHTDIR_Z = 1;
+
+	DCONST float Z_NEAR = 0.1f;
+	DCONST float Z_FAR = 1500.0f;
+	DCONST float Z_FAR_SHADOW = 4000.0f;
+
+	DCONST float CAM_INIT_POS_X = 0;
+	DCONST float CAM_INIT_POS_Y = 550;
+	DCONST float CAM_INIT_POS_Z = 400;
 
 }sc;
 #undef DCONST
@@ -110,13 +126,13 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 
-	st.camMain.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.1f, 4000.0f, 1.0f * rdW / rdH);
+	st.camMain.specifyFrustum((float)AT_PI * 1.0f / 2.0f, sc.Z_NEAR, sc.Z_FAR, 1.0f * rdW / rdH);
 	st.camMain.specifyFrontEyeRay(1, 0, -0.2);
-	st.camMain.specifyPosition(0, 550, 400);
+	st.camMain.specifyPosition(sc.CAM_INIT_POS_X, sc.CAM_INIT_POS_Y, sc.CAM_INIT_POS_Z);
 
-	st.camLight.specifyOrthoClipSpace(0.1f, 3000.0f, 1.0f * rdW / rdH, 300.0f);
-	st.camLight.specifyPosition(0, 1800, -450);
-	st.camLight.specifyFrontEyeRay(0, -2.5, 1);
+	st.camLight.specifyOrthoClipSpace(sc.Z_NEAR, sc.Z_FAR_SHADOW, 1.0f * rdW / rdH, 600.0f);
+	st.camLight.specifyPosition(0, 1800, -550);
+	st.camLight.specifyFrontEyeRay(sc.LIGHTDIR_X, sc.LIGHTDIR_Y, sc.LIGHTDIR_Z);
 	st.camLight.specifyUp(0, 1, 0);
 
 	st.rd.createDescriptorPool(&st.descUniCamMain);
@@ -173,12 +189,17 @@ void prepareMain() {
 	st.mainPass->shaderPath.vertexShader = getShader("main.vert");
 	st.mainPass->shaderPath.fragmentShader = getShader("main.frag");
 	st.mainPass->vxLayout = st.model.getVertexBuffer();
-	st.mainPass->setDescriptorLayouts({
-		{st.descUniCamMain,AT_ACDS_UNIFORM_BUFFER,0},
-		{st.descPbrBaseTex,AT_ACDS_SAMPLER,0},
-		{st.descUniCamLight,AT_ACDS_UNIFORM_BUFFER,0},
-		{st.shadowPass->getDepthDescriptor(0),AT_ACDS_SAMPLER,0}
-	});
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.mainPass->setDescriptorLayouts({
+			{st.descUniCamMain,AT_ACDS_UNIFORM_BUFFER,0},
+			{st.descPbrBaseTex,AT_ACDS_SAMPLER,0},
+			{st.descUniCamLight,AT_ACDS_UNIFORM_BUFFER,0},
+			{st.shadowPass->getDepthDescriptor(i),AT_ACDS_SAMPLER,0},
+			{st.descFogVolumeSampler,AT_ACDS_SAMPLER,0},
+			{st.descUniFogConsts,AT_ACDS_UNIFORM_BUFFER,0},
+		},i);
+	}
+	
 	st.mainPass->buildGraphicsPipeline();
 }
 
@@ -203,7 +224,8 @@ void prepareFogVolume() {
 	st.rd.addStorageImageArrayToDescriptor({ st.lightScatterVolume }, st.descLightScatVol, 0, -1);
 
 	st.rd.createDescriptorPool(&st.descFogVolume);
-	st.rd.createTexture3d(&st.fogVolume, nullptr, nullptr, sc.VOLSIZE_X, sc.VOLSIZE_Y, sc.VOLSIZE_Z,
+	st.rd.createDescriptorPool(&st.descFogVolumeSampler);
+	st.rd.createTexture3d(&st.fogVolume,st.descFogVolumeSampler, nullptr, sc.VOLSIZE_X, sc.VOLSIZE_Y, sc.VOLSIZE_Z,
 		4, 0, AT_IF_SRGB_FLOAT32, -1, AT_IU_COMPUTE_OUTPUT);
 	st.fogVolume->toGeneralLayout();
 	st.rd.addStorageImageArrayToDescriptor({ st.fogVolume }, st.descFogVolume, 0, -1);
@@ -212,21 +234,27 @@ void prepareFogVolume() {
 void prepareLightParticipationPass() {
 	st.lightPartPass = std::make_unique<AnthemComputePassHelper>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
 	st.lightPartPass->shaderPath.computeShader = getShader("lightpart.comp");
-	st.lightPartPass->workGroupSize = { sc.THREAD_X, sc.THREAD_Y, sc.THREAD_Z };
-	st.lightPartPass->setDescriptorLayouts({
-		{st.descUniFogConsts,AT_ACDS_UNIFORM_BUFFER,0},
-		{st.descLightScatVol,AT_ACDS_STORAGE_IMAGE,0}
-	});
+	st.lightPartPass->workGroupSize = { sc.VOLSIZE_X / sc.THREAD_X, sc.VOLSIZE_Y / sc.THREAD_Y, sc.VOLSIZE_Z / sc.THREAD_Z };
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.lightPartPass->setDescriptorLayouts({
+			{st.descUniFogConsts,AT_ACDS_UNIFORM_BUFFER,0},
+			{st.descLightScatVol,AT_ACDS_STORAGE_IMAGE,0},
+			{st.shadowPass->getDepthDescriptor(i),AT_ACDS_SAMPLER,0},
+			{st.descUniCamLight,AT_ACDS_UNIFORM_BUFFER,0},
+		},i);
+	}
 	st.lightPartPass->buildComputePipeline();
 }
 
 void prepareRayMarchingPass() {
 	st.rayMarchPass = std::make_unique<AnthemComputePassHelper>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
 	st.rayMarchPass->shaderPath.computeShader = getShader("raymarch.comp");
-	st.rayMarchPass->workGroupSize = { sc.THREAD_X, sc.THREAD_Y, 1 };
+	st.rayMarchPass->workGroupSize = { sc.VOLSIZE_X / sc.THREAD_X, sc.VOLSIZE_Y / sc.THREAD_Y, 1 };
+	
 	st.rayMarchPass->setDescriptorLayouts({
 		{st.descUniFogConsts,AT_ACDS_UNIFORM_BUFFER,0},
-		{st.descFogVolume,AT_ACDS_STORAGE_IMAGE,0}
+		{st.descFogVolume,AT_ACDS_STORAGE_IMAGE,0},
+		{st.descLightScatVol,AT_ACDS_STORAGE_IMAGE,0},
 	});
 	st.rayMarchPass->buildComputePipeline();
 }
@@ -266,7 +294,7 @@ void updateUniform() {
 	view.columnMajorVectorization(vm);
 	local.columnMajorVectorization(lm);
 	pv = proj.multiply(view);
-
+	auto invPv = AnthemLinAlg::gaussJordan(proj.multiply(view));
 	st.uniCamMain->specifyUniforms(pm, vm, lm);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.uniCamMain->updateBuffer(i);
@@ -284,14 +312,17 @@ void updateUniform() {
 	}
 
 	// For CS
-	auto invPv = AnthemLinAlg::gaussJordan(proj.multiply(view));
 	float invPvRaw[16];
 	float lightColor[4] = { sc.LIGHT_R * sc.LIGHT_I,sc.LIGHT_G * sc.LIGHT_I,sc.LIGHT_B * sc.LIGHT_I,sc.AMBIENT_I };
 	int fogSize[4] = { sc.VOLSIZE_X,sc.VOLSIZE_Y,sc.VOLSIZE_Z,0 };
 	float lightAttr[4] = { sc.FOG_DENSITY,sc.ANISOTROPY,0,0 };
+	float lightDir[4] = { sc.LIGHTDIR_X,sc.LIGHTDIR_Y,sc.LIGHTDIR_Z,0 };
+	float farNear[4] = { sc.Z_FAR,sc.Z_NEAR,0,0 };
+	ANTH_TODO("Dynamic camera");
+	float camPos[4] = { sc.CAM_INIT_POS_X,sc.CAM_INIT_POS_Y,sc.CAM_INIT_POS_Z,0 };
 
 	invPv.columnMajorVectorization(invPvRaw);
-	st.uniFogConsts->specifyUniforms(fogSize, lightAttr, lightColor, invPvRaw);
+	st.uniFogConsts->specifyUniforms(fogSize, lightAttr, lightColor, lightDir, farNear, camPos, invPvRaw);
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.uniFogConsts->updateBuffer(i);
 	}
@@ -317,10 +348,10 @@ int main() {
 	initialize();
 	loadModel();
 	prepareShadow();
-	prepareMain();
 	prepareFogVolume();
 	prepareLightParticipationPass();
 	prepareRayMarchingPass();
+	prepareMain();
 	prepareIdPass();
 	st.rd.registerPipelineSubComponents();
 	recordCommand();

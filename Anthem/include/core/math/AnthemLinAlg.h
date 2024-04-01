@@ -124,10 +124,8 @@ namespace Anthem::Core::Math{
             T nRight = -nLeft;
             out[0][0] = 2*zNear/(nRight-nLeft);
             out[1][1] = -2*zNear/(nTop-nBottom);
-            //out[2][2] = (zFar+zNear)/(zFar-zNear);
             out[2][2] = (zFar)/(zFar-zNear);
             out[3][2] = 1;
-            //out[2][3] = -2*zFar*zNear/(zFar-zNear);
             out[2][3] = -1*zFar*zNear/(zFar-zNear);
             out[3][3] = 0;
             out[0][2] = -(nRight+nLeft)/(nRight-nLeft);

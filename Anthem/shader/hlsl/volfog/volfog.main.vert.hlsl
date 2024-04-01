@@ -11,6 +11,7 @@ struct VSOutput
     [[vk::location(0)]] float4 texCoord : TEXCOORD0;
     [[vk::location(1)]] float4 normal : NORMAL0;
     [[vk::location(2)]] float4 rawPos : POSITION0;
+    [[vk::location(3)]] float4 ndcPos : POSITION1;
 };
 
 struct Camera
@@ -29,6 +30,7 @@ VSOutput main(VSInput vsIn)
     vsOut.texCoord = vsIn.texcoord;
     vsOut.normal = vsIn.normal;
     vsOut.rawPos = vsIn.position;
+    vsOut.ndcPos = vsOut.position;
     return vsOut;
     
 }
