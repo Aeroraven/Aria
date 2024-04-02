@@ -80,6 +80,7 @@ struct Stage {
 	AnthemSemaphore* mainComplete;
 	AnthemSemaphore* deferComplete;
 	AnthemSemaphore* aoComplete;
+	AnthemSemaphore* aaComplete;
 	AnthemFence* fence;
 
 	AnthemImage** lightScatterVolume;
@@ -130,13 +131,13 @@ struct StageConstants {
 	DCONST uint32_t VOLSIZE_X = 400;
 	DCONST uint32_t VOLSIZE_Y = 256;
 	DCONST uint32_t VOLSIZE_Z = 400;
-	DCONST float FOG_DENSITY = 0.002f;
+	float FOG_DENSITY = 0.002f;
 	DCONST float ANISOTROPY = 0.0f;
 	DCONST float LIGHT_R = 1.0f;
 	DCONST float LIGHT_G = 1.0f;
 	DCONST float LIGHT_B = 1.0f;
-	DCONST float LIGHT_I = 40.0f;
-	DCONST float AMBIENT_I = 0.05f;
+	float LIGHT_I = 40.0f;
+	float AMBIENT_I = 0.05f;
 
 	DCONST uint32_t THREAD_X = 8;
 	DCONST uint32_t THREAD_Y = 8;
@@ -177,7 +178,7 @@ void initialize() {
 	st.camMain.specifyFrontEyeRay(1, 0, -0.5);
 	st.camMain.specifyPosition(sc.CAM_INIT_POS_X, sc.CAM_INIT_POS_Y, sc.CAM_INIT_POS_Z);
 
-	st.camLight.specifyOrthoClipSpace(sc.Z_NEAR, sc.Z_FAR_SHADOW, 1.0f * rdW / rdH, 300.0f);
+	st.camLight.specifyOrthoClipSpace(sc.Z_NEAR, sc.Z_FAR_SHADOW, 1.0f * rdW / rdH, 250.0f);
 	st.camLight.specifyPosition(0, 1800, -550);
 	st.camLight.specifyFrontEyeRay(sc.LIGHTDIR_X, sc.LIGHTDIR_Y, sc.LIGHTDIR_Z);
 	st.camLight.specifyUp(0, 1, 0);
@@ -195,7 +196,7 @@ void initialize() {
 	st.rd.createUniformBuffer(&st.aoSamples, 0, st.descAOSamples, -1);
 
 	st.keyController = st.camMain.getKeyboardController();
-	st.rd.ctSetKeyBoardController(st.keyController);
+	//st.rd.ctSetKeyBoardController(st.keyController);
 
 	st.rd.createSemaphore(&st.shadowComplete);
 	st.rd.createSemaphore(&st.rayMarchComplete);
@@ -203,6 +204,7 @@ void initialize() {
 	st.rd.createSemaphore(&st.mainComplete);
 	st.rd.createSemaphore(&st.deferComplete);
 	st.rd.createSemaphore(&st.aoComplete);
+	st.rd.createSemaphore(&st.aaComplete);
 	st.rd.createFence(&st.fence);
 }
 
@@ -485,7 +487,7 @@ void updateUniform() {
 	float lightAttr[4] = { sc.FOG_DENSITY,sc.ANISOTROPY,jitter,st.firstRW };
 	float lightDir[4] = { sc.LIGHTDIR_X,sc.LIGHTDIR_Y,sc.LIGHTDIR_Z,0 };
 	float farNear[4] = { sc.Z_FAR,sc.Z_NEAR,0,0 };
-	float jitterSeq[4] = { 0,0 ,st.hseq1[st.round] * 0.2 - 0.5 ,0 };
+	float jitterSeq[4] = { 0,0 ,st.hseq1[st.round] * 0.05 - 0.5 ,0 };
 	ANTH_TODO("Dynamic camera");
 	float camPos[4] = { sc.CAM_INIT_POS_X,sc.CAM_INIT_POS_Y,sc.CAM_INIT_POS_Z,0 };
 
@@ -498,15 +500,36 @@ void updateUniform() {
 	st.round = st.round + 1;
 	st.round %= 8;
 }
+void setupImgui() {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.FontGlobalScale = 1.8;
+	ImGui::StyleColorsDark();
+	st.rd.exInitImGui();
+}
+void prepareImguiFrame() {
+	st.fpsMeter.record();
+	std::stringstream ss;
+	ss << "FPS:";
+	ss << st.fpsMeter.getFrameRate();
+
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin("Control Panel");
+	ImGui::Text(ss.str().c_str());
+	ImGui::SliderFloat("Fog Density", &sc.FOG_DENSITY, 0.0f, 0.008f);
+	ImGui::SliderFloat("Light Intensity", &sc.LIGHT_I, 0.0f, 60.0f);
+	ImGui::SliderFloat("Ambient Intensity", &sc.AMBIENT_I, 0.0f, 0.2f);
+	ImGui::End();
+}
+
 
 void drawLoop() {
-	st.fpsMeter.record();
-	static int fx = 0;
-	fx = (fx + 1) % 100;
-	if (fx == 0) {
-		ANTH_LOGI("FPS:", st.fpsMeter.getFrameRate());
-	}
-
+	prepareImguiFrame();
 	static int cur = 0;
 	uint32_t imgIdx;
 	st.fence->waitAndReset();
@@ -514,19 +537,32 @@ void drawLoop() {
 	updateUniform();
 	st.rd.drPrepareFrame(cur, &imgIdx);
 
+	// ImGUI draw calls
+	ImGui::Render();
+	ImDrawData* drawData = ImGui::GetDrawData();
+	st.rd.exRenderImGui(cur, st.fxaaPass->getSwapchainFb(), {0,0,0,1}, drawData);
+	uint32_t imguiCmdBuf;
+	st.rd.exGetImGuiCommandBufferIndex(cur, &imguiCmdBuf);
+	AnthemSemaphore* imguiSemaphore;
+	st.rd.exGetImGuiDrawProgressSemaphore(cur, &imguiSemaphore);
+
+	// Main draw calls
 	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.deferPass->getCommandIndex(cur), -1, {}, {}, nullptr, { st.deferComplete });
 	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.shadowPass->getCommandIndex(cur), -1, { st.deferComplete }, { AT_SSW_ALL_COMMAND }, nullptr, { st.shadowComplete });
 	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.aoPass->getCommandIndex(cur), -1, { st.shadowComplete }, { AT_SSW_ALL_COMMAND }, nullptr, { st.aoComplete });
 	st.rd.drSubmitCommandBufferCompQueueGeneralA(st.lightPartPass->getCommandIndex(cur), { st.aoComplete }, { st.lightScatAttrComplete }, nullptr);
 	st.rd.drSubmitCommandBufferCompQueueGeneralA(st.rayMarchPass->getCommandIndex(cur), { st.lightScatAttrComplete }, { st.rayMarchComplete }, nullptr);
-	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.mainPass->getCommandIndex(cur), -1, { st.rayMarchComplete }, { AT_SSW_ALL_COMMAND }, st.fence, { st.mainComplete });
-	st.rd.drSubmitCommandBufferGraphicsQueueGeneralA(st.fxaaPass->getCommandIdx(cur), cur, { st.mainComplete }, { AT_SSW_ALL_COMMAND });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.mainPass->getCommandIndex(cur), -1, { st.rayMarchComplete }, { AT_SSW_ALL_COMMAND }, nullptr, { st.mainComplete });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.fxaaPass->getCommandIdx(cur), cur, { st.mainComplete }, { AT_SSW_ALL_COMMAND }, st.fence, { st.aaComplete });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneralA(imguiCmdBuf, cur, { st.aaComplete }, { AT_SSW_ALL_COMMAND });
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = (cur + 1) % 2;
 }
 
+
 int main() {
 	initialize();
+	setupImgui();
 	loadModel();
 	prepareAOSamples();
 	prepareCanvas();
@@ -542,5 +578,7 @@ int main() {
 	recordCommand();
 	st.rd.setDrawFunction(drawLoop);
 	st.rd.startDrawLoopDemo();
+	st.rd.exDestroyImgui();
+	st.rd.finalize();
 	return 0;
 }

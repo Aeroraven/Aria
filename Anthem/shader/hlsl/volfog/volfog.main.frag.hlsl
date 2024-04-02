@@ -110,6 +110,7 @@ PSOutput main(VSOutput vsOut)
 
     float4 adjNormal = texNorm.Sample(sampNorm, vsOut.texCoord.xy);
     float4 basecolor = texBaseColor.Sample(sampBaseColor, vsOut.texCoord.xy);
+    
     float4 ndcPos = texNdc.Sample(sampNdc, vsOut.texCoord.xy);
     float4 rawPos = texPos.Sample(sampPos, vsOut.texCoord.xy);
     float4 ao = texAO.Sample(sampAO, vsOut.texCoord.xy);

@@ -46,6 +46,7 @@ namespace Anthem::Components::Postprocessing {
          
         uint32_t getCommandIdx(uint32_t id) const;
         AnthemDescriptorPool* getColorAttachmentDescId(uint32_t id) const;
+        AnthemSwapchainFramebuffer* getSwapchainFb() const;
 
     };
 }

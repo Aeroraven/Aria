@@ -104,4 +104,7 @@ namespace Anthem::Components::Postprocessing {
 	AnthemDescriptorPool* AnthemPostprocessPass::getColorAttachmentDescId(uint32_t id) const {
 		return this->descTarget[id];
 	}
+	AnthemSwapchainFramebuffer* AnthemPostprocessPass::getSwapchainFb() const {
+		return this->fbSwapchain;
+	}
 }

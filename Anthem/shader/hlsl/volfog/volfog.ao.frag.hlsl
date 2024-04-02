@@ -34,6 +34,7 @@ struct PSOutput
 PSOutput main(VSOutput vsOut)
 {
     PSOutput psOut;
+    psOut.ao = float4(0, 0, 0, 0);
     float4 pos = texPos.Sample(sampPos, vsOut.texCoord.xy);
     float4 adjNormal = texNorm.Sample(sampNorm, vsOut.texCoord.xy);
     float4 tangent = texTangent.Sample(sampTangent, vsOut.texCoord.xy);

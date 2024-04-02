@@ -41,10 +41,6 @@ float4 getBaseColor(uint baseId, float2 uv)
 {
     return texPbrBase[baseId].Sample(sampPbrBase[baseId], uv).rgba;
 }
-float4 getNormColor(uint baseId, float2 uv)
-{
-    return texPbrBase[baseId].Sample(sampPbrBase[baseId], uv).rgba;
-}
 PSOutput main(VSOutput vsOut)
 {
     PSOutput psOut;
@@ -52,11 +48,10 @@ PSOutput main(VSOutput vsOut)
     float4 normal = vsOut.normal;
     float4 oTangent;
     float4 oBitangent;
-    float4 normalMap = getBaseColor(uint(vsOut.texIndices.g), vsOut.texCoord.xy);
     float4 adjNormal = float4(getNormal(uint(vsOut.texIndices.g), vsOut.texCoord.xy, tangent, normal, oTangent, oBitangent), 1.0);
     
     psOut.color = getBaseColor(uint(vsOut.texIndices.r), vsOut.texCoord.xy);
-    psOut.norm = adjNormal; ///\getBaseColor(uint(vsOut.texIndices.g), vsOut.texCoord.xy);
+    psOut.norm = adjNormal; 
     psOut.pos = vsOut.rawPos;
     psOut.ndc = vsOut.ndcPos;
     psOut.tangent = vsOut.tangent;
