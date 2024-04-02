@@ -38,10 +38,16 @@ namespace Anthem::Components::Utility {
 
 		auto childJob = [&](int k)->void {
 			for (int i = 0; i < model[k].numVertices; i++) {
+				std::array<float, 4> tangentData = { 0,0,0,1 };
+				if (model[k].tangents.size() > 0) {
+					tangentData = { model[k].tangents[i * 4], model[k].tangents[i * 4 + 1], model[k].tangents[i * 4 + 2], model[k].tangents[i * 4 + 3] };
+				}
 				vx->insertData(i + prs[k],
 					{ model[k].positions[i * 3],model[k].positions[i * 3 + 1],model[k].positions[i * 3 + 2],1.0 },
 					{ model[k].normals[i * 3],model[k].normals[i * 3 + 1],model[k].normals[i * 3 + 2],0.0 },
-					{ model[k].texCoords[i * 2],model[k].texCoords[i * 2 + 1], k * 1.0f + 0.5f,texMaps[k] + 0.5f });
+					{ model[k].texCoords[i * 2],model[k].texCoords[i * 2 + 1], k * 1.0f + 0.5f,model[k].pbrBaseTexId + 0.5f },
+					tangentData,
+					{ model[k].pbrBaseTexId + 0.5f,model[k].pbrNormalTexId + 0.5f,0,0 });
 			}
 		};
 

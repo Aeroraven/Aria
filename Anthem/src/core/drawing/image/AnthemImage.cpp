@@ -118,7 +118,7 @@ namespace Anthem::Core{
         this->cmdBufs->endCommandRecording(cmdBufIdx);
         this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx,true);
         this->cmdBufs->freeCommandBuffer(cmdBufIdx);
-        ANTH_LOGI("Image copied from buffer");
+        //ANTH_LOGI("Image copied from buffer");
         return true;
     }
     bool AnthemImage::destroyStagingBuffer(){
@@ -147,8 +147,6 @@ namespace Anthem::Core{
         this->image.msaaCount = this->phyDevice->getMaxSampleCount();
         return true;
     }
-
-
 
     uint32_t AnthemImage::calculateBufferSize(){
         return this->height * this->width * this->channels * this->depth * AnthemImageInfoProcessing::getPerChannelSize(this->desiredFormat);

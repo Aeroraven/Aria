@@ -1,9 +1,6 @@
 struct VSOutput
 {
     [[vk::location(0)]] float4 texCoord : TEXCOORD0;
-    [[vk::location(1)]] float4 normal : NORMAL0;
-    [[vk::location(2)]] float4 rawPos : POSITION0;
-    [[vk::location(3)]] float4 ndcPos : POSITION1;
 };
 
 struct PSOutput
@@ -32,16 +29,26 @@ struct LightAttrs
 
 static const int PCF_RANGE = 2;
 
-Texture2D texPbrBase[25] : register(t0, space1);
-SamplerState sampPbrBase[25] : register(s0, space1);
 
-ConstantBuffer<Camera> camLight : register(b0, space2);
-Texture2D texShadow : register(t0, space3);
-SamplerState sampShadow : register(s0, space3);
+ConstantBuffer<Camera> camLight : register(b0, space1);
+Texture2D texShadow : register(t0, space2);
+SamplerState sampShadow : register(s0, space2);
 
-Texture3D texFogVol : register(t0, space4);
-SamplerState sampFogVol : register(s0, space4);
-ConstantBuffer<LightAttrs> attrs : register(b0, space5);
+Texture3D texFogVol : register(t0, space3);
+SamplerState sampFogVol : register(s0, space3);
+ConstantBuffer<LightAttrs> attrs : register(b0, space4);
+
+Texture2D texBaseColor: register(t0, space5);
+SamplerState sampBaseColor : register(s0, space5);
+Texture2D texNorm : register(t0, space6);
+SamplerState sampNorm : register(s0, space6);
+Texture2D texPos : register(t0, space7);
+SamplerState sampPos : register(s0, space7);
+Texture2D texNdc : register(t0, space8);
+SamplerState sampNdc : register(s0, space8);
+Texture2D texAO : register(t0, space9);
+SamplerState sampAO : register(s0, space9);
+
 
 float pcfShadowMap(float2 uv,float curDepth)
 {
@@ -64,19 +71,6 @@ float pcfShadowMap(float2 uv,float curDepth)
         }
     }
     return adoptedShadow / totalShadow;
-}
-
-float4 simpleShadowColor(float4 rawPos, float4 texUV)
-{
-    int texId = int(texUV.a);
-    float4 baseColor = texPbrBase[texId].Sample(sampPbrBase[texId], texUV.xy);
-    float4 lightSrcPos = mul(camLight.proj, mul(camLight.view, mul(camLight.model,rawPos)));
-    lightSrcPos = lightSrcPos / lightSrcPos.w;
-    float2 lightSrcUV = lightSrcPos.xy * 0.5 + 0.5;
-    float refLightDepth = texShadow.Sample(sampShadow, lightSrcUV).r;
-    float shadow = pcfShadowMap(lightSrcUV, lightSrcPos.z);
-    float4 finalColor = (attrs.lightColor.a + (1 - shadow)) * baseColor;
-    return finalColor;
 }
 
 float3 addVolumeLighting(float4 ndcPos,float4 baseColor)
@@ -113,10 +107,25 @@ float4 gammaCorrection(float4 color)
 PSOutput main(VSOutput vsOut)
 {
     PSOutput psOut;
-    float4 diffuse = simpleShadowColor(vsOut.rawPos, vsOut.texCoord); //TODO: incorrect lighting
-    float4 color = float4(addVolumeLighting(vsOut.ndcPos, diffuse), 1.0);
+
+    float4 adjNormal = texNorm.Sample(sampNorm, vsOut.texCoord.xy);
+    float4 basecolor = texBaseColor.Sample(sampBaseColor, vsOut.texCoord.xy);
+    float4 ndcPos = texNdc.Sample(sampNdc, vsOut.texCoord.xy);
+    float4 rawPos = texPos.Sample(sampPos, vsOut.texCoord.xy);
+    float4 ao = texAO.Sample(sampAO, vsOut.texCoord.xy);
+    
+    float4 lightSrcPos = mul(camLight.proj, mul(camLight.view, mul(camLight.model, rawPos)));
+    lightSrcPos = lightSrcPos / lightSrcPos.w;
+    float2 lightSrcUV = lightSrcPos.xy * 0.5 + 0.5;
+    float shadow = pcfShadowMap(lightSrcUV, lightSrcPos.z);
+    
+    float diffuse = max(0, dot(normalize(adjNormal.xyz), -normalize(attrs.lightDir.xyz)));
+    float4 baselightColor;
+    float ambient = attrs.lightColor.a * (1 - ao.r);
+    baselightColor = (ambient + (1 - shadow) * diffuse) * basecolor;
+    
+    float4 color = float4(addVolumeLighting(ndcPos, baselightColor), 1.0);
     psOut.color = gammaCorrection(toneMapping(color));
-    //psOut.color = revealTransmittance(vsOut.ndcPos, diffuse);
-    //psOut.color = diffuse;
+
     return psOut;
 }

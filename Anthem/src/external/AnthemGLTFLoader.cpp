@@ -20,13 +20,14 @@ namespace Anthem::External{
         ANTH_LOGI("Model Dir=",this->modelDirectory);
         return true;
     }
-    bool AnthemGLTFLoader::parseModel(AnthemGLTFLoaderParseConfig config,std::vector<AnthemGLTFLoaderParseResult>& result){
+    bool AnthemGLTFLoader::parseModel(AnthemGLTFLoaderParseConfig config,std::vector<AnthemGLTFLoaderParseResult>& result, AnthemGLTFLoaderTexParseResult* texResult){
         int totalResultSize = 0;
         for (auto subMesh : model.meshes) {
             totalResultSize += subMesh.primitives.size();
         }
         result.reserve(totalResultSize);
         result.resize(totalResultSize);
+
         const auto& accessor = model.accessors;
         const auto& materials = model.materials;
         const auto& textures = model.textures;
@@ -56,6 +57,24 @@ namespace Anthem::External{
             return 0;
         };
         uint32_t curResultSlot = 0;
+        if (texResult != nullptr) {
+            auto& q = *texResult;
+            q.tex.reserve(model.images.size());
+            q.tex.resize(model.images.size());
+            q.channels.reserve(model.images.size());
+            q.channels.resize(model.images.size());
+            q.height.reserve(model.images.size());
+            q.height.resize(model.images.size());
+            q.width.reserve(model.images.size());
+            q.width.resize(model.images.size());
+            for (auto i : AT_RANGE2(model.images.size())) {
+                q.tex[i] = std::move(model.images[i].image);
+                q.width[i] = model.images[i].width;
+                q.height[i] = model.images[i].height;
+                q.channels[i] = model.images[i].component;
+                ANTH_ASSERT(model.images[i].bits == 8, "Bits != 8");
+            }
+        }
         for(int i=0;i<model.meshes.size();i++){
             ANTH_LOGI("Parsing Mesh",i);
             auto& curMesh = model.meshes.at(i);
@@ -63,7 +82,6 @@ namespace Anthem::External{
             for (auto & curPrimitive : curMesh.primitives) {
                 ANTH_LOGI("Parsing Submesh", k++);
                 auto& curResult = result.at(curResultSlot++);
-                // auto& curPrimitive = curMesh.primitives.at(0);
                 
                 // Index Accessor
                 auto& indexAccessor = accessor.at(curPrimitive.indices);
@@ -75,14 +93,23 @@ namespace Anthem::External{
 
                 // Material Entry
                 auto& materialEntry = materials.at(curPrimitive.material);
-                auto& materialIndex = materialEntry.pbrMetallicRoughness.baseColorTexture.index;
-                if (materialIndex != -1) {
-                    auto imageIdx = textures.at(materialIndex).source;
+                auto& materialIndexPbrBase = materialEntry.pbrMetallicRoughness.baseColorTexture.index;
+                auto& materialIndexNormal = materialEntry.normalTexture.index;
+
+                curResult.pbrBaseTexId = -1;
+                curResult.pbrNormalTexId = -1;
+                if (materialIndexPbrBase != -1) {
+                    auto imageIdx = textures.at(materialIndexPbrBase).source;
                     std::string dest;
                     tinygltf::URIDecode(model.images.at(imageIdx).uri, &dest, nullptr);
                     curResult.pbrBaseColorTexPath = dest;
-
+                    curResult.pbrBaseTexId = imageIdx;
                 }
+                if (materialIndexNormal != -1) {
+                    auto imageIdx = textures.at(materialIndexNormal).source;
+                    curResult.pbrNormalTexId = imageIdx;
+                }
+
                 curResult.pbrBaseColorFactor = materialEntry.pbrMetallicRoughness.baseColorFactor;
                 // Attribute Accessor
                 for (auto& attr : curPrimitive.attributes) {
@@ -117,7 +144,17 @@ namespace Anthem::External{
                         attrAccessorCount *= curResult.texCoordDim;
                         bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.texCoords,
                             attrAccessorOffset, attrAccessorCount);
+                    }
+                    else if (attrName == config.tangentPrimitiveName) {
+                        curResult.tangentPrimitiveType = attrAccessor.type;
+                        specifyStride(attrAccessor.type, curResult.tangentDim, curResult.tangentPrimitiveType);
+                        attrAccessorCount *= curResult.tangentDim;
+                        bufferParse<float, float>(attrAccessor.bufferView, 4, curResult.tangents,
+                            attrAccessorOffset, attrAccessorCount);
 
+                        if (curResult.tangents.size() == 0) {
+                            ANTH_LOGE("ww");
+                        }
                     }
                 }
                 curResult.basePath = this->modelDirectory + "/";
@@ -128,6 +165,7 @@ namespace Anthem::External{
                 ANTH_LOGI("Position Primitive Type:", curResult.positionPrimitiveType, "Dimension:", curResult.positionDim, "Length", curResult.positions.size());
                 ANTH_LOGI("Normal Primitive Type:", curResult.normalPrimitiveType, "Dimension:", curResult.normalDim, "Length", curResult.normals.size());
                 ANTH_LOGI("TexCoord Primitive Type:", curResult.texCoordPrimitiveType, "Dimension:", curResult.texCoordDim, "Length", curResult.texCoords.size());
+                ANTH_LOGI("Tangent Primitive Type:", curResult.tangentPrimitiveType, "Dimension:", curResult.tangentDim, "Length", curResult.tangents.size());
                 ANTH_LOGI("Tex Path", curResult.pbrBaseColorTexPath);
             }
             

@@ -145,11 +145,11 @@ void createTransparentPipeline() {
 	st.spTransparent.vertexShader = getShader("transparent.vert");
 	st.spTransparent.fragmentShader = getShader("transparent.frag");
 	st.rd.createShader(&st.shTransparent, &st.spTransparent);
-	st.rd.createColorAttachmentImage(&st.cbAccu, st.descAccuAtt, 0, AT_IF_SRGB_FLOAT32, false, -1);
-	st.rd.createColorAttachmentImage(&st.cbReveal, st.descRevealAtt, 0, AT_IF_SRGB_FLOAT32, false, -1);
+	st.rd.createColorAttachmentImage(&st.cbAccu, st.descAccuAtt, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createColorAttachmentImage(&st.cbReveal, st.descRevealAtt, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 	st.rd.createDepthBuffer(&st.depthTransparent,false);
 
-	st.roptTransparent.colorAttachmentFormats = { AT_IF_SRGB_FLOAT32 ,AT_IF_SRGB_FLOAT32 };
+	st.roptTransparent.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 ,AT_IF_SIGNED_FLOAT32 };
 	st.roptTransparent.clearColors = { {0.0f,0.0f,0.0f,0.0f},{1.0f,1.0f,1.0f,1.0f} };
 	st.roptTransparent.clearColorAttachmentOnLoad = { true,true };
 	st.roptTransparent.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
@@ -170,9 +170,9 @@ void createOpaquePipeline() {
 	st.spOpaque.fragmentShader = getShader("opaque.frag");
 	st.rd.createShader(&st.shOpaque, &st.spOpaque);
 	st.rd.createDepthBuffer(&st.depthOpaque, false);
-	st.rd.createColorAttachmentImage(&st.cbSolid, st.descSolidAtt, 0, AT_IF_SRGB_FLOAT32, false, -1);
+	st.rd.createColorAttachmentImage(&st.cbSolid, st.descSolidAtt, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 
-	st.roptOpaque.colorAttachmentFormats = { AT_IF_SRGB_FLOAT32 };
+	st.roptOpaque.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
 	st.roptOpaque.clearColors = { {0,0,0,1} };
 	st.roptOpaque.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
 	st.roptOpaque.clearColorAttachmentOnLoad = { true };

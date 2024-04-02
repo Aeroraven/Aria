@@ -140,7 +140,7 @@ void createMainStage() {
 	st.roptMain.clearStencilAttachmentOnLoad = true;
 	st.roptMain.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
 	st.roptMain.clearColorAttachmentOnLoad = { true,true,true };
-	st.roptMain.colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 ,AT_IF_SRGB_FLOAT32 };
+	st.roptMain.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 ,AT_IF_SIGNED_FLOAT32 };
 	st.roptMain.clearColors = { {0,0,0,1},{0,0,0,1},{0,0,0,1} };
 	st.coptMain.enableDynamicStencilTesting = false;
 	st.coptMain.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
@@ -160,10 +160,10 @@ void createMainStage() {
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.rd.createDescriptorPool(&st.descDepth[i]);
 		st.rd.createDescriptorPool(&st.descTgt[i]);
-		st.rd.createColorAttachmentImage(&st.target[i], st.descTgt[i], 0, AT_IF_SRGB_FLOAT32, false, -1);
-		st.rd.createColorAttachmentImage(&st.colDepth[i], st.descDepth[i], 0, AT_IF_SRGB_FLOAT32, false, -1);
+		st.rd.createColorAttachmentImage(&st.target[i], st.descTgt[i], 0, AT_IF_SIGNED_FLOAT32, false, -1);
+		st.rd.createColorAttachmentImage(&st.colDepth[i], st.descDepth[i], 0, AT_IF_SIGNED_FLOAT32, false, -1);
 		st.rd.createDescriptorPool(&st.descMotionVec[i]);
-		st.rd.createColorAttachmentImage(&st.motionImage[i], st.descMotionVec[i], 0, AT_IF_SRGB_FLOAT32, false, -1);
+		st.rd.createColorAttachmentImage(&st.motionImage[i], st.descMotionVec[i], 0, AT_IF_SIGNED_FLOAT32, false, -1);
 		st.rd.createSimpleFramebufferA(&st.fbMain[i], { st.target[i],st.motionImage[i],st.colDepth[i]}, st.passMain, st.depthMain);
 	}
 

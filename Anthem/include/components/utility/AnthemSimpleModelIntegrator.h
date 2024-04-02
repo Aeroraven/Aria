@@ -41,7 +41,13 @@ namespace Anthem::Components::Utility {
 #endif
 	class AnthemSimpleModelIntegrator {
 	private:
-		AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>, AtAttributeVecf<4>>* vx = nullptr;
+		AnthemVertexBufferImpl<
+			AtAttributeVecf<4>, //Pos
+			AtAttributeVecf<4>,	//Normal
+			AtAttributeVecf<4>,	//Tex
+			AtAttributeVecf<4>,	//Tangent
+			AtAttributeVecf<4>	//TextureID
+		>* vx = nullptr;
 		AnthemIndexBuffer* ix = nullptr;
 		AnthemIndirectDrawBuffer* indirect = nullptr;
 		std::vector<std::string> requiredTexturePaths = {};

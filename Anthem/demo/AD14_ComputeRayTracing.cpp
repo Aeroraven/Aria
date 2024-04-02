@@ -94,7 +94,7 @@ void prepareCompute() {
 		stage.renderer.createDescriptorPool(&stage.descImage1[i]);
 		stage.renderer.createDescriptorPool(&stage.descStImage1[i]);
 		stage.renderer.createTexture(&stage.image1[i], stage.descImage1[i], nullptr, stage.texSize, stage.texSize, 4, 0,
-			false, false, AT_IF_SRGB_FLOAT32, -1, false, AT_IU_COMPUTE_OUTPUT);
+			false, false, AT_IF_SIGNED_FLOAT32, -1, false, AT_IU_COMPUTE_OUTPUT);
 		stage.image1[i]->toGeneralLayout();
 
 		std::vector<AnthemImageContainer*> ct = { stage.image1[i]};

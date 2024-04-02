@@ -73,7 +73,7 @@ namespace Anthem::Core{
         this->cmdBufs->endCommandRecording(cmdBufIdx);  
         this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx,true);
         this->cmdBufs->freeCommandBuffer(cmdBufIdx);
-        ANTH_LOGI("Mipmap generated");
+        ANTH_LOGV("Mipmap generated");
 
         VkFormatProperties formatProperties;
         vkGetPhysicalDeviceFormatProperties(phyDevice->getPhysicalDevice(), VK_FORMAT_R8G8B8A8_SRGB, &formatProperties);
@@ -113,10 +113,9 @@ namespace Anthem::Core{
         createInfo.subresourceRange.levelCount = this->image.mipmapLodLevels;
         auto result = vkCreateImageView(this->logicalDevice->getLogicalDevice(),&createInfo,nullptr,&(this->image.imageView));
         if(result != VK_SUCCESS){
-            ANTH_LOGI("Failed to create image view",result);
+            ANTH_LOGE("Failed to create image view",result);
             return false;
         }
-        ANTH_LOGI("Image view created");
         return true;
     }
     bool  AnthemImageContainer::createImageTransitionLayoutInternal(VkImageLayout oldLayout, VkImageLayout newLayout,
@@ -132,7 +131,6 @@ namespace Anthem::Core{
         this->cmdBufs->endCommandRecording(cmdBufIdx);
         this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx, true);
         this->cmdBufs->freeCommandBuffer(cmdBufIdx);
-        ANTH_LOGI("Image pipeline barrier created, transition done");
         return true;
     }
     bool AnthemImageContainer::createImageTransitionLayoutLegacy(VkImageLayout oldLayout,VkImageLayout newLayout){
@@ -169,7 +167,6 @@ namespace Anthem::Core{
         }else{
             samplerInfo.maxLod = 1.0f;
         }
-        ANTH_LOGI("Sampler Max LOD:",this->image.mipmapLodLevels);
         this->samplerCreated = true;
         auto samplerResult = vkCreateSampler(this->logicalDevice->getLogicalDevice(),&samplerInfo,nullptr,&(this->sampler));
         ANTH_ASSERT(samplerResult==VK_SUCCESS,"Failed to create sampler");
@@ -196,8 +193,6 @@ namespace Anthem::Core{
         this->image.imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         this->image.imageInfo.samples = (decltype(this->image.imageInfo.samples)) this->image.msaaCount;
         this->image.imageInfo.flags = this->image.extraFlags;
-
-        ANTH_LOGI("Image Mip Lvls:", this->image.imageInfo.mipLevels);
 
         auto creatImageRes = vkCreateImage(this->logicalDevice->getLogicalDevice(),&(this->image.imageInfo),nullptr,&(this->image.image));
         ANTH_ASSERT(creatImageRes==VK_SUCCESS,"Failed to create image");

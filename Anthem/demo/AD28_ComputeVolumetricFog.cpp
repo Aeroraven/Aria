@@ -16,6 +16,7 @@
 #include "../include/components/passhelper/AnthemComputePassHelper.h"
 #include "../include/components/postprocessing/AnthemPostIdentity.h"
 #include "../include/components/math/AnthemLowDiscrepancySequence.h"
+#include "../include/components/postprocessing/AnthemFXAA.h"
 using namespace Anthem::Components::Performance;
 using namespace Anthem::Components::Utility;
 using namespace Anthem::Components::Camera;
@@ -31,8 +32,11 @@ struct Stage {
 
 	AnthemCamera camMain = AnthemCamera(AT_ACPT_PERSPECTIVE);
 	AnthemCamera camLight = AnthemCamera(AT_ACPT_ORTHO);
+	AnthemFrameRateMeter fpsMeter = AnthemFrameRateMeter(10);
+
 
 	std::vector<AnthemGLTFLoaderParseResult> gltfModel;
+	AnthemGLTFLoaderTexParseResult gltfTex;
 	AnthemSimpleModelIntegrator model;
 	AnthemDescriptorPool* descPbrBaseTex = nullptr;
 	AnthemImage** pbrBaseTex = nullptr;
@@ -62,14 +66,20 @@ struct Stage {
 	std::unique_ptr<AnthemPassHelper> mainPass;
 	std::unique_ptr<AnthemPassHelper> shadowPass;
 	std::unique_ptr<AnthemPostIdentity> idPass;
+	std::unique_ptr<AnthemPassHelper> deferPass;
+	std::unique_ptr<AnthemPassHelper> aoPass;
 	std::unique_ptr<AnthemComputePassHelper> lightPartPass;
 	std::unique_ptr<AnthemComputePassHelper> rayMarchPass;
+	std::unique_ptr<AnthemFXAA> fxaaPass;
 
 	std::function<void(int, int, int, int)> keyController;
 
 	AnthemSemaphore* shadowComplete;
 	AnthemSemaphore* lightScatAttrComplete;
 	AnthemSemaphore* rayMarchComplete;
+	AnthemSemaphore* mainComplete;
+	AnthemSemaphore* deferComplete;
+	AnthemSemaphore* aoComplete;
 	AnthemFence* fence;
 
 	AnthemImage** lightScatterVolume;
@@ -84,15 +94,43 @@ struct Stage {
 	AnthemHaltonSequence hseq2 = AnthemHaltonSequence(3, 16);
 	AnthemHaltonSequence hseq3 = AnthemHaltonSequence(5, 16);
 
+	AnthemDescriptorPool* descMainTarget;
+	AnthemImage* mainTarget;
+
+	using uxSamples = AtUniformVecfArray<4, 64>;
+	AnthemDescriptorPool* descAOSamples;
+	AnthemUniformBufferImpl<uxSamples>* aoSamples;
 	int round = 0;
 }st;
 
+
+struct GBuffer {
+	AnthemDescriptorPool* dPos;
+	AnthemDescriptorPool* dNorm;
+	AnthemDescriptorPool* dBaseColor;
+	AnthemDescriptorPool* dAO;
+	AnthemDescriptorPool* dNdc;
+	AnthemDescriptorPool* dTangent;
+
+	AnthemImage* pos;
+	AnthemImage* norm;
+	AnthemImage* baseColor;
+	AnthemImage* ao;
+	AnthemImage* ndc;
+	AnthemImage* tangent;
+}gb;
+
+struct DeferCanvas {
+	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>>* vx;
+	AnthemIndexBuffer* ix;
+}canvas;
+
 #define DCONST static constexpr const
 struct StageConstants {
-	DCONST uint32_t VOLSIZE_X = 256;
-	DCONST uint32_t VOLSIZE_Y = 144;
-	DCONST uint32_t VOLSIZE_Z = 256;
-	DCONST float FOG_DENSITY = 0.0012f;
+	DCONST uint32_t VOLSIZE_X = 400;
+	DCONST uint32_t VOLSIZE_Y = 256;
+	DCONST uint32_t VOLSIZE_Z = 400;
+	DCONST float FOG_DENSITY = 0.002f;
 	DCONST float ANISOTROPY = 0.0f;
 	DCONST float LIGHT_R = 1.0f;
 	DCONST float LIGHT_G = 1.0f;
@@ -105,7 +143,7 @@ struct StageConstants {
 	DCONST uint32_t THREAD_Z = 8;
 
 	DCONST float LIGHTDIR_X = 0;
-	DCONST float LIGHTDIR_Y = -2.5;
+	DCONST float LIGHTDIR_Y = -1.7;
 	DCONST float LIGHTDIR_Z = 1;
 
 	DCONST float Z_NEAR = 0.1f;
@@ -153,12 +191,18 @@ void initialize() {
 	st.rd.createDescriptorPool(&st.descUniFogConsts);
 	st.rd.createUniformBuffer(&st.uniFogConsts, 0, st.descUniFogConsts, -1);
 
+	st.rd.createDescriptorPool(&st.descAOSamples);
+	st.rd.createUniformBuffer(&st.aoSamples, 0, st.descAOSamples, -1);
+
 	st.keyController = st.camMain.getKeyboardController();
 	st.rd.ctSetKeyBoardController(st.keyController);
 
 	st.rd.createSemaphore(&st.shadowComplete);
 	st.rd.createSemaphore(&st.rayMarchComplete);
 	st.rd.createSemaphore(&st.lightScatAttrComplete);
+	st.rd.createSemaphore(&st.mainComplete);
+	st.rd.createSemaphore(&st.deferComplete);
+	st.rd.createSemaphore(&st.aoComplete);
 	st.rd.createFence(&st.fence);
 }
 
@@ -167,7 +211,7 @@ void loadModel() {
 	AnthemGLTFLoaderParseConfig config;
 	std::string path = ANTH_ASSET_DIR;
 	loader.loadModel((path + "\\sponza\\glTF\\Sponza.gltf").c_str());
-	loader.parseModel(config, st.gltfModel);
+	loader.parseModel(config, st.gltfModel, &st.gltfTex);
 	std::vector<AnthemUtlSimpleModelStruct> rp;
 	for (auto& p : st.gltfModel)rp.push_back(p);
 	st.model.loadModel(&st.rd, rp, -1);
@@ -175,41 +219,136 @@ void loadModel() {
 
 	st.rd.createDescriptorPool(&st.descPbrBaseTex);
 
-	st.pbrBaseTex = new AnthemImage * [st.requiredTex.size()];
+	int numTexs = st.gltfTex.tex.size();
+	st.pbrBaseTex = new AnthemImage * [numTexs];
 	std::vector<AnthemImageContainer*> imgContainer;
-	for (int i = 0; i < st.requiredTex.size(); i++) {
-		std::unique_ptr<AnthemImageLoader> loader = std::make_unique<AnthemImageLoader>();
-		uint32_t texWidth, texHeight, texChannels;
-		uint8_t* texData;
-		std::string texPath = st.gltfModel[i].basePath + st.requiredTex[i];
-		if (st.requiredTex[i] == "") {
-			texPath = ANTH_ASSET_DIR;
-			texPath += "cat.jpg";
-		}
-		loader->loadImage(texPath.c_str(), &texWidth, &texHeight, &texChannels, &texData);
-		st.rd.createTexture(&st.pbrBaseTex[i], st.descPbrBaseTex, texData, texWidth, texHeight, texChannels, 0, false, false, AT_IF_SRGB_UINT8, -1, true);
+	for (int i = 0; i < numTexs; i++) {
+		st.rd.createTexture(&st.pbrBaseTex[i], st.descPbrBaseTex, st.gltfTex.tex[i].data(), st.gltfTex.width[i],
+			st.gltfTex.height[i], st.gltfTex.channels[i], 0, false, false, AT_IF_UNORM_UINT8, -1, true);
 		imgContainer.push_back(st.pbrBaseTex[i]);
 	}
 	st.rd.addSamplerArrayToDescriptor(imgContainer, st.descPbrBaseTex, 0, -1);
 }
 
+void prepareAOSamples() {
+	std::vector<float> samples(4 * 64);
+	for (int i = 0; i < 4 * 64; i+=4) {
+		const auto d = AnthemLinAlg::randomVector3<float>();
+		samples[i] = d[0];
+		samples[i + 1] = d[1];
+		samples[i + 2] = d[2];
+		samples[i + 3] = (rand()%30);
+	}
+	st.aoSamples->specifyUniforms(samples.data());
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.aoSamples->updateBuffer(i);
+	}
+}
+
+void prepareCanvas() {
+	st.rd.createVertexBuffer(&canvas.vx);
+	st.rd.createIndexBuffer(&canvas.ix);
+	canvas.vx->setTotalVertices(6);
+	canvas.vx->insertData(0, { -1,-1,0,1 }, { 0,0,0,0 });
+	canvas.vx->insertData(1, { 1,-1,0,1 }, { 1,0,0,0 });
+	canvas.vx->insertData(2, { 1,1,0,1 }, { 1,1,0,0 });
+	canvas.vx->insertData(3, { -1,1,0,1 }, { 0,1,0,0 });
+	canvas.ix->setIndices({ 0,1,2,2,3,0 });
+}
+void prepareDefer() {
+	st.rd.createDescriptorPool(&gb.dAO);
+	st.rd.createDescriptorPool(&gb.dBaseColor);
+	st.rd.createDescriptorPool(&gb.dNorm);
+	st.rd.createDescriptorPool(&gb.dPos);
+	st.rd.createDescriptorPool(&gb.dNdc);
+	st.rd.createDescriptorPool(&gb.dTangent);
+
+	st.rd.createColorAttachmentImage(&gb.ao, gb.dAO, 0, AT_IF_SIGNED_FLOAT32, false, 0);
+	st.rd.createColorAttachmentImage(&gb.baseColor, gb.dBaseColor, 0, AT_IF_SIGNED_FLOAT32, false, 0);
+	st.rd.createColorAttachmentImage(&gb.pos, gb.dPos, 0, AT_IF_SIGNED_FLOAT32, false, 0);
+	st.rd.createColorAttachmentImage(&gb.norm, gb.dNorm, 0, AT_IF_SIGNED_FLOAT32, false, 0);
+	st.rd.createColorAttachmentImage(&gb.ndc, gb.dNdc, 0, AT_IF_SIGNED_FLOAT32, false, 0);
+	st.rd.createColorAttachmentImage(&gb.tangent, gb.dTangent, 0, AT_IF_SIGNED_FLOAT32, false, 0);
+
+	st.deferPass = std::make_unique<AnthemPassHelper>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
+	st.deferPass->shaderPath.vertexShader = getShader("defer.vert");
+	st.deferPass->shaderPath.fragmentShader = getShader("defer.frag");
+	st.deferPass->vxLayout = st.model.getVertexBuffer();
+	st.deferPass->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.deferPass->passOpt.clearColorAttachmentOnLoad = { true,true,true,true,true };
+	st.deferPass->passOpt.clearColors = { {0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0},{0, 0, 0, 0} };
+	st.deferPass->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND ,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.deferPass->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 };
+	st.deferPass->setRenderTargets({ gb.baseColor,gb.norm,gb.pos,gb.ndc,gb.tangent });
+
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.deferPass->setDescriptorLayouts({
+			{st.descUniCamMain,AT_ACDS_UNIFORM_BUFFER,0},
+			{st.descPbrBaseTex,AT_ACDS_SAMPLER,0},
+		}, i);
+	}
+	st.deferPass->buildGraphicsPipeline();
+
+	st.aoPass = std::make_unique<AnthemPassHelper>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
+	st.aoPass->shaderPath.vertexShader = getShader("ao.vert");
+	st.aoPass->shaderPath.fragmentShader = getShader("ao.frag");
+	st.aoPass->vxLayout = canvas.vx;
+	st.aoPass->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.aoPass->passOpt.clearColorAttachmentOnLoad = { true };
+	st.aoPass->passOpt.clearColors = { {0, 0, 0, 0}, };
+	st.aoPass->pipeOpt.blendPreset = { AT_ABP_NO_BLEND };
+	st.aoPass->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.aoPass->setRenderTargets({ gb.ao });
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.aoPass->setDescriptorLayouts({
+			{st.descAOSamples,AT_ACDS_UNIFORM_BUFFER,0},
+			{gb.dBaseColor,AT_ACDS_SAMPLER,0},
+			{gb.dNorm,AT_ACDS_SAMPLER,0},
+			{gb.dPos,AT_ACDS_SAMPLER,0},
+			{gb.dNdc,AT_ACDS_SAMPLER,0},
+			{gb.dTangent,AT_ACDS_SAMPLER,0},
+			{st.descUniCamMain,AT_ACDS_UNIFORM_BUFFER,0}
+		}, i);
+	}
+	st.aoPass->buildGraphicsPipeline();
+}
 void prepareMain() {
+
+
+	st.rd.createDescriptorPool(&st.descMainTarget);
+	st.rd.createColorAttachmentImage(&st.mainTarget, st.descMainTarget, 0, AT_IF_SIGNED_FLOAT32, false, 0);
+
 	st.mainPass = std::make_unique<AnthemPassHelper>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
 	st.mainPass->shaderPath.vertexShader = getShader("main.vert");
 	st.mainPass->shaderPath.fragmentShader = getShader("main.frag");
-	st.mainPass->vxLayout = st.model.getVertexBuffer();
+	st.mainPass->vxLayout = canvas.vx;
+	st.mainPass->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.mainPass->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.mainPass->setRenderTargets({ st.mainTarget });
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.mainPass->setDescriptorLayouts({
 			{st.descUniCamMain,AT_ACDS_UNIFORM_BUFFER,0},
-			{st.descPbrBaseTex,AT_ACDS_SAMPLER,0},
 			{st.descUniCamLight,AT_ACDS_UNIFORM_BUFFER,0},
 			{st.shadowPass->getDepthDescriptor(i),AT_ACDS_SAMPLER,0},
 			{st.descFogVolumeSampler,AT_ACDS_SAMPLER,0},
 			{st.descUniFogConsts,AT_ACDS_UNIFORM_BUFFER,0},
+			{gb.dBaseColor,AT_ACDS_SAMPLER,0},
+			{gb.dNorm,AT_ACDS_SAMPLER,0},
+			{gb.dPos,AT_ACDS_SAMPLER,0},
+			{gb.dNdc,AT_ACDS_SAMPLER,0},
+			{gb.dAO,AT_ACDS_SAMPLER,0},
 		},i);
 	}
 	
 	st.mainPass->buildGraphicsPipeline();
+}
+
+void preparePostAA() {
+	st.fxaaPass = std::make_unique<AnthemFXAA>(&st.rd, 2);
+	st.fxaaPass->addInput({
+		{st.descMainTarget,AT_ACDS_SAMPLER,0},
+		});
+	st.fxaaPass->prepare();
 }
 
 void prepareShadow() {
@@ -231,16 +370,14 @@ void prepareFogVolume() {
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.rd.createDescriptorPool(&st.descLightScatVol[i]);
 		st.rd.createTexture3d(&st.lightScatterVolume[i], nullptr, nullptr, sc.VOLSIZE_X, sc.VOLSIZE_Y, sc.VOLSIZE_Z,
-			4, 0, AT_IF_SRGB_FLOAT32, -1, AT_IU_COMPUTE_OUTPUT);
+			4, 0, AT_IF_SIGNED_FLOAT32, -1, AT_IU_COMPUTE_OUTPUT);
 		st.lightScatterVolume[i]->toGeneralLayout();
 		st.rd.addStorageImageArrayToDescriptor({ st.lightScatterVolume[i] }, st.descLightScatVol[i], 0, -1);
 	}
-
-
 	st.rd.createDescriptorPool(&st.descFogVolume);
 	st.rd.createDescriptorPool(&st.descFogVolumeSampler);
 	st.rd.createTexture3d(&st.fogVolume,st.descFogVolumeSampler, nullptr, sc.VOLSIZE_X, sc.VOLSIZE_Y, sc.VOLSIZE_Z,
-		4, 0, AT_IF_SRGB_FLOAT32, -1, AT_IU_COMPUTE_OUTPUT);
+		4, 0, AT_IF_SIGNED_FLOAT32, -1, AT_IU_COMPUTE_OUTPUT);
 	st.fogVolume->toGeneralLayout();
 	st.rd.addStorageImageArrayToDescriptor({ st.fogVolume }, st.descFogVolume, 0, -1);
 }
@@ -277,13 +414,25 @@ void prepareRayMarchingPass() {
 
 void prepareIdPass() {
 	st.idPass = std::make_unique<AnthemPostIdentity>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
-	st.idPass->addInput({ {st.shadowPass->getDepthDescriptor(0),AT_ACDS_SAMPLER,0} }, 0);
-	st.idPass->addInput({ {st.shadowPass->getDepthDescriptor(1),AT_ACDS_SAMPLER,0} }, 1);
+	//st.idPass->addInput({ {st.shadowPass->getDepthDescriptor(0),AT_ACDS_SAMPLER,0} }, 0);
+	//st.idPass->addInput({ {st.shadowPass->getDepthDescriptor(1),AT_ACDS_SAMPLER,0} }, 1);
+	st.idPass->addInput({ { gb.dAO,AT_ACDS_SAMPLER,0} });
 	st.idPass->prepare();
 }
 
+
 void recordCommand() {
 	st.mainPass->recordCommands([&](uint32_t x) {
+		st.rd.drBindVertexBuffer(canvas.vx, x);
+		st.rd.drBindIndexBuffer(canvas.ix, x);
+		st.rd.drDraw(6, x);
+	});
+	st.aoPass->recordCommands([&](uint32_t x) {
+		st.rd.drBindVertexBuffer(canvas.vx, x);
+		st.rd.drBindIndexBuffer(canvas.ix, x);
+		st.rd.drDraw(6, x);
+	});
+	st.deferPass->recordCommands([&](uint32_t x) {
 		st.rd.drBindVertexBuffer(st.model.getVertexBuffer(), x);
 		st.rd.drBindIndexBuffer(st.model.getIndexBuffer(), x);
 		st.rd.drDrawIndexedIndirect(st.model.getIndirectBuffer(), x);
@@ -296,6 +445,7 @@ void recordCommand() {
 	st.idPass->recordCommand();
 	st.rayMarchPass->recordCommand();
 	st.lightPartPass->recordCommand();
+	st.fxaaPass->recordCommand();
 }
 
 void updateUniform() {
@@ -350,6 +500,13 @@ void updateUniform() {
 }
 
 void drawLoop() {
+	st.fpsMeter.record();
+	static int fx = 0;
+	fx = (fx + 1) % 100;
+	if (fx == 0) {
+		ANTH_LOGI("FPS:", st.fpsMeter.getFrameRate());
+	}
+
 	static int cur = 0;
 	uint32_t imgIdx;
 	st.fence->waitAndReset();
@@ -357,10 +514,13 @@ void drawLoop() {
 	updateUniform();
 	st.rd.drPrepareFrame(cur, &imgIdx);
 
-	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.shadowPass->getCommandIndex(cur), -1, {}, {}, nullptr, { st.shadowComplete });
-	st.rd.drSubmitCommandBufferCompQueueGeneralA(st.lightPartPass->getCommandIndex(cur), { st.shadowComplete }, { st.lightScatAttrComplete }, nullptr);
-	st.rd.drSubmitCommandBufferCompQueueGeneralA(st.rayMarchPass->getCommandIndex(cur), { st.lightScatAttrComplete }, { st.rayMarchComplete }, st.fence);
-	st.rd.drSubmitCommandBufferGraphicsQueueGeneralA(st.mainPass->getCommandIndex(cur), cur, { st.rayMarchComplete }, { AT_SSW_ALL_COMMAND });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.deferPass->getCommandIndex(cur), -1, {}, {}, nullptr, { st.deferComplete });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.shadowPass->getCommandIndex(cur), -1, { st.deferComplete }, { AT_SSW_ALL_COMMAND }, nullptr, { st.shadowComplete });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.aoPass->getCommandIndex(cur), -1, { st.shadowComplete }, { AT_SSW_ALL_COMMAND }, nullptr, { st.aoComplete });
+	st.rd.drSubmitCommandBufferCompQueueGeneralA(st.lightPartPass->getCommandIndex(cur), { st.aoComplete }, { st.lightScatAttrComplete }, nullptr);
+	st.rd.drSubmitCommandBufferCompQueueGeneralA(st.rayMarchPass->getCommandIndex(cur), { st.lightScatAttrComplete }, { st.rayMarchComplete }, nullptr);
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.mainPass->getCommandIndex(cur), -1, { st.rayMarchComplete }, { AT_SSW_ALL_COMMAND }, st.fence, { st.mainComplete });
+	st.rd.drSubmitCommandBufferGraphicsQueueGeneralA(st.fxaaPass->getCommandIdx(cur), cur, { st.mainComplete }, { AT_SSW_ALL_COMMAND });
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = (cur + 1) % 2;
 }
@@ -368,11 +528,15 @@ void drawLoop() {
 int main() {
 	initialize();
 	loadModel();
+	prepareAOSamples();
+	prepareCanvas();
 	prepareShadow();
+	prepareDefer();
 	prepareFogVolume();
 	prepareLightParticipationPass();
 	prepareRayMarchingPass();
 	prepareMain();
+	preparePostAA();
 	prepareIdPass();
 	st.rd.registerPipelineSubComponents();
 	recordCommand();

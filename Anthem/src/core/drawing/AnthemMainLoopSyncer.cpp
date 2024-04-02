@@ -172,6 +172,9 @@ namespace Anthem::Core{
                 else if (p == tp::AT_SSW_COLOR_ATTACH_OUTPUT) {
                     waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
                 }
+                else if (p == tp::AT_SSW_ALL_COMMAND) {
+                    waitStages.push_back(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+                }
                 else {
                     ANTH_LOGE("Invalid wait stage");
                 }

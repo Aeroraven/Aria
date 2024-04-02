@@ -13,19 +13,20 @@ namespace Anthem::Core {
     enum AnthemImageFormat {
         AT_IF_UNDEFINED,
         AT_IF_SRGB_UINT8,
-        AT_IF_SRGB_FLOAT32,
+        AT_IF_SIGNED_FLOAT32,
         AT_IF_SBGR_UINT8,
+        AT_IF_UNORM_UINT8,
         AT_IF_R_UINT8,
         AT_IF_SWAPCHAIN
     };
     class AnthemImageInfoProcessing {
     public:
         static uint32_t getPerChannelSize(AnthemImageFormat formatx) {
-            if (formatx == AT_IF_SRGB_UINT8 || formatx == AT_IF_SBGR_UINT8 ||
+            if (formatx == AT_IF_SRGB_UINT8 || formatx == AT_IF_SBGR_UINT8 || formatx == AT_IF_UNORM_UINT8 ||
                 formatx == AT_IF_R_UINT8 || formatx == AT_IF_SWAPCHAIN) {
                 return 1;
             }
-            else if (formatx == AT_IF_SRGB_FLOAT32) {
+            else if (formatx == AT_IF_SIGNED_FLOAT32) {
                 return 4;
             }
             ANTH_LOGE("Unknown format");
@@ -36,7 +37,7 @@ namespace Anthem::Core {
             if (formatx == AT_IF_SRGB_UINT8) {
                 pendingFormat = VK_FORMAT_R8G8B8A8_SRGB;
             }
-            else if (formatx == AT_IF_SRGB_FLOAT32) {
+            else if (formatx == AT_IF_SIGNED_FLOAT32) {
                 pendingFormat = VK_FORMAT_R32G32B32A32_SFLOAT;
             }
             else if (formatx == AT_IF_SBGR_UINT8) {
@@ -44,6 +45,9 @@ namespace Anthem::Core {
             }
             else if (formatx == AT_IF_R_UINT8) {
                 pendingFormat = VK_FORMAT_R8_SRGB;
+            }
+            else if (formatx == AT_IF_UNORM_UINT8) {
+                pendingFormat = VK_FORMAT_R8G8B8A8_UNORM;
             }
             else if (formatx == AT_IF_SWAPCHAIN) {
                 ANTH_ASSERT(swapchain != nullptr, "Empty swapchain ptr");

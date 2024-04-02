@@ -23,6 +23,9 @@ Refer to the parent directory for more information about the project.
 - [FreeType](https://freetype.org/)
 - [ImGui](https://github.com/ocornut/imgui)
 
+#### Assets
+- Almost all art resources are not included in this repo. Download them manually to ensure that the program can be launched.
+
 ### Demo Explanation
 - Demo with prefix `AC` indicates that it is some thing about new C++ standards.
 - Demo with prefix `AD` indicates that it is some thing about Vulkan.

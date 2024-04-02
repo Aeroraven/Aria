@@ -90,10 +90,10 @@ void prepareOffscreenPass(){
     renderer.createDescriptorPool(&offscreenPass.descPoolPos);
     renderer.createDescriptorPool(&offscreenPass.descPoolSpecular);
 
-    renderer.createColorAttachmentImage(&offscreenPass.attachmentColor,offscreenPass.descPoolColor,0,AT_IF_SRGB_FLOAT32,false);
-    renderer.createColorAttachmentImage(&offscreenPass.attachmentNormal,offscreenPass.descPoolNormal,0,AT_IF_SRGB_FLOAT32,false);
-    renderer.createColorAttachmentImage(&offscreenPass.attachmentPosition,offscreenPass.descPoolPos,0,AT_IF_SRGB_FLOAT32,false);
-    renderer.createColorAttachmentImage(&offscreenPass.attachmentSpecular,offscreenPass.descPoolSpecular,0,AT_IF_SRGB_FLOAT32,false);
+    renderer.createColorAttachmentImage(&offscreenPass.attachmentColor,offscreenPass.descPoolColor,0,AT_IF_SIGNED_FLOAT32,false);
+    renderer.createColorAttachmentImage(&offscreenPass.attachmentNormal,offscreenPass.descPoolNormal,0,AT_IF_SIGNED_FLOAT32,false);
+    renderer.createColorAttachmentImage(&offscreenPass.attachmentPosition,offscreenPass.descPoolPos,0,AT_IF_SIGNED_FLOAT32,false);
+    renderer.createColorAttachmentImage(&offscreenPass.attachmentSpecular,offscreenPass.descPoolSpecular,0,AT_IF_SIGNED_FLOAT32,false);
 
     renderer.createDepthBuffer(&offscreenPass.depthBuffer,false);
 
@@ -101,7 +101,7 @@ void prepareOffscreenPass(){
     AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
-        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32,AT_IF_SRGB_FLOAT32 },
+        .colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 },
         .clearColorAttachmentOnLoad = {true,true,true,true}
     };
     renderer.setupRenderPass(&offscreenPass.pass,&setupOpt,offscreenPass.depthBuffer);

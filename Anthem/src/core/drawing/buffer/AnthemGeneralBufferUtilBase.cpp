@@ -26,7 +26,7 @@ namespace Anthem::Core{
             ANTH_LOGE("Failed to allocate memory");
             return false;
         }
-        ANTH_LOGI("Memory allocated");
+        ANTH_LOGV("Memory allocated");
         this->bindBufferInternalUt(logicalDevice,bufProp);
         return true;
     }
@@ -37,7 +37,7 @@ namespace Anthem::Core{
             ANTH_LOGE("Failed to bind buffer memory");
             return false;
         }
-        ANTH_LOGI("Buffer memory binded");
+        ANTH_LOGV("Buffer memory binded");
         return true;
     }
     bool AnthemGeneralBufferUtilBase::copyDataToBufferInternalUt(const AnthemLogicalDevice* logicalDevice, AnthemGeneralBufferProp* bufProp, void* data, uint32_t size, bool flush) const {

@@ -179,7 +179,7 @@ void recordCommands() {
 void createStorageImage() {
 	st.rd.getSwapchainImageExtent(&st.imgWidth, &st.imgHeight);
 	st.rd.createTexture(&st.storageImage, nullptr, nullptr,
-		st.imgWidth, st.imgHeight, 4, 0, false, false, AT_IF_SRGB_FLOAT32, -1, true, AT_IU_RAYTRACING_DEST);
+		st.imgWidth, st.imgHeight, 4, 0, false, false, AT_IF_SIGNED_FLOAT32, -1, true, AT_IU_RAYTRACING_DEST);
 	st.storageImage->toGeneralLayout();
 
 	st.rd.createDescriptorPool(&st.descImg);

@@ -187,15 +187,15 @@ void prepareOffscreen(DeferPass& offscreen,AnthemSimpleToyRenderer& renderer){
     AnthemRenderPassSetupOption setupOpt{
         .renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS,
         .msaaType = AT_ARPMT_NO_MSAA,
-        .colorAttachmentFormats = { AT_IF_SRGB_FLOAT32, AT_IF_SRGB_FLOAT32 },
+        .colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32 },
         .clearColorAttachmentOnLoad = {true,true}
     };
     renderer.setupRenderPass(&offscreen.pass,&setupOpt,offscreen.depthBuffer);
     ANTH_LOGI("Render Pass Created");
 
     //Create Attachment
-    renderer.createColorAttachmentImage(&offscreen.positionImage, offscreen.descPoolPositionAtt, 0, AT_IF_SRGB_FLOAT32,false);
-    renderer.createColorAttachmentImage(&offscreen.normalImage, offscreen.descPoolNormalAtt, 0,AT_IF_SRGB_FLOAT32,false);
+    renderer.createColorAttachmentImage(&offscreen.positionImage, offscreen.descPoolPositionAtt, 0, AT_IF_SIGNED_FLOAT32,false);
+    renderer.createColorAttachmentImage(&offscreen.normalImage, offscreen.descPoolNormalAtt, 0,AT_IF_SIGNED_FLOAT32,false);
     ANTH_LOGI("Attachments Created");
 
     //Create Framebuffer

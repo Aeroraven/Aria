@@ -18,7 +18,7 @@ Native examples use Vulkan as backend. Use following instruction to build the pr
 
 Before build the project, install `glfw3` 、`freetype`、`OpenCV`and `Vulkan SDK`. Then use `cmake` to build the project.
 
-NOTE: Change paths in CMake configuration file before the compilation! (I am too lazy to make them compatible with different envs)
+NOTE: Change paths in CMake configuration file before the compilation! (I am too lazy to make them compatible with different envs). Ensure that your device supports `Vulkan 1.3` and `Ray Tracing Extension`
 
 ```bash
 cd Anthem

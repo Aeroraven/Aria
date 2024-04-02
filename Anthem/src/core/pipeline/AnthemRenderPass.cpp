@@ -167,7 +167,7 @@ namespace Anthem::Core{
             if(opt.colorAttachmentFormats[i].has_value()){
                 const auto dfm = opt.colorAttachmentFormats[i].value();
                 VkFormat tgtFm;
-                if(dfm==AT_IF_SRGB_FLOAT32){
+                if(dfm==AT_IF_SIGNED_FLOAT32){
                     tgtFm = VK_FORMAT_R32G32B32A32_SFLOAT;
                 }else if(dfm==AT_IF_SRGB_UINT8){
                     tgtFm = VK_FORMAT_R8G8B8A8_SRGB;

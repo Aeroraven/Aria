@@ -6,8 +6,8 @@ struct VSOutput
 Texture2D texIn : register(t0, space0);
 SamplerState sampIn : register(s0, space0);
 
-static const float LUMIN_MIN_THRESH = 0.0312;
-static const float LUMIN_SCALE_MIN_THRESH = 0.063;
+static const float LUMIN_MIN_THRESH = 0.0112;
+static const float LUMIN_SCALE_MIN_THRESH = 0.033;
 static const float MAX_SEARCH_STEPS = 20.0;
 
 float lumin(float4 color)
