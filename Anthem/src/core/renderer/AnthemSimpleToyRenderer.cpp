@@ -296,7 +296,12 @@ namespace Anthem::Core{
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
         textureImage->specifySwapchain(this->swapChain.get());
-        textureImage->loadImageData(prop->texData, prop->texWidth, prop->texHeight, prop->texChannel);
+        if (prop->useFloatData) {
+            textureImage->loadImageDataSFloat3(prop->texDataFloat, prop->texWidth, prop->texHeight, prop->texChannel, 1);
+        }
+        else {
+            textureImage->loadImageData(prop->texData, prop->texWidth, prop->texHeight, prop->texChannel);
+        }
         textureImage->specifyUsage(prop->usage);
         if (prop->mipmap2d) {
             textureImage->enableMipMapping();

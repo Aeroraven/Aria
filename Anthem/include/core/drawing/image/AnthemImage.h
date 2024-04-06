@@ -12,7 +12,9 @@ namespace Anthem::Core{
 
 
     struct AnthemImageCreateProps {
-        uint8_t* texData = nullptr;
+        bool useFloatData = false;
+        const uint8_t* texData = nullptr;
+        const float* texDataFloat = nullptr;
         uint32_t texWidth = 0;
         uint32_t texHeight = 0;
         uint32_t texChannel = 0;
@@ -57,7 +59,8 @@ namespace Anthem::Core{
         bool enableMipMapping();
         bool enableMsaa();
         bool loadImageData(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
-        bool loadImageData3(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels,uint32_t depth);
+        bool loadImageData3(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels, uint32_t depth);
+        bool loadImageDataSFloat3(const float* data, uint32_t width, uint32_t height, uint32_t channels, uint32_t depth);
         bool setImageSize(uint32_t width, uint32_t height);
         bool setImageSize3(uint32_t width, uint32_t height, uint32_t depth);
         bool setImageFormat(AnthemImageFormat format);

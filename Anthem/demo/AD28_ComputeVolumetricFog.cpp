@@ -315,8 +315,6 @@ void prepareDefer() {
 	st.aoPass->buildGraphicsPipeline();
 }
 void prepareMain() {
-
-
 	st.rd.createDescriptorPool(&st.descMainTarget);
 	st.rd.createColorAttachmentImage(&st.mainTarget, st.descMainTarget, 0, AT_IF_SIGNED_FLOAT32, false, 0);
 

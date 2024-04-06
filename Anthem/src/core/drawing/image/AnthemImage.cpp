@@ -28,6 +28,20 @@ namespace Anthem::Core{
         this->channels = channels;
         return true;
     }
+    bool AnthemImage::loadImageDataSFloat3(const float* data, uint32_t width, uint32_t height, uint32_t channels, uint32_t depth) {
+        this->rawImageData = new char[width * height * depth * channels * sizeof(float)];
+        if (data == nullptr) {
+            ANTH_LOGW("Data is nullptr, skip loading image data.");
+        }
+        else {
+            memcpy(this->rawImageData, data, width * height * depth * channels * sizeof(float));
+        }
+        this->width = width;
+        this->height = height;
+        this->depth = depth;
+        this->channels = channels;
+        return true;
+    }
     bool AnthemImage::setImageFormat(AnthemImageFormat format){
         this->desiredFormat = format;
         return true;
