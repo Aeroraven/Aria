@@ -45,6 +45,7 @@ namespace Anthem::Components::Camera{
 
         bool getProjectionMatrix(AtMatf4& out);
         bool getViewMatrix(AtMatf4& out);
+        bool getPosition(AtVecf3& out);
 
         std::function<void(int, int, int, int)> getKeyboardController();
     };

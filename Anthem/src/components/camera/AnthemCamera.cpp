@@ -33,6 +33,10 @@ namespace Anthem::Components::Camera{
         out = this->viewMatrix.get();
         return true;
     }
+    bool AnthemCamera::getPosition(AtVecf3& out) {
+        out = this->pos;
+        return true;
+    }
     bool AnthemCamera::specifyOrthoClipSpace(float nearDepth,float farDepth, float aspectRatio,float clipSpaceHalfHeight){
         this->frustumNearDepth = nearDepth;
         this->frustumFarDepth = farDepth;

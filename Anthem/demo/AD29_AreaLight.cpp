@@ -48,9 +48,15 @@ struct Stage {
 	AnthemUniformBufferImpl<
 		AnthemUniformMatf<4>,
 		AnthemUniformMatf<4>,
-		AnthemUniformMatf<4>
+		AnthemUniformMatf<4>,
+		AnthemUniformVecf<4>
 	>* ubuf;
 	AnthemDescriptorPool* descUni;
+
+	AnthemUniformBufferImpl<
+		AnthemUniformVecfArray<4, 4>
+	>* uLbuf;
+	AnthemDescriptorPool* descUniL;
 
 	AnthemImage* lut1;
 	AnthemImage* lut2;
@@ -73,6 +79,8 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.camMain.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 1000.0f, 1.0f * rdW / rdH);
+	st.camMain.specifyPosition(0, 1, -15);
+	st.camMain.specifyFrontEyeRay(0, 0, 1);
 }
 
 void createLUT() {
@@ -101,16 +109,18 @@ void createGeometry() {
 	st.vx->insertData(1, { 100,0,-100,1 }, { 0,1,0,0 }, { 1,0,0,0 });
 	st.vx->insertData(2, { 100,0,100,1 }, { 0,1,0,0 }, { 1,1,0,0 });
 	st.vx->insertData(3, { -100,0,100,1 }, { 0,1,0,0 }, { 0,1,0,0 });
-	st.vx->insertData(4, { -5,5,0,1 }, { 0,0,-1,0 }, { 0,0,1,0 });
-	st.vx->insertData(5, { 5,5,0,1 }, { 0,0,-1,0 }, { 0,0,1,0 });
-	st.vx->insertData(6, { 5,-5,0,1 }, { 0,0,-1,0 }, { 0,0,1,0 });
-	st.vx->insertData(7, { -5,-5,0,1 }, { 0,0,-1,0 }, { 0,0,1,0 });
+	st.vx->insertData(4, { -5,11,0,1 }, { 0,0,-1,0 }, { 0,0,1,0 });
+	st.vx->insertData(5, { 5,11,0,1 }, { 0,0,-1,0 }, { 0,0,1,0 });
+	st.vx->insertData(6, { 5,0.1,0,1 }, { 0,0,-1,0 }, { 0,0,1,0 });
+	st.vx->insertData(7, { -5,0.1,0,1 }, { 0,0,-1,0 }, { 0,0,1,0 });
 	st.ix->setIndices({ 0,1,2,2,3,0,4,5,6,6,7,4 });
 }
 
 void createUniform() {
 	st.rd.createDescriptorPool(&st.descUni);
 	st.rd.createUniformBuffer(&st.ubuf, 0, st.descUni, -1);
+	st.rd.createDescriptorPool(&st.descUniL);
+	st.rd.createUniformBuffer(&st.uLbuf, 0, st.descUniL, -1);
 }
 
 void createMainPass() {
@@ -122,6 +132,7 @@ void createMainPass() {
 	st.mainPass->setDescriptorLayouts({
 		{st.descUni,AT_ACDS_UNIFORM_BUFFER,0},
 		{st.descLut,AT_ACDS_SAMPLER,0},
+		{st.descUniL,AT_ACDS_UNIFORM_BUFFER,0},
 	});
 	st.mainPass->buildGraphicsPipeline();
 }
@@ -149,9 +160,23 @@ void updateUniform() {
 	view.columnMajorVectorization(vm);
 	local.columnMajorVectorization(lm);
 	pv = proj.multiply(view);
-	st.ubuf->specifyUniforms(pm, vm, lm);
+
+	float cPos[4];
+	AtVecf3 cPosX;
+	st.camMain.getPosition(cPosX);
+	for (auto i : AT_RANGE2(3))cPos[i] = cPosX[i];
+
+	float lpos[16] = {
+		-5,11,0,1,
+		5,11,0,1,
+		5,0.1,0,1,
+		-5,0.1,0,1
+	};
+	st.uLbuf->specifyUniforms(lpos);
+	st.ubuf->specifyUniforms(pm, vm, lm,cPos);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.ubuf->updateBuffer(i);
+		st.uLbuf->updateBuffer(i);
 	}
 }
 
@@ -160,7 +185,7 @@ void drawCall() {
 	updateUniform();
 	uint32_t imgIdx = 0;
 	st.rd.drPrepareFrame(cur, &imgIdx);
-	st.passSeq[cur]->executeCommandToStage(imgIdx, 0);
+	st.passSeq[cur]->executeCommandToStage(imgIdx,  false);
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }

@@ -27,7 +27,7 @@ namespace Anthem::Components::PassHelper {
 			}
 			else {
 				if (seq[i].type == ATC_ASCE_GRAPHICS) {
-					rd->drSubmitCommandBufferGraphicsQueueGeneral2A(seq[i].commandBufferIndex, frameImageIdx, toWait, waitStage, nullptr, {});
+					rd->drSubmitCommandBufferGraphicsQueueGeneralA(seq[i].commandBufferIndex, frameImageIdx, toWait, waitStage);
 				}
 				else {
 					ANTH_LOGE("Baked compute command buffer is not supported now.");
