@@ -15,6 +15,8 @@
 
 **Klee GLTF Model**: By INSTICT. In Creation "Klee FBX", Converted by Sketchfab, Re-exported using Blender. https://sketchfab.com/3d-models/klee-fbx-eb4ba3c0d92349cfaf7361e4e55604f0
 
+**Sky HDRI**:  By Jarod Guest & Sergej Majborod. Conversion done by `HDRI-to-Cubemap` https://polyhaven.com/a/sunflowers_puresky , https://matheowis.github.io/HDRI-to-CubeMap/ 
+
 
 
 

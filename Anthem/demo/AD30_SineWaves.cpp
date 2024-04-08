@@ -31,7 +31,7 @@ using namespace Anthem::Core;
 #define DCONST static constexpr const
 struct StageConstants {
 	DCONST int GRID_SIZE = 320;
-	DCONST float SURFACE_WIDTH = 16;
+	DCONST float SURFACE_WIDTH = 64;
 	DCONST float FBM_FREQ_FACTOR = 1.18;
 	DCONST float FBM_AMPL_FACTOR = 0.75;
 	DCONST float BASE_FREQ = 1.5;
@@ -45,6 +45,7 @@ struct StageConstants {
 
 
 struct Stage {
+	AnthemFrameRateMeter fpsMeter = AnthemFrameRateMeter(10);
 	AnthemSimpleToyRenderer rd;
 	AnthemConfig cfg;
 	AnthemCamera camMain = AnthemCamera(AT_ACPT_PERSPECTIVE);
@@ -77,6 +78,7 @@ struct Stage {
 	// Skybox
 	AnthemVertexBufferImpl<AtAttributeVecf<4>>* sbox;
 	AnthemIndexBuffer* ixBox;
+
 	// Texture & Viewport
 	AnthemDescriptorPool* descBox;
 	AnthemImageCubic* texSkybox;
@@ -264,19 +266,46 @@ void recordCommand() {
 	});
 }
 
+void setupImgui() {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.FontGlobalScale = 1.8;
+	ImGui::StyleColorsDark();
+	st.rd.exInitImGui();
+}
+
+void prepareImguiFrame() {
+	st.fpsMeter.record();
+	std::stringstream ss;
+	ss << "FPS:";
+	ss << st.fpsMeter.getFrameRate();
+
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin("Control Panel");
+	ImGui::Text(ss.str().c_str());
+	ImGui::End();
+}
+
 
 void drawCall() {
 	static int cur = 0;
 	updateUniform();
 	uint32_t imgIdx = 0;
 	st.rd.drPrepareFrame(cur, &imgIdx);
-	st.passSeq[cur]->executeCommandToStage(imgIdx, false);
+	prepareImguiFrame();
+	st.passSeq[cur]->executeCommandToStage(imgIdx, false, true, st.mainPass->getSwapchainBuffer());
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }
 
 int main() {
 	initialize();
+	setupImgui();
 	createGeometry();
 	createUniform();
 	createGeometrySkybox();
@@ -290,6 +319,7 @@ int main() {
 
 	st.rd.setDrawFunction(drawCall);
 	st.rd.startDrawLoopDemo();
+	st.rd.exDestroyImgui();
 	st.rd.finalize();
 	return 0;
 }

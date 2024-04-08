@@ -34,8 +34,6 @@ namespace Anthem::Components::PassHelper {
 		AnthemGraphicsPipelineCreateProps pipeOpt;
 		AnthemRenderPassSetupOption passOpt;
 		IAnthemVertexBufferAttrLayout* vxLayout = nullptr;
-
-
 		
 	public:
 		AnthemPassHelper(AnthemSimpleToyRenderer* renderer, uint32_t copies);
@@ -43,6 +41,7 @@ namespace Anthem::Components::PassHelper {
 		void setDescriptorLayouts(const std::vector<AnthemDescriptorSetEntry>& layouts, int destCopy = -1);
 		void buildGraphicsPipeline();
 		void recordCommands(std::function<void(uint32_t)> injectedCommands);
+		AnthemSwapchainFramebuffer* getSwapchainBuffer();
 		
 		uint32_t getCommandIndex(uint32_t copy);
 		AnthemDescriptorPool* getDepthDescriptor(uint32_t id);

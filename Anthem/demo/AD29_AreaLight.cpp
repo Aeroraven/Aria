@@ -185,7 +185,7 @@ void drawCall() {
 	updateUniform();
 	uint32_t imgIdx = 0;
 	st.rd.drPrepareFrame(cur, &imgIdx);
-	st.passSeq[cur]->executeCommandToStage(imgIdx,  false);
+	st.passSeq[cur]->executeCommandToStage(imgIdx, false, false, nullptr);
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }

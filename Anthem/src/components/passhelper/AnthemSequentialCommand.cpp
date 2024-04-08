@@ -11,13 +11,13 @@ namespace Anthem::Components::PassHelper {
 			rd->createSemaphore(&semaphores[i]);
 		}
 	}
-	void AnthemSequentialCommand::executeCommandToStage(uint32_t frameImageIdx, bool forceFence) {
+	void AnthemSequentialCommand::executeCommandToStage(uint32_t frameImageIdx, bool forceFence, bool useImGui, AnthemSwapchainFramebuffer* swapchainFb) {
 		for (auto i : AT_RANGE2(seq.size())) {
 			std::vector<const AnthemSemaphore*> toWait = (i == 0) ? std::vector<const AnthemSemaphore*>{} : std::vector<const AnthemSemaphore*>{ semaphores[i - 1] };
 			std::vector<AtSyncSemaphoreWaitStage> waitStage = (i == 0) ? std::vector<AtSyncSemaphoreWaitStage>{} : std::vector<AtSyncSemaphoreWaitStage>{ AT_SSW_ALL_COMMAND };
 
-			if (i != seq.size() - 1) {
-				AnthemFence* sigFence = (i == seq.size() - 2 && forceFence) ? this->fence : nullptr;
+			if (i != seq.size() - 1 || useImGui) {
+				AnthemFence* sigFence = ((i == seq.size() - 2 || (i == seq.size() - 1 && useImGui)) && forceFence) ? this->fence : nullptr;
 				if (seq[i].type == ATC_ASCE_GRAPHICS) {
 					rd->drSubmitCommandBufferGraphicsQueueGeneral2A(seq[i].commandBufferIndex, -1, toWait, waitStage, sigFence, { semaphores[i] });
 				}
@@ -33,6 +33,17 @@ namespace Anthem::Components::PassHelper {
 					ANTH_LOGE("Baked compute command buffer is not supported now.");
 				}
 			}
+		}
+		if (useImGui) {
+			ImGui::Render();
+			ImDrawData* drawData = ImGui::GetDrawData();
+			rd->exRenderImGui(frameImageIdx, swapchainFb, { 0,0,0,1 }, drawData);
+
+			uint32_t imguiCmdBuf;
+			rd->exGetImGuiCommandBufferIndex(frameImageIdx, &imguiCmdBuf);
+			AnthemSemaphore* imguiSemaphore;
+			rd->exGetImGuiDrawProgressSemaphore(frameImageIdx, &imguiSemaphore);
+			rd->drSubmitCommandBufferGraphicsQueueGeneralA(imguiCmdBuf, frameImageIdx, { semaphores[seq.size() - 1] }, { AT_SSW_ALL_COMMAND });
 		}
 	}
 	void AnthemSequentialCommand::waitExecutionToStage() {

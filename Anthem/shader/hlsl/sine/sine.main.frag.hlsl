@@ -62,7 +62,6 @@ float4 main(VSOutput vsOut) : SV_Target0
 
     float3 fresnel = skyColor * R;
     fresnel += sun * R;
-    
     float4 fresnelF = float4(fresnel, 1.0f);
     
     //Specular

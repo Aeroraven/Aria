@@ -87,4 +87,7 @@ namespace Anthem::Components::PassHelper {
 			rd->drEndCommandRecording(ci);
 		}
 	}
+	AnthemSwapchainFramebuffer* AnthemPassHelper::getSwapchainBuffer() {
+		return swapchainFb;
+	}
 }

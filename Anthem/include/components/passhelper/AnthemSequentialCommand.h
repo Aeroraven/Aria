@@ -25,7 +25,7 @@ namespace Anthem::Components::PassHelper {
 	public:
 		AnthemSequentialCommand(AnthemSimpleToyRenderer* renderer);
 		void setSequence(const std::vector<AnthemSequentialCommandEntry>& seq);
-		void executeCommandToStage(uint32_t frameImageIdx, bool forceFence);
+		void executeCommandToStage(uint32_t frameImageIdx, bool forceFence,bool useImGui,AnthemSwapchainFramebuffer* swapchainFb);
 		void waitExecutionToStage();
 	};
 }
