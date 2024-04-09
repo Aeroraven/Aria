@@ -8,6 +8,11 @@ struct VSOutput
     [[vk::location(0)]] float4 pos : POSITION0;
 };
 
+struct PSOutput
+{
+    float4 color : SV_Target0;
+    float4 pos : SV_Target1;
+};
 
 ConstantBuffer<Constants> data : register(b0, space0);
 TextureCube texSkybox : register(t0, space1);
@@ -33,13 +38,14 @@ float3 toLinear(float3 color)
 {
     return pow(color, float3( 2.2, 2.2,  2.2));
 }
-float4 main(VSOutput vsOut) : SV_Target0
+PSOutput main(VSOutput vsOut)
 {
     float4 baseColor = float4(0.1, 0.7, 1, 1);
     
     float2 p = vsOut.pos.xz;
 
-    float3 dxyz = calcWave(p, data.timing.x, data.wave, data.freqAmpl.y, data.freqAmpl.x, data.freqAmpl.w, data.freqAmpl.z);
+    float3 dxyz = calcWave(p, data.timing.x, data.wave, data.freqAmpl.y, data.freqAmpl.x, data.freqAmpl.w, data.freqAmpl.z,
+        data.warpWaves.x, int(data.warpWaves.y + 0.5));
     float3 pos = float3(p.x, dxyz.y, p.y);
     
     float3 dx = normalize(float3(1, dxyz.x, 0));
@@ -82,6 +88,10 @@ float4 main(VSOutput vsOut) : SV_Target0
     
     float4 color = fresnelF + specular + diffuse + ambient;
     color = toSrgb(color);
+    
+    PSOutput ret;
+    ret.color = color;
+    ret.pos = float4(pos, 1.0f);
+    return ret;
 
-    return float4(color);
 }

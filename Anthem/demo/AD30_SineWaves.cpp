@@ -17,7 +17,7 @@
 #include "../include/components/passhelper/AnthemSequentialCommand.h"
 #include "../include/components/postprocessing/AnthemPostIdentity.h"
 #include "../include/components/math/AnthemLowDiscrepancySequence.h"
-#include "../include/components/postprocessing/AnthemFXAA.h"
+#include "../include/components/postprocessing/AnthemGlobalFog.h"
 
 using namespace Anthem::Components::Performance;
 using namespace Anthem::Components::Utility;
@@ -30,16 +30,20 @@ using namespace Anthem::Core;
 
 #define DCONST static constexpr const
 struct StageConstants {
-	DCONST int GRID_SIZE = 320;
-	DCONST float SURFACE_WIDTH = 64;
-	DCONST float FBM_FREQ_FACTOR = 1.18;
-	DCONST float FBM_AMPL_FACTOR = 0.75;
-	DCONST float BASE_FREQ = 1.5;
-	DCONST float BASE_AMPL = 0.2;
+	DCONST int GRID_SIZE = 640;
+	DCONST float SURFACE_WIDTH = 128;
+	float FBM_FREQ_FACTOR = 1.18;
+	float FBM_AMPL_FACTOR = 0.75;
+	float BASE_FREQ = 1.5;
+	float BASE_AMPL = 0.2;
 	DCONST float PHASE_RANGE = 1;
 	DCONST int NUM_WAVES = 32;
 	DCONST float SUN_POS[4] = { 0,-1,-1,0 };
-	DCONST float SKYBOX_SIZE = 1.0;
+	DCONST float SKYBOX_SIZE = 64;
+	float DOMAIN_WARP = 1.0;
+	int USE_WAVES = 32;
+	float SCATTER_FACTOR = 0.015;
+	float HEIGHT_ATTN = 0.3;
 }sc;
 #undef DCONST
 
@@ -59,16 +63,29 @@ struct Stage {
 		AtUniformVecf<4>, //(base_freq,base_ampl,fbm_freq,fbm_ampl
 		AtUniformVecf<4>, //(sundir)
 		AtUniformVecf<4>, //(campos)
+		AtUniformVecf<4>, //(domainWarps,numWaves)
 		AtUniformVecfArray<4, sc.NUM_WAVES>	//(dirPosition,dirTemporal)
 	>* ubuf;
+
+	AnthemDescriptorPool* descUniFog;
+	AnthemUniformBufferImpl <
+		AtUniformMatf<4>
+	>* ubufFog;
 
 	AnthemVertexBufferImpl<
 		AtAttributeVecf<4>
 	>* vx;
 	AnthemIndexBuffer* ix;
 
+	AnthemDescriptorPool* descCanv;
+	AnthemImage* canvas;
+	AnthemDescriptorPool* descPos;
+	AnthemImage* pos;
+
 	std::unique_ptr<AnthemPassHelper> mainPass;
 	std::unique_ptr<AnthemPassHelper> skyPass;
+
+	std::unique_ptr<AnthemGlobalFog> idPass;
 	std::unique_ptr<AnthemSequentialCommand> passSeq[2];
 
 	float dirA[sc.NUM_WAVES];
@@ -108,7 +125,7 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.camMain.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 1000.0f, 1.0f * rdW / rdH);
-	st.camMain.specifyPosition(0, 1, -2);
+	st.camMain.specifyPosition(0, 1, 0);
 	st.camMain.specifyFrontEyeRay(0, 0, 1);
 }
 
@@ -172,9 +189,18 @@ void createTextures() {
 	st.rd.createCubicTextureSimple(&st.texSkybox, st.descBox, rawData, width, height, channel, 0, -1);
 }
 
+void createRenderTargets() {
+	st.rd.createDescriptorPool(&st.descCanv);
+	st.rd.createColorAttachmentImage(&st.canvas, st.descCanv, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createDescriptorPool(&st.descPos);
+	st.rd.createColorAttachmentImage(&st.pos, st.descPos, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+}
+
 void createUniform() {
 	st.rd.createDescriptorPool(&st.descUni);
 	st.rd.createUniformBuffer(&st.ubuf, 0, st.descUni, -1);
+	st.rd.createDescriptorPool(&st.descUniFog);
+	st.rd.createUniformBuffer(&st.ubufFog, 0, st.descUniFog, -1);
 }
 void updateUniform() {
 	//Camera
@@ -192,8 +218,11 @@ void updateUniform() {
 	float dstat[4 * sc.NUM_WAVES];
 	float freqAmpl[4] = { sc.BASE_FREQ,sc.BASE_AMPL,sc.FBM_FREQ_FACTOR,sc.FBM_AMPL_FACTOR };
 	float timer[4] = { glfwGetTime() * 1.0f };
-	float camPosR[4] = { 0,1,-2,0 };
+	float camPosR[4] = { 0,1,0,0 };
 	float sunDir[4] = { sc.SUN_POS[0],sc.SUN_POS[1],sc.SUN_POS[2],0 };
+	float attrX[4] = { sc.DOMAIN_WARP,sc.USE_WAVES,0,0 };
+
+	float fogAttr[4] = { sc.SCATTER_FACTOR,sc.HEIGHT_ATTN,0,0 };
 	if (st.dirInit == false) {
 		st.dirInit = true;
 		for (auto i : AT_RANGE2(sc.NUM_WAVES)) {
@@ -207,10 +236,11 @@ void updateUniform() {
 		dstat[i * 4 + 2] = st.phase[i];
 		dstat[i * 4 + 3] = 0;
 	}
-
-	st.ubuf->specifyUniforms(pm, vm, lm, timer, freqAmpl,sunDir, camPosR, dstat);
+	st.ubufFog->specifyUniforms(fogAttr);
+	st.ubuf->specifyUniforms(pm, vm, lm, timer, freqAmpl,sunDir, camPosR, attrX, dstat);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.ubuf->updateBuffer(i);
+		st.ubufFog->updateBuffer(i);
 	}
 }
 
@@ -219,8 +249,14 @@ void createMainPass() {
 	st.mainPass->shaderPath.vertexShader = getShader("main.vert");
 	st.mainPass->shaderPath.fragmentShader = getShader("main.frag");
 	st.mainPass->vxLayout = st.vx;
-	st.mainPass->passOpt.renderPassUsage = AT_ARPAA_FINAL_PASS;
-	st.mainPass->passOpt.clearColorAttachmentOnLoad = { false };
+	st.mainPass->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.mainPass->setRenderTargets({ st.canvas,st.pos });
+	st.mainPass->setDepthFromPass(*st.skyPass.get());
+	st.mainPass->passOpt.clearColorAttachmentOnLoad = { false,false };
+	st.mainPass->passOpt.clearDepthAttachmentOnLoad = false;
+	st.mainPass->passOpt.clearColors = { {0,0,0,1},{0,0,0,1} };
+	st.mainPass->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32 };
+	st.mainPass->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
 	st.mainPass->setDescriptorLayouts({
 		{st.descUni,AT_ACDS_UNIFORM_BUFFER,0},
 		{st.descBox,AT_ACDS_SAMPLER,0}
@@ -233,7 +269,12 @@ void createSkyPass() {
 	st.skyPass->shaderPath.vertexShader = getShader("sky.vert");
 	st.skyPass->shaderPath.fragmentShader = getShader("sky.frag");
 	st.skyPass->vxLayout = st.sbox;
-	st.skyPass->passOpt.renderPassUsage = AT_ARPAA_FINAL_PASS;
+	st.skyPass->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.skyPass->setRenderTargets({ st.canvas,st.pos });
+	st.skyPass->passOpt.clearColorAttachmentOnLoad = { true,true };
+	st.skyPass->passOpt.clearColors = { {0,0,0,1},{0,0,0,1} };
+	st.skyPass->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32 };
+	st.skyPass->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
 	st.skyPass->setDescriptorLayouts({
 		{st.descUni,AT_ACDS_UNIFORM_BUFFER,0},
 		{st.descBox,AT_ACDS_SAMPLER,0},
@@ -253,18 +294,33 @@ void recordCommand() {
 		st.rd.drBindIndexBuffer(st.ixBox, x);
 		st.rd.drDraw(st.ixBox->getIndexCount(), x);
 	});
+	st.idPass->recordCommand();
 
 	st.passSeq[0] = std::make_unique<AnthemSequentialCommand>(&st.rd);
 	st.passSeq[1] = std::make_unique<AnthemSequentialCommand>(&st.rd);
+
 	st.passSeq[0]->setSequence({ 
 		{ st.skyPass->getCommandIndex(0), ATC_ASCE_GRAPHICS},
-		{ st.mainPass->getCommandIndex(0), ATC_ASCE_GRAPHICS} 
+		{ st.mainPass->getCommandIndex(0), ATC_ASCE_GRAPHICS},
+		{ st.idPass->getCommandIdx(0), ATC_ASCE_GRAPHICS}
 	});
 	st.passSeq[1]->setSequence({ 
 		{ st.skyPass->getCommandIndex(1), ATC_ASCE_GRAPHICS},
-		{ st.mainPass->getCommandIndex(1), ATC_ASCE_GRAPHICS} 
+		{ st.mainPass->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
+		{ st.idPass->getCommandIdx(1), ATC_ASCE_GRAPHICS}
 	});
 }
+
+void createIdPass() {
+	st.idPass = std::make_unique<AnthemGlobalFog>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
+	st.idPass->addInput({ 
+		{ st.descCanv,AT_ACDS_SAMPLER,0},
+		{ st.descPos,AT_ACDS_SAMPLER,0},
+		{ st.descUniFog,AT_ACDS_UNIFORM_BUFFER,0}
+	});
+	st.idPass->prepare();
+}
+
 
 void setupImgui() {
 	IMGUI_CHECKVERSION();
@@ -288,6 +344,16 @@ void prepareImguiFrame() {
 	ImGui::NewFrame();
 	ImGui::Begin("Control Panel");
 	ImGui::Text(ss.str().c_str());
+
+	ImGui::SliderFloat("Frequency", &sc.BASE_FREQ, 1.0f, 5.0f);
+	ImGui::SliderFloat("Amplitude", &sc.BASE_AMPL, 0.01f, 0.5f);
+	ImGui::SliderFloat("FBM Freq Scaler", &sc.FBM_FREQ_FACTOR, 1.0f, 2.0f);
+	ImGui::SliderFloat("FBM Ampl Scaler", &sc.FBM_AMPL_FACTOR, 0.0f, 1.0f);
+	ImGui::SliderFloat("FBM Domain Warp", &sc.DOMAIN_WARP, 0.0f, 1.0f);
+	ImGui::SliderInt("Num Waves", &sc.USE_WAVES, 1, 32);
+	ImGui::SliderFloat("Fog Scatter", &sc.SCATTER_FACTOR, 0.0f, 0.5f);
+	ImGui::SliderFloat("Fog Attenuation", &sc.HEIGHT_ATTN, 0.0f, 2.0f);
+
 	ImGui::End();
 }
 
@@ -298,7 +364,7 @@ void drawCall() {
 	uint32_t imgIdx = 0;
 	st.rd.drPrepareFrame(cur, &imgIdx);
 	prepareImguiFrame();
-	st.passSeq[cur]->executeCommandToStage(imgIdx, false, true, st.mainPass->getSwapchainBuffer());
+	st.passSeq[cur]->executeCommandToStage(imgIdx, false, true, st.idPass->getSwapchainFb());
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }
@@ -306,6 +372,7 @@ void drawCall() {
 int main() {
 	initialize();
 	setupImgui();
+	createRenderTargets();
 	createGeometry();
 	createUniform();
 	createGeometrySkybox();
@@ -313,6 +380,7 @@ int main() {
 
 	createSkyPass();
 	createMainPass();
+	createIdPass();
 
 	st.rd.registerPipelineSubComponents();
 	recordCommand();

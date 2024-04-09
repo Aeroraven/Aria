@@ -19,9 +19,9 @@ cbuffer UniformBuffer : register(b0, space0)
 VSOutput main(VSInput vsIn)
 {
     VSOutput vsOut;
-    float3 pos = vsIn.position.xyz + cam.camPos.xyz;
+    float3 pos = vsIn.position.xyz;
     vsOut.position = mul(cam.proj, mul(cam.view, mul(cam.model, float4(pos, 1.0f))));
-    vsOut.texCoord = vsIn.position;
+    vsOut.texCoord = float4(vsIn.position.xyz, 1);
     return vsOut;
     
 }

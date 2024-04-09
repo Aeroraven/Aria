@@ -181,7 +181,12 @@ namespace Anthem::Core{
             colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
             if (opt.clearColorAttachmentOnLoad[i] == false) {
                 colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-                colorAttachment.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+                if (opt.renderPassUsage != AT_ARPAA_FINAL_PASS) {
+                    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                }
+                else {
+                    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+                }
             }
             else {
                 colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -328,7 +333,7 @@ namespace Anthem::Core{
             subpassDependency[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
             subpassDependency[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
             subpassDependency[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-            subpassDependency[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            subpassDependency[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
             subpassDependency[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
         }else if(opt.renderPassUsage == AT_ARPAA_DEPTH_STENCIL_ONLY_PASS){
             subpassDependency.resize(2);

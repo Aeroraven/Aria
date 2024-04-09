@@ -40,17 +40,20 @@ namespace Anthem::Components::PassHelper {
 			rd->drAllocateCommandBuffer(&cmdIdx[i]);
 		}
 		rd->createShader(&shader, &shaderPath);
-		if (this->enableDepthSampler) {
-			for (auto i : AT_RANGE2(copies)) {
-				rd->createDescriptorPool(&descDepth[i]);
-				rd->createDepthBufferWithSampler(&depth[i], descDepth[i], 0, false);
+		if (!depthCreated) {
+			if (this->enableDepthSampler) {
+				for (auto i : AT_RANGE2(copies)) {
+					rd->createDescriptorPool(&descDepth[i]);
+					rd->createDepthBufferWithSampler(&depth[i], descDepth[i], 0, false);
+				}
+			}
+			else {
+				for (auto i : AT_RANGE2(copies)) {
+					rd->createDepthBuffer(&depth[i], false);
+				}
 			}
 		}
-		else {
-			for (auto i : AT_RANGE2(copies)) {
-				rd->createDepthBuffer(&depth[i], false);
-			}
-		}
+		
 		rd->setupRenderPass(&pass, &passOpt, depth[0]);
 		
 		if (passOpt.renderPassUsage == AT_ARPAA_FINAL_PASS) {
@@ -89,5 +92,10 @@ namespace Anthem::Components::PassHelper {
 	}
 	AnthemSwapchainFramebuffer* AnthemPassHelper::getSwapchainBuffer() {
 		return swapchainFb;
+	}
+	void AnthemPassHelper::setDepthFromPass(const AnthemPassHelper& p) {
+		this->depth = p.depth;
+		this->descDepth = p.descDepth;
+		depthCreated = true;
 	}
 }
