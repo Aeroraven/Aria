@@ -1,6 +1,4 @@
-## II. All Demos
 
-Here are all demos implemented in this repository
 
 
 
@@ -96,7 +94,7 @@ The architecture is refactored.
   - Section 2: Cloth Simulation [In Progress] (Only available in demo currently)
 
 
-  
+
 
 
 
