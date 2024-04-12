@@ -189,7 +189,7 @@ void createCube() {
 	cube.opt.msaaType = AT_ARPMT_NO_MSAA;
 	core.renderer.setupRenderPass(&cube.pass, &cube.opt, cube.depthBuffer);
 
-	std::vector<const AnthemImage*> colorAttachments = {cube.backfaceLocation};
+	std::vector<const IAnthemImageViewContainer*> colorAttachments = {cube.backfaceLocation};
 	core.renderer.createSimpleFramebuffer(&cube.framebuffer, &colorAttachments, cube.pass, cube.depthBuffer);
 	
 	AnthemDescriptorSetEntry uniformBufferDescEntryRdw = {
