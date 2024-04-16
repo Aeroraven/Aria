@@ -12,7 +12,7 @@ SamplerState sampPos : register(s0, space1);
 static const float SCATTER_F = 0.015;
 static const float HEIGHT_ATTN = 0.3;
 static const float ELEVATION = 0;
-static const float4 FOG_COLOR = float4(0.95, 0.95, 0.95, 1);
+static const float4 FOG_COLOR = float4(0.85, 0.85, 0.85, 1);
 
 struct Attr
 {

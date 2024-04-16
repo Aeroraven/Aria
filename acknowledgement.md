@@ -1,3 +1,6 @@
+# Aria / Acknowledgements
+
+
 
 ## Materials Referenced / Acknowledgements
 
@@ -55,6 +58,15 @@ Kawase Blur: https://zhuanlan.zhihu.com/p/125744132
 SMAA: https://iryoku.com/smaa/downloads/SMAA-Enhanced-Subpixel-Morphological-Antialiasing.pdf
 
 Path Tracing: https://raytracing.github.io/books/RayTracingInOneWeekend.html
+
+Water With Sine Waves: https://www.youtube.com/watch?v=PH9q0HNBjT4
+
+TAA: https://zhuanlan.zhihu.com/p/425233743
+
+Compute Fog: https://zhuanlan.zhihu.com/p/366083234
+
+
+
 
 
 ## Rectification

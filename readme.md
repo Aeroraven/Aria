@@ -2,11 +2,15 @@
 
 This repository is here for **PERSONAL PURPOSE**. It serves as the record for the time I used to learn useless algorithms.
 
+![](/Imgs/test_ad29.png)
+
 
 
 ## 0. Clarification
 
-The rectified WebGL ray-tracing is here: https://github.com/Aeroraven/Aria/blob/main/Aria-v2/src/examples/AriaStagePathTracing.ts. This implementation corrects https://github.com/Aeroraven/Ray-tracing.
+The rectified WebGL ray-tracing is here: https://github.com/Aeroraven/Aria/blob/main/Aria-v2/src/examples/AriaStagePathTracing.ts. 
+
+This implementation corrects https://github.com/Aeroraven/Ray-tracing.
 
 
 
@@ -67,16 +71,32 @@ Here are all demos implemented in this repository
 | 30. Indirect Draw                              | ○ (AD-13)       | /                |
 | 31. Mesh Shader                                | ○ (AD-19)       | /                |
 | 32. LTC Area Light                             | ○ (AD-28)       | ×                |
+| 33. Global Fog                                 | ○ (AD-30)       | ×                |
 
 
 
 ## II. Running Instruction
 
+Almost all assets are not contained in this repository. To ensure that the app runs, please download resources (including models, textures, etc)
+
+
+
 ### 1. Native Examples
 
-Native examples use Vulkan as backend. Use following instruction to build the project. Note that your compiler should be `g++` or `msvc` and at least supports partial `C++23` standard. `$SELECTED_TARGETS` can be chosen from `demo` subdirectory.
+#### Prerequisites / Dependencies
 
-Before build the project, install `glfw3` 、`freetype`、`OpenCV`and `Vulkan SDK`. Then use `cmake` to build the project.
+- GPU Memory >= 4 MB
+- MSVC >= 19.34 + CMake >= 3.10
+- Vulkan >= 1.3
+  - With Ray Tracing Pipeline Extension Support. [See Supported GPU List](https://vulkan.gpuinfo.org/listdevicescoverage.php?extension=VK_KHR_ray_tracing_pipeline&platform=windows)
+  - With Mesh Shader Support. [See Supported GPU List](https://vulkan.gpuinfo.org/listdevicescoverage.php?extension=VK_EXT_mesh_shader&platform=windows)
+- glfw3
+- freetype2
+- OpenCV
+
+#### Instructions
+
+Native examples use Vulkan as backend. Use following instruction to build the project. `$SELECTED_TARGETS` can be chosen from `demo` subdirectory.
 
 Download assets (models, textures, etc.) before running the demo.
 
@@ -88,11 +108,11 @@ cmake -S . -B ./build
 cmake --build ./build --config Debug --target $SELECTED_TARGETS
 ```
 
-Only supports `msvc` compiler now.
-
 Edit `CMakeLists.txt` before changing compiler.
 
 **Note:** Running the code in `WSL` is not recommended!
+
+
 
 ### 2. Browser-based Examples
 
@@ -105,11 +125,9 @@ npm run deploy
 
 (WebGPU might be considered later)
 
+
+
 ## III. Acknowledgement & License
-
-### Rectification
-
-This repository partially reinplements the WebGL Ray Tracer (https://github.com/Aeroraven/Ray-tracing), which contains fatal mistakes.
 
 ### License & Disclaimer
 
