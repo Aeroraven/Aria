@@ -85,7 +85,7 @@ Almost all assets are not contained in this repository. To ensure that the app r
 
 #### Prerequisites / Dependencies
 
-- GPU Memory >= 4 MB
+- GPU Memory >= 4 GB
 - MSVC >= 19.34 + CMake >= 3.10
 - Vulkan >= 1.3
   - With Ray Tracing Pipeline Extension Support. [See Supported GPU List](https://vulkan.gpuinfo.org/listdevicescoverage.php?extension=VK_KHR_ray_tracing_pipeline&platform=windows)

@@ -18,6 +18,7 @@
 #include "../include/components/postprocessing/AnthemPostIdentity.h"
 #include "../include/components/math/AnthemLowDiscrepancySequence.h"
 #include "../include/components/postprocessing/AnthemGlobalFog.h"
+#include "../include/components/postprocessing/AnthemFXAA.h"
 
 using namespace Anthem::Components::Performance;
 using namespace Anthem::Components::Utility;
@@ -53,10 +54,15 @@ struct Stage {
 
 	std::unique_ptr<AnthemPassHelper> mainPass;
 	std::unique_ptr<AnthemPassHelper> outlinePass;
+	std::unique_ptr<AnthemFXAA> fxaaPass;
 	std::unique_ptr<AnthemSequentialCommand> passSeq[2];
 
-	AnthemUniformBufferImpl< AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>>* uniform;
+	AnthemUniformBufferImpl< AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>, AtUniformVecf<4>>* uniform;
 	AnthemDescriptorPool* descUni;
+
+	AnthemDescriptorPool* descCanv;
+	AnthemImage* canvas;
+	float aspect;
 }st;
 
 
@@ -67,10 +73,17 @@ void initialize() {
 	st.rd.initialize();
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
+	st.aspect = 1.0f * rdW / rdH;
 
-	st.camera.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 0.9, -1.5);
+	st.camera.specifyFrustum((float)AT_PI * 1.0f / 3.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
+	st.camera.specifyPosition(0, 0.8, -1.8);
 	st.camera.specifyFrontEyeRay(0, 0, 1);
+
+	st.rd.createDescriptorPool(&st.descUni);
+	st.rd.createUniformBuffer(&st.uniform, 0, st.descUni, -1);
+
+	st.rd.createDescriptorPool(&st.descCanv);
+	st.rd.createColorAttachmentImage(&st.canvas, st.descCanv, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 }
 
 void loadModel() {
@@ -80,7 +93,12 @@ void loadModel() {
 	loader.loadModel((path + "\\kirara\\kirara-2.gltf").c_str());
 	loader.parseModel(config, st.gltfModel, &st.gltfTex);
 	std::vector<AnthemUtlSimpleModelStruct> rp;
-	for (auto& p : st.gltfModel)rp.push_back(p);
+	for (auto i = 0; auto & p : st.gltfModel) {
+		if (i != 26 && i!=28) {
+			rp.push_back(p);
+		}
+		i++;
+	}
 	st.model.loadModel(&st.rd, rp, -1);
 	st.requiredTex = st.model.getRequiredTextures();
 
@@ -102,46 +120,96 @@ void prepareMainPass() {
 	st.mainPass->shaderPath.vertexShader = getShader("main.vert");
 	st.mainPass->shaderPath.fragmentShader = getShader("main.frag");
 	st.mainPass->vxLayout = st.model.getVertexBuffer();
-	st.mainPass->passOpt.renderPassUsage = AT_ARPAA_FINAL_PASS;
+	st.mainPass->setRenderTargets({ st.canvas });
+	st.mainPass->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.mainPass->passOpt.clearColors = {{1.0f,1.0f,1.0f,1.0f}};
+	st.mainPass->pipeOpt.enableCullMode = false;
+	st.mainPass->pipeOpt.cullMode = AT_ACM_FRONT;
+	st.mainPass->pipeOpt.frontFace = AT_AFF_COUNTER_CLOCKWISE;
+	st.mainPass->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.mainPass->setDescriptorLayouts({
 			{st.descUni,AT_ACDS_UNIFORM_BUFFER,0},
+			{st.descPbrBaseTex,AT_ACDS_SAMPLER,0},
 		});
 	}
 	st.mainPass->buildGraphicsPipeline();
+}
+
+void prepareOutlinePass() {
+	st.outlinePass = std::make_unique<AnthemPassHelper>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
+	st.outlinePass->shaderPath.vertexShader = getShader("outline.vert");
+	st.outlinePass->shaderPath.fragmentShader = getShader("outline.frag");
+	st.outlinePass->vxLayout = st.model.getVertexBuffer();
+	st.outlinePass->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.outlinePass->passOpt.clearColorAttachmentOnLoad = { false };
+	st.outlinePass->passOpt.clearDepthAttachmentOnLoad = false;
+	st.outlinePass->passOpt.clearColors = { {1.0f,1.0f,1.0f,1.0f} };
+	st.outlinePass->setDepthFromPass(*st.mainPass);
+	st.outlinePass->pipeOpt.enableCullMode = true;
+	st.outlinePass->pipeOpt.cullMode = AT_ACM_BACK;
+	st.outlinePass->pipeOpt.frontFace = AT_AFF_COUNTER_CLOCKWISE;
+	st.outlinePass->setRenderTargets({ st.canvas });
+	st.outlinePass->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.outlinePass->setDescriptorLayouts({
+			{st.descUni,AT_ACDS_UNIFORM_BUFFER,0},
+		});
+	}
+	st.outlinePass->buildGraphicsPipeline();
+}
+
+void preparePostAA() {
+	st.fxaaPass = std::make_unique<AnthemFXAA>(&st.rd, 2);
+	st.fxaaPass->addInput({
+		{st.descCanv,AT_ACDS_SAMPLER,0},
+	});
+	st.fxaaPass->prepare();
 }
 
 void recordCommand() {
 	st.mainPass->recordCommands([&](uint32_t x) {
 		st.rd.drBindVertexBuffer(st.model.getVertexBuffer(), x);
 		st.rd.drBindIndexBuffer(st.model.getIndexBuffer(), x);
-		st.rd.drDraw(st.model.getIndexBuffer()->getIndexCount(), x);
-		});
+		st.rd.drDrawIndexedIndirect(st.model.getIndirectBuffer(), x);
+	});
+	st.outlinePass->recordCommands([&](uint32_t x) {
+		st.rd.drBindVertexBuffer(st.model.getVertexBuffer(), x);
+		st.rd.drBindIndexBuffer(st.model.getIndexBuffer(), x);
+		st.rd.drDrawIndexedIndirect(st.model.getIndirectBuffer(), x);
+	});
+	st.fxaaPass->recordCommand();
 
 	st.passSeq[0] = std::make_unique<AnthemSequentialCommand>(&st.rd);
 	st.passSeq[1] = std::make_unique<AnthemSequentialCommand>(&st.rd);
 
 	st.passSeq[0]->setSequence({
 		{ st.mainPass->getCommandIndex(0), ATC_ASCE_GRAPHICS},
-		});
+		{ st.outlinePass->getCommandIndex(0), ATC_ASCE_GRAPHICS},
+		{ st.fxaaPass->getCommandIdx(0), ATC_ASCE_GRAPHICS},
+	});
 	st.passSeq[1]->setSequence({
 		{ st.mainPass->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
-		});
+		{ st.outlinePass->getCommandIndex(1), ATC_ASCE_GRAPHICS},
+		{ st.fxaaPass->getCommandIdx(1), ATC_ASCE_GRAPHICS},
+	});
 }
 
 void updateUniform() {
 	AtMatf4 proj, view, local;
 	st.camera.getProjectionMatrix(proj);
 	st.camera.getViewMatrix(view);
-	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f },
-		0.5f * static_cast<float>(glfwGetTime()));
+	//local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f },0.5f * static_cast<float>(glfwGetTime()));
+	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f }, AT_PI );
 
-	float pm[16], vm[16], lm[16];
+	float pm[16], vm[16], lm[16], vc[4];
 	proj.columnMajorVectorization(pm);
 	view.columnMajorVectorization(vm);
 	local.columnMajorVectorization(lm);
-
-	st.uniform->specifyUniforms(pm, vm, lm);
+	vc[0] = st.aspect;
+	st.uniform->specifyUniforms(pm, vm, lm, vc);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.uniform->updateBuffer(i);
 	}
@@ -152,7 +220,7 @@ void drawCall() {
 	updateUniform();
 	uint32_t imgIdx = 0;
 	st.rd.drPrepareFrame(cur, &imgIdx);
-	st.passSeq[cur]->executeCommandToStage(imgIdx, false, true, st.mainPass->getSwapchainBuffer());
+	st.passSeq[cur]->executeCommandToStage(imgIdx, false,false, st.fxaaPass->getSwapchainFb());
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }
@@ -160,15 +228,16 @@ void drawCall() {
 
 int main() {
 	initialize();
+	loadModel();
 	prepareMainPass();
+	prepareOutlinePass();
+	preparePostAA();
 
 	st.rd.registerPipelineSubComponents();
 	recordCommand();
 
 	st.rd.setDrawFunction(drawCall);
 	st.rd.startDrawLoopDemo();
-
-	st.rd.exDestroyImgui();
 	st.rd.finalize();
 	return 0;
 }

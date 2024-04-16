@@ -146,6 +146,32 @@ namespace Anthem::Core{
 
         this->rasterizerStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
         this->rasterizerStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        if (extraProps.enableCullMode) {
+            if (extraProps.cullMode == AnthemCullMode::AT_ACM_NONE) {
+                this->rasterizerStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
+            }
+            else if (extraProps.cullMode == AnthemCullMode::AT_ACM_BACK) {
+                this->rasterizerStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+            }
+            else if (extraProps.cullMode == AnthemCullMode::AT_ACM_FRONT) {
+                this->rasterizerStateCreateInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
+            }
+            else if (extraProps.cullMode == AnthemCullMode::AT_ACM_FRONT_AND_BACK) {
+                this->rasterizerStateCreateInfo.cullMode = VK_CULL_MODE_FRONT_AND_BACK;
+            }
+            else {
+                ANTH_LOGE("Unsupported cull mode");
+            }
+            if (extraProps.frontFace == AnthemFrontFace::AT_AFF_CLOCKWISE) {
+				this->rasterizerStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+			}
+            else if (extraProps.frontFace == AnthemFrontFace::AT_AFF_COUNTER_CLOCKWISE) {
+				this->rasterizerStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+			}
+            else {
+				ANTH_LOGE("Unsupported front face");
+			}
+        }
         this->rasterizerStateCreateInfo.depthBiasEnable = VK_FALSE;
         this->rasterizerStateCreateInfo.depthBiasConstantFactor = 0.0f;
         this->rasterizerStateCreateInfo.depthBiasClamp = 0.0f;

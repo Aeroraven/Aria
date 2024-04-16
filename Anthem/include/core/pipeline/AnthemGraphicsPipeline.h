@@ -33,6 +33,18 @@ namespace Anthem::Core{
         AT_ARPM_WIREFRAME = 2
     };
 
+    enum AnthemCullMode {
+		AT_ACM_NONE = 0,
+		AT_ACM_FRONT = 1,
+		AT_ACM_BACK = 2,
+        AT_ACM_FRONT_AND_BACK = 3
+	}; 
+
+    enum AnthemFrontFace {
+		AT_AFF_CLOCKWISE = 0,
+		AT_AFF_COUNTER_CLOCKWISE = 1
+	};
+
     struct AnthemGraphicsPipelineCreateProps {
         AnthemInputAssemblerTopology inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
         std::optional<std::vector<IAnthemVertexBufferAttrLayout*>> vertStageLayout = std::nullopt;
@@ -55,6 +67,12 @@ namespace Anthem::Core{
         // Depth / Stencil Testing
         bool enableDepthTestsing = true;
         bool enableDynamicStencilTesting = false;
+
+        // Cull Mode
+        bool enableCullMode = false;
+        AnthemCullMode cullMode = AnthemCullMode::AT_ACM_NONE;
+        AnthemFrontFace frontFace = AnthemFrontFace::AT_AFF_CLOCKWISE;
+
     };
 
     class AnthemGraphicsPipeline{     

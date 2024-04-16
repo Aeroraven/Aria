@@ -28,7 +28,13 @@ ConstantBuffer<Camera> camera : register(b0, space0);
 VSOutput main(VSInput input)
 {
     VSOutput output;
-    output.position = mul(camera.proj, mul(camera.view, mul(camera.model, input.position)));
+    output.position = mul(camera.proj, mul(camera.view, mul(camera.model, input.position )));
+    float4 vNorm = mul(camera.model, float4(input.normal.xyz, 0.0));
+    float4 extDir = mul(camera.proj, vNorm);
+    float3 extDir3 = normalize(extDir.xyz);
+    extDir3.xy = normalize(extDir3.xy);
+    output.position += 0.0025 * camera.aspect.r * float4(extDir3, 0);
+    
     output.texUv = input.uv;
     output.normal = mul(camera.model, input.normal);
     output.texIndices = input.texIndices;
