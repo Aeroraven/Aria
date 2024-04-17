@@ -1,6 +1,7 @@
 #pragma once
 #include "AnthemMatrix.h"
 #include "AnthemVector.h"
+#include "AnthemQuaternion.h"
 
 namespace Anthem::Core::Math{
 

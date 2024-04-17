@@ -204,6 +204,8 @@ namespace Anthem::Core{
 
         // Controller
         bool ctSetKeyBoardController(std::function<void(int, int, int, int)> handler);
+        bool ctSetMouseController(std::function<void(int, int, int)> handler);
+        bool ctSetMouseMoveController(std::function<void(double, double)> handler);
 
         // Command Buffer Operations
         bool drAllocateCommandBuffer(uint32_t* commandBufferId);

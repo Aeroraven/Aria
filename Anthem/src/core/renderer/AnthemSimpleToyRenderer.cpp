@@ -615,6 +615,14 @@ namespace Anthem::Core{
         this->instance->specifyKeyHandler(handler);
         return true;
     }
+    bool AnthemSimpleToyRenderer::ctSetMouseController(std::function<void(int, int, int)> handler) {
+        this->instance->specifyMouseHandler(handler);
+		return true;
+    }
+    bool AnthemSimpleToyRenderer::ctSetMouseMoveController(std::function<void(double, double)> handler) {
+		this->instance->specifyMouseMoveHandler(handler);
+		return true;
+	}
     bool AnthemSimpleToyRenderer:: drGetCommandBufferForFrame(uint32_t* commandBufferId,uint32_t frameIdx){
         *commandBufferId = this->drawingCommandHelper->getFrameCmdBufIdx(frameIdx);
         return true;

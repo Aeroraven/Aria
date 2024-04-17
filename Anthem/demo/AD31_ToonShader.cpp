@@ -3,6 +3,7 @@
 #include "../include/external/AnthemGLTFLoader.h"
 #include "../include/external/AnthemImageLoader.h"
 #include "../include/components/camera/AnthemCamera.h"
+#include "../include/components/camera/AnthemOrbitControl.h"
 #include "../include/components/performance/AnthemFrameRateMeter.h"
 #include "../include/core/drawing/buffer/AnthemBufferMemAligner.h"
 #include "../include/core/drawing/buffer/impl/AnthemVertexBufferImpl.h"
@@ -63,6 +64,11 @@ struct Stage {
 	AnthemDescriptorPool* descCanv;
 	AnthemImage* canvas;
 	float aspect;
+
+	std::function<void(int, int, int, int)> keyController;
+	std::function<void(double, double)> mouseMoveController;
+	std::function<void(int, int, int)> mouseController;
+	AnthemOrbitControl orbitControl;
 }st;
 
 
@@ -76,7 +82,7 @@ void initialize() {
 	st.aspect = 1.0f * rdW / rdH;
 
 	st.camera.specifyFrustum((float)AT_PI * 1.0f / 3.0f, 0.1f, 500.0f, 1.0f * rdW / rdH);
-	st.camera.specifyPosition(0, 0.8, -1.8);
+	st.camera.specifyPosition(0, -0.2, -1.6);
 	st.camera.specifyFrontEyeRay(0, 0, 1);
 
 	st.rd.createDescriptorPool(&st.descUni);
@@ -84,6 +90,15 @@ void initialize() {
 
 	st.rd.createDescriptorPool(&st.descCanv);
 	st.rd.createColorAttachmentImage(&st.canvas, st.descCanv, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+
+	st.keyController = st.camera.getKeyboardController(0.01f);
+	st.rd.ctSetKeyBoardController(st.keyController);
+
+	st.mouseController = st.orbitControl.getMouseController(0.01f);
+	st.mouseMoveController = st.orbitControl.getMouseMoveController(0.01f);
+	st.rd.ctSetMouseController(st.mouseController);
+	st.rd.ctSetMouseMoveController(st.mouseMoveController);
+	st.orbitControl.specifyTranslation(0, -1.0, 0);
 }
 
 void loadModel() {
@@ -94,7 +109,7 @@ void loadModel() {
 	loader.parseModel(config, st.gltfModel, &st.gltfTex);
 	std::vector<AnthemUtlSimpleModelStruct> rp;
 	for (auto i = 0; auto & p : st.gltfModel) {
-		if (i != 26 && i!=28) {
+		if (i != 26 && i != 28 && i != 29) {
 			rp.push_back(p);
 		}
 		i++;
@@ -156,10 +171,36 @@ void prepareOutlinePass() {
 	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
 		st.outlinePass->setDescriptorLayouts({
 			{st.descUni,AT_ACDS_UNIFORM_BUFFER,0},
+			{st.descPbrBaseTex,AT_ACDS_SAMPLER,0},
 		});
 	}
 	st.outlinePass->buildGraphicsPipeline();
 }
+
+void setupImgui() {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.FontGlobalScale = 1.8;
+	ImGui::StyleColorsDark();
+	st.rd.exInitImGui();
+}
+
+void prepareImguiFrame() {
+	st.fpsMeter.record();
+	std::stringstream ss;
+	ss << "FPS:";
+	ss << st.fpsMeter.getFrameRate();
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin("Control Panel");
+	ImGui::Text(ss.str().c_str());
+	ImGui::End();
+}
+
 
 void preparePostAA() {
 	st.fxaaPass = std::make_unique<AnthemFXAA>(&st.rd, 2);
@@ -201,8 +242,7 @@ void updateUniform() {
 	AtMatf4 proj, view, local;
 	st.camera.getProjectionMatrix(proj);
 	st.camera.getViewMatrix(view);
-	//local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f },0.5f * static_cast<float>(glfwGetTime()));
-	local = AnthemLinAlg::axisAngleRotationTransform3<float, float>({ 0.0f,1.0f,0.0f }, AT_PI );
+	st.orbitControl.getModelMatrix(local);
 
 	float pm[16], vm[16], lm[16], vc[4];
 	proj.columnMajorVectorization(pm);
@@ -220,7 +260,8 @@ void drawCall() {
 	updateUniform();
 	uint32_t imgIdx = 0;
 	st.rd.drPrepareFrame(cur, &imgIdx);
-	st.passSeq[cur]->executeCommandToStage(imgIdx, false,false, st.fxaaPass->getSwapchainFb());
+	prepareImguiFrame();
+	st.passSeq[cur]->executeCommandToStage(imgIdx, false,true, st.fxaaPass->getSwapchainFb());
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }
@@ -228,6 +269,7 @@ void drawCall() {
 
 int main() {
 	initialize();
+	setupImgui();
 	loadModel();
 	prepareMainPass();
 	prepareOutlinePass();
@@ -238,6 +280,8 @@ int main() {
 
 	st.rd.setDrawFunction(drawCall);
 	st.rd.startDrawLoopDemo();
+	st.rd.exDestroyImgui();
 	st.rd.finalize();
+	
 	return 0;
 }

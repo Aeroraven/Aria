@@ -13,6 +13,10 @@ namespace Anthem::Core{
         this->keyboardHandler(a, b, c, d);
         return true;
     }
+    bool AnthemInstance::callMouseMoveHander(double a, double b) {
+		this->mouseMoveHandler(a, b);
+		return true;
+	}
     bool AnthemInstance::specifyResizeHandler(std::function<void(int,int)> handler){
         this->resizeHandler = handler;
         return true;
@@ -23,6 +27,10 @@ namespace Anthem::Core{
     }
     bool AnthemInstance::specifyKeyHandler(std::function<void(int, int, int, int)> handler) {
         this->keyboardHandler = handler;
+        return true;
+    }
+    bool AnthemInstance::specifyMouseMoveHandler(std::function<void(double, double)> handler) {
+        this->mouseMoveHandler = handler;
         return true;
     }
     bool AnthemInstance::waitForFramebufferReady(){
@@ -69,10 +77,15 @@ namespace Anthem::Core{
             auto app = reinterpret_cast<AnthemInstance*>(glfwGetWindowUserPointer(window));
             app->callKeyboardHander(key,scancode,action,mods);
         };
+        auto mouseMoveCallback = [](GLFWwindow* window, double xpos, double ypos) {
+			auto app = reinterpret_cast<AnthemInstance*>(glfwGetWindowUserPointer(window));
+			app->callMouseMoveHander(xpos, ypos);
+		};
         glfwSetWindowUserPointer(window,this);
         glfwSetFramebufferSizeCallback(this->window,fbResizeCallback);
         glfwSetMouseButtonCallback(this->window, mouseActionCallback);
         glfwSetKeyCallback(this->window, keyActionCallback);
+        glfwSetCursorPosCallback(this->window,mouseMoveCallback);
         return true;
     }
     bool AnthemInstance::destroyWindow(){

@@ -71,7 +71,7 @@ namespace Anthem::Core::Math{
             }
             return r;
         }
-        AnthemSameShapeVectorTp operator*(const T& second) const {
+        virtual AnthemSameShapeVectorTp operator*(const T& second) const {
             AnthemSameShapeVectorTp r;
             for (int i = 0; i < R; i++) {
                 r[i] = data[i] * second;
