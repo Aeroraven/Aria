@@ -36,15 +36,29 @@ float intensityRamp(float diffuse)
     return ramp1 * ramp1w + ramp2 * ramp2w;
 }
 
+float4 fresnelRimLight(float4 f0, float3 n, float3 v, float rimWid, float rimSoftness)
+{
+    float ndotv = dot(n, -v);
+    float rimFactor = ndotv < 0 ? 0 : 1 - ndotv;
+    float4 ret = f0 + (1.0f - f0) * pow(rimFactor, 5.0);
+    ret = smoothstep(float4(rimWid, rimWid, rimWid, rimWid), float4(1, 1, 1, 1), ret);
+    ret = smoothstep(float4(0, 0, 0, 0), float4(rimSoftness, rimSoftness, rimSoftness, rimSoftness), ret);
+    
+    return ret;
+}
+
 float4 main(VSOutput vsOut) : SV_Target
 {
+    //return float4(0.8, 0.8, 0.8, 1);
     float3 n = normalize(vsOut.normal.xyz);
     float3 l = normalize(LIGHT_DIR.xyz);
+    float3 v = normalize(float3(0, 0, 1));
     float diff = max(0, dot(n, -l));
-    float4 baseColor = float4(0.9, 0.9, 0.9, 1);//inverseGamma(getBaseColor(uint(vsOut.texIndices.r), vsOut.texUv.xy));
+    float4 baseColor = float4(0.8, 0.8, 0.8, 1);//inverseGamma(getBaseColor(uint(vsOut.texIndices.r), vsOut.texUv.xy));
     float intensity = intensityRamp(diff);
+    float4 rim = fresnelRimLight(float4(0.02, 0.02, 0.02, 1), n, v, 0.0, 0.7);
     
-    return gamma(baseColor * intensity);
+    return gamma(baseColor * (intensity) + rim);
     
     //return float4(0.8, 0.8, 0.8, 1);
     //return 

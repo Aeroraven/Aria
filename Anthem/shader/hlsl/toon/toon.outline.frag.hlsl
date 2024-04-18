@@ -19,6 +19,6 @@ float4 gamma(float4 color)
 }
 float4 main(VSOutput vsOut) : SV_Target
 {
-    return gamma(lerp(float4(0, 0, 0, 1), vsOut.color, 0.25));
+    return gamma(lerp(float4(0, 0, 0, 1), vsOut.color, 0.0));
 
 }

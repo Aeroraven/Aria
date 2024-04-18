@@ -139,7 +139,7 @@ void prepareMainPass() {
 	st.mainPass->vxLayout = st.model.getVertexBuffer();
 	st.mainPass->setRenderTargets({ st.canvas });
 	st.mainPass->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
-	st.mainPass->passOpt.clearColors = {{1.0f,1.0f,1.0f,1.0f}};
+	st.mainPass->passOpt.clearColors = {{0.3f,0.3f,0.3f,0.3f}};
 	st.mainPass->pipeOpt.enableCullMode = false;
 	st.mainPass->pipeOpt.cullMode = AT_ACM_FRONT;
 	st.mainPass->pipeOpt.frontFace = AT_AFF_COUNTER_CLOCKWISE;
