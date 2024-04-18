@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(Anthem)
 
 # Compile Arguments
-add_compile_definitions(AT_FEATURE_RAYTRACING_ENABLED)
+#add_compile_definitions(AT_FEATURE_RAYTRACING_ENABLED)
 
 # Configs
 

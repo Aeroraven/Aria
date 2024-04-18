@@ -74,26 +74,30 @@ namespace Anthem::Core{
                 this->createImageTransitionLayoutLegacy(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             }
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT,this->depth>1);
+            this->createImageViewFbInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
             this->createSampler();
             this->destroyStagingBuffer();
         }else if(this->definedUsage == AT_IU_COLOR_ATTACHMENT){
             if(this->msaaOn){
                 this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, pendingFormat, this->width, this->height,this->depth);
             }else{
-                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, pendingFormat, this->width, this->height, this->depth);
+                this->createImageInternal(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, pendingFormat, this->width, this->height, this->depth);
             }
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
+            this->createImageViewFbInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
             this->createSampler();
         }
         else if (this->definedUsage == AT_IU_COMPUTE_OUTPUT) {
             this->createImageInternal(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, pendingFormat, this->width, this->height, this->depth);
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
+            this->createImageViewFbInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
             this->createSampler();
             this->image.reqStageFlags |= VK_SHADER_STAGE_COMPUTE_BIT;
         }
         else if (this->definedUsage == AT_IU_RAYTRACING_DEST) {
             this->createImageInternal(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, pendingFormat, this->width, this->height, this->depth);
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
+            this->createImageViewFbInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
             this->image.reqStageFlags |= VK_SHADER_STAGE_RAYGEN_BIT_KHR;
         }
         return true;
@@ -112,7 +116,11 @@ namespace Anthem::Core{
         this->image.reqStageFlags |= stageFlag;
         return true;
     }
-
+    bool AnthemImage::registerMipmapGenCommand(uint32_t cmdIdx) {
+        this->generateMipmap2DCommandBufferInternal(cmdIdx, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
+        return true;
+    }
     bool AnthemImage::copyBufferToImage(){
         uint32_t cmdBufIdx;
         this->cmdBufs->createCommandBuffer(&cmdBufIdx);
@@ -167,6 +175,9 @@ namespace Anthem::Core{
     }
     const VkImageView* AnthemImage::getImageView() const{
         return AnthemImageContainer::getImageView();
+    }
+    const VkImageView* AnthemImage::getImageViewFrameBuffer() const {
+        return AnthemImageContainer::getImageViewFb();
     }
     const VkImage* AnthemImage::getImage() const {
         return &this->image.image;

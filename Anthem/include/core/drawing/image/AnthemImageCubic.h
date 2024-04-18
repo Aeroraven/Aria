@@ -45,6 +45,7 @@ namespace Anthem::Core {
         virtual uint32_t getWidth() const override;
         virtual uint32_t getHeight() const override;
         virtual uint32_t getLayers() const override;
+        virtual const VkImageView* getImageViewFrameBuffer() const override;
         uint32_t getDepth() const;
 
     };

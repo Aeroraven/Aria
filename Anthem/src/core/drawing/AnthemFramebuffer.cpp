@@ -34,7 +34,8 @@ namespace Anthem::Core{
             auto attType = renderPass->getAttachmentType(i);
             if(attType == AT_ARPCA_COLOR || attType == AT_ARPCA_COLOR_MSAA){
                 auto& tmp = (*colorImages)[colorImageCur++];
-                framebufferAttachment.push_back(*(tmp->getImageView()));
+                ANTH_LOGI("Fv",tmp->getImageViewFrameBuffer());
+                framebufferAttachment.push_back(*(tmp->getImageViewFrameBuffer()));
                 ANTH_ASSERT( tmp->getWidth() == colorImageWid, "Incompatible size");
                 ANTH_ASSERT( tmp->getHeight() == colorImageHeight, "Incompatible size");
                 ANTH_ASSERT( tmp->getLayers() == colorImageLayers, "Incompatible layer size");
@@ -52,6 +53,7 @@ namespace Anthem::Core{
         framebufferInfo.width = colorImageWid;
         framebufferInfo.height = colorImageHeight;
         framebufferInfo.layers = colorImageLayers;
+        ANTH_LOGI("Layers:", colorImageLayers);
         if(vkCreateFramebuffer(this->logicalDevice->getLogicalDevice(),&framebufferInfo,nullptr,&this->framebuffer) != VK_SUCCESS){
             ANTH_LOGE("Failed to create framebuffer");
             return false;

@@ -66,6 +66,7 @@ namespace Anthem::Core{
         bool setImageFormat(AnthemImageFormat format);
 
         bool addAccessStage(uint32_t stageFlag);
+        bool registerMipmapGenCommand(uint32_t cmdIdx);
         
         virtual const VkImage* getImage() const;
         virtual const VkImageView* getImageView() const override;
@@ -74,7 +75,7 @@ namespace Anthem::Core{
         virtual uint32_t getLayers() const override;
         virtual uint32_t getMipLevels() const;
         uint32_t getDepth() const;
-
+        const VkImageView* getImageViewFrameBuffer() const override;
         bool toGeneralLayout() {
             this->image.desiredLayout = VK_IMAGE_LAYOUT_GENERAL;
             this->createImageTransitionLayoutLegacy(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);

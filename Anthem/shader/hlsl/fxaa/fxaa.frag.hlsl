@@ -23,6 +23,7 @@ float luminTex(float2 texc)
 float4 main(VSOutput vsOut) : SV_Target0
 {
     //return texIn.Sample(sampIn, vsOut.texCoord);
+    //return texIn.SampleLevel(sampIn, vsOut.texCoord, 4);
     
     uint texHeight, texWidth, texLods;
     texIn.GetDimensions(0, texWidth, texHeight, texLods);

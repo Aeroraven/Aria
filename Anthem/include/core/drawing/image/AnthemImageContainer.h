@@ -11,6 +11,7 @@ namespace Anthem::Core{
         VkDeviceMemory memory;
         VkImageCreateInfo imageInfo = {};
         VkImageView imageView;
+        VkImageView imageViewFb = nullptr;
         uint32_t mipmapLodLevels = 1;
         uint32_t layerCounts = 1;
         VkSampleCountFlags msaaCount = VK_SAMPLE_COUNT_1_BIT;
@@ -39,7 +40,8 @@ namespace Anthem::Core{
 
     protected:
         bool createImageInternal(VkImageUsageFlags usage, VkFormat format, uint32_t width, uint32_t height, uint32_t depth);
-        bool createImageViewInternal(VkImageAspectFlags aspectFlags,bool use3d = false);
+        bool createImageViewInternal(VkImageAspectFlags aspectFlags, bool use3d = false);
+        bool createImageViewFbInternal(VkImageAspectFlags aspectFlags, bool use3d = false);
         bool createImageTransitionLayoutLegacy(VkImageLayout oldLayout,VkImageLayout newLayout);
         bool createImageTransitionLayoutInternal(VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcFlag,
             VkPipelineStageFlags dstFlag,VkImageAspectFlags aspectFlag);
@@ -47,6 +49,8 @@ namespace Anthem::Core{
         bool destroyImageInternal();
         bool destroyImageViewInternal();
         bool generateMipmap2D(uint32_t texWidth,uint32_t texHeight);
+        bool generateMipmap2DCommandBufferInternal(uint32_t cmdIdx,VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcFlag,
+            VkPipelineStageFlags dstFlag, VkImageAspectFlags aspectFlag);
 
     
     public:
@@ -59,6 +63,7 @@ namespace Anthem::Core{
 
 
         const VkImageView* getImageView() const;
+        const VkImageView* getImageViewFb() const;
         const VkShaderStageFlags getRequiredShaderStage() const {
             return this->image.reqStageFlags;
         }

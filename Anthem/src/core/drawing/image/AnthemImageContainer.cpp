@@ -7,6 +7,21 @@ namespace Anthem::Core{
         uint32_t cmdBufIdx;
         this->cmdBufs->createCommandBuffer(&cmdBufIdx);
         this->cmdBufs->startCommandRecording(cmdBufIdx);
+        this->generateMipmap2DCommandBufferInternal(cmdBufIdx, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_IMAGE_ASPECT_COLOR_BIT);
+        
+        this->cmdBufs->endCommandRecording(cmdBufIdx);  
+        this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx,true);
+        this->cmdBufs->freeCommandBuffer(cmdBufIdx);
+        ANTH_LOGV("Mipmap generated");
+
+        VkFormatProperties formatProperties;
+        vkGetPhysicalDeviceFormatProperties(phyDevice->getPhysicalDevice(), VK_FORMAT_R8G8B8A8_SRGB, &formatProperties);
+        ANTH_ASSERT((formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT),"Unsupported Linear Filtering");
+        return true;
+    }
+    bool AnthemImageContainer::generateMipmap2DCommandBufferInternal(uint32_t cmdIdx, VkImageLayout oldLayout, VkImageLayout newLayout, VkPipelineStageFlags srcFlag,
+        VkPipelineStageFlags dstFlag, VkImageAspectFlags aspectFlag) {
 
         VkImageMemoryBarrier barrier = {};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -14,48 +29,49 @@ namespace Anthem::Core{
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.image = this->image.image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.aspectMask = aspectFlag;
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.levelCount = 1;
         barrier.subresourceRange.layerCount = 1;
 
-        int32_t mipWidth = texWidth;
-        int32_t mipHeight = texHeight;
+        int32_t mipWidth = this->getImageWidth();
+        int32_t mipHeight = this->getImageHeight();
 
         for (uint32_t i = 1u; i < this->image.mipmapLodLevels; i++) {
-            ANTH_LOGI("MipLvl:",i," Wid=",(signed)mipWidth, " Hei=",(signed) mipHeight);
+            ANTH_LOGI("MipLvl:", i, " Wid=", (signed)mipWidth, " Hei=", (signed)mipHeight);
             barrier.subresourceRange.baseMipLevel = i - 1;
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-            vkCmdPipelineBarrier(*this->cmdBufs->getCommandBuffer(cmdBufIdx),VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-                0, nullptr,0, nullptr,1, &barrier);
+            vkCmdPipelineBarrier(*this->cmdBufs->getCommandBuffer(cmdIdx), VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                0, nullptr, 0, nullptr, 1, &barrier);
 
             VkImageBlit blit{};
             blit.srcOffsets[0] = { 0, 0, 0 };
             blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
-            blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.srcSubresource.aspectMask = aspectFlag;
             blit.srcSubresource.mipLevel = i - 1;
             blit.srcSubresource.baseArrayLayer = 0;
             blit.srcSubresource.layerCount = 1;
             blit.dstOffsets[0] = { 0, 0, 0 };
             blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
-            blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.dstSubresource.aspectMask = aspectFlag;
             blit.dstSubresource.mipLevel = i;
             blit.dstSubresource.baseArrayLayer = 0;
             blit.dstSubresource.layerCount = 1;
 
-            vkCmdBlitImage(*this->cmdBufs->getCommandBuffer(cmdBufIdx),this->image.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,this->image.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                1, &blit,VK_FILTER_LINEAR);
+            vkCmdBlitImage(*this->cmdBufs->getCommandBuffer(cmdIdx), this->image.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, this->image.image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1, &blit, VK_FILTER_LINEAR);
 
             barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
             barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
             barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-            vkCmdPipelineBarrier(*this->cmdBufs->getCommandBuffer(cmdBufIdx),VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+            vkCmdPipelineBarrier(*this->cmdBufs->getCommandBuffer(cmdIdx), VK_PIPELINE_STAGE_TRANSFER_BIT, dstFlag, 0,
                 0, nullptr, 0, nullptr, 1, &barrier);
 
             if (mipWidth > 1) mipWidth /= 2;
@@ -67,21 +83,16 @@ namespace Anthem::Core{
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-        vkCmdPipelineBarrier(*(this->cmdBufs->getCommandBuffer(cmdBufIdx)), VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-            0,0, nullptr,0, nullptr,1, &barrier);  
-
-        this->cmdBufs->endCommandRecording(cmdBufIdx);  
-        this->cmdBufs->submitTaskToGraphicsQueue(cmdBufIdx,true);
-        this->cmdBufs->freeCommandBuffer(cmdBufIdx);
-        ANTH_LOGV("Mipmap generated");
-
-        VkFormatProperties formatProperties;
-        vkGetPhysicalDeviceFormatProperties(phyDevice->getPhysicalDevice(), VK_FORMAT_R8G8B8A8_SRGB, &formatProperties);
-        ANTH_ASSERT((formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT),"Unsupported Linear Filtering");
+        vkCmdPipelineBarrier(*(this->cmdBufs->getCommandBuffer(cmdIdx)), VK_PIPELINE_STAGE_TRANSFER_BIT, dstFlag,
+            0, 0, nullptr, 0, nullptr, 1, &barrier);
         return true;
     }
     bool AnthemImageContainer::destroyImageViewInternal(){
         vkDestroyImageView(this->logicalDevice->getLogicalDevice(),this->image.imageView,nullptr);
+        if (image.imageViewFb != nullptr) {
+            vkDestroyImageView(this->logicalDevice->getLogicalDevice(), this->image.imageViewFb, nullptr);
+        }
+
         return true;
     }
     bool AnthemImageContainer::destroyImageInternal(){
@@ -114,6 +125,36 @@ namespace Anthem::Core{
         auto result = vkCreateImageView(this->logicalDevice->getLogicalDevice(),&createInfo,nullptr,&(this->image.imageView));
         if(result != VK_SUCCESS){
             ANTH_LOGE("Failed to create image view",result);
+            return false;
+        }
+        return true;
+    }
+    bool AnthemImageContainer::createImageViewFbInternal(VkImageAspectFlags aspectFlags, bool use3d) {
+        VkImageViewCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.image = this->image.image;
+        if (this->image.isCubic) {
+            createInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+        }
+        else if (!use3d) {
+            createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        }
+        else {
+            createInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
+        }
+        createInfo.format = this->image.imageInfo.format;
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.subresourceRange.aspectMask = aspectFlags;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.layerCount = this->image.layerCounts;
+        createInfo.subresourceRange.levelCount = 1;
+        auto result = vkCreateImageView(this->logicalDevice->getLogicalDevice(), &createInfo, nullptr, &(this->image.imageViewFb));
+        if (result != VK_SUCCESS) {
+            ANTH_LOGE("Failed to create image view", result);
             return false;
         }
         return true;
@@ -246,5 +287,11 @@ namespace Anthem::Core{
     }
     const VkImageView* AnthemImageContainer::getImageView() const{
         return &(this->image.imageView);
+    }
+    const VkImageView* AnthemImageContainer::getImageViewFb() const {
+        if (this->image.imageViewFb == nullptr) {
+            ANTH_LOGE("Invalid image view");
+        }
+        return &(this->image.imageViewFb);
     }
 }

@@ -69,6 +69,8 @@ struct Stage {
 	std::function<void(double, double)> mouseMoveController;
 	std::function<void(int, int, int)> mouseController;
 	AnthemOrbitControl orbitControl;
+
+	uint32_t* mipmapCommand = nullptr;
 }st;
 
 
@@ -89,7 +91,7 @@ void initialize() {
 	st.rd.createUniformBuffer(&st.uniform, 0, st.descUni, -1);
 
 	st.rd.createDescriptorPool(&st.descCanv);
-	st.rd.createColorAttachmentImage(&st.canvas, st.descCanv, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createColorAttachmentImage(&st.canvas, st.descCanv, 0, AT_IF_SIGNED_FLOAT32, false, -1, true);
 
 	st.keyController = st.camera.getKeyboardController(0.01f);
 	st.rd.ctSetKeyBoardController(st.keyController);
@@ -98,7 +100,7 @@ void initialize() {
 	st.mouseMoveController = st.orbitControl.getMouseMoveController(0.01f);
 	st.rd.ctSetMouseController(st.mouseController);
 	st.rd.ctSetMouseMoveController(st.mouseMoveController);
-	st.orbitControl.specifyTranslation(0, -1.0, 0);
+	st.orbitControl.specifyTranslation(0, -1.1, 0);
 }
 
 void loadModel() {
@@ -211,6 +213,16 @@ void preparePostAA() {
 }
 
 void recordCommand() {
+	st.mipmapCommand = new uint32_t[st.cfg.vkcfgMaxImagesInFlight];
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.rd.drAllocateCommandBuffer(&st.mipmapCommand[i]);
+		st.rd.drStartCommandRecording(st.mipmapCommand[i]);
+		st.rd.drSetImageLayoutSimple(st.canvas, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, st.mipmapCommand[i]);
+		st.canvas->registerMipmapGenCommand(st.mipmapCommand[i]);
+		st.rd.drEndCommandRecording(st.mipmapCommand[i]);
+	}
+
+	// Register commands
 	st.mainPass->recordCommands([&](uint32_t x) {
 		st.rd.drBindVertexBuffer(st.model.getVertexBuffer(), x);
 		st.rd.drBindIndexBuffer(st.model.getIndexBuffer(), x);
@@ -229,11 +241,13 @@ void recordCommand() {
 	st.passSeq[0]->setSequence({
 		{ st.mainPass->getCommandIndex(0), ATC_ASCE_GRAPHICS},
 		{ st.outlinePass->getCommandIndex(0), ATC_ASCE_GRAPHICS},
+		{ st.mipmapCommand[0], ATC_ASCE_GRAPHICS},
 		{ st.fxaaPass->getCommandIdx(0), ATC_ASCE_GRAPHICS},
 	});
 	st.passSeq[1]->setSequence({
 		{ st.mainPass->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
 		{ st.outlinePass->getCommandIndex(1), ATC_ASCE_GRAPHICS},
+		{ st.mipmapCommand[1], ATC_ASCE_GRAPHICS},
 		{ st.fxaaPass->getCommandIdx(1), ATC_ASCE_GRAPHICS},
 	});
 }

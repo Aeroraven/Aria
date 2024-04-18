@@ -159,7 +159,7 @@ namespace Anthem::Core{
             uint32_t texChannel, uint32_t bindLoc, AnthemImageFormat imageFmt = AnthemImageFormat::AT_IF_SRGB_UINT8,uint32_t descId=-1, 
             AnthemImageUsage usage = AT_IU_TEXTURE);
         bool createColorAttachmentImage(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint32_t bindLoc,
-            AnthemImageFormat format, bool enableMsaa, uint32_t descId = -1);
+            AnthemImageFormat format, bool enableMsaa, uint32_t descId = -1, bool enableMipmap = false);
         bool createIndexBuffer(AnthemIndexBuffer** pIndexBuffer);
         bool createShader(AnthemShaderModule** pShaderModule,AnthemShaderFilePaths* filename);
         bool createSwapchainImageFramebuffers(AnthemSwapchainFramebuffer** pFramebufferList,const AnthemRenderPass* renderPass, const AnthemDepthBuffer* depthBuffer);

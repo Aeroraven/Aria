@@ -103,6 +103,9 @@ namespace Anthem::Core {
 	const VkImageView* AnthemImageCubic::getImageView() const {
 		return AnthemImageContainer::getImageView();
 	}
+	const VkImageView* AnthemImageCubic::getImageViewFrameBuffer() const {
+		return AnthemImageContainer::getImageViewFb();
+	}
 	uint32_t AnthemImageCubic::getWidth() const {
 		return this->width;
 	}

@@ -371,7 +371,7 @@ namespace Anthem::Core{
     }
 
     bool AnthemSimpleToyRenderer::createColorAttachmentImage(AnthemImage** pImage,AnthemDescriptorPool* descPool, uint32_t bindLoc,
-        AnthemImageFormat format, bool enableMsaa,uint32_t descId){
+        AnthemImageFormat format, bool enableMsaa,uint32_t descId, bool enableMipmap){
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
@@ -381,6 +381,9 @@ namespace Anthem::Core{
         textureImage->specifyUsage(AT_IU_COLOR_ATTACHMENT);
         if(enableMsaa){
             textureImage->enableMsaa();
+        }
+        if (enableMipmap) {
+            textureImage->enableMipMapping();
         }
         ANTH_LOGI("Creating Color Attachment");
         textureImage->setImageFormat(format);
