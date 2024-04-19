@@ -1,6 +1,6 @@
 # Aria
 
-This repository is here for **PERSONAL PURPOSE**. It serves as the record for the time I used to learn useless algorithms.
+This repository serves as the record for the time I used to learn useless algorithms.
 
 ![](/Imgs/test_ad29.png)
 
