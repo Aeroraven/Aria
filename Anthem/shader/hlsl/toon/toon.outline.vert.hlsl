@@ -41,7 +41,11 @@ VSOutput main(VSInput input)
     float4 vNorm = mul(camera.model, float4(input.normal.xyz, 0.0));
     float4 extDir = mul(camera.proj, mul(camera.view, vNorm));
     float3 extDir3 = normalize(extDir.xyz);
-    output.position.xy += 0.0020 * extDir3.xy * output.position.w * float2(1.0, camera.aspect.r);
+    if (!(input.uv.z >= 4.9 && input.uv.z < 6.5))
+    {
+        output.position.xy += 0.0020 * extDir3.xy * output.position.w * float2(1.0, camera.aspect.r);
+    }
+
     
     output.texUv = input.uv;
     output.normal = mul(camera.model, input.normal);

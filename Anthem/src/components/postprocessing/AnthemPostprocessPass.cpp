@@ -54,7 +54,7 @@ namespace Anthem::Components::Postprocessing {
 			this->pipeline = new AnthemGraphicsPipeline * [this->cmdCopies];
 			for (auto i : AT_RANGE2(this->cmdCopies)) {
 				rd->createDescriptorPool(&descTarget[i]);
-				rd->createColorAttachmentImage(&targetImage[i], descTarget[i], 0, AT_IF_SWAPCHAIN, false, -1);
+				rd->createColorAttachmentImage(&targetImage[i], descTarget[i], 0, AT_IF_SWAPCHAIN, false, -1,true);
 				rd->createSimpleFramebufferA(&fbTarget[i], { this->targetImage[i] }, this->pass, depthStencil);
 				rd->createGraphicsPipelineCustomized(&pipeline[i], inputs[0], {}, pass, shader, vx, &copt);
 			}
@@ -64,11 +64,18 @@ namespace Anthem::Components::Postprocessing {
 	void AnthemPostprocessPass::prepareRenderPass() {
 		rd->setupRenderPass(&pass, &ropt, depthStencil);
 	}
-
+	void AnthemPostprocessPass::enableMsaa() {
+		ANTH_TODO("Forced type cast");
+		enabledMsaa = true;
+		rd->createColorAttachmentImage(&msaaColorImage, nullptr, 0, AT_IF_SWAPCHAIN, true, -1);
+		ropt.msaaType = AT_ARPMT_MSAA;
+		ropt.msaaColorAttachment = msaaColorImage;
+		ropt.msaaSamples = (VkSampleCountFlagBits)msaaColorImage->getSampleCount();
+	}
 	void AnthemPostprocessPass::recordCommand() {
 		for (auto k = 0; auto i : cmdIdx) {
 			rd->drStartCommandRecording(i);
-			rd->drStartRenderPass(pass, fbSwapchain->getFramebufferObjectUnsafe(k), i, false);
+			rd->drStartRenderPass(pass, fbSwapchain->getFramebufferObjectUnsafe(k), i,this->enabledMsaa);
 			rd->drBindGraphicsPipeline(pipeline[0], i);
 			rd->drSetViewportScissorFromSwapchain(i);
 			rd->drBindDescriptorSetCustomizedGraphics(inputs[k], pipeline[0], i);
@@ -92,6 +99,8 @@ namespace Anthem::Components::Postprocessing {
 			rd->drBindIndexBuffer(ix, i);
 			rd->drDraw(ix->getIndexCount(), i);
 			rd->drEndRenderPass(i);
+			rd->drSetImageLayoutSimple(targetImage[k], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, i);
+			targetImage[k]->registerMipmapGenCommand(i);
 			rd->drEndCommandRecording(i);
 			k++;
 		}

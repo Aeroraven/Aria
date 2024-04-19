@@ -306,7 +306,7 @@ namespace Anthem::Core{
             subpass.pResolveAttachments = &colorAttachmentReferenceList[0];
         }
 
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+        subpass.pDepthStencilAttachment = (depthBuffer == nullptr) ? nullptr : &depthAttachmentRef;
 
         //Create Subpass Dependencies
         std::vector<VkSubpassDependency> subpassDependency = {};

@@ -20,6 +20,7 @@
 #include "../include/components/math/AnthemLowDiscrepancySequence.h"
 #include "../include/components/postprocessing/AnthemGlobalFog.h"
 #include "../include/components/postprocessing/AnthemFXAA.h"
+#include "../include/components/postprocessing/AnthemBloom.h"
 
 using namespace Anthem::Components::Performance;
 using namespace Anthem::Components::Utility;
@@ -56,6 +57,7 @@ struct Stage {
 	std::unique_ptr<AnthemPassHelper> mainPass;
 	std::unique_ptr<AnthemPassHelper> outlinePass;
 	std::unique_ptr<AnthemFXAA> fxaaPass;
+	std::unique_ptr<AnthemBloom> bloomPass;
 	std::unique_ptr<AnthemSequentialCommand> passSeq[2];
 
 	AnthemUniformBufferImpl< AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>, AtUniformVecf<4>>* uniform;
@@ -111,7 +113,7 @@ void loadModel() {
 	loader.parseModel(config, st.gltfModel, &st.gltfTex);
 	std::vector<AnthemUtlSimpleModelStruct> rp;
 	for (auto i = 0; auto & p : st.gltfModel) {
-		if (i != 26 && i != 28 && i != 29) {
+		if ( i != 28 && i != 29) {
 			rp.push_back(p);
 		}
 		i++;
@@ -139,7 +141,7 @@ void prepareMainPass() {
 	st.mainPass->vxLayout = st.model.getVertexBuffer();
 	st.mainPass->setRenderTargets({ st.canvas });
 	st.mainPass->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
-	st.mainPass->passOpt.clearColors = {{0.3f,0.3f,0.3f,0.3f}};
+	st.mainPass->passOpt.clearColors = {{0.3f,0.3f,0.3f,0.0f}};
 	st.mainPass->pipeOpt.enableCullMode = false;
 	st.mainPass->pipeOpt.cullMode = AT_ACM_FRONT;
 	st.mainPass->pipeOpt.frontFace = AT_AFF_COUNTER_CLOCKWISE;
@@ -203,13 +205,17 @@ void prepareImguiFrame() {
 	ImGui::End();
 }
 
-
 void preparePostAA() {
 	st.fxaaPass = std::make_unique<AnthemFXAA>(&st.rd, 2);
 	st.fxaaPass->addInput({
 		{st.descCanv,AT_ACDS_SAMPLER,0},
 	});
-	st.fxaaPass->prepare();
+	st.fxaaPass->prepare(true);
+
+	st.bloomPass = std::make_unique<AnthemBloom>(&st.rd, 2,5,st.cfg.appcfgResolutionWidth,st.cfg.appcfgResolutionHeight);
+	st.bloomPass->setSrcImage(st.fxaaPass->getColorAttachmentDescId(0));
+	st.bloomPass->prepare(false);
+
 }
 
 void recordCommand() {
@@ -233,7 +239,9 @@ void recordCommand() {
 		st.rd.drBindIndexBuffer(st.model.getIndexBuffer(), x);
 		st.rd.drDrawIndexedIndirect(st.model.getIndirectBuffer(), x);
 	});
-	st.fxaaPass->recordCommand();
+	st.fxaaPass->recordCommandOffscreen();
+	st.bloomPass->recordCommand();
+	st.bloomPass->enableMsaa();
 
 	st.passSeq[0] = std::make_unique<AnthemSequentialCommand>(&st.rd);
 	st.passSeq[1] = std::make_unique<AnthemSequentialCommand>(&st.rd);
@@ -243,12 +251,14 @@ void recordCommand() {
 		{ st.outlinePass->getCommandIndex(0), ATC_ASCE_GRAPHICS},
 		{ st.mipmapCommand[0], ATC_ASCE_GRAPHICS},
 		{ st.fxaaPass->getCommandIdx(0), ATC_ASCE_GRAPHICS},
+		{ st.bloomPass->getCommandIdx(0), ATC_ASCE_GRAPHICS},
 	});
 	st.passSeq[1]->setSequence({
 		{ st.mainPass->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
 		{ st.outlinePass->getCommandIndex(1), ATC_ASCE_GRAPHICS},
 		{ st.mipmapCommand[1], ATC_ASCE_GRAPHICS},
 		{ st.fxaaPass->getCommandIdx(1), ATC_ASCE_GRAPHICS},
+		{ st.bloomPass->getCommandIdx(1), ATC_ASCE_GRAPHICS},
 	});
 }
 
@@ -275,7 +285,7 @@ void drawCall() {
 	uint32_t imgIdx = 0;
 	st.rd.drPrepareFrame(cur, &imgIdx);
 	prepareImguiFrame();
-	st.passSeq[cur]->executeCommandToStage(imgIdx, false,true, st.fxaaPass->getSwapchainFb());
+	st.passSeq[cur]->executeCommandToStage(imgIdx, false,true, st.bloomPass->getSwapchainFb());
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }

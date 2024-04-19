@@ -31,10 +31,13 @@ namespace Anthem::Components::Postprocessing {
         AnthemFramebuffer** fbTarget;
         AnthemDescriptorPool** descTarget;
         AnthemImage** targetImage;
+        AnthemImage* msaaColorImage;
+
         bool drawOffscreen = false;
+        bool enabledMsaa = false;
     public:
         AnthemPostprocessPass(AnthemSimpleToyRenderer* p, uint32_t cmdCopies);
-
+        virtual void enableMsaa();
         virtual void prepareShader() = 0;
         virtual void prepareRenderPass();
         virtual void prepareGeometry();

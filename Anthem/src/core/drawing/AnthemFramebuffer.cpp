@@ -6,7 +6,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemFramebuffer::createFromColorAttachment(const std::vector<const IAnthemImageViewContainer*>* colorImages, const AnthemRenderPass* renderPass){
-        ANTH_ASSERT(this->depthBuffer != nullptr,"Depth buffer not specified");
+        //ANTH_ASSERT(this->depthBuffer != nullptr,"Depth buffer not specified");
         ANTH_ASSERT(this->logicalDevice != nullptr,"Logical device not specified");
         this->ctRenderPass = renderPass;
         if(colorImages != &this->colorAttachment){
@@ -19,9 +19,9 @@ namespace Anthem::Core{
         std::vector<VkImageView> framebufferAttachment;
         int colorImageCur = 0;
         auto totalRenderPassAttachments = renderPass->getTotalAttachmentCnt();
-        auto colorImageWid = (this->depthBuffer->getImageWidth()); 
-        auto colorImageHeight =(this->depthBuffer->getImageHeight()); 
-        auto colorImageLayers = this->depthBuffer->getLayers();
+        auto colorImageWid = this->depthBuffer ? (this->depthBuffer->getImageWidth()) : 0;
+        auto colorImageHeight = this->depthBuffer ? (this->depthBuffer->getImageHeight()) : 0;
+        auto colorImageLayers = this->depthBuffer ? this->depthBuffer->getLayers() : 0;
         
         if((*colorImages).size()>0){
             colorImageWid = (*colorImages)[0]->getWidth();

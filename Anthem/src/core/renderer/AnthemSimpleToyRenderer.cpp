@@ -371,13 +371,15 @@ namespace Anthem::Core{
     }
 
     bool AnthemSimpleToyRenderer::createColorAttachmentImage(AnthemImage** pImage,AnthemDescriptorPool* descPool, uint32_t bindLoc,
-        AnthemImageFormat format, bool enableMsaa,uint32_t descId, bool enableMipmap){
+        AnthemImageFormat format, bool enableMsaa,uint32_t descId, bool enableMipmap,int width,int height){
         auto textureImage = new AnthemImage();
         textureImage->specifyLogicalDevice(this->logicalDevice.get());
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
         textureImage->specifySwapchain(this->swapChain.get());
-        textureImage->setImageSize(this->swapChain->getSwapChainExtentWidth(),this->swapChain->getSwapChainExtentHeight());
+        width = width == 0 ? this->swapChain->getSwapChainExtentWidth() : width;
+        height = height == 0 ? this->swapChain->getSwapChainExtentHeight() : height;
+        textureImage->setImageSize(width,height);
         textureImage->specifyUsage(AT_IU_COLOR_ATTACHMENT);
         if(enableMsaa){
             textureImage->enableMsaa();

@@ -32,5 +32,6 @@ VSOutput main(VSInput input)
     output.texUv = input.uv;
     output.normal = mul(camera.model, input.normal);
     output.texIndices = input.texIndices;
+    
     return output;
 }
