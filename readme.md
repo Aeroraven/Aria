@@ -38,14 +38,14 @@ Here are all demos implemented in this repository
 | 10. HDR                                        | ○ (AD-29)       | ○ (V0-C4S3)      |
 | 11. PBR Basics                                 | ○ (AD-5)        | ○ (V0-C5S2)      |
 | 12-A. Simple Bloom                             | ×               | ○ (V0-C5S3)      |
-| 12-B. Downsampling & Upsampling Bloom          | ×               | ▲ (V2-C7S4)      |
+| 12-B. Bloom (Mip-chain)                        | ○ (AD-31)       | ▲ (V2-C7S4)      |
 | 13-A. Directional Shadow Mapping               | ○ (AD-8)        | ○ (V0-C5S4)      |
 | 13-B. Point Shadow Mapping                     | ○ (AD-21)       | ○ (V2-C7S5)      |
 | 14. Noise                                      | ×               | ○ (V1-C6S1)      |
 | 15. SSAO                                       | ○ (AD-6)        | ○ (V1-C6S7)      |
 | 16. SSR                                        | ○ (AD-9)        | ▲ (V1-C6S8)      |
 | 17. Mipmap                                     | ○ (AD-1)        | ○ (V2-C7S3)      |
-| 18. Toon Shader                                | ×               | ○ (V1-C6S11)     |
+| 18. Toon Shader                                | ○ (AD-31)       | ○ (V1-C6S11)     |
 | 19-A. FXAA                                     | ○ (AD-27-A)     | ○ (V1-C6S4)      |
 | 19-B. TAA                                      | ○ (AD-27-B)     | ×                |
 | 19-C. MLAA                                     | ○ (AD-27-C)     | ○ (V2-C7S1)      |
@@ -54,7 +54,7 @@ Here are all demos implemented in this repository
 | 21-A. Volumetric Rendering                     | ○ (AD-12)       | ○ (V1-C6S3)      |
 | 21-B. Volumetric Lighting / Fog (Ray Marching) | ×               | ○ (V2-C6S6)      |
 | 21-C. Volumetric Lighting / Fog (Voxel)        | ○ (AD-29)       | /                |
-| 22. Kawase Blur                                | ×               | ○ (V2-C7S2)      |
+| 22. Kawase Blur                                | ○ (AD-31)       | ○ (V2-C7S2)      |
 | 23. Cloth Simulation                           | ○ (AD-15)       | ○ (V2-C8S2)      |
 | 24-A. Wave Simulation (Numerical)              | ×               | ○ (V1-C6S12)     |
 | 24-B. Wave Simulation (FBM)                    | ○ (AD-30)       | ×                |
