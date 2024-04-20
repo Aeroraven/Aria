@@ -17,6 +17,7 @@ namespace Anthem::Core {
         AT_IF_SBGR_UINT8,
         AT_IF_UNORM_UINT8,
         AT_IF_R_UINT8,
+        AT_IF_SIGNED_FLOAT32_MONO,
         AT_IF_SWAPCHAIN
     };
     class AnthemImageInfoProcessing {
@@ -26,7 +27,7 @@ namespace Anthem::Core {
                 formatx == AT_IF_R_UINT8 || formatx == AT_IF_SWAPCHAIN) {
                 return 1;
             }
-            else if (formatx == AT_IF_SIGNED_FLOAT32) {
+            else if (formatx == AT_IF_SIGNED_FLOAT32 || formatx == AT_IF_SIGNED_FLOAT32_MONO) {
                 return 4;
             }
             ANTH_LOGE("Unknown format");
@@ -48,6 +49,9 @@ namespace Anthem::Core {
             }
             else if (formatx == AT_IF_UNORM_UINT8) {
                 pendingFormat = VK_FORMAT_R8G8B8A8_UNORM;
+            }
+            else if (formatx == AT_IF_SIGNED_FLOAT32_MONO) {
+                pendingFormat = VK_FORMAT_R32_SFLOAT;
             }
             else if (formatx == AT_IF_SWAPCHAIN) {
                 ANTH_ASSERT(swapchain != nullptr, "Empty swapchain ptr");

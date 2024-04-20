@@ -9,7 +9,8 @@ namespace Anthem::Core {
 	
 	enum AnthemPushConstantStageFlags {
 		AT_APCS_VERTEX = 1,
-		AT_APCS_FRAGMENT = 2
+		AT_APCS_FRAGMENT = 2,
+		AT_APCS_COMPUTE = 3,
 	};
 
 	class AnthemPushConstant {

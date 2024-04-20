@@ -13,7 +13,7 @@ namespace Anthem{
             int appcfgResolutionHeight = 1080;
 
             std::vector<const char*> vkcfgValidationLayers = {"VK_LAYER_KHRONOS_validation"};
-            bool vkcgEnableValidationLayers = true;
+            bool vkcfgEnableValidationLayers = true;
             int vkcfgMaxImagesInFlight = 2;
             
             bool vkcfgPreferSrgbImagePresentation = true;

@@ -32,6 +32,7 @@ namespace Anthem::Core {
             return true;
         }
         bool setInput(uint32_t idx, std::array<Tp, VecSz>... args) {
+            hasLocalData = true;
             return this->bmaSetDynamicInput(idx, args...);
         }
         ~AnthemShaderStorageBufferImpl() {

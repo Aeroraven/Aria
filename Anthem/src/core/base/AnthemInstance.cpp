@@ -124,7 +124,7 @@ namespace Anthem::Core{
         this->createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         this->createInfo.ppEnabledExtensionNames = extensions.data();
 
-        if(config->vkcgEnableValidationLayers){
+        if(config->vkcfgEnableValidationLayers){
             this->createInfo.enabledLayerCount = static_cast<uint32_t>(config->vkcfgValidationLayers.size());
             this->createInfo.ppEnabledLayerNames = config->vkcfgValidationLayers.data();
         }else{
@@ -150,7 +150,7 @@ namespace Anthem::Core{
         const char** glfwExtensions;
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
         std::vector<const char*> extensions(glfwExtensions,glfwExtensions+glfwExtensionCount);
-        if(config->vkcgEnableValidationLayers){
+        if(config->vkcfgEnableValidationLayers){
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
         extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);

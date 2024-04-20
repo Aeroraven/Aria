@@ -2,7 +2,7 @@
 
 namespace Anthem::Core{
     bool AnthemValLayer::checkValidLayerSupport(){
-        if(cfg->vkcgEnableValidationLayers==false){
+        if(cfg->vkcfgEnableValidationLayers==false){
             return true;
         }
         uint32_t layerCount;
@@ -25,7 +25,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemValLayer::destroyDebugMsgLayer(const VkInstance* instance){
-        if(!cfg->vkcgEnableValidationLayers){
+        if(!cfg->vkcfgEnableValidationLayers){
             return true;
         }
         auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT");
@@ -39,7 +39,7 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemValLayer::createDebugMsgLayer(const VkInstance* instance){
-        if(!cfg->vkcgEnableValidationLayers){
+        if(!cfg->vkcfgEnableValidationLayers){
             return true;
         }
         auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT");
@@ -52,14 +52,14 @@ namespace Anthem::Core{
         }
     }
     bool AnthemValLayer::fillingPointerData(const void** p){
-        if(!cfg->vkcgEnableValidationLayers){
+        if(!cfg->vkcfgEnableValidationLayers){
             return true;
         }
         *p = &debugCreateInfo;
         return true;
     }
     bool AnthemValLayer::createDebugMsgLayerInfo(){
-        if(!cfg->vkcgEnableValidationLayers){
+        if(!cfg->vkcfgEnableValidationLayers){
             return true;
         }
         debugCreateInfo = {};

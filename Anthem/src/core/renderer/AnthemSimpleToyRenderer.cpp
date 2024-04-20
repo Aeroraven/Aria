@@ -157,7 +157,7 @@ namespace Anthem::Core{
             this->windowWidth = w;
         });
 
-        if(this->config->vkcgEnableValidationLayers){
+        if(this->config->vkcfgEnableValidationLayers){
             this->validationLayer->fillingPointerData(this->instance->getCreateInfoPNext());
             this->validationLayer->createDebugMsgLayer(this->instance->getInstance());
         }
@@ -481,11 +481,12 @@ namespace Anthem::Core{
         *pPipeline = graphicsPipeline;
         return true;
     }
-    bool AnthemSimpleToyRenderer::createComputePipelineCustomized(AnthemComputePipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemShaderModule* shaderModule){
+    bool AnthemSimpleToyRenderer::createComputePipelineCustomized(AnthemComputePipeline** pPipeline,
+        std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemShaderModule* shaderModule, std::vector<AnthemPushConstant*>& pushconsts){
         auto compPipeline = new AnthemComputePipeline();
         compPipeline->specifyLogicalDevice(this->logicalDevice.get());
         compPipeline->specifyShaderModule(shaderModule);
-        compPipeline->createPipelineLayoutCustomized(descSetEntries);
+        compPipeline->createPipelineLayoutCustomized(descSetEntries,pushconsts);
         compPipeline->createPipeline();
 
         this->computePipelines.push_back(compPipeline);
@@ -693,6 +694,17 @@ namespace Anthem::Core{
             pushConstant->getSize(),
             pushConstant->getData()
             );
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drPushConstantsCompute(AnthemPushConstant* pushConstant, AnthemComputePipeline* pipeline, uint32_t cmdIdx) {
+        vkCmdPushConstants(
+            *this->commandBuffers->getCommandBuffer(cmdIdx),
+            *(pipeline->getPipelineLayout()),
+            pushConstant->getRange().stageFlags,
+            pushConstant->getRange().offset,
+            pushConstant->getSize(),
+            pushConstant->getData()
+        );
         return true;
     }
     bool AnthemSimpleToyRenderer::drSubmitCommandBufferCompQueueGeneralA(uint32_t cmdIdx, const std::vector<const AnthemSemaphore*>& semaphoreToWait,

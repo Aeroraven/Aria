@@ -173,7 +173,7 @@ namespace Anthem::Core{
         bool createGraphicsPipelineCustomized(AnthemGraphicsPipeline** pPipeline,
             std::vector<AnthemDescriptorSetEntry> descSetEntries, std::vector<AnthemPushConstant*> pushConstants,
             AnthemRenderPass* renderPass,AnthemShaderModule* shaderModule, IAnthemVertexBufferAttrLayout* vertexBuffer,AnthemGraphicsPipelineCreateProps* createProps);
-        bool createComputePipelineCustomized(AnthemComputePipeline** pPipeline,std::vector<AnthemDescriptorSetEntry> descSetEntries,AnthemShaderModule* shaderModule);
+        bool createComputePipelineCustomized(AnthemComputePipeline** pPipeline, std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemShaderModule* shaderModule, std::vector<AnthemPushConstant*>& pushconsts);
         
         bool createSemaphore(AnthemSemaphore** pSemaphore);
         bool createFence(AnthemFence** pFence);
@@ -219,6 +219,7 @@ namespace Anthem::Core{
         bool drSubmitBufferPrimaryCall(uint32_t frameIdx,uint32_t cmdIdx);
         bool drClearCommands(uint32_t cmdIdx);
         bool drPushConstants(AnthemPushConstant* pushConstant, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx);
+        bool drPushConstantsCompute(AnthemPushConstant* pushConstant, AnthemComputePipeline* pipeline, uint32_t cmdIdx);
 
         bool drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx,
             const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>* semaphoreWaitStages,

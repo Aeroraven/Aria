@@ -1,7 +1,7 @@
 #include "../../../include/core/pipeline/AnthemPipelineBase.h"
 
 namespace Anthem::Core {
-    bool AnthemPipelineBase::createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry) {
+    bool AnthemPipelineBase::createPipelineLayoutCustomized(const std::vector<AnthemDescriptorSetEntry>& entry, const std::vector<AnthemPushConstant*> pushConsts) {
         this->pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         this->pipelineLayoutCreateInfo.pNext = nullptr;
         this->pipelineLayoutCreateInfo.flags = 0;
@@ -27,6 +27,15 @@ namespace Anthem::Core {
         }
         this->pipelineLayoutCreateInfo.pSetLayouts = layouts.data();
         this->pipelineLayoutCreateInfo.setLayoutCount = static_cast<uint32_t>(layouts.size());
+
+        // Push Constants
+        std::vector<VkPushConstantRange> constRanges;
+        this->pipelineLayoutCreateInfo.pushConstantRangeCount = pushConsts.size();
+        for (const auto& p : pushConsts) {
+            constRanges.push_back(p->getRange());
+        }
+        this->pipelineLayoutCreateInfo.pPushConstantRanges = constRanges.data();
+
         //Create Layout
         auto result = vkCreatePipelineLayout(this->logicalDevice->getLogicalDevice(), &(this->pipelineLayoutCreateInfo), nullptr, &(this->pipelineLayout));
         if (result != VK_SUCCESS) {

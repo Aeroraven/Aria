@@ -9,6 +9,7 @@ namespace Anthem::Core{
 
     struct AnthemShaderStorageBufferProp{
         std::vector<AnthemGeneralBufferProp> ssbo;
+        std::vector<AnthemGeneralBufferProp> ssboHelper; //Counter Buffer
         AnthemGeneralBufferProp staging;
     };
 
@@ -23,10 +24,14 @@ namespace Anthem::Core{
         char* bufferData;
         uint32_t numCopies = 1;
         AnthemSSBOUsage usage = AnthemSSBOUsage::AT_ASBU_UNDEFINED;
+        bool hasLocalData = false;
 
     public:
         const std::vector<AnthemGeneralBufferProp>* getBuffers(){
             return &(this->bufferProp.ssbo);
+        }
+        const std::vector<AnthemGeneralBufferProp>* getHelperBuffers() {
+            return &(this->bufferProp.ssboHelper);
         }
         uint32_t virtual getBufferSize() {
             return this->calculateBufferSize();
@@ -36,7 +41,10 @@ namespace Anthem::Core{
         }
         bool specifyNumCopies(uint32_t numCopies){
             this->numCopies = numCopies;
+            this->bufferProp.ssbo.reserve(numCopies);
             this->bufferProp.ssbo.resize(numCopies);
+            this->bufferProp.ssboHelper.reserve(numCopies);
+            this->bufferProp.ssboHelper.resize(numCopies);
             return true;
         }
         bool specifyUsage(AnthemSSBOUsage bufferUsage){
@@ -54,6 +62,38 @@ namespace Anthem::Core{
             this->cmdBufs->submitTaskToGraphicsQueue(cmdIdx,true);
             return true;
         }
+
+        bool setAtomicCounter(uint32_t idx, int counter) {
+            AnthemGeneralBufferProp backStaging;
+            this->createBufferInternal(&backStaging, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,nullptr,sizeof(int));
+            vkMapMemory(logicalDevice->getLogicalDevice(), backStaging.bufferMem, 0, VK_WHOLE_SIZE, 0, &backStaging.mappedMem);
+            memcpy(backStaging.mappedMem, &counter, sizeof(counter));
+            
+            VkMappedMemoryRange range{};
+            range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+            range.memory = backStaging.bufferMem;
+            range.size = VK_WHOLE_SIZE;
+            range.offset = 0;
+            range.pNext = nullptr;
+            vkFlushMappedMemoryRanges(logicalDevice->getLogicalDevice(), 1,&range);
+
+
+            uint32_t cmdIdx;
+            this->cmdBufs->createCommandBuffer(&cmdIdx);
+            this->cmdBufs->startCommandRecording(cmdIdx);
+            VkBufferCopy cpInfo = {};
+            cpInfo.size = sizeof(int);
+            vkCmdCopyBuffer(*this->cmdBufs->getCommandBuffer(cmdIdx), backStaging.buffer, this->bufferProp.ssboHelper[idx].buffer, 1, &cpInfo);
+            this->cmdBufs->endCommandRecording(cmdIdx);
+            this->cmdBufs->submitTaskToGraphicsQueue(cmdIdx, true);
+
+            vkUnmapMemory(logicalDevice->getLogicalDevice(), backStaging.bufferMem);
+            vkFreeMemory(logicalDevice->getLogicalDevice(), backStaging.bufferMem, nullptr);
+            vkDestroyBuffer(logicalDevice->getLogicalDevice(), backStaging.buffer, nullptr);
+            return true;
+        }
+
         bool prepareStagingBuffer(){
             this->createBufferInternal(&this->bufferProp.staging,VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -73,7 +113,14 @@ namespace Anthem::Core{
                     this->createBufferInternal(&this->bufferProp.ssbo[i], 
                         (VkBufferUsageFlagBits)(usageBit), 
                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-                    this->copyFromStagingToSSBO(i);
+
+                    // Atomic Counters
+                    this->createBufferInternal(&this->bufferProp.ssboHelper[i],
+                        (VkBufferUsageFlagBits)(usageBit),
+                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT, nullptr, sizeof(int));
+                    setAtomicCounter(i, 0);
+
+                    if(this->hasLocalData)this->copyFromStagingToSSBO(i);
                 }
             }
             return true;
@@ -98,16 +145,39 @@ namespace Anthem::Core{
             return true;
         }
 
+        int getAtomicCounter(int copyId) {
+            int counter = 0;
+            AnthemGeneralBufferProp backStaging;
+            this->createBufferInternal(&backStaging, VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, nullptr, sizeof(int));
+            VkBufferCopy cpInfo = {};
+            cpInfo.size = sizeof(int);
+            vkMapMemory(logicalDevice->getLogicalDevice(), backStaging.bufferMem, 0, VK_WHOLE_SIZE, 0, &backStaging.mappedMem);
+
+            uint32_t cmdIdx;
+            this->cmdBufs->createCommandBuffer(&cmdIdx);
+            this->cmdBufs->startCommandRecording(cmdIdx);
+            vkCmdCopyBuffer(*this->cmdBufs->getCommandBuffer(cmdIdx), this->bufferProp.ssboHelper[copyId].buffer, backStaging.buffer, 1, &cpInfo);
+            this->cmdBufs->endCommandRecording(cmdIdx);
+            this->cmdBufs->submitTaskToGraphicsQueue(cmdIdx, true);
+            memcpy(&counter, backStaging.mappedMem, sizeof(counter));
+            vkUnmapMemory(logicalDevice->getLogicalDevice(), backStaging.bufferMem);
+            vkFreeMemory(logicalDevice->getLogicalDevice(), backStaging.bufferMem, nullptr);
+            vkDestroyBuffer(logicalDevice->getLogicalDevice(), backStaging.buffer, nullptr);
+            return counter;
+        }
+
 
         const VkBuffer* getDestBufferObject(uint32_t copyId) const {
             return &(this->bufferProp.ssbo.at(copyId).buffer);
         }
         bool createShaderStorageBuffer(){
-            prepareStagingBuffer();
+            if (this->hasLocalData)prepareStagingBuffer();
             prepareSSBO();
             return true;
         }
         bool destroyStagingBuffer(){
+            if (!hasLocalData)return true;
             vkFreeMemory(this->logicalDevice->getLogicalDevice(),bufferProp.staging.bufferMem,nullptr);
             vkDestroyBuffer(this->logicalDevice->getLogicalDevice(),bufferProp.staging.buffer,nullptr);
             return true;
@@ -117,6 +187,8 @@ namespace Anthem::Core{
             for(uint32_t i=0;i<this->numCopies;i++){
                 vkFreeMemory(this->logicalDevice->getLogicalDevice(),bufferProp.ssbo.at(i).bufferMem,nullptr);
                 vkDestroyBuffer(this->logicalDevice->getLogicalDevice(),bufferProp.ssbo.at(i).buffer,nullptr);
+                vkFreeMemory(this->logicalDevice->getLogicalDevice(), bufferProp.ssboHelper.at(i).bufferMem, nullptr);
+                vkDestroyBuffer(this->logicalDevice->getLogicalDevice(), bufferProp.ssboHelper.at(i).buffer, nullptr);
             }
             return true;
         }

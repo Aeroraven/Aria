@@ -26,7 +26,7 @@ namespace Anthem::Components::PassHelper {
 			rd->drAllocateCommandBuffer(&cmdIdx[i]);
 		}
 		rd->createShader(&shader, &shaderPath);
-		rd->createComputePipelineCustomized(&pipeline, descLayout[0], shader);
+		rd->createComputePipelineCustomized(&pipeline, descLayout[0], shader,this->pushConstants);
 	}
 	void AnthemComputePassHelper::recordCommand() {
 		for (auto i : AT_RANGE2(copies)) {

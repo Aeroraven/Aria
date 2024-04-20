@@ -9,6 +9,9 @@ namespace Anthem::Core {
 		case AT_APCS_FRAGMENT:
 			this->flags |= VK_SHADER_STAGE_FRAGMENT_BIT;
 			break;
+		case AT_APCS_COMPUTE:
+			this->flags |= VK_SHADER_STAGE_COMPUTE_BIT;
+			break;
 		default:
 			ANTH_LOGE("Unsupported flag:", stage);
 		}
