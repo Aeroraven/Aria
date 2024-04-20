@@ -110,7 +110,7 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 1000.0f, 1.0f * rdW / rdH);
-	st.cam.specifyPosition(0, 25, -2);
+	st.cam.specifyPosition(0, 15, -2);
 	st.cam.specifyFrontEyeRay(0, 0, 1);
 
 	st.keyController = st.cam.getKeyboardController(0.1);

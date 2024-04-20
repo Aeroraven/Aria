@@ -41,8 +41,9 @@ void main(uint3 invId : SV_DispatchThreadID)
     float elev = 7.0;
     float3 pos = float3(invId) / GRID_SIZE + chunkLoc.loc.xyz + float3(4, 0, 4);
     float scaler = 2.99;
-    float ret = (pos.y - TERRAIN_ELEVATION) * elev + 0.1;
-    ret += (exp(cnoise(pos * 1.95)) - 0.95) * ampl * 1.25;
-    ret += fractalApproxPerlin(pos, scaler, 5) * ampl * 0.25;
+    float baseHeight = exp(2 * cnoise(float3(pos.xz * 4.5, 0))) * 0.2;
+    float ret = (pos.y - baseHeight) * elev + 0.1;
+    //ret += (exp(cnoise(pos * 1.95)) - 0.95) * ampl * 1.25;
+    ret += fractalApproxPerlin(pos, scaler, 5) * ampl * sqrt(baseHeight);
     density[invId] = ret;
 }

@@ -22,7 +22,7 @@ struct Mesh
 [[vk::push_constant]] ChunkLocation chunkLoc;
 RWTexture3D<float> density : register(u0, space0);
 AppendStructuredBuffer<Mesh> mesh : register(u0, space1);
-static const float COORDINATE_SCALE  = 32.0;
+static const float COORDINATE_SCALE  = 64.0;
 static const float GRID_SIZE = 512.0;
 static const float3 COORDINATE_OFFSET = float3(-0.5, 0, 0);
 
