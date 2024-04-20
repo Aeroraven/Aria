@@ -72,6 +72,8 @@ Here are all demos implemented in this repository
 | 31. Mesh Shader                                | ○ (AD-19)       | /                |
 | 32. LTC Area Light                             | ○ (AD-28)       | ×                |
 | 33. Global Fog                                 | ○ (AD-30)       | ×                |
+| 34. Marching Cubes                             | ○ (AD-32)       | ×                |
+| 35. Procedural Terrain Generation              | ▲ (AD-32)       | ×                |
 
 
 

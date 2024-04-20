@@ -22,8 +22,8 @@ struct Mesh
 [[vk::push_constant]] ChunkLocation chunkLoc;
 RWTexture3D<float> density : register(u0, space0);
 AppendStructuredBuffer<Mesh> mesh : register(u0, space1);
-static const float COORDINATE_SCALE  = 8.0;
-static const float GRID_SIZE = 256.0;
+static const float COORDINATE_SCALE  = 32.0;
+static const float GRID_SIZE = 512.0;
 static const float3 COORDINATE_OFFSET = float3(-0.5, 0, 0);
 
 static int triLUT[256][16] = {
@@ -349,9 +349,14 @@ void marchingCubes(uint3 co)
 		float interpA = wdA1 / (wdA1 - wdA2);
 		float interpB = wdB1 / (wdB1 - wdB2);
 		float interpC = wdC1 / (wdC1 - wdC2);
-        float3 finalA = interpA * verLUT[linkLUT[triLUT[mask][j]][0]] + (1 - interpA) * verLUT[linkLUT[triLUT[mask][j]][1]];
-        float3 finalB = interpB * verLUT[linkLUT[triLUT[mask][j + 1]][0]] + (1 - interpB) * verLUT[linkLUT[triLUT[mask][j + 1]][1]];
-        float3 finalC = interpC * verLUT[linkLUT[triLUT[mask][j + 2]][0]] + (1 - interpC) * verLUT[linkLUT[triLUT[mask][j + 2]][1]];
+		
+        //interpA = 0.5;
+		//interpB = 0.5;
+		//interpC = 0.5;
+		
+        float3 finalA = interpA * verLUT[linkLUT[triLUT[mask][j]][1]] + (1 - interpA) * verLUT[linkLUT[triLUT[mask][j]][0]];
+        float3 finalB = interpB * verLUT[linkLUT[triLUT[mask][j + 1]][1]] + (1 - interpB) * verLUT[linkLUT[triLUT[mask][j + 1]][0]];
+        float3 finalC = interpC * verLUT[linkLUT[triLUT[mask][j + 2]][1]] + (1 - interpC) * verLUT[linkLUT[triLUT[mask][j + 2]][0]];
 		
 		
         float3 oA = finalA / GRID_SIZE;

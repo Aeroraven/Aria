@@ -40,8 +40,8 @@ inline std::string getShader(auto x) {
 }
 #define DCONST static constexpr const
 struct StageConstants {
-	DCONST int32_t CHUNK_SIZE_X = 256;
-	DCONST int32_t CHUNK_SIZE_ELEVATION = 256;
+	DCONST int32_t CHUNK_SIZE_X = 512;
+	DCONST int32_t CHUNK_SIZE_ELEVATION = 512;
 
 	DCONST int32_t COMPUTE_GROUP_X = 8;
 	DCONST int32_t COMPUTE_GROUP_Y = 8;
@@ -49,7 +49,7 @@ struct StageConstants {
 	DCONST int32_t DEMO_X = 0;
 	DCONST int32_t DEMO_Z = 0;
 
-	DCONST int32_t MAX_TRIANGLES = 600000;
+	DCONST int32_t MAX_TRIANGLES = 1500000*3;
 }sc;
 #undef DCONST
  
@@ -110,7 +110,7 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 1000.0f, 1.0f * rdW / rdH);
-	st.cam.specifyPosition(0, 8, -2);
+	st.cam.specifyPosition(0, 25, -2);
 	st.cam.specifyFrontEyeRay(0, 0, 1);
 
 	st.keyController = st.cam.getKeyboardController(0.1);

@@ -10,7 +10,7 @@ struct ChunkLocation
 [[vk::push_constant]] ChunkLocation chunkLoc;
 RWTexture3D<float> density : register(u0, space0);
 static const float TERRAIN_ELEVATION = 0.5;
-static const float GRID_SIZE = 256.0;
+static const float GRID_SIZE = 512.0;
 
 float rand(float3 co)
 {
@@ -27,7 +27,7 @@ float fractalApproxPerlin(float3 co, float scaler, int octaves)
     {
         value += cnoise(co * frequency* scaler) * amplitude;
         sumAmpl += amplitude;
-        amplitude *= 0.5;
+        amplitude *= 0.75;
         frequency *= 2;
     }
     return value/sumAmpl;
@@ -38,8 +38,11 @@ float fractalApproxPerlin(float3 co, float scaler, int octaves)
 void main(uint3 invId : SV_DispatchThreadID)
 {
     float ampl = 1.5;
-    float elev = 4.0;
-    float3 pos = float3(invId) / GRID_SIZE + chunkLoc.loc.xyz + float3(2, 0, 2);
-    float scaler = 1.12;
-    density[invId] = fractalApproxPerlin(pos, scaler, 5) * ampl  + (pos.y - TERRAIN_ELEVATION) * elev+0.1;
+    float elev = 7.0;
+    float3 pos = float3(invId) / GRID_SIZE + chunkLoc.loc.xyz + float3(4, 0, 4);
+    float scaler = 2.99;
+    float ret = (pos.y - TERRAIN_ELEVATION) * elev + 0.1;
+    ret += (exp(cnoise(pos * 1.95)) - 0.95) * ampl * 1.25;
+    ret += fractalApproxPerlin(pos, scaler, 5) * ampl * 0.25;
+    density[invId] = ret;
 }
