@@ -20,6 +20,7 @@
 #include "../include/components/math/AnthemNoise.h"
 #include "../include/components/postprocessing/AnthemGlobalFog.h"
 #include "../include/components/postprocessing/AnthemFXAA.h"
+#include "../include/components/postprocessing/AnthemSimpleBlur.h"
 #include "../include/components/camera/AnthemOrbitControl.h"
 
 using namespace Anthem::Components::Performance;
@@ -40,23 +41,29 @@ inline std::string getShader(auto x) {
 }
 #define DCONST static constexpr const
 struct StageConstants {
-	DCONST int32_t CHUNK_SIZE_X = 512;
-	DCONST int32_t CHUNK_SIZE_ELEVATION = 512;
+	DCONST int32_t CHUNK_SIZE_X = 168;
+	DCONST int32_t CHUNK_SIZE_ELEVATION = 168;
 
 	DCONST int32_t COMPUTE_GROUP_X = 8;
 	DCONST int32_t COMPUTE_GROUP_Y = 8;
 	DCONST int32_t COMPUTE_GROUP_Z = 8;
-	DCONST int32_t DEMO_X = 0;
-	DCONST int32_t DEMO_Z = 0;
+	DCONST int32_t DEMO_X = 1;
+	DCONST int32_t DEMO_Z = 1;
 
-	DCONST int32_t MAX_TRIANGLES = 1500000*3;
+	DCONST int32_t MAX_TRIANGLES = 190000*15;
+	DCONST float WATER_WIDTH = 1600;
+	DCONST float WATER_ELEVATION = 50;
+	DCONST float SKYBOX_SIZE = 800;
+	DCONST float SKYBOX_ELEVATION = 50;
 }sc;
 #undef DCONST
- 
+
+
+
 struct Chunk {
 	int32_t x, z;
 	AnthemImage* volDensity;
-	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>, AtBufVecd4f<1>>* mesh;
+	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>, AtBufVecd4f<1>, AtBufVecd4f<1>>* mesh;
 	AnthemPushConstantImpl<AtBufVec4f<1>>* pc; //(Loclx,Loclz,0,0)
 	AnthemDescriptorPool* descVol;
 	AnthemDescriptorPool* descMesh;
@@ -67,7 +74,18 @@ struct Chunk {
 
 	AnthemSemaphore* volPassDone;
 	AnthemFence* mcPassDone;
+	AnthemIndexBuffer* ix;
+	int gpuTriangles = 0;
 };
+
+struct Surface {
+	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>, AtAttributeVecf<4>>* vx;
+	AnthemIndexBuffer* ix;
+}sf;
+
+struct Skybox {
+
+}sb;
 
 struct Stage {
 	// Base
@@ -80,18 +98,33 @@ struct Stage {
 	AnthemUniformBufferImpl<AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>>* ubCamera;
 
 	// Geometry
-	AnthemIndexBuffer* index;
 	std::map<std::pair<int, int>, Chunk> chunks;
 	Chunk* demoChunk;
 
-	// Render Target
-	AnthemDescriptorPool* descTarget;
-	AnthemImage* canvas;
+	// Render Target (G-Buffers)
+	AnthemDescriptorPool* descGColor;
+	AnthemDescriptorPool* descGNormal;
+	AnthemDescriptorPool* descGPos;
+	AnthemDescriptorPool* descGAO;
+	AnthemDescriptorPool* descGTangent;
+	AnthemDescriptorPool* descGDeferBlend;
+
+	AnthemImage* gColor;
+	AnthemImage* gNormal;
+	AnthemImage* gPos;
+	AnthemImage* gAO;
+	AnthemImage* gTangent;
+	AnthemImage* gDeferBlend;
 
 	// Passes
 	std::unique_ptr<AnthemComputePassHelper> passVol;
 	std::unique_ptr<AnthemComputePassHelper> passMarchingCube;
-	std::unique_ptr<AnthemPassHelper> passDraw;
+	std::unique_ptr<AnthemPassHelper> passDefer;
+	std::unique_ptr<AnthemPassHelper> passAO;
+	std::unique_ptr<AnthemSimpleBlur> passAOPost;
+	std::unique_ptr<AnthemPassHelper> passDeferBlend;
+	std::unique_ptr<AnthemPassHelper> passSurface;
+	std::unique_ptr<AnthemPassHelper> passSkybox;
 	std::unique_ptr<AnthemFXAA> passFXAA;
 
 	// Command Sequence
@@ -100,7 +133,23 @@ struct Stage {
 
 	// Counters
 	int gpuTrianlges = 0;
+
+	// Ambient Occlusion
+	using uxSamples = AtUniformVecfArray<4, 64>;
+	AnthemDescriptorPool* descAOSamples;
+	AnthemUniformBufferImpl<uxSamples>* aoSamples;
+
+	// Skybox
+	AnthemVertexBufferImpl<AtAttributeVecf<4>>* sbox;
+	AnthemIndexBuffer* ixBox;
+	AnthemDescriptorPool* descBox;
+	AnthemImageCubic* texSkybox;
 }st;
+
+struct DeferMesh {
+	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>>* vx;
+	AnthemIndexBuffer* ix;
+}canvas;
 
 void initialize() {
 	st.cfg.demoName = "32. Procedural Terrain";
@@ -109,11 +158,11 @@ void initialize() {
 	st.rd.initialize();
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
-	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 1000.0f, 1.0f * rdW / rdH);
-	st.cam.specifyPosition(0, 15, -2);
+	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 10000.0f, 1.0f * rdW / rdH);
+	st.cam.specifyPosition(4, 204, -284);
 	st.cam.specifyFrontEyeRay(0, 0, 1);
 
-	st.keyController = st.cam.getKeyboardController(0.1);
+	st.keyController = st.cam.getKeyboardController(2.4);
 	st.rd.ctSetKeyBoardController(st.keyController);
 }
 
@@ -123,12 +172,12 @@ void createChunk(int x, int z) {
 	c.x = x;
 	c.z = z;
 	st.rd.createDescriptorPool(&c.descVol);
-	st.rd.createTexture3d(&c.volDensity, c.descVol, nullptr, sc.CHUNK_SIZE_X+1, sc.CHUNK_SIZE_ELEVATION+1, sc.CHUNK_SIZE_X+1,
-		1, 0, AT_IF_SIGNED_FLOAT32_MONO, -1,AT_IU_COMPUTE_OUTPUT);
+	st.rd.createTexture3d(&c.volDensity, c.descVol, nullptr, sc.CHUNK_SIZE_X + 1, sc.CHUNK_SIZE_ELEVATION + 1, sc.CHUNK_SIZE_X + 1,
+		1, 0, AT_IF_SIGNED_FLOAT32_MONO, -1, AT_IU_COMPUTE_OUTPUT);
 	c.volDensity->toGeneralLayout();
 	st.rd.addStorageImageArrayToDescriptor({ c.volDensity }, c.descVol, 0, -1);
 	st.rd.createDescriptorPool(&c.descMesh);
-	uint32_t chunkSize = std::min(sc.MAX_TRIANGLES, sc.CHUNK_SIZE_X * sc.CHUNK_SIZE_ELEVATION * sc.CHUNK_SIZE_X * 15);
+	uint32_t chunkSize = std::min(static_cast<uint32_t>(sc.MAX_TRIANGLES), sc.CHUNK_SIZE_X * sc.CHUNK_SIZE_ELEVATION * sc.CHUNK_SIZE_X * 15u);
 	using ssboType = std::remove_cv_t<decltype(c.mesh)>;
 	std::optional<std::function<void(ssboType)>> initFunc = std::nullopt;
 	st.rd.createShaderStorageBuffer(&c.mesh, chunkSize, 0, c.descMesh, initFunc, -1);
@@ -144,12 +193,60 @@ void createChunk(int x, int z) {
 	c.pc->enableShaderStage(AT_APCS_COMPUTE);
 	c.pc->enableShaderStage(AT_APCS_VERTEX);
 	c.pc->enableShaderStage(AT_APCS_FRAGMENT);
-	float constpc[4] = { (float)x,(float)z,0,0 };
+	auto sA = 0;
+	auto sB = 0;
+	float constpc[4] = { (float)x,(float)z,sA,sB };
+
+	ANTH_LOGI("Random number is:", sA, "-", sB);
+
 	c.pc->setConstant(constpc);
 
 	if (x == sc.DEMO_X && z == sc.DEMO_Z) {
 		st.demoChunk = &c;
 	}
+}
+
+void createGeometrySkybox() {
+	auto c = sc.SKYBOX_SIZE;
+	auto d = sc.SKYBOX_ELEVATION;
+	const std::vector<std::array<float, 4>> vertices = {
+		{-c,-c,-c,c},{c,-c,-c,c},{c,c,-c,c},{-c,c,-c,c},
+		{-c,-c,c,c},{c,-c,c,c},{c,c,c,c},{-c,c,c,c}
+	};
+	const std::vector<uint32_t> indices = {
+		0,1,2,2,3,0,
+		4,5,6,6,7,4,
+		0,3,7,7,4,0,
+		1,2,6,6,5,1,
+		0,1,5,5,4,0,
+		3,2,6,6,7,3
+	};
+	st.rd.createVertexBuffer(&st.sbox);
+	st.rd.createIndexBuffer(&st.ixBox);
+	st.ixBox->setIndices(indices);
+	st.sbox->setTotalVertices(8);
+	for (auto i : AT_RANGE(0, 8))st.sbox->insertData(i, vertices[i]);
+}
+
+inline std::string getSkyboxTex(auto x) {
+	std::string st(ANTH_ASSET_DIR);
+	st += "skybox2\\";
+	st += x;
+	st += ".png";
+	return st;
+}
+
+
+void createTextures() {
+	const char* fileNames[6] = { "px","nx","py","ny","pz","nz" };
+	std::array<uint8_t*, 6> rawData;
+	uint32_t width, height, channel;
+	AnthemImageLoader loader;
+	for (auto i : AT_RANGE(0, 6)) {
+		loader.loadImage(getSkyboxTex(fileNames[i]).c_str(), &width, &height, &channel, &rawData[i]);
+	}
+	st.rd.createDescriptorPool(&st.descBox);
+	st.rd.createCubicTextureSimple(&st.texSkybox, st.descBox, rawData, width, height, channel, 0, -1);
 }
 
 void recordChunkCommands(int x, int z) {
@@ -203,65 +300,252 @@ void createComputePass() {
 	st.passMarchingCube->buildComputePipeline();
 }
 
+void createSkyPass() {
+	st.passSkybox = std::make_unique<AnthemPassHelper>(&st.rd, static_cast<uint32_t>(st.cfg.vkcfgMaxImagesInFlight));
+	st.passSkybox->shaderPath.vertexShader = getShader("sky.vert");
+	st.passSkybox->shaderPath.fragmentShader = getShader("sky.frag");
+	st.passSkybox->vxLayout = st.sbox;
+	st.passSkybox->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.passSkybox->setRenderTargets({ st.gColor, st.gNormal,st.gPos, st.gTangent });
+	st.passSkybox->passOpt.clearColors = { {0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f} ,{0.0f,0.0f,0.0f,0.0f} };
+	st.passSkybox->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.passSkybox->passOpt.clearColorAttachmentOnLoad = { false,false,false,false };
+	st.passSkybox->passOpt.clearDepthAttachmentOnLoad = false;
+	st.passSkybox->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 };
+	st.passSkybox->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.passSkybox->setDescriptorLayouts({
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0},
+		{st.descBox,AT_ACDS_SAMPLER,0},
+	});
+	st.passSkybox->setDepthFromPass(*st.passDefer);
+	st.passSkybox->buildGraphicsPipeline();
+}
+
+
 void createGraphicsPass() {
-	st.passDraw = std::make_unique<AnthemPassHelper>(&st.rd, 2);
-	st.passDraw->shaderPath.fragmentShader = getShader("draw.frag");
-	st.passDraw->shaderPath.vertexShader = getShader("draw.vert");
-	st.passDraw->setRenderTargets({ st.canvas });
-	st.passDraw->setDescriptorLayouts({
+	// Defer Pass
+	st.passDefer = std::make_unique<AnthemPassHelper>(&st.rd, 2);
+	st.passDefer->shaderPath.fragmentShader = getShader("draw.frag");
+	st.passDefer->shaderPath.vertexShader = getShader("draw.vert");
+	st.passDefer->pipeOpt.enableCullMode = true;
+	st.passDefer->pipeOpt.cullMode = AT_ACM_BACK;
+	st.passDefer->pipeOpt.frontFace = AT_AFF_COUNTER_CLOCKWISE;
+	st.passDefer->setRenderTargets({ st.gColor, st.gNormal,st.gPos, st.gTangent });
+	st.passDefer->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32 };
+	st.passDefer->passOpt.clearColors={{0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f} ,{0.0f,0.0f,0.0f,0.0f} };
+	st.passDefer->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.passDefer->setDescriptorLayouts({
 		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0}
 	});
-	st.passDraw->vxLayout = st.demoChunk->mesh;
-	st.passDraw->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
-	st.passDraw->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
-	st.passDraw->buildGraphicsPipeline();
+	st.passDefer->vxLayout = st.demoChunk->mesh;
+	st.passDefer->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.passDefer->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 };
+	st.passDefer->passOpt.clearColorAttachmentOnLoad = { true,true,true,true };
+	st.passDefer->buildGraphicsPipeline();
 
+	// AO Pass
+	st.passAO = std::make_unique<AnthemPassHelper>(&st.rd, 2);
+	st.passAO->shaderPath.fragmentShader = getShader("ao.frag");
+	st.passAO->shaderPath.vertexShader = getShader("ao.vert");
+	st.passAO->setRenderTargets({st.gAO });
+	st.passAO->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.passAO->setDescriptorLayouts({
+		{st.descGColor,AT_ACDS_SAMPLER,0},
+		{st.descGNormal,AT_ACDS_SAMPLER,0},
+		{st.descGPos,AT_ACDS_SAMPLER,0},
+		{st.descGTangent,AT_ACDS_SAMPLER,0},
+		{st.descAOSamples,AT_ACDS_UNIFORM_BUFFER,0},
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0}
+	});
+	st.passAO->vxLayout = canvas.vx;
+	st.passAO->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.passAO->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.passAO->buildGraphicsPipeline();
+
+	// Water Pass I
+	st.passSurface = std::make_unique<AnthemPassHelper>(&st.rd, 2);
+	st.passSurface->shaderPath.fragmentShader = getShader("water.frag");
+	st.passSurface->shaderPath.vertexShader = getShader("water.vert");
+	st.passSurface->setRenderTargets({ st.gColor, st.gNormal,st.gPos, st.gTangent });
+	st.passSurface->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32 };
+	st.passSurface->passOpt.clearColors = { {0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f} ,{0.0f,0.0f,0.0f,0.0f} };
+	st.passSurface->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.passSurface->passOpt.clearDepthAttachmentOnLoad = false;
+	st.passSurface->passOpt.clearColorAttachmentOnLoad = { false,false,false,false };
+	st.passSurface->setDepthFromPass(*st.passDefer);
+	st.passSurface->setDescriptorLayouts({
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0}
+		});
+	st.passSurface->vxLayout = st.demoChunk->mesh;
+	st.passSurface->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.passSurface->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 };
+	st.passSurface->buildGraphicsPipeline();
+
+	// AO Post
+	st.passAOPost = std::make_unique<AnthemSimpleBlur>(&st.rd, 2);
+	st.passAOPost->addInput({
+		{st.descGAO,AT_ACDS_SAMPLER,0},
+	});
+	st.passAOPost->prepare(true);
+
+	// Defer Blend
+	st.passDeferBlend = std::make_unique<AnthemPassHelper>(&st.rd, 2);
+	st.passDeferBlend->shaderPath.fragmentShader = getShader("blend.frag");
+	st.passDeferBlend->shaderPath.vertexShader = getShader("blend.vert");
+	st.passDeferBlend->setRenderTargets({ st.gDeferBlend });
+	st.passDeferBlend->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.passDeferBlend->setDescriptorLayouts({
+		{st.descGColor,AT_ACDS_SAMPLER,0},
+		{st.descGNormal,AT_ACDS_SAMPLER,0},
+		{st.descGPos,AT_ACDS_SAMPLER,0},
+		{st.passAOPost->getColorAttachmentDescId(0),AT_ACDS_SAMPLER,0},
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0}
+		});
+
+	st.passDeferBlend->vxLayout = canvas.vx;
+	st.passDeferBlend->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.passDeferBlend->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.passDeferBlend->buildGraphicsPipeline();
+
+	// FXAA Pass
 	st.passFXAA = std::make_unique<AnthemFXAA>(&st.rd, 2);
 	st.passFXAA->addInput({
-		{st.descTarget,AT_ACDS_SAMPLER,0},
+		{st.descGDeferBlend,AT_ACDS_SAMPLER,0},
 		});
 	st.passFXAA->prepare(false);
 }
 
+void prepareAOSamples() {
+	std::vector<float> samples(4 * 64);
+	for (int i = 0; i < 4 * 64; i += 4) {
+		const auto d = AnthemLinAlg::randomVector3<float>();
+		samples[i] = d[0];
+		samples[i + 1] = d[1];
+		samples[i + 2] = d[2];
+		samples[i + 3] = (rand() % 10);
+	}
+	st.aoSamples->specifyUniforms(samples.data());
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.aoSamples->updateBuffer(i);
+	}
+}
+
+
 void createUniform() {
 	st.rd.createDescriptorPool(&st.descCamera);
 	st.rd.createUniformBuffer(&st.ubCamera, 0, st.descCamera, -1);
-	st.rd.createDescriptorPool(&st.descTarget);
-	st.rd.createColorAttachmentImage(&st.canvas, st.descTarget, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+
+	// GBuffers
+	st.rd.createDescriptorPool(&st.descGColor);
+	st.rd.createColorAttachmentImage(&st.gColor, st.descGColor, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createDescriptorPool(&st.descGNormal);
+	st.rd.createColorAttachmentImage(&st.gNormal, st.descGNormal, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createDescriptorPool(&st.descGPos);
+	st.rd.createColorAttachmentImage(&st.gPos, st.descGPos, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createDescriptorPool(&st.descGAO);
+	st.rd.createColorAttachmentImage(&st.gAO, st.descGAO, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createDescriptorPool(&st.descAOSamples);
+	st.rd.createUniformBuffer(&st.aoSamples, 0, st.descAOSamples, -1);
+	st.rd.createDescriptorPool(&st.descGTangent);
+	st.rd.createColorAttachmentImage(&st.gTangent, st.descGTangent, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createDescriptorPool(&st.descGDeferBlend);
+	st.rd.createColorAttachmentImage(&st.gDeferBlend, st.descGDeferBlend, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 }
 
-void createIndexBuffer() {
-	st.gpuTrianlges = 1;
-	for(auto& [k,v]:st.chunks) {
-		st.gpuTrianlges += v.mesh->getAtomicCounter(0);
+void createWaterGeometry() {
+	st.rd.createVertexBuffer(&sf.vx);
+	st.rd.createIndexBuffer(&sf.ix);
+
+	sf.vx->setTotalVertices(4);
+	sf.vx->insertData(0, { -sc.WATER_WIDTH,sc.WATER_ELEVATION,-sc.WATER_WIDTH,1 }, { 0,1,0,0 }, { 1,0,0,0 });
+	sf.vx->insertData(1, { sc.WATER_WIDTH,sc.WATER_ELEVATION,-sc.WATER_WIDTH,1 }, { 1,1,0,0 }, { 1,0,0,0 });
+	sf.vx->insertData(2, { sc.WATER_WIDTH,sc.WATER_ELEVATION,sc.WATER_WIDTH,1 }, { 1,0,0,0 }, { 1,0,0,0 });
+	sf.vx->insertData(3, { -sc.WATER_WIDTH,sc.WATER_ELEVATION,sc.WATER_WIDTH,1 }, { 0,0,0,0 }, { 1,0,0,0 });
+
+	sf.ix->setIndices({ 0,1,2,2,3,0 });
+}
+
+void createIndexBuffer(int x,int z) {
+	st.rd.createIndexBuffer(&st.chunks[{x, z}].ix);
+	std::vector<uint32_t> indices = {};
+	st.chunks[{x, z}].gpuTriangles = st.chunks[{x, z}].mesh->getAtomicCounter(0);
+	ANTH_LOGI("Valid idx",st.chunks[{x, z}].gpuTriangles);
+	auto lm = st.chunks[{x, z}].gpuTriangles * 3 + 3;
+	for (auto i : AT_RANGE2(lm)) {
+		indices.push_back(i);
 	}
-	st.rd.createIndexBuffer(&st.index);
-	std::vector<uint32_t> idx;
-	for (auto i : AT_RANGE2(st.gpuTrianlges * 3)) {
-		idx.push_back(i);
+	st.chunks[{x, z}].ix->setIndices(indices);
+	st.chunks[{x, z}].ix->createBuffer();
+}
+
+void prepareDeferCanvas() {
+	st.rd.createVertexBuffer(&canvas.vx);
+	st.rd.createIndexBuffer(&canvas.ix);
+	canvas.vx->setTotalVertices(4);
+	float dw = 1.0;
+	canvas.vx->insertData(0, { -dw,-dw,0,1 }, { 0,0,0,0 });
+	canvas.vx->insertData(1, { dw,-dw,0,1 }, { 1,0,0,0 });
+	canvas.vx->insertData(2, { dw,dw,0,1 }, { 1,1,0,0 });
+	canvas.vx->insertData(3, { -dw,dw,0,1 }, { 0,1,0,0 });
+	canvas.ix->setIndices({ 0,1,2,2,3,0 });
+}
+
+void injectCommands(uint32_t x) {
+	ANTH_LOGI(st.chunks.size(), "SIZE");
+	for (auto& [k, v] : st.chunks) {
+		ANTH_LOGI("Add commands", k.first, " ", k.second);
+		st.rd.drBindVertexBufferFromSsbo(v.mesh, 0, x);
+		st.rd.drBindIndexBuffer(v.ix, x);
+		st.rd.drDraw(v.ix->getIndexCount(), x);
 	}
-	st.index->setIndices(idx);
-	st.index->createBuffer();
-	ANTH_LOGI("Total Triangles = ", st.gpuTrianlges, " Total Indicecs = ", idx.size());
 }
 
 void recordDrawCommand() {
-	st.passDraw->recordCommands([&](uint32_t x) {
-		st.rd.drBindVertexBufferFromSsbo(st.demoChunk->mesh,0, x);
-		st.rd.drBindIndexBuffer(st.index, x);
-		st.rd.drDraw(st.index->getIndexCount(), x);
+	st.passSurface->recordCommands([&](uint32_t x) {
+		st.rd.drBindVertexBuffer(sf.vx, x);
+		st.rd.drBindIndexBuffer(sf.ix, x);
+		st.rd.drDraw(sf.ix->getIndexCount(), x);
 	});
+	st.passDefer->recordCommands([&](uint32_t x) {
+		injectCommands(x);
+	});
+	st.passAO->recordCommands([&](uint32_t x) {
+		st.rd.drBindVertexBuffer(canvas.vx, x);
+		st.rd.drBindIndexBuffer(canvas.ix, x);
+		st.rd.drDraw(6, x);
+	});
+	st.passDeferBlend->recordCommands([&](uint32_t x) {
+		st.rd.drBindVertexBuffer(canvas.vx, x);
+		st.rd.drBindIndexBuffer(canvas.ix, x);
+		st.rd.drDraw(6, x);
+	});
+	st.passSkybox->recordCommands([&](uint32_t x) {
+		st.rd.drBindVertexBuffer(st.sbox, x);
+		st.rd.drBindIndexBuffer(st.ixBox, x);
+		st.rd.drDraw(st.ixBox->getIndexCount(), x);
+	});
+	st.passAOPost->recordCommandOffscreen();
 	st.passFXAA->recordCommand();
 
 	st.seq[0] = std::make_unique<AnthemSequentialCommand>(&st.rd);
 	st.seq[1] = std::make_unique<AnthemSequentialCommand>(&st.rd);
 
 	st.seq[0]->setSequence({
-		{ st.passDraw->getCommandIndex(0), ATC_ASCE_GRAPHICS},
+		{ st.passDefer->getCommandIndex(0), ATC_ASCE_GRAPHICS},
+		{st.passSurface->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+		{st.passSkybox->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+		{ st.passAO->getCommandIndex(0), ATC_ASCE_GRAPHICS},
+		{ st.passAOPost->getCommandIdx(0),ATC_ASCE_GRAPHICS},
+		{ st.passDeferBlend->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passFXAA->getCommandIdx(0), ATC_ASCE_GRAPHICS},
-		});
+	});
 	st.seq[1]->setSequence({
-		{ st.passDraw->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
+		{ st.passDefer->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
+		{st.passSurface->getCommandIndex(1),ATC_ASCE_GRAPHICS},
+		{st.passSkybox->getCommandIndex(1),ATC_ASCE_GRAPHICS},
+		{ st.passAO->getCommandIndex(1), ATC_ASCE_GRAPHICS},
+		{ st.passAOPost->getCommandIdx(1),ATC_ASCE_GRAPHICS},
+		{ st.passDeferBlend->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{ st.passFXAA->getCommandIdx(1), ATC_ASCE_GRAPHICS},
 	});
 }
@@ -282,6 +566,31 @@ void updateUniform() {
 	}
 }
 
+void createAllChunks() {
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+			createChunk(i, j);
+		}
+	}
+}
+
+void recordAllChunks() {
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+			recordChunkCommands(i, j);
+		}
+	}
+}
+void createAllIndexBuffer() {
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+			createIndexBuffer(i, j);
+		}
+	}
+
+}
+
+
 void drawLoop() {
 	static int cur = 0;
 	updateUniform();
@@ -295,16 +604,21 @@ void drawLoop() {
 int main() {
 	initialize();
 	createUniform();
-
-	createChunk(sc.DEMO_X, sc.DEMO_Z);
+	createTextures();
+	createWaterGeometry();
+	createGeometrySkybox();
+	prepareAOSamples();
+	prepareDeferCanvas();
+	createAllChunks();
 	createComputePass();
 	createGraphicsPass();
+	createSkyPass();
 
 	st.rd.registerPipelineSubComponents();
-	recordChunkCommands(sc.DEMO_X, sc.DEMO_Z);
+	recordAllChunks();
 	ANTH_LOGI("Chunk created");
 
-	createIndexBuffer();
+	createAllIndexBuffer();
 	recordDrawCommand();
 
 	st.rd.setDrawFunction(drawLoop);

@@ -9,6 +9,7 @@ struct OutVertex
 {
     float4 position;
     float4 normal;
+    float4 tangent;
 };
 struct Triangle
 {
@@ -22,8 +23,9 @@ struct Mesh
 [[vk::push_constant]] ChunkLocation chunkLoc;
 RWTexture3D<float> density : register(u0, space0);
 AppendStructuredBuffer<Mesh> mesh : register(u0, space1);
-static const float COORDINATE_SCALE  = 64.0;
-static const float GRID_SIZE = 512.0;
+static const float COORDINATE_SCALE  = 192.0;
+static const float Y_ELEVATION = 312.0;
+static const float GRID_SIZE = 168.0;
 static const float3 COORDINATE_OFFSET = float3(-0.5, 0, 0);
 
 static int triLUT[256][16] = {
@@ -317,6 +319,35 @@ static float3 genLUT[12] = {
     float3(0, 0.5, 1)
 };
 
+float interpolatedDensity(float3 co)
+{
+    float d[8];
+    uint3 index = uint3(co);
+    float3 frac = co - float3(index);
+	for (int i = 0; i < 8; i++)
+    {
+        d[i] = density[index + verLUT[i]];
+    }
+        
+    float d0 = lerp(d[0], d[1], frac.x);
+    float d1 = lerp(d[3], d[2], frac.x);
+    float d2 = lerp(d[4], d[5], frac.x);
+    float d3 = lerp(d[7], d[6], frac.x);
+        
+    float d4 = lerp(d0, d1, frac.z);
+    float d5 = lerp(d2, d3, frac.z);
+        
+    return lerp(d4, d5, frac.y);
+}
+float3 fieldGradient(float3 co)
+{
+    float3 grad;
+	grad.x = interpolatedDensity(co + float3(1, 0, 0)) - interpolatedDensity(co - float3(1, 0, 0));
+	grad.y = interpolatedDensity(co + float3(0, 1, 0)) - interpolatedDensity(co - float3(0, 1, 0));
+	grad.z = interpolatedDensity(co + float3(0, 0, 1)) - interpolatedDensity(co - float3(0, 0, 1));
+	return grad;
+}
+
 void marchingCubes(uint3 co)
 {
     uint3 vert[8];
@@ -332,12 +363,12 @@ void marchingCubes(uint3 co)
     }
 	
     voxelId = voxelId * 15;
-    float3 cp = float3(co) / GRID_SIZE;
+    float3 cp = float3(co) / (GRID_SIZE - 1);
     for (int j = 0; j < 15; j += 3)
     {
         if (triLUT[mask][j] == -1 || co.x == GRID_SIZE - 1 || co.y == GRID_SIZE - 1 || co.z == GRID_SIZE - 1)
         {
-            continue;
+            break;
         }
 		float wdA1 = density[vert[linkLUT[triLUT[mask][j]][0]]];
 		float wdA2 = density[vert[linkLUT[triLUT[mask][j]][1]]];
@@ -350,33 +381,46 @@ void marchingCubes(uint3 co)
 		float interpB = wdB1 / (wdB1 - wdB2);
 		float interpC = wdC1 / (wdC1 - wdC2);
 		
-        //interpA = 0.5;
-		//interpB = 0.5;
-		//interpC = 0.5;
-		
         float3 finalA = interpA * verLUT[linkLUT[triLUT[mask][j]][1]] + (1 - interpA) * verLUT[linkLUT[triLUT[mask][j]][0]];
         float3 finalB = interpB * verLUT[linkLUT[triLUT[mask][j + 1]][1]] + (1 - interpB) * verLUT[linkLUT[triLUT[mask][j + 1]][0]];
         float3 finalC = interpC * verLUT[linkLUT[triLUT[mask][j + 2]][1]] + (1 - interpC) * verLUT[linkLUT[triLUT[mask][j + 2]][0]];
 		
 		
-        float3 oA = finalA / GRID_SIZE;
-        float3 oB = finalB / GRID_SIZE;
-        float3 oC = finalC / GRID_SIZE;
+        float3 oA = finalA / (GRID_SIZE - 1);
+        float3 oB = finalB / (GRID_SIZE - 1);
+        float3 oC = finalC / (GRID_SIZE - 1);
+		
+		float3 coordScale = float3(COORDINATE_SCALE,Y_ELEVATION,COORDINATE_SCALE);
 		
         Triangle tri;
-        tri.v[0].position = float4((oA + cp + COORDINATE_OFFSET) * COORDINATE_SCALE, 1);
-		tri.v[1].position = float4((oB + cp + COORDINATE_OFFSET) * COORDINATE_SCALE, 1);
-		tri.v[2].position = float4((oC + cp + COORDINATE_OFFSET) * COORDINATE_SCALE, 1);
+        tri.v[0].position = float4((oA + cp + COORDINATE_OFFSET + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y)) * coordScale, 1);
+        tri.v[1].position = float4((oB + cp + COORDINATE_OFFSET + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y)) * coordScale, 1);
+        tri.v[2].position = float4((oC + cp + COORDINATE_OFFSET + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y)) * coordScale, 1);
+		
+
 		
 		
-		// Calculate Normal
-        float3 da = tri.v[0].position.xyz;
-        float3 db = tri.v[1].position.xyz;
-        float3 dc = tri.v[2].position.xyz;
-        float3 n = normalize(cross(dc - db, db - da));
-        tri.v[0].normal = float4(n, 0);
-        tri.v[1].normal = float4(n, 0);
-        tri.v[2].normal = float4(n, 0);
+		// Interpolate field to get normals use gradient
+        float3 gradA = fieldGradient((oA + cp) * (GRID_SIZE - 1));
+        float3 gradB = fieldGradient((oB + cp) * (GRID_SIZE - 1));
+        float3 gradC = fieldGradient((oC + cp) * (GRID_SIZE - 1));
+		
+		tri.v[0].normal = float4(normalize(gradA), 0);
+        tri.v[1].normal = float4(normalize(gradB), 0);
+        tri.v[2].normal = float4(normalize(gradC), 0);
+		
+		float3 eAB = normalize(oB - oA);
+		float3 eAC = -normalize(oC - oA);
+		float3 eBC = normalize(oC - oB);
+		
+		// Get tangents
+        float3 tangentA = normalize(eAB - dot(tri.v[0].normal.xyz, eAB) * eAB);
+		float3 tangentC = normalize(eAC - dot(tri.v[2].normal.xyz, eAC) * eAC);
+		float3 tangentB = normalize(eBC - dot(tri.v[1].normal.xyz, eBC) * eBC);
+		
+		tri.v[0].tangent = float4(tangentA, 0);
+		tri.v[1].tangent = float4(tangentB, 0);
+		tri.v[2].tangent = float4(tangentC, 0);
 		
         Mesh m;
 		m.t = tri;

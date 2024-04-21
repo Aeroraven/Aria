@@ -39,6 +39,7 @@ namespace Anthem::Components::Postprocessing {
 		prepareShader();
 		if (offscreen) {
 			ropt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+			ropt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
 			drawOffscreen = true;
 		}
 		prepareRenderPass();
@@ -52,9 +53,10 @@ namespace Anthem::Components::Postprocessing {
 			this->targetImage = new AnthemImage * [this->cmdCopies];
 			this->fbTarget = new AnthemFramebuffer * [this->cmdCopies];
 			this->pipeline = new AnthemGraphicsPipeline * [this->cmdCopies];
+
 			for (auto i : AT_RANGE2(this->cmdCopies)) {
 				rd->createDescriptorPool(&descTarget[i]);
-				rd->createColorAttachmentImage(&targetImage[i], descTarget[i], 0, AT_IF_SWAPCHAIN, false, -1,true);
+				rd->createColorAttachmentImage(&targetImage[i], descTarget[i], 0, AT_IF_SIGNED_FLOAT32, false, -1,true);
 				rd->createSimpleFramebufferA(&fbTarget[i], { this->targetImage[i] }, this->pass, depthStencil);
 				rd->createGraphicsPipelineCustomized(&pipeline[i], inputs[0], {}, pass, shader, vx, &copt);
 			}
