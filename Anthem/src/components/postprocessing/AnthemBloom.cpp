@@ -50,7 +50,7 @@ namespace Anthem::Components::Postprocessing {
 		downViewports.resize(layers);
 		downPc.reserve(layers);
 		downPc.resize(layers);
-		downPopt.enableDepthTestsing = false;
+		downPopt.enableDepthTesting = false;
 
 		rd->createDescriptorPool(&downChain);
 		std::vector<AnthemImageContainer*> imgc;

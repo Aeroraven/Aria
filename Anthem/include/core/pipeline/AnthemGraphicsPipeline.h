@@ -65,7 +65,8 @@ namespace Anthem::Core{
         std::optional<AnthemViewport*> customViewport = std::nullopt;
 
         // Depth / Stencil Testing
-        bool enableDepthTestsing = true;
+        bool enableDepthTesting = true;
+        bool enableDepthWriting = true;
         bool enableDynamicStencilTesting = false;
 
         // Cull Mode

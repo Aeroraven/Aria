@@ -243,13 +243,13 @@ namespace Anthem::Core{
         this->depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         this->depthStencilStateCreateInfo.pNext = nullptr;  
         this->depthStencilStateCreateInfo.flags = 0;
-        if (!this->extraProps.enableDepthTestsing) {
+        if (!this->extraProps.enableDepthTesting) {
             this->depthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
             this->depthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
         }
         else {
             this->depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-            this->depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+            this->depthStencilStateCreateInfo.depthWriteEnable = this->extraProps.enableDepthWriting ? VK_TRUE : VK_FALSE;
         }
         this->depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
         this->depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;

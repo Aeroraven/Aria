@@ -160,7 +160,7 @@ void createTransparentPipeline() {
 	st.rd.createSimpleFramebuffer(&st.fbTransparent, &colorAtts, st.rpTransparent, st.depthTransparent);
 
 	st.coptTransparent.blendPreset = { AnthemBlendPreset::AT_ABP_WEIGHTED_BLENDED_ACCUM, AnthemBlendPreset::AT_ABP_WEIGHTED_BLENDED_REVEAL };
-	st.coptTransparent.enableDepthTestsing = false;
+	st.coptTransparent.enableDepthTesting = false;
 	st.coptTransparent.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
 	st.rd.createGraphicsPipelineCustomized(&st.ppTransparent, {}, { st.pconst }, st.rpTransparent, st.shTransparent, st.vx, &st.coptTransparent);
 }
@@ -182,7 +182,7 @@ void createOpaquePipeline() {
 	std::vector<const AnthemImage*> colorAtts = { st.cbSolid };
 	st.rd.createSimpleFramebuffer(&st.fbOpaque, &colorAtts, st.rpOpaque, st.depthOpaque);
 	st.coptOpaque.blendPreset = { AnthemBlendPreset::AT_ABP_NO_BLEND };
-	st.coptOpaque.enableDepthTestsing = true;
+	st.coptOpaque.enableDepthTesting = true;
 	st.coptOpaque.inputTopo = AnthemInputAssemblerTopology::AT_AIAT_TRIANGLE_LIST;
 	st.rd.createGraphicsPipelineCustomized(&st.ppOpaque, {}, { st.pconst }, st.rpOpaque, st.shOpaque, st.vx, &st.coptOpaque);
 }

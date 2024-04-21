@@ -143,7 +143,7 @@ void createOutlineStage() {
 	st.roptOutline.clearDepthAttachmentOnLoad = false;
 	st.roptOutline.clearStencilAttachmentOnLoad = false;
 	st.coptOutline.enableDynamicStencilTesting = true;
-	st.coptOutline.enableDepthTestsing = false;
+	st.coptOutline.enableDepthTesting = false;
 	st.roptOutline.clearColorAttachmentOnLoad = { false };
 
 	st.rd.setupRenderPass(&st.passOutline, &st.roptOutline, st.depthMain);

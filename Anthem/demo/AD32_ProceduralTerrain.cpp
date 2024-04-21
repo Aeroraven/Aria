@@ -83,9 +83,6 @@ struct Surface {
 	AnthemIndexBuffer* ix;
 }sf;
 
-struct Skybox {
-
-}sb;
 
 struct Stage {
 	// Base
@@ -95,7 +92,7 @@ struct Stage {
 	AnthemCamera cam = AnthemCamera(AT_ACPT_PERSPECTIVE);
 	AnthemDescriptorPool* descCamera;
 	AnthemFrameRateMeter frm = AnthemFrameRateMeter(10);
-	AnthemUniformBufferImpl<AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>>* ubCamera;
+	AnthemUniformBufferImpl<AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>, AtUniformVecf<4>>* ubCamera;
 
 	// Geometry
 	std::map<std::pair<int, int>, Chunk> chunks;
@@ -108,6 +105,7 @@ struct Stage {
 	AnthemDescriptorPool* descGAO;
 	AnthemDescriptorPool* descGTangent;
 	AnthemDescriptorPool* descGDeferBlend;
+	AnthemDescriptorPool* descGUnderwaterMask;
 
 	AnthemImage* gColor;
 	AnthemImage* gNormal;
@@ -115,6 +113,7 @@ struct Stage {
 	AnthemImage* gAO;
 	AnthemImage* gTangent;
 	AnthemImage* gDeferBlend;
+	AnthemImage* gUnderWaterMask;
 
 	// Passes
 	std::unique_ptr<AnthemComputePassHelper> passVol;
@@ -362,23 +361,22 @@ void createGraphicsPass() {
 	st.passAO->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
 	st.passAO->buildGraphicsPipeline();
 
-	// Water Pass I
+	// Water Pass I: Get Mask for Underwater stuffs
 	st.passSurface = std::make_unique<AnthemPassHelper>(&st.rd, 2);
 	st.passSurface->shaderPath.fragmentShader = getShader("water.frag");
 	st.passSurface->shaderPath.vertexShader = getShader("water.vert");
-	st.passSurface->setRenderTargets({ st.gColor, st.gNormal,st.gPos, st.gTangent });
-	st.passSurface->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32 };
-	st.passSurface->passOpt.clearColors = { {0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f} ,{0.0f,0.0f,0.0f,0.0f} };
-	st.passSurface->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.passSurface->setRenderTargets({ st.gUnderWaterMask });
+	st.passSurface->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.passSurface->passOpt.storeDepthValues = true;
+	st.passSurface->pipeOpt.enableDepthWriting = false;
 	st.passSurface->passOpt.clearDepthAttachmentOnLoad = false;
-	st.passSurface->passOpt.clearColorAttachmentOnLoad = { false,false,false,false };
+	st.passSurface->passOpt.clearColorAttachmentOnLoad = { true };
 	st.passSurface->setDepthFromPass(*st.passDefer);
 	st.passSurface->setDescriptorLayouts({
 		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0}
 		});
 	st.passSurface->vxLayout = st.demoChunk->mesh;
 	st.passSurface->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
-	st.passSurface->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 };
 	st.passSurface->buildGraphicsPipeline();
 
 	// AO Post
@@ -399,8 +397,9 @@ void createGraphicsPass() {
 		{st.descGNormal,AT_ACDS_SAMPLER,0},
 		{st.descGPos,AT_ACDS_SAMPLER,0},
 		{st.passAOPost->getColorAttachmentDescId(0),AT_ACDS_SAMPLER,0},
-		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0}
-		});
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0},
+		{st.descGUnderwaterMask,AT_ACDS_SAMPLER,0}
+	});
 
 	st.passDeferBlend->vxLayout = canvas.vx;
 	st.passDeferBlend->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
@@ -450,6 +449,8 @@ void createUniform() {
 	st.rd.createColorAttachmentImage(&st.gTangent, st.descGTangent, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 	st.rd.createDescriptorPool(&st.descGDeferBlend);
 	st.rd.createColorAttachmentImage(&st.gDeferBlend, st.descGDeferBlend, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createDescriptorPool(&st.descGUnderwaterMask);
+	st.rd.createColorAttachmentImage(&st.gUnderWaterMask, st.descGUnderwaterMask, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 }
 
 void createWaterGeometry() {
@@ -552,15 +553,22 @@ void recordDrawCommand() {
 
 void updateUniform() {
 	AtMatf4 proj, view, local;
+	AtVecf3 camPos;
 	st.cam.getProjectionMatrix(proj);
 	st.cam.getViewMatrix(view);
+	st.cam.getPosition(camPos);
 	local = AnthemLinAlg::eye<float, 4>();
 
 	float pm[16], vm[16], lm[16], vc[4];
+
+	vc[0] = camPos[0];
+	vc[1] = camPos[1];
+	vc[2] = camPos[2];
+	vc[3] = 0;
 	proj.columnMajorVectorization(pm);
 	view.columnMajorVectorization(vm);
 	local.columnMajorVectorization(lm);
-	st.ubCamera->specifyUniforms(pm, vm, lm);
+	st.ubCamera->specifyUniforms(pm, vm, lm,vc);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.ubCamera->updateBuffer(i);
 	}

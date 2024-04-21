@@ -249,7 +249,14 @@ namespace Anthem::Core{
                 depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
                 depthAttachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
             }
-            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+            if (opt.storeDepthValues) {
+                depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            }
+            else {
+                depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            }
+
 
             if (depthBuffer->isStencilEnabled()) {
                 if (opt.clearStencilAttachmentOnLoad) {

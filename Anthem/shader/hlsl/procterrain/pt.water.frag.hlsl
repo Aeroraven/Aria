@@ -1,11 +1,7 @@
 struct PSOutput
 {
-    float4 color : SV_Target0;
-    float4 normal : SV_Target1;
-    float4 position : SV_Target2;
-    float4 tangent : SV_Target3;
+    float4 mask : SV_Target0;
 };
-
 
 struct VSOutput
 {
@@ -18,9 +14,6 @@ struct VSOutput
 PSOutput main(VSOutput vsOut)
 {
     PSOutput psOut;
-    psOut.color = float4(0.2, 0.2, 1.0, 1.0);
-    psOut.normal = vsOut.normal;
-    psOut.position = vsOut.position;
-    psOut.tangent = vsOut.tangent;
+    psOut.mask = float4(vsOut.position.xyz, 1.0);
     return psOut;
 }
