@@ -39,7 +39,7 @@ static const float3 WATER_COLOR = float3(0.13, 0.54, 0.89);
 static const float WATER_REFRAC_INDICE = 0.1427;
 static const float WATER_SIZE = 1600;
 static const float WATER_ELEVATION = 50;
-static const float WATER_WAVE_STRENGTH = 0.02;
+static const float WATER_WAVE_STRENGTH = 0.003;
 
 float4 gamma(float4 color)
 {
@@ -80,7 +80,7 @@ float4 pointColor(float2 uv,float4 posr)
         float diff = max(0, dot(normal, lightDir));
     
         // Ambient
-        float ambient = 0.1;
+        float ambient = 0.4;
     
         float3 finalColor = color.rgb * (ambient + diff) * ao;
         ret = float4(finalColor, 1.0);
@@ -106,14 +106,15 @@ PSOutput main(VSOutput vsOut)
     PSOutput psOut;
     float4 posr = texPosition.Sample(sampPosition, vsOut.texUv.xy).xyzw;
     psOut.color = pointColor(vsOut.texUv.xy, posr);
-
     
     // Water Blending
     float4 waterData = texWaterMask.Sample(sampWaterMask, vsOut.texUv.xy).rgba;
     float2 waterUV = texWaterUV.Sample(sampWaterUV, vsOut.texUv.xy).xy;
     
-
-    float2 waterDistortion = texWaterDuDv.Sample(sampWaterDuDv, vsOut.texUv.xy).xy * 2.0 - 1.0;
+    float timeStep = frac(cam.timer.x * 0.015);
+    float2 waterDistortion1 = texWaterDuDv.Sample(sampWaterDuDv, frac((vsOut.texUv.xy + float2(timeStep, 0)) * 3.0)).xy * 2.0 - 1.0;
+    float2 waterDistortion2 = texWaterDuDv.Sample(sampWaterDuDv, frac((vsOut.texUv.xy * float2(-1, 0) + float2(0, timeStep)) * 3.0)).xy * 2.0 - 1.0;
+    float2 waterDistortion = waterDistortion1 + waterDistortion2;
     
     float2 waterNewUV = waterUV + waterDistortion * WATER_WAVE_STRENGTH;
     float4 waterPos = getWaterPosition(waterNewUV);
@@ -195,8 +196,7 @@ PSOutput main(VSOutput vsOut)
     float fresnel = schlickFresnel(WATER_REFRAC_INDICE, ndotl);
     float3 transColor = lerp(refractColor, reflectColor, fresnel);
     
-    
-    psOut.color.rgb = lerp(transColor, waterColor, 0.3);
+    psOut.color.rgb = lerp(transColor, waterColor, 0.4);
     
     // Final Color
     psOut.color = gamma(psOut.color);

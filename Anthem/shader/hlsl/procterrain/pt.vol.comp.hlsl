@@ -10,14 +10,15 @@ struct ChunkLocation
 [[vk::push_constant]] ChunkLocation chunkLoc;
 RWTexture3D<float> density : register(u0, space0);
 static const float TERRAIN_ELEVATION = 0.5;
-static const float GRID_SIZE = 168.0;
+static const float GRID_SIZE = 96.0;
+static const float GRID_SIZE_Y = 144.0;
+static const float OFFSET_X = 323.34;
+static const float OFFSET_Z = 497.09;
 
 float rand(float3 co)
 {
     return frac(sin(dot(co.xyz, float3(12.9898, 78.233, 45.543))) * 43758.5453);
 }
-
-
 
 float sigmoidShift(float v, float shift)
 {
@@ -55,7 +56,7 @@ float fractalBaseHeightF(float2 pos)
     {
         value += cnoise(dpos * frequency) * amplitude;
         //Domain Warp
-        dpos += cnoise(dpos * frequency) * 0.45 * sqrt(amplitude);
+        dpos += cnoise(dpos * frequency) * 0.5 * sqrt(amplitude);
         sumAmpl += amplitude;
         amplitude *= 0.35;
         frequency *= 2;
@@ -69,22 +70,22 @@ float fractalBaseHeightF(float2 pos)
 
 float edgeModify(float2 v)
 {
-    float2 center = float2(0.5, 0.5) + float2(228.382, 497.09);
+    float2 center = float2(0.5, 0.5) + float2(OFFSET_X, OFFSET_Z);
     float distCenter = length(center - v);
-    float bv = (1 - distCenter / length(float2(1.5, 1.5)));
+    float bv = smoothstep(0, 1, (1 - distCenter / length(float2(1.8, 1.8))));
     float modf = sigmoidShift((bv - 0.5) * 8.0, 0);
     if (bv < 0.5)
     {
         modf = exp((bv - 0.5) * 8.0)*0.5;
     }
-    return modf;
+    return 1-modf;
 }
 float centerElevation(float2 v)
 {
-    float2 center = float2(0.5, 0.5) + float2(228.382, 497.09);
+    float2 center = float2(0.5, 0.5) + float2(OFFSET_X, OFFSET_Z);
     float distCenter = length(center - v);
-    float modf = sigmoidShift(((1 - distCenter / length(float2(1.5, 1.5))) - 0.5) * 8.0, 0);
-    return modf;
+    float modf = sigmoidShift(((distCenter / length(float2(1.5, 1.5))) - 0.5) * 8.0, 0);
+    return modf ;
 
 }
 
@@ -92,18 +93,18 @@ float centerElevation(float2 v)
 [numthreads(8, 8, 8)]
 void main(uint3 invId : SV_DispatchThreadID)
 {
-    float ampl = 0.05;
+    float ampl = 0.15;
     float elev = 14.0;
-    float3 pos = float3(invId) / (GRID_SIZE - 1) + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y) + float3(228.382, 0, 497.09);
-    float scaler = 15.5;
-    float baseScaler = 1.05;
+    float3 pos = float3(invId) / float3(GRID_SIZE - 1, GRID_SIZE_Y-1,GRID_SIZE-1) + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y) + float3(OFFSET_X, 0, OFFSET_Z);
+    float scaler = 2.2;
+    float baseScaler = 0.30;
     
     // Base Height
     float baseHeight = fractalBaseHeightF(pos.xz * baseScaler);
-    baseHeight = (baseHeight + centerElevation(pos.xz) * 0.3) * edgeModify(pos.xz);
+    baseHeight = (baseHeight*0.9 + centerElevation(pos.xz) * 0.1) * edgeModify(pos.xz);
     // Details
     float ret = 0;
     ret += (pos.y - baseHeight) * elev;
-    ret -= fractalApproxPerlin(pos, scaler, 1)*ampl;
+    ret += fractalApproxPerlin(pos, scaler, 2)*ampl;
     density[invId] = ret;
 }

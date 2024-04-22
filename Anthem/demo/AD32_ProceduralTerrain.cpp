@@ -41,8 +41,8 @@ inline std::string getShader(auto x) {
 }
 #define DCONST static constexpr const
 struct StageConstants {
-	DCONST int32_t CHUNK_SIZE_X = 168;
-	DCONST int32_t CHUNK_SIZE_ELEVATION = 168;
+	DCONST int32_t CHUNK_SIZE_X = 96;
+	DCONST int32_t CHUNK_SIZE_ELEVATION = 144;
 
 	DCONST int32_t COMPUTE_GROUP_X = 8;
 	DCONST int32_t COMPUTE_GROUP_Y = 8;
@@ -50,11 +50,12 @@ struct StageConstants {
 	DCONST int32_t DEMO_X = 1;
 	DCONST int32_t DEMO_Z = 1;
 
-	DCONST int32_t MAX_TRIANGLES = 190000*15;
+	DCONST int32_t MAX_TRIANGLES = 90000*3;
 	DCONST float WATER_WIDTH = 1600;
 	DCONST float WATER_ELEVATION = 50;
-	DCONST float SKYBOX_SIZE = 800;
+	DCONST float SKYBOX_SIZE = 1800;
 	DCONST float SKYBOX_ELEVATION = 50;
+	DCONST float WORLD_SIZE = 3;
 }sc;
 #undef DCONST
 
@@ -173,7 +174,7 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 10000.0f, 1.0f * rdW / rdH);
-	st.cam.specifyPosition(4, 204, -384);
+	st.cam.specifyPosition(4, 138, -284);
 	st.cam.specifyFrontEyeRay(0, 0, 1);
 
 	st.keyController = st.cam.getKeyboardController(2.4);
@@ -649,23 +650,23 @@ void updateUniform() {
 }
 
 void createAllChunks() {
-	for (int i = -1; i <= 1; i++) {
-		for (int j = -1; j <= 1; j++) {
+	for (int i = -sc.WORLD_SIZE; i <= sc.WORLD_SIZE; i++) {
+		for (int j = -sc.WORLD_SIZE; j <= sc.WORLD_SIZE; j++) {
 			createChunk(i, j);
 		}
 	}
 }
 
 void recordAllChunks() {
-	for (int i = -1; i <= 1; i++) {
-		for (int j = -1; j <= 1; j++) {
+	for (int i = -sc.WORLD_SIZE; i <= sc.WORLD_SIZE; i++) {
+		for (int j = -sc.WORLD_SIZE; j <= sc.WORLD_SIZE; j++) {
 			recordChunkCommands(i, j);
 		}
 	}
 }
 void createAllIndexBuffer() {
-	for (int i = -1; i <= 1; i++) {
-		for (int j = -1; j <= 1; j++) {
+	for (int i = -sc.WORLD_SIZE; i <= sc.WORLD_SIZE; i++) {
+		for (int j = -sc.WORLD_SIZE; j <= sc.WORLD_SIZE; j++) {
 			createIndexBuffer(i, j);
 		}
 	}
