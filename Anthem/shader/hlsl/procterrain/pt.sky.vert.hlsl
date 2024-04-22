@@ -1,3 +1,4 @@
+#include "pt.common.hlsl"
 
 struct VSInput
 {
@@ -10,12 +11,6 @@ struct VSOutput
     [[vk::location(0)]] float4 texCoord : TEXCOORD0;
 };
 
-struct Camera
-{
-    float4x4 proj;
-    float4x4 view;
-    float4x4 model;
-};
 
 ConstantBuffer<Camera> cam : register(b0, space0);
 

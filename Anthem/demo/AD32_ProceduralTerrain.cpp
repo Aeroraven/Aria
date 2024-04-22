@@ -79,7 +79,7 @@ struct Chunk {
 };
 
 struct Surface {
-	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>, AtAttributeVecf<4>>* vx;
+	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>, AtAttributeVecf<4>, AtAttributeVecf<4>>* vx;
 	AnthemIndexBuffer* ix;
 }sf;
 
@@ -92,7 +92,13 @@ struct Stage {
 	AnthemCamera cam = AnthemCamera(AT_ACPT_PERSPECTIVE);
 	AnthemDescriptorPool* descCamera;
 	AnthemFrameRateMeter frm = AnthemFrameRateMeter(10);
-	AnthemUniformBufferImpl<AtUniformMatf<4>, AtUniformMatf<4>, AtUniformMatf<4>, AtUniformVecf<4>>* ubCamera;
+	AnthemUniformBufferImpl<
+		AtUniformMatf<4>, 
+		AtUniformMatf<4>, 
+		AtUniformMatf<4>, 
+		AtUniformVecf<4>, //Cam Pos
+		AtUniformVecf<4>  //Tick
+	>* ubCamera;
 
 	// Geometry
 	std::map<std::pair<int, int>, Chunk> chunks;
@@ -106,6 +112,7 @@ struct Stage {
 	AnthemDescriptorPool* descGTangent;
 	AnthemDescriptorPool* descGDeferBlend;
 	AnthemDescriptorPool* descGUnderwaterMask;
+	AnthemDescriptorPool* descGWaterUV;
 
 	AnthemImage* gColor;
 	AnthemImage* gNormal;
@@ -114,6 +121,13 @@ struct Stage {
 	AnthemImage* gTangent;
 	AnthemImage* gDeferBlend;
 	AnthemImage* gUnderWaterMask;
+	AnthemImage* gWaterUV;
+
+	// Water Normals
+	AnthemDescriptorPool* descWNormal;
+	AnthemImage* waterNormal;
+	AnthemDescriptorPool* descWDuDv;
+	AnthemImage* waterDuDv;
 
 	// Passes
 	std::unique_ptr<AnthemComputePassHelper> passVol;
@@ -123,6 +137,7 @@ struct Stage {
 	std::unique_ptr<AnthemSimpleBlur> passAOPost;
 	std::unique_ptr<AnthemPassHelper> passDeferBlend;
 	std::unique_ptr<AnthemPassHelper> passSurface;
+	std::unique_ptr<AnthemPassHelper> passGround;
 	std::unique_ptr<AnthemPassHelper> passSkybox;
 	std::unique_ptr<AnthemFXAA> passFXAA;
 
@@ -158,7 +173,7 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 10000.0f, 1.0f * rdW / rdH);
-	st.cam.specifyPosition(4, 204, -284);
+	st.cam.specifyPosition(4, 204, -384);
 	st.cam.specifyFrontEyeRay(0, 0, 1);
 
 	st.keyController = st.cam.getKeyboardController(2.4);
@@ -235,6 +250,13 @@ inline std::string getSkyboxTex(auto x) {
 	return st;
 }
 
+inline std::string getWaterAssets(auto x) {
+	std::string st(ANTH_ASSET_DIR);
+	st += "procterrain\\";
+	st += x;
+	st += ".png";
+	return st;
+}
 
 void createTextures() {
 	const char* fileNames[6] = { "px","nx","py","ny","pz","nz" };
@@ -246,6 +268,19 @@ void createTextures() {
 	}
 	st.rd.createDescriptorPool(&st.descBox);
 	st.rd.createCubicTextureSimple(&st.texSkybox, st.descBox, rawData, width, height, channel, 0, -1);
+}
+
+void loadWaterTextures() {
+	uint32_t width, height, channel;
+	uint8_t* rawData;
+	AnthemImageLoader loader;
+	loader.loadImage(getWaterAssets("normalMap").c_str(), &width, &height, &channel, &rawData);
+	st.rd.createDescriptorPool(&st.descWNormal);
+	st.rd.createTexture(&st.waterNormal, st.descWNormal, rawData, width, height, channel, 0, false, false, AT_IF_UNORM_UINT8, -1);
+	loader.loadImage(getWaterAssets("waterDuDv").c_str(), &width, &height, &channel, &rawData);
+	st.rd.createDescriptorPool(&st.descWDuDv);
+	st.rd.createTexture(&st.waterDuDv, st.descWDuDv, rawData, width, height, channel, 0, false, false, AT_IF_UNORM_UINT8, -1);
+
 }
 
 void recordChunkCommands(int x, int z) {
@@ -342,6 +377,26 @@ void createGraphicsPass() {
 	st.passDefer->passOpt.clearColorAttachmentOnLoad = { true,true,true,true };
 	st.passDefer->buildGraphicsPipeline();
 
+	// Ground Pass
+	st.passGround = std::make_unique<AnthemPassHelper>(&st.rd, 2);
+	st.passGround->shaderPath.fragmentShader = getShader("ground.frag");
+	st.passGround->shaderPath.vertexShader = getShader("ground.vert");
+	st.passGround->setRenderTargets({ st.gColor, st.gNormal,st.gPos, st.gTangent });
+	st.passGround->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32 };
+	st.passGround->passOpt.clearColors = { {0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f} ,{0.0f,0.0f,0.0f,0.0f} };
+	st.passGround->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.passGround->setDescriptorLayouts({
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0}
+		});
+	st.passGround->vxLayout = sf.vx;
+	st.passGround->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.passGround->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 };
+	st.passGround->passOpt.clearColorAttachmentOnLoad = { false,false,false,false };
+	st.passGround->setDepthFromPass(*st.passDefer);
+	st.passGround->passOpt.clearDepthAttachmentOnLoad = false;
+	st.passGround->buildGraphicsPipeline();
+
+
 	// AO Pass
 	st.passAO = std::make_unique<AnthemPassHelper>(&st.rd, 2);
 	st.passAO->shaderPath.fragmentShader = getShader("ao.frag");
@@ -365,18 +420,20 @@ void createGraphicsPass() {
 	st.passSurface = std::make_unique<AnthemPassHelper>(&st.rd, 2);
 	st.passSurface->shaderPath.fragmentShader = getShader("water.frag");
 	st.passSurface->shaderPath.vertexShader = getShader("water.vert");
-	st.passSurface->setRenderTargets({ st.gUnderWaterMask });
-	st.passSurface->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.passSurface->setRenderTargets({ st.gUnderWaterMask,st.gWaterUV });
+	st.passSurface->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 };
+	st.passSurface->passOpt.clearColors = { {0,0,0,0},{0,0,0,0} };
 	st.passSurface->passOpt.storeDepthValues = true;
 	st.passSurface->pipeOpt.enableDepthWriting = false;
 	st.passSurface->passOpt.clearDepthAttachmentOnLoad = false;
-	st.passSurface->passOpt.clearColorAttachmentOnLoad = { true };
+	st.passSurface->passOpt.clearColorAttachmentOnLoad = { true,true };
 	st.passSurface->setDepthFromPass(*st.passDefer);
 	st.passSurface->setDescriptorLayouts({
-		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0}
-		});
-	st.passSurface->vxLayout = st.demoChunk->mesh;
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0},
+	});
+	st.passSurface->vxLayout = sf.vx;
 	st.passSurface->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.passSurface->pipeOpt.blendPreset = {AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
 	st.passSurface->buildGraphicsPipeline();
 
 	// AO Post
@@ -398,7 +455,12 @@ void createGraphicsPass() {
 		{st.descGPos,AT_ACDS_SAMPLER,0},
 		{st.passAOPost->getColorAttachmentDescId(0),AT_ACDS_SAMPLER,0},
 		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0},
-		{st.descGUnderwaterMask,AT_ACDS_SAMPLER,0}
+		{st.descGUnderwaterMask,AT_ACDS_SAMPLER,0},
+		{st.descBox,AT_ACDS_SAMPLER,0},
+		{st.descWNormal,AT_ACDS_SAMPLER,0},
+		{st.descWDuDv,AT_ACDS_SAMPLER,0},
+		{st.descGWaterUV, AT_ACDS_SAMPLER,0}
+
 	});
 
 	st.passDeferBlend->vxLayout = canvas.vx;
@@ -451,6 +513,8 @@ void createUniform() {
 	st.rd.createColorAttachmentImage(&st.gDeferBlend, st.descGDeferBlend, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 	st.rd.createDescriptorPool(&st.descGUnderwaterMask);
 	st.rd.createColorAttachmentImage(&st.gUnderWaterMask, st.descGUnderwaterMask, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createDescriptorPool(&st.descGWaterUV);
+	st.rd.createColorAttachmentImage(&st.gWaterUV, st.descGWaterUV, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 }
 
 void createWaterGeometry() {
@@ -458,10 +522,10 @@ void createWaterGeometry() {
 	st.rd.createIndexBuffer(&sf.ix);
 
 	sf.vx->setTotalVertices(4);
-	sf.vx->insertData(0, { -sc.WATER_WIDTH,sc.WATER_ELEVATION,-sc.WATER_WIDTH,1 }, { 0,1,0,0 }, { 1,0,0,0 });
-	sf.vx->insertData(1, { sc.WATER_WIDTH,sc.WATER_ELEVATION,-sc.WATER_WIDTH,1 }, { 1,1,0,0 }, { 1,0,0,0 });
-	sf.vx->insertData(2, { sc.WATER_WIDTH,sc.WATER_ELEVATION,sc.WATER_WIDTH,1 }, { 1,0,0,0 }, { 1,0,0,0 });
-	sf.vx->insertData(3, { -sc.WATER_WIDTH,sc.WATER_ELEVATION,sc.WATER_WIDTH,1 }, { 0,0,0,0 }, { 1,0,0,0 });
+	sf.vx->insertData(0, { -sc.WATER_WIDTH,sc.WATER_ELEVATION,-sc.WATER_WIDTH,1 },{0,1,0,0}, {1,0,0,0}, {0,0,0,0});
+	sf.vx->insertData(1, { sc.WATER_WIDTH,sc.WATER_ELEVATION,-sc.WATER_WIDTH,1 }, { 0,1,0,0 }, { 1,0,0,0 }, { 1,0,0,0 });
+	sf.vx->insertData(2, { sc.WATER_WIDTH,sc.WATER_ELEVATION,sc.WATER_WIDTH,1 }, { 0,1,0,0 }, { 1,0,0,0 }, { 1,1,0,0 });
+	sf.vx->insertData(3, { -sc.WATER_WIDTH,sc.WATER_ELEVATION,sc.WATER_WIDTH,1 }, { 0,1,0,0 }, { 1,0,0,0 }, { 0,1,0,0 });
 
 	sf.ix->setIndices({ 0,1,2,2,3,0 });
 }
@@ -510,6 +574,11 @@ void recordDrawCommand() {
 	st.passDefer->recordCommands([&](uint32_t x) {
 		injectCommands(x);
 	});
+	st.passGround->recordCommands([&](uint32_t x) {
+		st.rd.drBindVertexBuffer(sf.vx, x);
+		st.rd.drBindIndexBuffer(sf.ix, x);
+		st.rd.drDraw(sf.ix->getIndexCount(), x);
+	});
 	st.passAO->recordCommands([&](uint32_t x) {
 		st.rd.drBindVertexBuffer(canvas.vx, x);
 		st.rd.drBindIndexBuffer(canvas.ix, x);
@@ -533,6 +602,7 @@ void recordDrawCommand() {
 
 	st.seq[0]->setSequence({
 		{ st.passDefer->getCommandIndex(0), ATC_ASCE_GRAPHICS},
+		{st.passGround->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{st.passSurface->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{st.passSkybox->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(0), ATC_ASCE_GRAPHICS},
@@ -542,6 +612,7 @@ void recordDrawCommand() {
 	});
 	st.seq[1]->setSequence({
 		{ st.passDefer->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
+		{st.passGround->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passSurface->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passSkybox->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(1), ATC_ASCE_GRAPHICS},
@@ -560,15 +631,18 @@ void updateUniform() {
 	local = AnthemLinAlg::eye<float, 4>();
 
 	float pm[16], vm[16], lm[16], vc[4];
+	float tick[4];
 
 	vc[0] = camPos[0];
 	vc[1] = camPos[1];
 	vc[2] = camPos[2];
 	vc[3] = 0;
+	tick[0] = static_cast<float>(glfwGetTime());
+	
 	proj.columnMajorVectorization(pm);
 	view.columnMajorVectorization(vm);
 	local.columnMajorVectorization(lm);
-	st.ubCamera->specifyUniforms(pm, vm, lm,vc);
+	st.ubCamera->specifyUniforms(pm, vm, lm,vc,tick);
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.ubCamera->updateBuffer(i);
 	}
@@ -613,6 +687,7 @@ int main() {
 	initialize();
 	createUniform();
 	createTextures();
+	loadWaterTextures();
 	createWaterGeometry();
 	createGeometrySkybox();
 	prepareAOSamples();

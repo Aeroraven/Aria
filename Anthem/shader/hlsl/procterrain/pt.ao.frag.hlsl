@@ -1,3 +1,5 @@
+#include "pt.common.hlsl"
+
 struct VSOutput
 {
     [[vk::location(0)]] float4 texUv : TEXCOORD0;
@@ -10,13 +12,6 @@ struct PSOutput
 {
     float4 ao : SV_Target0;
 };
-struct Camera
-{
-    float4x4 proj;
-    float4x4 view;
-    float4x4 model;
-};
-
 
 Texture2D texColor : register(t0, space0);
 SamplerState sampColor : register(s0, space0);

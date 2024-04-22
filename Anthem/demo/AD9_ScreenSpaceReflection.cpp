@@ -104,6 +104,7 @@ void prepareOffscreenPass(){
         .colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 },
         .clearColorAttachmentOnLoad = {true,true,true,true}
     };
+    setupOpt.clearColors = { {0,0,0,1},{0,0,0,1} ,{0,0,0,1} ,{0,0,0,1} };
     renderer.setupRenderPass(&offscreenPass.pass,&setupOpt,offscreenPass.depthBuffer);
     ANTH_LOGI("Render Pass Created");
 
@@ -130,8 +131,9 @@ void prepareOffscreenPass(){
         .inTypeIndex = 0
     };
     std::vector<AnthemDescriptorSetEntry> descSetEntriesRegPipeline = {samplerDescEntryRegPipeline,uniformBufferDescEntryRegPipeline};
-
-    renderer.createGraphicsPipelineCustomized(&offscreenPass.pipeline,descSetEntriesRegPipeline, {}, offscreenPass.pass,offscreenPass.shader,meshes.vxBuffers[0],nullptr);
+    AnthemGraphicsPipelineCreateProps cprop;
+    cprop.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND ,AT_ABP_NO_BLEND ,AT_ABP_NO_BLEND };
+    renderer.createGraphicsPipelineCustomized(&offscreenPass.pipeline,descSetEntriesRegPipeline, {}, offscreenPass.pass,offscreenPass.shader,meshes.vxBuffers[0],&cprop);
     ANTH_LOGI("Pipeline Created");
 }
 
@@ -278,7 +280,7 @@ void updateOffscrUniform(int currentFrame){
     int rdWinH,rdWinW;
     renderer.exGetWindowSize(rdWinH,rdWinW);
     auto axis = Math::AnthemVector<float,3>({0.0f,1.0f,0.0f});
-    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.3);
+    auto local = Math::AnthemLinAlg::axisAngleRotationTransform3(axis,(float)glfwGetTime()*0.0+AT_PI);
     auto localrot = local.clipSubmatrixLeftTop<3,3>();
     
     AtMatf4 camPovProj,camPovView;

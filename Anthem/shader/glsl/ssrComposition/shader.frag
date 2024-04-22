@@ -23,7 +23,7 @@ layout(set = 4, binding = 0) uniform UniformBufferObject{
     vec4 windowState;
 }ubo;
 
-const float maxDist = 40.0;
+const float maxDist = 400.0;
 const float depthAlw = 0.5;
 
 void main(){

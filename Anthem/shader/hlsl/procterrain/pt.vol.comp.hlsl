@@ -75,7 +75,7 @@ float edgeModify(float2 v)
     float modf = sigmoidShift((bv - 0.5) * 8.0, 0);
     if (bv < 0.5)
     {
-        modf = exp((bv - 0.5) * 4.0)*0.5;
+        modf = exp((bv - 0.5) * 8.0)*0.5;
     }
     return modf;
 }
