@@ -247,6 +247,7 @@ void createChunk(int x, int z) {
 	std::optional<std::function<void(ssboType1)>> initFunc2 = std::nullopt;
 	st.rd.createShaderStorageBuffer(&c.mesh, chunkSize, 0, c.descMesh, initFunc, -1);
 	st.rd.createShaderStorageBuffer(&c.treeInstancing, chunkSize, 0, c.descTreeInst, initFunc2, -1);
+	c.treeInstancing->useAsInstancingBuffer();
 	c.treeInstancing->setAttrBindingPoint({ 5 });
 
 	c.dseVolPass = {
@@ -641,7 +642,6 @@ void injectCommands(uint32_t x) {
 }
 
 void recordDrawCommand() {
-	
 	st.passSurface->recordCommands([&](uint32_t x) {
 		st.rd.drBindVertexBuffer(sf.vx, x);
 		st.rd.drBindIndexBuffer(sf.ix, x);
@@ -678,10 +678,10 @@ void recordDrawCommand() {
 
 	st.seq[0]->setSequence({
 		{ st.passDefer->getCommandIndex(0), ATC_ASCE_GRAPHICS},
-		{st.passGround->getCommandIndex(0),ATC_ASCE_GRAPHICS},
-		{st.passDeferTree->getCommandIndex(0),ATC_ASCE_GRAPHICS},
-		{st.passSurface->getCommandIndex(0),ATC_ASCE_GRAPHICS},
-		{st.passSkybox->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+		{ st.passGround->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+		{ st.passDeferTree->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+		{ st.passSurface->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+		{  st.passSkybox->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(0), ATC_ASCE_GRAPHICS},
 		{ st.passAOPost->getCommandIdx(0),ATC_ASCE_GRAPHICS},
 		{ st.passDeferBlend->getCommandIndex(0),ATC_ASCE_GRAPHICS},
@@ -735,22 +735,18 @@ void createAllChunks() {
 }
 
 void recordAllChunks() {
-
-
 	for (int i = -sc.WORLD_SIZE; i <= sc.WORLD_SIZE; i++) {
 		for (int j = -sc.WORLD_SIZE; j <= sc.WORLD_SIZE; j++) {
 			recordChunkCommands(i, j);
 		}
 	}
-	st.treeModel.getVertexBuffer()->createBuffer();
-	st.treeModel.getIndexBuffer()->createBuffer();
 	st.passDeferTree->recordCommands([&](uint32_t x) {
 		for (auto& [k, v] : st.chunks) {
 			st.rd.drBindVertexBufferEx2(st.treeModel.getVertexBuffer(), v.treeInstancing, 0, x);
 			st.rd.drBindIndexBuffer(st.treeModel.getIndexBuffer(), x);
-			for (auto i : AT_RANGE2(st.treeModel.drawFI.size())) {
+			for (auto i : AT_RANGE(1,2)) {
 				st.rd.drPushConstants(st.pcTree, st.passDeferTree->pipeline, x);
-				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], 1, st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
+				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], 800, st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
 			}
 		}
 	});
@@ -763,23 +759,53 @@ void createAllIndexBuffer() {
 	}
 }
 
+void setupImgui() {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.FontGlobalScale = 1.8;
+	ImGui::StyleColorsDark();
+	st.rd.exInitImGui();
+}
+
+void prepareImguiFrame() {
+	st.frm.record();
+	std::stringstream ss;
+	ss << "FPS:";
+	ss << st.frm.getFrameRate();
+
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin("Control Panel");
+	ImGui::Text(ss.str().c_str());
+
+	ImGui::End();
+}
 
 void drawLoop() {
 	static int cur = 0;
+
 	updateUniform();
 	uint32_t imgIdx = 0;
 	st.rd.drPrepareFrame(cur, &imgIdx);
-	st.seq[cur]->executeCommandToStage(imgIdx, false, false, st.passFXAA->getSwapchainFb());
+	prepareImguiFrame();
+	st.seq[cur]->executeCommandToStage(imgIdx, false, true, st.passFXAA->getSwapchainFb());
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }
 
+
 int main() {
 	initialize();
+	setupImgui();
 	createUniform();
 	createTextures();
 	loadWaterTextures();
 	loadTree();
+	
 	createWaterGeometry();
 	createGeometrySkybox();
 	prepareAOSamples();
@@ -799,6 +825,7 @@ int main() {
 
 	st.rd.setDrawFunction(drawLoop);
 	st.rd.startDrawLoopDemo();
+	st.rd.exDestroyImgui();
 	st.rd.finalize();
 
 	return 0;

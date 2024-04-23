@@ -2,6 +2,8 @@
 // Ref: https://developer.nvidia.com/gpugems/gpugems3/part-i-geometry/chapter-1-generating-complex-procedural-terrains-using-gpu
 
 #include "pt.noise.hlsl"
+#include "pt.common.hlsl"
+
 struct ChunkLocation
 {
     float4 loc;
@@ -16,8 +18,6 @@ struct TreeLoc
 RWTexture3D<float> density : register(u0, space0);
 AppendStructuredBuffer<TreeLoc> treeLocs : register(u0, space1);
 static const float TERRAIN_ELEVATION = 0.5;
-static const float GRID_SIZE = 96.0;
-static const float GRID_SIZE_Y = 144.0;
 static const float OFFSET_X = 323.34;
 static const float OFFSET_Z = 497.09;
 
@@ -100,9 +100,7 @@ float centerElevation(float2 v)
     float distCenter = length(center - v);
     float modf = sigmoidShift(((distCenter / length(float2(1.5, 1.5))) - 0.5) * 8.0, 0);
     return modf ;
-
 }
-
 
 [numthreads(8, 8, 8)]
 void main(uint3 invId : SV_DispatchThreadID)
@@ -119,14 +117,23 @@ void main(uint3 invId : SV_DispatchThreadID)
     // Details
     float ret = 0;
     ret += (pos.y - baseHeight) * elev;
-    ret += fractalApproxPerlin(pos, scaler, 2)*ampl;
+    //ret += fractalApproxPerlin(pos, scaler, 2)*ampl;
     density[invId] = ret;
     
+    float3 worldPos = float3(invId) / float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1) + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y);
+    worldPos = worldPos * float3(COORDINATE_SCALE, Y_ELEVATION, COORDINATE_SCALE);
+    
     //Tree
-    if(invId.x==0 && invId.y==0 && invId.z==0)
+    float delta = 1.0 / (GRID_SIZE_Y - 1.0);
+    float noise = cnoise(frac(cnoise(worldPos.yxz) * 12.737)+worldPos.xzy);
+    if (baseHeight > 0.15 && 
+        baseHeight < 0.20 && 
+        pos.y > baseHeight && 
+        pos.y - delta < baseHeight && 
+        noise > 0.95)
     {
         TreeLoc tloc;
-        tloc.treeLoc = float4(0.5, 75.5, 0.5, 0.5);
+        tloc.treeLoc = float4(worldPos, 1) ;
         treeLocs.Append(tloc);
     }
 }

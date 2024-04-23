@@ -33,7 +33,7 @@ namespace Anthem::Core {
             for (int i = 0; i < data.size(); i++) {
                 this->attrBindPoint[i] = data.at(i);
             }
-           s return true;
+            return true;
         }
         uint32_t virtual calculateBufferSize() override {
             return this->totlBufferSize;
@@ -186,7 +186,7 @@ namespace Anthem::Core {
             ANTH_ASSERT(desc, "Description is nullptr");
             desc->binding = bindLoc;
             desc->stride = this->bmaGetIthElementPrePadding(1);
-            desc->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            desc->inputRate = asInstancingBuffer ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
             return true;
         }
         bool virtual getInputAttrDescriptionInternal(std::vector<VkVertexInputAttributeDescription>* desc, uint32_t bindLoc) override {

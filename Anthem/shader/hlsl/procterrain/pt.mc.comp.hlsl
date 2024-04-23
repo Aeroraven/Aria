@@ -1,6 +1,7 @@
 // Marching Cubes for Terrain Mesh Generation
 // Lookup Table From: https://github.com/HugePotatoMonster/Dense-Reconstruction/blob/tsdf_dev/include/DenseReconstruction/MarchingCubes/drMarchingCubesDef.h
 
+#include "pt.common.hlsl"
 struct ChunkLocation
 {
     float4 loc;
@@ -23,10 +24,7 @@ struct Mesh
 [[vk::push_constant]] ChunkLocation chunkLoc;
 RWTexture3D<float> density : register(u0, space0);
 AppendStructuredBuffer<Mesh> mesh : register(u0, space1);
-static const float COORDINATE_SCALE  = 256.0;
-static const float Y_ELEVATION = 729.0;
-static const float GRID_SIZE = 96.0;
-static const float GRID_SIZE_Y = 144.0;
+
 static const float3 COORDINATE_OFFSET = float3(-0.5, 0, 0);
 
 static int triLUT[256][16] = {

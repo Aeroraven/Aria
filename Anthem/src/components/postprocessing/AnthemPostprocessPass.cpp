@@ -56,7 +56,7 @@ namespace Anthem::Components::Postprocessing {
 
 			for (auto i : AT_RANGE2(this->cmdCopies)) {
 				rd->createDescriptorPool(&descTarget[i]);
-				rd->createColorAttachmentImage(&targetImage[i], descTarget[i], 0, AT_IF_SIGNED_FLOAT32, false, -1,true);
+				rd->createColorAttachmentImage(&targetImage[i], descTarget[i], 0, AT_IF_SIGNED_FLOAT32, false, -1,false);
 				rd->createSimpleFramebufferA(&fbTarget[i], { this->targetImage[i] }, this->pass, depthStencil);
 				rd->createGraphicsPipelineCustomized(&pipeline[i], inputs[0], {}, pass, shader, vx, &copt);
 			}
@@ -101,8 +101,8 @@ namespace Anthem::Components::Postprocessing {
 			rd->drBindIndexBuffer(ix, i);
 			rd->drDraw(ix->getIndexCount(), i);
 			rd->drEndRenderPass(i);
-			rd->drSetImageLayoutSimple(targetImage[k], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, i);
-			targetImage[k]->registerMipmapGenCommand(i);
+			//rd->drSetImageLayoutSimple(targetImage[k], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, i);
+			//targetImage[k]->registerMipmapGenCommand(i);
 			rd->drEndCommandRecording(i);
 			k++;
 		}
