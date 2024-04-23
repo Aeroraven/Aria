@@ -251,6 +251,7 @@ namespace Anthem::Core{
 
         bool drBindVertexBuffer(AnthemVertexBuffer* vertexBuffer,uint32_t cmdIdx);
         bool drBindVertexBufferMultiple(std::vector<AnthemVertexBuffer*> vertexBuffer, uint32_t cmdIdx);
+        bool drBindVertexBufferEx2(AnthemVertexBuffer* vertexBuffer, AnthemShaderStorageBuffer* instBuffer, uint32_t copyId,uint32_t cmdIdx);
         bool drBindVertexBufferFromSsbo(AnthemShaderStorageBuffer* vertexBuffer, uint32_t copyId, uint32_t cmdIdx);
         bool drBindIndexBuffer(AnthemIndexBuffer* indexBuffer, uint32_t cmdIdx);
         bool drBindIndexBufferFromSsbo(AnthemShaderStorageBuffer* indexBuffer,uint32_t copyId, uint32_t cmdIdx);

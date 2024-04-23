@@ -64,7 +64,8 @@ namespace Anthem::Components::PassHelper {
 				rd->createSimpleFramebufferA(&frameBuffers[i], renderTargets[i], pass, depth[i]);
 			}
 		}
-		rd->createGraphicsPipelineCustomized(&pipeline, descLayout[0], {}, pass, shader, vxLayout, &pipeOpt);
+		
+		rd->createGraphicsPipelineCustomized(&pipeline, descLayout[0], pushConstants, pass, shader, vxLayout, &pipeOpt);
 	}
 	uint32_t AnthemPassHelper::getCommandIndex(uint32_t copy) {
 		return cmdIdx[copy];

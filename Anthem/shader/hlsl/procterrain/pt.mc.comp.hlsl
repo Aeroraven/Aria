@@ -400,7 +400,6 @@ void marchingCubes(uint3 co)
 		
 
 		
-		
 		// Interpolate field to get normals use gradient
         float3 gradA = fieldGradient((oA + cp) * float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1));
         float3 gradB = fieldGradient((oB + cp) * float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1));

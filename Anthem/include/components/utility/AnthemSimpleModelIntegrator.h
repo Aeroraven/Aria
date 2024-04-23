@@ -52,6 +52,8 @@ namespace Anthem::Components::Utility {
 		AnthemIndirectDrawBuffer* indirect = nullptr;
 		std::vector<std::string> requiredTexturePaths = {};
 
+
+
 		// Raytracing
 #ifdef AT_FEATURE_RAYTRACING_ENABLED
 		AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* posBuffer;
@@ -81,6 +83,7 @@ namespace Anthem::Components::Utility {
 #endif
 
 	public:
+		std::vector<uint32_t> drawVC, drawVO, drawFI;
 		bool loadModel(AnthemSimpleToyRenderer* renderer,std::vector<AnthemUtlSimpleModelStruct> model, uint32_t cpuJobs);
 		bool loadModelRayTracing(AnthemSimpleToyRenderer* renderer, const std::vector<AnthemUtlSimpleModelStruct>& model, const std::set<int> lightIds);
 		

@@ -55,7 +55,7 @@ struct StageConstants {
 	DCONST float WATER_ELEVATION = 50;
 	DCONST float SKYBOX_SIZE = 1800;
 	DCONST float SKYBOX_ELEVATION = 50;
-	DCONST float WORLD_SIZE = 3;
+	DCONST float WORLD_SIZE = 2;
 }sc;
 #undef DCONST
 
@@ -65,9 +65,12 @@ struct Chunk {
 	int32_t x, z;
 	AnthemImage* volDensity;
 	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>, AtBufVecd4f<1>, AtBufVecd4f<1>>* mesh;
+	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* treeInstancing;
+
 	AnthemPushConstantImpl<AtBufVec4f<1>>* pc; //(Loclx,Loclz,0,0)
 	AnthemDescriptorPool* descVol;
 	AnthemDescriptorPool* descMesh;
+	AnthemDescriptorPool* descTreeInst;
 
 	std::vector<AnthemDescriptorSetEntry> dseVolPass;
 	std::vector<AnthemDescriptorSetEntry> dseMarchingCubePass;
@@ -130,10 +133,20 @@ struct Stage {
 	AnthemDescriptorPool* descWDuDv;
 	AnthemImage* waterDuDv;
 
+	// Objects
+	std::vector<AnthemGLTFLoaderParseResult> treeGLTF;
+	AnthemSimpleModelIntegrator treeModel;
+	AnthemGLTFLoaderTexParseResult treeTex;
+	AnthemDescriptorPool* descPbrBaseTexTree = nullptr;
+	AnthemImage** pbrBaseTexTree = nullptr;
+	std::vector<std::string> requiredTexTree;
+	AnthemPushConstantImpl<AtBufMat4f<1>>* pcTree;
+
 	// Passes
 	std::unique_ptr<AnthemComputePassHelper> passVol;
 	std::unique_ptr<AnthemComputePassHelper> passMarchingCube;
 	std::unique_ptr<AnthemPassHelper> passDefer;
+	std::unique_ptr<AnthemPassHelper> passDeferTree;
 	std::unique_ptr<AnthemPassHelper> passAO;
 	std::unique_ptr<AnthemSimpleBlur> passAOPost;
 	std::unique_ptr<AnthemPassHelper> passDeferBlend;
@@ -181,6 +194,40 @@ void initialize() {
 	st.rd.ctSetKeyBoardController(st.keyController);
 }
 
+void loadTree() {
+	AnthemGLTFLoader loader;
+	AnthemGLTFLoaderParseConfig config;
+	std::string path = ANTH_ASSET_DIR;
+	loader.loadModel((path + "\\tree\\tree.gltf").c_str());
+	loader.parseModel(config, st.treeGLTF, &st.treeTex);
+	std::vector<AnthemUtlSimpleModelStruct> rp;
+	for (auto& p : st.treeGLTF)rp.push_back(p);
+	st.treeModel.loadModel(&st.rd, rp, -1);
+	st.requiredTexTree = st.treeModel.getRequiredTextures();
+
+	st.rd.createDescriptorPool(&st.descPbrBaseTexTree);
+
+	int numTexs = st.treeTex.tex.size();
+	st.pbrBaseTexTree = new AnthemImage * [numTexs];
+	std::vector<AnthemImageContainer*> imgContainer;
+	for (int i = 0; i < numTexs; i++) {
+		st.rd.createTexture(&st.pbrBaseTexTree[i], st.descPbrBaseTexTree, st.treeTex.tex[i].data(), st.treeTex.width[i],
+			st.treeTex.height[i], st.treeTex.channels[i], 0, false, false, AT_IF_UNORM_UINT8, -1, true);
+		imgContainer.push_back(st.pbrBaseTexTree[i]);
+	}
+	st.rd.addSamplerArrayToDescriptor(imgContainer, st.descPbrBaseTexTree, 0, -1);
+
+	st.rd.createPushConstant(&st.pcTree);
+	st.pcTree->enableShaderStage(AT_APCS_VERTEX);
+	st.pcTree->enableShaderStage(AT_APCS_FRAGMENT);
+
+	AtMatf4 pcTreeLocal;
+	pcTreeLocal = AnthemLinAlg::axisAngleRotationTransform3<float,float>({1.0f,0.0f,0.0f}, AT_PI / 2);
+	float constpc[16];
+	pcTreeLocal.columnMajorVectorization(constpc);
+	st.pcTree->setConstant(constpc);
+}
+
 void createChunk(int x, int z) {
 	st.chunks[{x, z}] = {};
 	auto& c = st.chunks[{x, z}];
@@ -192,13 +239,19 @@ void createChunk(int x, int z) {
 	c.volDensity->toGeneralLayout();
 	st.rd.addStorageImageArrayToDescriptor({ c.volDensity }, c.descVol, 0, -1);
 	st.rd.createDescriptorPool(&c.descMesh);
+	st.rd.createDescriptorPool(&c.descTreeInst);
 	uint32_t chunkSize = std::min(static_cast<uint32_t>(sc.MAX_TRIANGLES), sc.CHUNK_SIZE_X * sc.CHUNK_SIZE_ELEVATION * sc.CHUNK_SIZE_X * 15u);
 	using ssboType = std::remove_cv_t<decltype(c.mesh)>;
+	using ssboType1 = std::remove_cv_t<decltype(c.treeInstancing)>;
 	std::optional<std::function<void(ssboType)>> initFunc = std::nullopt;
+	std::optional<std::function<void(ssboType1)>> initFunc2 = std::nullopt;
 	st.rd.createShaderStorageBuffer(&c.mesh, chunkSize, 0, c.descMesh, initFunc, -1);
+	st.rd.createShaderStorageBuffer(&c.treeInstancing, chunkSize, 0, c.descTreeInst, initFunc2, -1);
+	c.treeInstancing->setAttrBindingPoint({ 5 });
 
 	c.dseVolPass = {
-		{c.descVol,AT_ACDS_STORAGE_IMAGE,0}
+		{c.descVol,AT_ACDS_STORAGE_IMAGE,0},
+		{c.descTreeInst,AT_ACDS_SHADER_STORAGE_BUFFER,0}
 	};
 	c.dseMarchingCubePass = {
 		{c.descVol,AT_ACDS_STORAGE_IMAGE,0},
@@ -356,6 +409,28 @@ void createSkyPass() {
 	st.passSkybox->buildGraphicsPipeline();
 }
 
+void createTreePass() {
+	st.passDeferTree = std::make_unique<AnthemPassHelper>(&st.rd, 2);
+	st.passDeferTree->shaderPath.fragmentShader = getShader("tree.frag");
+	st.passDeferTree->shaderPath.vertexShader = getShader("tree.vert");
+	st.passDeferTree->setRenderTargets({ st.gColor, st.gNormal,st.gPos, st.gTangent });
+	st.passDeferTree->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32 };
+	st.passDeferTree->passOpt.clearColors = { {0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f} ,{0.0f,0.0f,0.0f,0.0f} };
+	st.passDeferTree->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.passDeferTree->setDescriptorLayouts({
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0},
+		{st.descPbrBaseTexTree,AT_ACDS_SAMPLER,0},
+	});
+	st.passDeferTree->vxLayout = nullptr;
+	st.passDeferTree->pushConstants = { st.pcTree };
+	st.passDeferTree->pipeOpt.vertStageLayout = { st.treeModel.getVertexBuffer(),st.demoChunk->treeInstancing };
+	st.passDeferTree->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.passDeferTree->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32,AT_IF_SIGNED_FLOAT32 };
+	st.passDeferTree->passOpt.clearColorAttachmentOnLoad = { false,false,false,false };
+	st.passDeferTree->passOpt.clearDepthAttachmentOnLoad = false;
+	st.passDeferTree->setDepthFromPass(*st.passDefer);
+	st.passDeferTree->buildGraphicsPipeline();
+}
 
 void createGraphicsPass() {
 	// Defer Pass
@@ -557,7 +632,6 @@ void prepareDeferCanvas() {
 }
 
 void injectCommands(uint32_t x) {
-	ANTH_LOGI(st.chunks.size(), "SIZE");
 	for (auto& [k, v] : st.chunks) {
 		ANTH_LOGI("Add commands", k.first, " ", k.second);
 		st.rd.drBindVertexBufferFromSsbo(v.mesh, 0, x);
@@ -567,6 +641,7 @@ void injectCommands(uint32_t x) {
 }
 
 void recordDrawCommand() {
+	
 	st.passSurface->recordCommands([&](uint32_t x) {
 		st.rd.drBindVertexBuffer(sf.vx, x);
 		st.rd.drBindIndexBuffer(sf.ix, x);
@@ -604,6 +679,7 @@ void recordDrawCommand() {
 	st.seq[0]->setSequence({
 		{ st.passDefer->getCommandIndex(0), ATC_ASCE_GRAPHICS},
 		{st.passGround->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+		{st.passDeferTree->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{st.passSurface->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{st.passSkybox->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(0), ATC_ASCE_GRAPHICS},
@@ -614,6 +690,7 @@ void recordDrawCommand() {
 	st.seq[1]->setSequence({
 		{ st.passDefer->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
 		{st.passGround->getCommandIndex(1),ATC_ASCE_GRAPHICS},
+		{st.passDeferTree->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passSurface->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passSkybox->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(1), ATC_ASCE_GRAPHICS},
@@ -658,11 +735,25 @@ void createAllChunks() {
 }
 
 void recordAllChunks() {
+
+
 	for (int i = -sc.WORLD_SIZE; i <= sc.WORLD_SIZE; i++) {
 		for (int j = -sc.WORLD_SIZE; j <= sc.WORLD_SIZE; j++) {
 			recordChunkCommands(i, j);
 		}
 	}
+	st.treeModel.getVertexBuffer()->createBuffer();
+	st.treeModel.getIndexBuffer()->createBuffer();
+	st.passDeferTree->recordCommands([&](uint32_t x) {
+		for (auto& [k, v] : st.chunks) {
+			st.rd.drBindVertexBufferEx2(st.treeModel.getVertexBuffer(), v.treeInstancing, 0, x);
+			st.rd.drBindIndexBuffer(st.treeModel.getIndexBuffer(), x);
+			for (auto i : AT_RANGE2(st.treeModel.drawFI.size())) {
+				st.rd.drPushConstants(st.pcTree, st.passDeferTree->pipeline, x);
+				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], 1, st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
+			}
+		}
+	});
 }
 void createAllIndexBuffer() {
 	for (int i = -sc.WORLD_SIZE; i <= sc.WORLD_SIZE; i++) {
@@ -670,7 +761,6 @@ void createAllIndexBuffer() {
 			createIndexBuffer(i, j);
 		}
 	}
-
 }
 
 
@@ -689,6 +779,7 @@ int main() {
 	createUniform();
 	createTextures();
 	loadWaterTextures();
+	loadTree();
 	createWaterGeometry();
 	createGeometrySkybox();
 	prepareAOSamples();
@@ -696,6 +787,7 @@ int main() {
 	createAllChunks();
 	createComputePass();
 	createGraphicsPass();
+	createTreePass();
 	createSkyPass();
 
 	st.rd.registerPipelineSubComponents();

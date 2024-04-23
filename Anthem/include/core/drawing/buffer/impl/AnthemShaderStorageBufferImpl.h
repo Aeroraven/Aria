@@ -17,8 +17,24 @@ namespace Anthem::Core {
         uint32_t totlBufferSize = 0;
         VkVertexInputBindingDescription vertexInputBindingDescription = {};
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescription = {};
+        uint32_t attrBindPoint[sizeof...(Tp)];
+        bool asInstancingBuffer = false;
 
     public:
+        AnthemShaderStorageBufferImpl() {
+            for (auto i = 0; i < this->numArgs; i++) {
+                attrBindPoint[i] = i;
+            }
+        }
+        void useAsInstancingBuffer() {
+            this->asInstancingBuffer = true;
+        }
+        bool setAttrBindingPoint(std::array<uint32_t, sizeof...(Tp)> data) {
+            for (int i = 0; i < data.size(); i++) {
+                this->attrBindPoint[i] = data.at(i);
+            }
+           s return true;
+        }
         uint32_t virtual calculateBufferSize() override {
             return this->totlBufferSize;
         }
@@ -181,7 +197,7 @@ namespace Anthem::Core {
             for (auto i = 0; i < this->numArgs; i++) {
                 VkVertexInputAttributeDescription attrDesc = {};
                 attrDesc.binding = bindLoc;
-                attrDesc.location = i;
+                attrDesc.location = attrBindPoint[i];
                 attrDesc.format = this->getFormatFromTypeInfo(i);
                 attrDesc.offset = this->dynamicOffsetReq.at(i);
                 desc->push_back(attrDesc);
@@ -225,6 +241,15 @@ namespace Anthem::Core {
         }
 
         bool virtual updateLayoutSpecification(AnthemVertexStageLayoutSpec* spec, uint32_t bindLoc) {
+            VkVertexInputBindingDescription ibDesc = {};
+            std::vector<VkVertexInputAttributeDescription> atDesc = {};
+            getInputBindingDescriptionInternal(&ibDesc, bindLoc);
+            getInputAttrDescriptionInternal(&atDesc, bindLoc);
+
+            spec->bindingDesc.push_back(ibDesc);
+            for (int i = 0; i < atDesc.size(); i++) {
+                spec->registeredDesc[attrBindPoint[i]] = atDesc[i];
+            }
             return true;
         }
 

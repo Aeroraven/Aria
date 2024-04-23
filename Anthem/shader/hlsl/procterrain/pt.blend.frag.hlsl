@@ -33,13 +33,15 @@ SamplerState sampWaterUV : register(s0, space9);
 
 static const float3 LIGHT_DIR = normalize(float3(0, -1, -1));
 static const float3 WATER_NORMAL = normalize(float3(0, 1, 0));
-static const float SSR_MAXDIST = 500.0;
+static const float SSR_MAXDIST = 1500.0;
 static const float SSR_DEPTH_THRESHOLD = 0.5;
 static const float3 WATER_COLOR = float3(0.13, 0.54, 0.89);
 static const float WATER_REFRAC_INDICE = 0.1427;
 static const float WATER_SIZE = 1600;
 static const float WATER_ELEVATION = 50;
 static const float WATER_WAVE_STRENGTH = 0.003;
+static const float WATER_NORMAL_OFFSET = 0.03;
+static const float SPECULAR_HIGHLIGHT = 50.0;
 
 float4 gamma(float4 color)
 {
@@ -132,8 +134,8 @@ PSOutput main(VSOutput vsOut)
     psOut.color = pointColor(reprojUV, texPosition.Sample(sampPosition, reprojUV));
     
     float3 intersectionPos = waterPos.xyz;
-    float3 waterNormal = texWaterNormal.Sample(sampWaterNormal, waterNewUV).rgb;
-    waterNormal.xz = waterNormal.xz * 2 - 1;
+    float3 waterNormal = texWaterNormal.Sample(sampWaterNormal, frac(waterNewUV * 3.0)).rgb;
+    waterNormal.xz = (waterNormal.xz * 2 - 1) * WATER_NORMAL_OFFSET;
     waterNormal = normalize(waterNormal);
     
     float3 viewDir = normalize(cam.camPos.xyz - intersectionPos);
@@ -164,7 +166,7 @@ PSOutput main(VSOutput vsOut)
     int i = 0;
     
     float invCamDepth = cam.camPos.z;
-    for (i = 1; i < deltaSel; i+=2)
+    for (i = 1; i < deltaSel; i+=1)
     {
         float percent = float(i) / float(deltaSel);
         float2 curPx = lerp(startPx,endPx, percent);
@@ -173,13 +175,12 @@ PSOutput main(VSOutput vsOut)
         float curDepthRef = (startPosWS.z - invCamDepth) * (endPosWS.z - invCamDepth) / lerp(endPosWS.z - invCamDepth, startPosWS.z - invCamDepth, percent);
         float4 curToPos = texPosition.Sample(sampPosition, curPx);
         float curDepth = curToPos.z - invCamDepth;
-        if (curToPos.a > 1.5)
+        if (curToPos.a > 1.5 || curToPos.y < WATER_ELEVATION)
         {
             continue;
         }
         
         float deltaDepth = curDepth - curDepthRef;
-        diff = min(abs(diff), abs(deltaDepth));
         if (deltaDepth < 0 && abs(deltaDepth)<10.0)
         {
             hit = i;
@@ -198,12 +199,13 @@ PSOutput main(VSOutput vsOut)
     float ndotl = max(0, dot(waterNormal, viewDir));
     float3 h = normalize(-LIGHT_DIR + viewDir);
     float ndoth = max(0, dot(waterNormal, h));
+    float specular = pow(ndoth, SPECULAR_HIGHLIGHT);
     
     
     float fresnel = schlickFresnel(WATER_REFRAC_INDICE, ndotl);
     float3 transColor = lerp(refractColor, reflectColor, fresnel);
     
-    psOut.color.rgb = lerp(transColor, waterColor, 0.4);
+    psOut.color.rgb = lerp(transColor, waterColor, 0.3) + specular;
     
     // Final Color
     psOut.color = gamma(psOut.color);

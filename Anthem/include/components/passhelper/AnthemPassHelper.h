@@ -19,7 +19,7 @@ namespace Anthem::Components::PassHelper {
 		std::vector<std::vector<const IAnthemImageViewContainer*>> renderTargets;
 		
 		AnthemSwapchainFramebuffer* swapchainFb;
-		AnthemGraphicsPipeline* pipeline;
+		
 
 		std::vector<AnthemFramebuffer*> frameBuffers;
 		std::vector<std::vector<AnthemDescriptorSetEntry>> descLayout;
@@ -34,7 +34,9 @@ namespace Anthem::Components::PassHelper {
 		AnthemGraphicsPipelineCreateProps pipeOpt;
 		AnthemRenderPassSetupOption passOpt;
 		IAnthemVertexBufferAttrLayout* vxLayout = nullptr;
-		
+		std::vector<IAnthemVertexBufferAttrLayout*> vxLayout2{};
+		AnthemGraphicsPipeline* pipeline;
+		std::vector<AnthemPushConstant*> pushConstants;
 	public:
 		AnthemPassHelper(AnthemSimpleToyRenderer* renderer, uint32_t copies);
 		void setRenderTargets(const std::vector<const IAnthemImageViewContainer*>& targets, int destCopy = -1);

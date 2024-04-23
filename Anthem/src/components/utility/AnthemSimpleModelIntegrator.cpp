@@ -64,6 +64,10 @@ namespace Anthem::Components::Utility {
 		for (int k = 0; k < prs.size(); k++) {
 			ixList.insert(ixList.end(), model[k].indices.begin(), model[k].indices.end());
 			indirect->addIndirectDrawCommand(1, 0, model[k].indices.size(), alcx, prs[k]);
+			
+			this->drawVC.push_back(model[k].indices.size());
+			this->drawVO.push_back(prs[k]);
+			this->drawFI.push_back(alcx);
 			alcx += model[k].indices.size();
 		}
 		ix->setIndices(ixList);

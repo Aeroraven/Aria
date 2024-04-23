@@ -856,7 +856,12 @@ namespace Anthem::Core{
         vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(cmdIdx),0,1,(vertexBuffer->getDestBufferObject()),emptyOffsetPlaceholder);
         return true;
     }
-
+    bool AnthemSimpleToyRenderer::drBindVertexBufferEx2(AnthemVertexBuffer* vertexBuffer, AnthemShaderStorageBuffer* instBuffer, uint32_t copyId, uint32_t cmdIdx) {
+        VkBuffer bufs[] = { *vertexBuffer->getDestBufferObject(), *instBuffer->getDestBufferObject(copyId) };
+		VkDeviceSize vdSize[] = { 0,0 };
+		vkCmdBindVertexBuffers(*this->commandBuffers->getCommandBuffer(cmdIdx), 0, 2, bufs, vdSize);
+		return true;
+    }
     bool AnthemSimpleToyRenderer::drBindVertexBufferMultiple(std::vector<AnthemVertexBuffer*> vertexBuffer, uint32_t cmdIdx) {
         std::vector<VkBuffer> bufs;
         std::vector<VkDeviceSize> vdSize;

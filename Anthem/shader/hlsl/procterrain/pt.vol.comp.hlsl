@@ -7,8 +7,14 @@ struct ChunkLocation
     float4 loc;
 };
 
+struct TreeLoc
+{
+    float4 treeLoc;
+};
+
 [[vk::push_constant]] ChunkLocation chunkLoc;
 RWTexture3D<float> density : register(u0, space0);
+AppendStructuredBuffer<TreeLoc> treeLocs : register(u0, space1);
 static const float TERRAIN_ELEVATION = 0.5;
 static const float GRID_SIZE = 96.0;
 static const float GRID_SIZE_Y = 144.0;
@@ -115,4 +121,12 @@ void main(uint3 invId : SV_DispatchThreadID)
     ret += (pos.y - baseHeight) * elev;
     ret += fractalApproxPerlin(pos, scaler, 2)*ampl;
     density[invId] = ret;
+    
+    //Tree
+    if(invId.x==0 && invId.y==0 && invId.z==0)
+    {
+        TreeLoc tloc;
+        tloc.treeLoc = float4(0.5, 75.5, 0.5, 0.5);
+        treeLocs.Append(tloc);
+    }
 }
