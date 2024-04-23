@@ -876,6 +876,10 @@ namespace Anthem::Core{
         vkCmdBindIndexBuffer(*this->commandBuffers->getCommandBuffer(cmdIdx), *(indexBuffer->getDestBufferObject()), 0, VK_INDEX_TYPE_UINT32);
         return true;
     }
+    bool AnthemSimpleToyRenderer::drBindIndexBufferFromSsbo(AnthemShaderStorageBuffer* indexBuffer, uint32_t copyId, uint32_t cmdIdx) {
+        vkCmdBindIndexBuffer(*this->commandBuffers->getCommandBuffer(cmdIdx), *(indexBuffer->getDestBufferObject(copyId)), 0, VK_INDEX_TYPE_UINT32);
+        return true;
+    }
     bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomizedCompute(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemComputePipeline* pipeline, uint32_t cmdIdx) {
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
         for (const auto& p : descSetEntries) {

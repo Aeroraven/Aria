@@ -39,7 +39,7 @@ namespace Anthem::Core{
     struct AnthemBufferVarDef<Tp,1,2,ArrSz>:virtual AnthemBufferVarDefBase<Tp,1,2,ArrSz>,virtual AnthemBufferVarDefDefinedMx<Tp,2,2>{};
 
     template<typename Tp,uint32_t ArrSz>
-    struct AnthemBufferVarDef<Tp,1,3,ArrSz>:virtual AnthemBufferVarDefBase<Tp,1,3,ArrSz>,virtual AnthemBufferVarDefDefinedMx<Tp,4,3>{};
+    struct AnthemBufferVarDef<Tp,1,3,ArrSz>:virtual AnthemBufferVarDefBase<Tp,1,3,ArrSz>,virtual AnthemBufferVarDefDefinedMx<Tp,3,3>{};
 
     template<typename Tp,uint32_t ArrSz>
     struct AnthemBufferVarDef<Tp,1,4,ArrSz>:virtual AnthemBufferVarDefBase<Tp,1,4,ArrSz>,virtual AnthemBufferVarDefDefinedMx<Tp,4,4>{};
@@ -88,6 +88,16 @@ namespace Anthem::Core{
 
     template<uint32_t ArrSz = 1>
     using AtBufMatd4f = AnthemBufferVarDynamicDef<float, 2, 4, ArrSz>;
+
+    template<uint32_t ArrSz = 1>
+    using AtBufVecd3i = AnthemBufferVarDynamicDef<int, 1, 3, ArrSz>;
+
+    template<uint32_t ArrSz = 1>
+    using AtBufVecd4i = AnthemBufferVarDynamicDef<int, 1, 4, ArrSz>;
+
+    template<uint32_t ArrSz = 1>
+    using AtBufVecdInt = AnthemBufferVarDynamicDef<int, 1, 1, ArrSz>;
+
 
     template<typename... Desc>
     class AnthemBufferMemAlignerImpl;

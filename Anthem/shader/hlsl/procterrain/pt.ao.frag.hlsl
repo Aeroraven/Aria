@@ -57,8 +57,7 @@ PSOutput main(VSOutput vsOut)
     float3 normal = texNormal.Sample(sampNormal, vsOut.texUv.xy).xyz;
     
     // Generate TBM Matrix
-    float3 tangent = texTangent.Sample(sampTangent, vsOut.texUv.xy).xyz;
-    float av = dot(normal, tangent);
+    float3 tangent = randomUnitVector(vsOut.texUv.xy); //texTangent.Sample(sampTangent, vsOut.texUv.xy).xyz;
     tangent = normalize(tangent - dot(tangent, normal) * normal);
     float3 bitangent = cross(normal, tangent);
     float3x3 tbn = transpose(float3x3(tangent, bitangent, normal));
@@ -92,7 +91,7 @@ PSOutput main(VSOutput vsOut)
         
         if (ndcr.w > refw + 1e-2)
         {
-            float rangeCheck = smoothstep(0.0, 1.0, 30.0 / abs(ndcr.z - refw));
+            float rangeCheck = smoothstep(0.0, 1.0, 60.0 / abs(ndcr.z - refw));
             occls += 1.0 * rangeCheck;
         }
         totls += 1.0;

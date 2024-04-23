@@ -20,6 +20,8 @@
 
 **Sky HDRI**:  By Jarod Guest & Sergej Majborod. Conversion done by `HDRI-to-Cubemap` https://polyhaven.com/a/sunflowers_puresky , https://matheowis.github.io/HDRI-to-CubeMap/ 
 
+**Water Normals / Water DuDv**: By ThinMatrix. In Project "OpenGL Water" https://www.youtube.com/playlist?list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh
+
 
 
 
@@ -65,7 +67,7 @@ TAA: https://zhuanlan.zhihu.com/p/425233743
 
 Compute Fog: https://zhuanlan.zhihu.com/p/366083234
 
-
+Water Rendering: https://www.youtube.com/playlist?list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh
 
 
 

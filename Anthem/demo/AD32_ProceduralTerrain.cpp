@@ -275,7 +275,7 @@ void loadWaterTextures() {
 	uint32_t width, height, channel;
 	uint8_t* rawData;
 	AnthemImageLoader loader;
-	loader.loadImage(getWaterAssets("normalMap").c_str(), &width, &height, &channel, &rawData);
+	loader.loadImage(getWaterAssets("matchingNormalMap").c_str(), &width, &height, &channel, &rawData);
 	st.rd.createDescriptorPool(&st.descWNormal);
 	st.rd.createTexture(&st.waterNormal, st.descWNormal, rawData, width, height, channel, 0, false, false, AT_IF_UNORM_UINT8, -1);
 	loader.loadImage(getWaterAssets("waterDuDv").c_str(), &width, &height, &channel, &rawData);

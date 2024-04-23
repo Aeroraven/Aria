@@ -31,7 +31,7 @@ SamplerState sampWaterDuDv : register(s0, space8);
 Texture2D texWaterUV : register(t0, space9);
 SamplerState sampWaterUV : register(s0, space9);
 
-static const float3 LIGHT_DIR = normalize(float3(1, -1, -1));
+static const float3 LIGHT_DIR = normalize(float3(0, -1, -1));
 static const float3 WATER_NORMAL = normalize(float3(0, 1, 0));
 static const float SSR_MAXDIST = 500.0;
 static const float SSR_DEPTH_THRESHOLD = 0.5;
@@ -132,7 +132,10 @@ PSOutput main(VSOutput vsOut)
     psOut.color = pointColor(reprojUV, texPosition.Sample(sampPosition, reprojUV));
     
     float3 intersectionPos = waterPos.xyz;
-    float3 waterNormal = WATER_NORMAL;
+    float3 waterNormal = texWaterNormal.Sample(sampWaterNormal, waterNewUV).rgb;
+    waterNormal.xz = waterNormal.xz * 2 - 1;
+    waterNormal = normalize(waterNormal);
+    
     float3 viewDir = normalize(cam.camPos.xyz - intersectionPos);
     float3 reflectDir = normalize(reflect(-viewDir, waterNormal));
     
@@ -161,7 +164,7 @@ PSOutput main(VSOutput vsOut)
     int i = 0;
     
     float invCamDepth = cam.camPos.z;
-    for (i = 1; i < deltaSel; i++)
+    for (i = 1; i < deltaSel; i+=2)
     {
         float percent = float(i) / float(deltaSel);
         float2 curPx = lerp(startPx,endPx, percent);
@@ -192,7 +195,11 @@ PSOutput main(VSOutput vsOut)
     float3 reflectColor = reflColor.rgb;
     float3 waterColor = WATER_COLOR;
     
-    float ndotl = dot(WATER_NORMAL, viewDir);
+    float ndotl = max(0, dot(waterNormal, viewDir));
+    float3 h = normalize(-LIGHT_DIR + viewDir);
+    float ndoth = max(0, dot(waterNormal, h));
+    
+    
     float fresnel = schlickFresnel(WATER_REFRAC_INDICE, ndotl);
     float3 transColor = lerp(refractColor, reflectColor, fresnel);
     

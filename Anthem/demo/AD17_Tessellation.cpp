@@ -19,9 +19,10 @@ using namespace Anthem::Core;
 
 
 
-// AD17 Tessellation
+// AD32 Procedural Terrain Generation
 // =======================
-// Terrain Generation using Tessellation Shader
+// 1. Generate Procedural Terrain using Compute Shader (Signed Distance Field + Marching Cubes)
+// 2. Water Lighting Procedure (Screen Space Reflection + DuDv Distortion)
 
 struct Stage {
 	// Core
