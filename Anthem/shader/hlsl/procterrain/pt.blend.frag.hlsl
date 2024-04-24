@@ -42,7 +42,7 @@ static const float WATER_ELEVATION = 50;
 static const float WATER_WAVE_STRENGTH = 0.003;
 static const float WATER_NORMAL_OFFSET = 0.03;
 static const float SPECULAR_HIGHLIGHT = 50.0;
-
+static const float4 WHITE = float4(1, 1, 1, 1);
 float4 gamma(float4 color)
 {
     return pow(color, 1.0 / 2.2);
@@ -53,18 +53,18 @@ float schlickFresnel(float f0, float cA)
     return f0 + (1 - f0) * pow(1 - cA, 5.0);
 }
 
-float4 aoBlur(float2 uv)
+float aoBlur(float2 uv)
 {
     float texH, texW, texLod;
     texAO.GetDimensions(0, texW, texH, texLod);
     float2 texelSize = 1.0 / float2(texW, texH);
     
-    float4 color = float4(0, 0, 0, 0);
+    float color =0;
     for (int x = -1; x <= 1; x++)
     {
         for (int y = -1; y <= 1; y++)
         {
-            color += texAO.Sample(sampAO, uv + float2(x, y) * texelSize);
+            color += texAO.Sample(sampAO, uv + float2(x, y) * texelSize).r;
         }
     }
     return color / 9.0;
@@ -93,7 +93,7 @@ float4 pointColor(float2 uv,float4 posr)
         float3 pos = posr.xyz;
         float3 normal = texNormal.Sample(sampNormal, uv).xyz;
         float4 color = texColor.Sample(sampColor, uv);
-        float ao = texAO.Sample(sampAO, uv).r;
+        float ao = aoBlur(uv);
     
         // Diffuse
         float3 lightDir = -LIGHT_DIR;

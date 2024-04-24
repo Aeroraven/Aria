@@ -39,9 +39,7 @@ float4 main(VSOutput vsOut) : SV_Target0
     float lMax = max(lC, max(lL, max(lR, max(lT, lB))));
     float lMin = min(lC, min(lL, min(lR, min(lT, lB))));
     float contrast = lMax - lMin;
-    
-    //return float4(0, abs(lC - lMin),0,0);
-    
+
     if (contrast > min(LUMIN_MIN_THRESH, lMax * LUMIN_SCALE_MIN_THRESH)) //
     {
         float4 cLT = texIn.Sample(sampIn, cpos + float2(-dx, -dy));
@@ -107,5 +105,5 @@ float4 main(VSOutput vsOut) : SV_Target0
         return lerp(texIn.Sample(sampIn, vsOut.texCoord), texIn.Sample(sampIn, vsOut.texCoord + blendDirection * float2(dx, dy)), finalFactor);
 
     }
-    return texIn.Sample(sampIn, vsOut.texCoord);
+    return cC;
 }

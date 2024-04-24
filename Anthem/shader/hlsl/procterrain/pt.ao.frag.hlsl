@@ -13,17 +13,13 @@ struct PSOutput
     float4 ao : SV_Target0;
 };
 
-Texture2D texColor : register(t0, space0);
-SamplerState sampColor : register(s0, space0);
-Texture2D texNormal : register(t0, space1);
-SamplerState sampNormal : register(s0, space1);
-Texture2D texPosition : register(t0, space2);
-SamplerState sampPosition : register(s0, space2);
-Texture2D texTangent : register(t0, space3);
-SamplerState sampTangent : register(s0, space3);
+Texture2D texNormal : register(t0, space0);
+SamplerState sampNormal : register(s0, space0);
+Texture2D texPosition : register(t0, space1);
+SamplerState sampPosition : register(s0, space1);
 
-ConstantBuffer<AOParams> attr:register(b0, space4);
-ConstantBuffer<Camera> cam : register(b0, space5);
+ConstantBuffer<AOParams> attr:register(b0, space2);
+ConstantBuffer<Camera> cam : register(b0, space3);
 static const float PI2 = 6.28318530718;
 
 float random(float2 seeds)
@@ -66,35 +62,39 @@ PSOutput main(VSOutput vsOut)
     // Calculate AO
     float occls = 0;
     float totls = 0;
-    int totlsI = 32;
-    if (posr.z - cam.camPos.z > 150)
-    {
-        totlsI = 8;
-    }
-    totls = float(totlsI);
-    for (int i = 0; i < totlsI; i++)
+    int totlsI = 64;
+    for (int i = 0; i < 64; i++)
     {
         float3 sp = normalize(attr.vec[i].xyz) * attr.vec[i].w;
-        sp = mul(tbn, sp) * sign(dot(sp, normal.xyz));
+        sp = mul(tbn, sp);
+        if (dot(sp, normal.xyz) < 0)
+            sp = -sp;
         
         float4 dpos = float4(pos, 1) + float4(sp, 0);
         float4 ndcr = mul(mvp, float4(dpos.xyz, 1.0));
+        float3 ndc = ndcr.xyz / ndcr.w;
+
+        float2 texcp = ndc.xy * 0.5 + 0.5;
         
-        float4 refPosition = texPosition.Sample(sampPosition, ndcr.xy / ndcr.w * 0.5 + 0.5);
-        if (refPosition.a > 0.5)
+        float4 refPosition = texPosition.Sample(sampPosition, texcp);
+        if (refPosition.a <= 0.5)
         {
-            float4 refDepthNdc = mul(mvp, float4(refPosition.xyz, 1.0));
-            float refw = refDepthNdc.z / refDepthNdc.w;
-        
-            if (ndcr.w > refw + 1e-2)
-            {
-                float rangeCheck = smoothstep(0.0, 1.0, 60.0 / abs(ndcr.z - refw));
-                occls += 1.0 * rangeCheck;
-            }
+            totls += 1.0;
+            continue;
         }
+        float4 refDepthNdc = mul(mvp, float4(refPosition.xyz, 1.0));
+        refDepthNdc.xyz /= refDepthNdc.w;
         
+        float refw = refDepthNdc.w;
+        
+        if (ndcr.w > refw + 1e-2)
+        {
+            float rangeCheck = smoothstep(0.0, 1.0, 60.0 / abs(ndcr.z - refw));
+            occls += 1.0 * rangeCheck;
+        }
+        totls += 1.0;
     }
-    psOut.ao = float4(1.0-occls/totls,0,0, 0);
+    psOut.ao = float4(1.0 - occls / totls, 0, 0, 0);
     
     
     return psOut;

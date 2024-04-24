@@ -169,10 +169,18 @@ namespace Anthem::Core{
                 VkFormat tgtFm;
                 if(dfm==AT_IF_SIGNED_FLOAT32){
                     tgtFm = VK_FORMAT_R32G32B32A32_SFLOAT;
-                }else if(dfm==AT_IF_SRGB_UINT8){
+                }
+                else if(dfm==AT_IF_SRGB_UINT8){
                     tgtFm = VK_FORMAT_R8G8B8A8_SRGB;
-                }else if(dfm==AT_IF_SBGR_UINT8){
+                }
+                else if(dfm==AT_IF_SBGR_UINT8){
                     tgtFm = VK_FORMAT_B8G8R8A8_SRGB;
+                }
+                else if (dfm == AT_IF_SIGNED_FLOAT32_MONO) {
+                    tgtFm = VK_FORMAT_R32_SFLOAT;
+                }
+                else if (dfm == AT_IF_UNORM_UINT8) {
+                    tgtFm = VK_FORMAT_R8G8B8A8_UNORM;
                 }
                 colorAttachment.format = tgtFm;
             }else{

@@ -43,7 +43,7 @@ namespace Anthem::Components::Postprocessing {
 		copt.enableDepthWriting = false;
 		if (offscreen) {
 			ropt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
-			ropt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+			ropt.colorAttachmentFormats = { caFormat };
 			drawOffscreen = true;
 		}
 		prepareRenderPass();
@@ -60,7 +60,7 @@ namespace Anthem::Components::Postprocessing {
 
 			for (auto i : AT_RANGE2(this->cmdCopies)) {
 				rd->createDescriptorPool(&descTarget[i]);
-				rd->createColorAttachmentImage(&targetImage[i], descTarget[i], 0, AT_IF_SIGNED_FLOAT32, false, -1,false);
+				rd->createColorAttachmentImage(&targetImage[i], descTarget[i], 0, caFormat, false, -1,false);
 				rd->createSimpleFramebufferA(&fbTarget[i], { this->targetImage[i] }, this->pass, nullptr);
 				rd->createGraphicsPipelineCustomized(&pipeline[i], inputs[0], {}, pass, shader, vx, &copt);
 			}
@@ -116,6 +116,9 @@ namespace Anthem::Components::Postprocessing {
 			rd->drEndCommandRecording(i);
 			k++;
 		}
+	}
+	void AnthemPostprocessPass::setAttachmentPrecision(AnthemImageFormat atif) {
+		this->caFormat = atif;
 	}
 
 	uint32_t AnthemPostprocessPass::getCommandIdx(uint32_t id) const {

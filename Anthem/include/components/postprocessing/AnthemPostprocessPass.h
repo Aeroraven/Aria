@@ -32,9 +32,11 @@ namespace Anthem::Components::Postprocessing {
         AnthemDescriptorPool** descTarget;
         AnthemImage** targetImage;
         AnthemImage* msaaColorImage;
+        AnthemImageFormat caFormat = AT_IF_SIGNED_FLOAT32;
 
         bool drawOffscreen = false;
         bool enabledMsaa = false;
+        
     public:
         AnthemPostprocessPass(AnthemSimpleToyRenderer* p, uint32_t cmdCopies);
         virtual void enableMsaa();
@@ -46,6 +48,7 @@ namespace Anthem::Components::Postprocessing {
 
         virtual void recordCommand();
         virtual void recordCommandOffscreen();
+        virtual void setAttachmentPrecision(AnthemImageFormat atif);
          
         uint32_t getCommandIdx(uint32_t id) const;
         AnthemDescriptorPool* getColorAttachmentDescId(uint32_t id) const;

@@ -479,18 +479,15 @@ void createGraphicsPass() {
 	st.passAO->shaderPath.fragmentShader = getShader("ao.frag");
 	st.passAO->shaderPath.vertexShader = getShader("ao.vert");
 	st.passAO->setRenderTargets({st.gAO });
-	st.passAO->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.passAO->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32_MONO };
 	st.passAO->setDescriptorLayouts({
-		{st.descGColor,AT_ACDS_SAMPLER,0},
 		{st.descGNormal,AT_ACDS_SAMPLER,0},
 		{st.descGPos,AT_ACDS_SAMPLER,0},
-		{st.descGTangent,AT_ACDS_SAMPLER,0},
 		{st.descAOSamples,AT_ACDS_UNIFORM_BUFFER,0},
 		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0}
 	});
 	st.passAO->vxLayout = canvas.vx;
 	st.passAO->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
-	st.passAO->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
 	st.passAO->buildGraphicsPipeline();
 
 	// Water Pass I: Get Mask for Underwater stuffs
@@ -542,7 +539,7 @@ void createGraphicsPass() {
 
 	st.passDeferBlend->vxLayout = canvas.vx;
 	st.passDeferBlend->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
-	st.passDeferBlend->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.passDeferBlend->passOpt.colorAttachmentFormats = { AT_IF_UNORM_UINT8 };
 	st.passDeferBlend->buildGraphicsPipeline();
 
 	// FXAA Pass
@@ -581,13 +578,13 @@ void createUniform() {
 	st.rd.createDescriptorPool(&st.descGPos);
 	st.rd.createColorAttachmentImage(&st.gPos, st.descGPos, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 	st.rd.createDescriptorPool(&st.descGAO);
-	st.rd.createColorAttachmentImage(&st.gAO, st.descGAO, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createColorAttachmentImage(&st.gAO, st.descGAO, 0, AT_IF_SIGNED_FLOAT32_MONO, false, -1);
 	st.rd.createDescriptorPool(&st.descAOSamples);
 	st.rd.createUniformBuffer(&st.aoSamples, 0, st.descAOSamples, -1);
 	st.rd.createDescriptorPool(&st.descGTangent);
 	st.rd.createColorAttachmentImage(&st.gTangent, st.descGTangent, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 	st.rd.createDescriptorPool(&st.descGDeferBlend);
-	st.rd.createColorAttachmentImage(&st.gDeferBlend, st.descGDeferBlend, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createColorAttachmentImage(&st.gDeferBlend, st.descGDeferBlend, 0, AT_IF_UNORM_UINT8, false, -1);
 	st.rd.createDescriptorPool(&st.descGUnderwaterMask);
 	st.rd.createColorAttachmentImage(&st.gUnderWaterMask, st.descGUnderwaterMask, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 	st.rd.createDescriptorPool(&st.descGWaterUV);
