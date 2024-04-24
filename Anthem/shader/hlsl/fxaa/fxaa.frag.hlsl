@@ -6,7 +6,7 @@ struct VSOutput
 Texture2D texIn : register(t0, space0);
 SamplerState sampIn : register(s0, space0);
 
-static const float LUMIN_MIN_THRESH = 0.0612;
+static const float LUMIN_MIN_THRESH = 0.0712;
 static const float LUMIN_SCALE_MIN_THRESH = 0.033;
 static const float MAX_SEARCH_STEPS = 20.0;
 
@@ -72,21 +72,20 @@ float4 main(VSOutput vsOut) : SV_Target0
                 blendDirection = float2(1, 0);
         }
         
-        float2 baseTexC = vsOut.texCoord;
-        float2 baseTexT = vsOut.texCoord + blendDirection * float2(dx, dy);
-        float baseLumin = (luminTex(baseTexC) + luminTex(baseTexT)) / 2;
+        float2 baseTexW = vsOut.texCoord + 0.5 * blendDirection * float2(dx, dy);
+        float baseLumin = (luminTex(baseTexW)) / 2;
         float stopCriteria = baseLumin * 0.25;
         
         float posSteps = 0, posDelta = 0;
         float negSteps = 0, negDelta = 0;
 
         for (; posSteps <= MAX_SEARCH_STEPS; posSteps += 1.0){
-            posDelta = (luminTex(baseTexC + posSteps * edgeSearchDir) + luminTex(baseTexT + posSteps * edgeSearchDir))/2 - baseLumin;
+            posDelta = (luminTex(baseTexW + posSteps * edgeSearchDir))/2 - baseLumin;
             if (abs(posDelta) > stopCriteria)
                 break;
         }
         for (; negSteps <= MAX_SEARCH_STEPS; negSteps += 1.0){
-            negDelta = (luminTex(baseTexC - negSteps * edgeSearchDir) + luminTex(baseTexT - negSteps * edgeSearchDir)) / 2 - baseLumin;
+            negDelta = (luminTex(baseTexW - negSteps * edgeSearchDir)) / 2 - baseLumin;
             if(abs(negDelta)>stopCriteria)
                 break;
         }
@@ -108,6 +107,5 @@ float4 main(VSOutput vsOut) : SV_Target0
         return lerp(texIn.Sample(sampIn, vsOut.texCoord), texIn.Sample(sampIn, vsOut.texCoord + blendDirection * float2(dx, dy)), finalFactor);
 
     }
-    //return float4(0, 0, 0, 0);
     return texIn.Sample(sampIn, vsOut.texCoord);
 }
