@@ -186,7 +186,7 @@ void initialize() {
 	st.rd.initialize();
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
-	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 10000.0f, 1.0f * rdW / rdH);
+	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 20000.0f, 1.0f * rdW / rdH);
 	st.cam.specifyPosition(4, 138, -284);
 	st.cam.specifyFrontEyeRay(0, 0, 1);
 
@@ -674,12 +674,14 @@ void recordDrawCommand() {
 	st.passFXAA->recordCommand();
 
 	st.seq[0] = std::make_unique<AnthemSequentialCommand>(&st.rd);
+	st.seq[0]->markGraphicsOnly();
 	st.seq[1] = std::make_unique<AnthemSequentialCommand>(&st.rd);
+	st.seq[1]->markGraphicsOnly();
 
 	st.seq[0]->setSequence({
 		{ st.passDefer->getCommandIndex(0), ATC_ASCE_GRAPHICS},
 		{ st.passGround->getCommandIndex(0),ATC_ASCE_GRAPHICS},
-		{ st.passDeferTree->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+		//{ st.passDeferTree->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passSurface->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{  st.passSkybox->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(0), ATC_ASCE_GRAPHICS},
@@ -690,7 +692,7 @@ void recordDrawCommand() {
 	st.seq[1]->setSequence({
 		{ st.passDefer->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
 		{st.passGround->getCommandIndex(1),ATC_ASCE_GRAPHICS},
-		{st.passDeferTree->getCommandIndex(1),ATC_ASCE_GRAPHICS},
+		//{st.passDeferTree->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passSurface->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passSkybox->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(1), ATC_ASCE_GRAPHICS},
@@ -744,9 +746,10 @@ void recordAllChunks() {
 		for (auto& [k, v] : st.chunks) {
 			st.rd.drBindVertexBufferEx2(st.treeModel.getVertexBuffer(), v.treeInstancing, 0, x);
 			st.rd.drBindIndexBuffer(st.treeModel.getIndexBuffer(), x);
+			auto insts = v.treeInstancing->getAtomicCounter(0);
 			for (auto i : AT_RANGE(1,2)) {
 				st.rd.drPushConstants(st.pcTree, st.passDeferTree->pipeline, x);
-				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], 800, st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
+				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], std::min(insts,500), st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
 			}
 		}
 	});

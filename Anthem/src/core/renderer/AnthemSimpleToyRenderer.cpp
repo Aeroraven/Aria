@@ -713,6 +713,66 @@ namespace Anthem::Core{
         std::vector<const AnthemSemaphore*> q = semaphoreToSignal;
         return drSubmitCommandBufferCompQueueGeneral(cmdIdx, &p, &q, fenceToSignal);
     }
+
+
+    bool AnthemSimpleToyRenderer::drBatchedSubmitCommandBuferGraphicsQueueOffscreen(std::vector<uint32_t> cmdIdx,
+        const std::vector<const AnthemSemaphore*>& semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>& semaphoreWaitStages,
+        const std::vector<const AnthemSemaphore*>& semaphoreToSignal, const AnthemFence* fenceToSignal) {
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        std::vector<VkSemaphore> waitSemaphores;
+        std::vector<VkPipelineStageFlags> waitStages;
+        for (const auto& p : semaphoreToWait) {
+            waitSemaphores.push_back(*p->getSemaphore());
+        }
+
+        for (const auto& p : semaphoreWaitStages) {
+            using tp = std::remove_cvref<decltype(p)>::type;
+            if (p == tp::AT_SSW_VERTEX_INPUT) {
+                waitStages.push_back(VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+            }
+            else if (p == tp::AT_SSW_COLOR_ATTACH_OUTPUT) {
+                waitStages.push_back(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+            }
+            else if (p == tp::AT_SSW_ALL_COMMAND) {
+                waitStages.push_back(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+            }
+            else {
+                ANTH_LOGE("Invalid wait stage");
+            }
+        }
+        submitInfo.pWaitSemaphores = waitSemaphores.data();
+        submitInfo.pWaitDstStageMask = waitStages.data();
+        submitInfo.waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size());
+
+        std::vector<VkCommandBuffer> submitCmdBufs{};
+        submitInfo.commandBufferCount = cmdIdx.size();
+        for (auto k : cmdIdx) {
+            submitCmdBufs.push_back(*commandBuffers->getCommandBuffer(k));
+        }
+        submitInfo.pCommandBuffers = submitCmdBufs.data();
+
+        std::vector<VkSemaphore> signalSemaphores;
+        for (auto& w : semaphoreToSignal) {
+            signalSemaphores.push_back(*w->getSemaphore());
+        }
+
+        submitInfo.signalSemaphoreCount = signalSemaphores.size();
+        submitInfo.pSignalSemaphores = signalSemaphores.data();
+
+        VkFence sigFence = VK_NULL_HANDLE;
+        if (fenceToSignal != nullptr) {
+            sigFence = *fenceToSignal->getFence();
+        }
+        if (vkQueueSubmit(this->logicalDevice->getGraphicsQueue(), 1, &submitInfo, sigFence) != VK_SUCCESS) {
+            ANTH_LOGE("Failed to submit draw command buffer");
+            return false;
+        }
+        ANTH_LOGV("Draw command buffer submitted");
+        return true;
+    }
     bool AnthemSimpleToyRenderer::drSubmitCommandBufferCompQueueGeneral(uint32_t cmdIdx, const std::vector<const AnthemSemaphore*>* semaphoreToWait, const std::vector<const AnthemSemaphore*>* semaphoreToSignal, const AnthemFence* fenceToSignal) {
         
         VkSubmitInfo submitInfo{};

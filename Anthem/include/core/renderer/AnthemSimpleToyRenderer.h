@@ -241,6 +241,10 @@ namespace Anthem::Core{
         bool drSubmitCommandBufferCompQueueGeneralA(uint32_t cmdIdx, const std::vector<const AnthemSemaphore*>& semaphoreToWait, 
             const std::vector<const AnthemSemaphore*>& semaphoreToSignal, const AnthemFence* fenceToSignal);
 
+        bool drBatchedSubmitCommandBuferGraphicsQueueOffscreen(std::vector<uint32_t> cmdIdx,
+            const std::vector<const AnthemSemaphore*>& semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>& semaphoreWaitStages,
+            const std::vector<const AnthemSemaphore*>& semaphoreToSignal, const AnthemFence* fenceToSignal);
+
         bool drSetViewportScissorFromSwapchain(uint32_t cmdIdx);
         bool drSetViewportScissor(AnthemViewport* custVp,uint32_t cmdIdx);
         bool drSetLineWidth(float lineWidth, uint32_t cmdIdx);

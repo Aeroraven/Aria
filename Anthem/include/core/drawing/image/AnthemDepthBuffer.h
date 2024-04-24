@@ -21,6 +21,7 @@ namespace Anthem::Core {
         bool destroyDepthBuffer();
         bool enableMsaa();
         bool enableCubic();
+        bool usePreciseBuffer();
 
         uint32_t getLayers() const;
         VkFormat getDepthFormat() const;

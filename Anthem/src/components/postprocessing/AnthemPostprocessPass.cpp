@@ -37,6 +37,10 @@ namespace Anthem::Components::Postprocessing {
 		rd->createDepthBuffer(&depthStencil,false);
 		prepareGeometry();
 		prepareShader();
+		
+		ropt.storeDepthValues = false;
+		copt.enableDepthTesting = false;
+		copt.enableDepthWriting = false;
 		if (offscreen) {
 			ropt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
 			ropt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
@@ -57,14 +61,20 @@ namespace Anthem::Components::Postprocessing {
 			for (auto i : AT_RANGE2(this->cmdCopies)) {
 				rd->createDescriptorPool(&descTarget[i]);
 				rd->createColorAttachmentImage(&targetImage[i], descTarget[i], 0, AT_IF_SIGNED_FLOAT32, false, -1,false);
-				rd->createSimpleFramebufferA(&fbTarget[i], { this->targetImage[i] }, this->pass, depthStencil);
+				rd->createSimpleFramebufferA(&fbTarget[i], { this->targetImage[i] }, this->pass, nullptr);
 				rd->createGraphicsPipelineCustomized(&pipeline[i], inputs[0], {}, pass, shader, vx, &copt);
 			}
 		}
 	}
 
 	void AnthemPostprocessPass::prepareRenderPass() {
-		rd->setupRenderPass(&pass, &ropt, depthStencil);
+		if (ropt.renderPassUsage == AT_ARPAA_FINAL_PASS) {
+			rd->setupRenderPass(&pass, &ropt, depthStencil);
+		}
+		else {
+			rd->setupRenderPass(&pass, &ropt, nullptr);
+		}
+		
 	}
 	void AnthemPostprocessPass::enableMsaa() {
 		ANTH_TODO("Forced type cast");

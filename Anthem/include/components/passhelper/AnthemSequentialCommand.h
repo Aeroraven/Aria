@@ -22,7 +22,10 @@ namespace Anthem::Components::PassHelper {
 		std::vector<AnthemSequentialCommandEntry> seq;
 		std::vector<AnthemSemaphore*> semaphores;
 		AnthemFence* fence;
+		bool graphicsOnly = false;
+
 	public:
+		void markGraphicsOnly();
 		AnthemSequentialCommand(AnthemSimpleToyRenderer* renderer);
 		void setSequence(const std::vector<AnthemSequentialCommandEntry>& seq);
 		void executeCommandToStage(uint32_t frameImageIdx, bool forceFence,bool useImGui,AnthemSwapchainFramebuffer* swapchainFb);

@@ -48,6 +48,10 @@ namespace Anthem::Core{
         this->image.layerCounts = 6;
         return true;
     }
+    bool AnthemDepthBuffer::usePreciseBuffer() {
+        this->depthFormat = enableStencil ? VK_FORMAT_D32_SFLOAT_S8_UINT : VK_FORMAT_D32_SFLOAT;
+        return true;
+    }
     uint32_t AnthemDepthBuffer::getLayers() const {
         return this->image.layerCounts;
     }

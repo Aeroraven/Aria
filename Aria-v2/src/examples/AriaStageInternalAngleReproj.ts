@@ -174,7 +174,6 @@ export class AriaStageInternalAngleReprojection extends AriaStage{
             const collection = new AriaComMesh(procedure,p)
             
             scene.addChild(collection)
-            
         }
         const axisMesh = new AriaComMesh(axisMaterial,axis)
         scene.addChild(axisMesh)
@@ -183,10 +182,7 @@ export class AriaStageInternalAngleReprojection extends AriaStage{
         camera.setPos(0,0,2)
         camera.initInteraction()
 
-
-
         const panel = new AriaComParamPanel(200,250)
-        //panel.addTitle("矩形内角投影")
         panel.addFPSMeter("FPS")
         panel.initInteraction()
 

@@ -152,7 +152,7 @@ namespace Anthem::Core::BaseUtility {
 }
 #define AT_ZIP(...)  Anthem::Core::BaseUtility::AtZipContainer(__VA_ARGS__)
 #define AT_RANGE(s,t) (std::views::iota(s,t))
-#define AT_RANGE2(t) (std::views::iota(static_cast<decltype(t)>(0),t))
+#define AT_RANGE2(t) (std::views::iota(static_cast<std::remove_reference_t<decltype((t))>>(0),(t)))
 #define AT_CLAMP(v,s,t) ((v)>(s)?( (v)<(t)?(v):(t) ):(s));
 
 #define AT_ALIGN(s,t) (((s)+(t)-1)&~((t)-1))

@@ -348,13 +348,11 @@ int insertString(std::string strs, float scale) {
 		curX += (font.advance[ch] >> 6) * scale;
 		idx += 6;
 
-		ANTH_LOGI("LP:", xp, " ", yp);
 		sdb.firstBearingY = font.glyphBearingY[ch] * scale;
 	}
 	sdb.ixBuf->setIndices(indices);
 	sdb.totalWidth = curX;
 	textPipe.strings.push_back(std::move(sdb));
-	//throw;
 	return textPipe.strings.size() - 1;
 }
 
@@ -368,7 +366,7 @@ void prepareComputePipeline() {
 	comp.shaderFile.computeShader = getShader("comp");
 	core.renderer.createShader(&comp.shader, &comp.shaderFile);
 
-	// Filling experiment data
+	// Experiment data
 	using ssboType = std::remove_cv_t<decltype(comp.samples)>;
 	std::function<void(ssboType)> ssboCreateFunc = [&](ssboType w) {
 		auto childJob = [&](int segment, int totalSegments)->void {

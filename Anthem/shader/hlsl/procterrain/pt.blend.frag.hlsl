@@ -106,12 +106,9 @@ float2 getUVFromPosition(float4 pos)
 PSOutput main(VSOutput vsOut)
 {
     PSOutput psOut;
-    //psOut.color = float4(1, 1, 1, 1);
-    //return psOut;
     
     float4 posr = texPosition.Sample(sampPosition, vsOut.texUv.xy).xyzw;
     psOut.color = pointColor(vsOut.texUv.xy, posr);
-    return psOut;
     
     // Water Blending
     float4 waterData = texWaterMask.Sample(sampWaterMask, vsOut.texUv.xy).rgba;

@@ -114,23 +114,24 @@ void main(uint3 invId : SV_DispatchThreadID)
     // Base Height
     float baseHeight = fractalBaseHeightF(pos.xz * baseScaler);
     baseHeight = (baseHeight*0.9 + centerElevation(pos.xz) * 0.1) * edgeModify(pos.xz);
+    //baseHeight = 0.3 * edgeModify(pos.xz);
     // Details
     float ret = 0;
     ret += (pos.y - baseHeight) * elev;
-    //ret += fractalApproxPerlin(pos, scaler, 2)*ampl;
+    ret += fractalApproxPerlin(pos, scaler, 2)*ampl;
     density[invId] = ret;
     
-    float3 worldPos = float3(invId) / float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1) + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y);
+    float3 worldPos = (float3(invId) - float3(0.5, 0, 0)) / float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1) + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y);
     worldPos = worldPos * float3(COORDINATE_SCALE, Y_ELEVATION, COORDINATE_SCALE);
     
     //Tree
     float delta = 1.0 / (GRID_SIZE_Y - 1.0);
-    float noise = cnoise(frac(cnoise(worldPos.yxz) * 12.737)+worldPos.xzy);
-    if (baseHeight > 0.15 && 
-        baseHeight < 0.20 && 
+    float noise = rand(worldPos.xzy);
+    if (baseHeight > 0.14 && 
+        baseHeight < 0.16 && 
         pos.y > baseHeight && 
         pos.y - delta < baseHeight && 
-        noise > 0.95)
+        noise > 0.98)
     {
         TreeLoc tloc;
         tloc.treeLoc = float4(worldPos, 1) ;
