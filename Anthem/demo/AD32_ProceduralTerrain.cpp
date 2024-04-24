@@ -530,7 +530,7 @@ void createGraphicsPass() {
 		{st.descGColor,AT_ACDS_SAMPLER,0},
 		{st.descGNormal,AT_ACDS_SAMPLER,0},
 		{st.descGPos,AT_ACDS_SAMPLER,0},
-		{st.passAOPost->getColorAttachmentDescId(0),AT_ACDS_SAMPLER,0},
+		{st.descGAO,AT_ACDS_SAMPLER,0},
 		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0},
 		{st.descGUnderwaterMask,AT_ACDS_SAMPLER,0},
 		{st.descBox,AT_ACDS_SAMPLER,0},
@@ -685,7 +685,6 @@ void recordDrawCommand() {
 		{ st.passSurface->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{  st.passSkybox->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(0), ATC_ASCE_GRAPHICS},
-		{ st.passAOPost->getCommandIdx(0),ATC_ASCE_GRAPHICS},
 		{ st.passDeferBlend->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passFXAA->getCommandIdx(0), ATC_ASCE_GRAPHICS},
 	});
@@ -696,7 +695,6 @@ void recordDrawCommand() {
 		{st.passSurface->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passSkybox->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(1), ATC_ASCE_GRAPHICS},
-		{ st.passAOPost->getCommandIdx(1),ATC_ASCE_GRAPHICS},
 		{ st.passDeferBlend->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{ st.passFXAA->getCommandIdx(1), ATC_ASCE_GRAPHICS},
 	});

@@ -61,40 +61,38 @@ PSOutput main(VSOutput vsOut)
     tangent = normalize(tangent - dot(tangent, normal) * normal);
     float3 bitangent = cross(normal, tangent);
     float3x3 tbn = transpose(float3x3(tangent, bitangent, normal));
+    float4x4 mvp = mul(cam.proj, mul(cam.view, cam.model));
     
     // Calculate AO
     float occls = 0;
     float totls = 0;
-    for (int i = 0; i < 64; i++)
+    int totlsI = 32;
+    if (posr.z - cam.camPos.z > 150)
+    {
+        totlsI = 8;
+    }
+    totls = float(totlsI);
+    for (int i = 0; i < totlsI; i++)
     {
         float3 sp = normalize(attr.vec[i].xyz) * attr.vec[i].w;
-        sp = mul(tbn, sp);
-        if (dot(sp, normal.xyz) < 0)
-            sp = -sp;
+        sp = mul(tbn, sp) * sign(dot(sp, normal.xyz));
         
         float4 dpos = float4(pos, 1) + float4(sp, 0);
-        float4 ndcr = mul(cam.proj, mul(cam.view, mul(cam.model, float4(dpos.xyz, 1.0))));
-        float3 ndc = ndcr.xyz / ndcr.w;
-
-        float2 texcp = ndc.xy * 0.5 + 0.5;
+        float4 ndcr = mul(mvp, float4(dpos.xyz, 1.0));
         
-        float4 refPosition = texPosition.Sample(sampPosition, texcp);
-        if (refPosition.a <= 0.5)
+        float4 refPosition = texPosition.Sample(sampPosition, ndcr.xy / ndcr.w * 0.5 + 0.5);
+        if (refPosition.a > 0.5)
         {
-            totls += 1.0;
-            continue;
-        }
-        float4 refDepthNdc = mul(cam.proj, mul(cam.view, mul(cam.model, float4(refPosition.xyz, 1.0))));
-        refDepthNdc.xyz /= refDepthNdc.w;
+            float4 refDepthNdc = mul(mvp, float4(refPosition.xyz, 1.0));
+            float refw = refDepthNdc.z / refDepthNdc.w;
         
-        float refw = refDepthNdc.w;
-        
-        if (ndcr.w > refw + 1e-2)
-        {
-            float rangeCheck = smoothstep(0.0, 1.0, 60.0 / abs(ndcr.z - refw));
-            occls += 1.0 * rangeCheck;
+            if (ndcr.w > refw + 1e-2)
+            {
+                float rangeCheck = smoothstep(0.0, 1.0, 60.0 / abs(ndcr.z - refw));
+                occls += 1.0 * rangeCheck;
+            }
         }
-        totls += 1.0;
+        
     }
     psOut.ao = float4(1.0-occls/totls,0,0, 0);
     

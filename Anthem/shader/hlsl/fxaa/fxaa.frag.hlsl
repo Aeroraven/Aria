@@ -6,7 +6,7 @@ struct VSOutput
 Texture2D texIn : register(t0, space0);
 SamplerState sampIn : register(s0, space0);
 
-static const float LUMIN_MIN_THRESH = 0.0112;
+static const float LUMIN_MIN_THRESH = 0.0612;
 static const float LUMIN_SCALE_MIN_THRESH = 0.033;
 static const float MAX_SEARCH_STEPS = 20.0;
 
@@ -20,32 +20,8 @@ float luminTex(float2 texc)
     return lumin(texIn.Sample(sampIn, texc));
 }
 
-float4 sobel(float2 texc)
-{
-    float texH, texW, texLods;
-    texIn.GetDimensions(0, texW, texH, texLods);
-    float dx = 1.0 / texW, dy = 1.0 / texH;
-    float4 cC = texIn.Sample(sampIn, texc);
-    float4 cL = texIn.Sample(sampIn, texc + float2(-dx, 0));
-    float4 cR = texIn.Sample(sampIn, texc + float2(+dx, 0));
-    float4 cT = texIn.Sample(sampIn, texc + float2(0, -dy));
-    float4 cB = texIn.Sample(sampIn, texc + float2(0, +dy));
-    float4 cLT = texIn.Sample(sampIn, texc + float2(-dx, -dy));
-    float4 cRT = texIn.Sample(sampIn, texc + float2(dx, -dy));
-    float4 cLB = texIn.Sample(sampIn, texc + float2(-dx, dy));
-    float4 cRB = texIn.Sample(sampIn, texc + float2(dx, dy));
-    float lC = lumin(cC), lL = lumin(cL), lR = lumin(cR), lT = lumin(cT), lB = lumin(cB);
-    float lLT = lumin(cLT), lRT = lumin(cRT), lLB = lumin(cLB), lRB = lumin(cRB);
-    float4 horizEdge = cL + cL + cL + cR + cR + cR - cT - cT - cT - cB - cB - cB;
-    float4 vertEdge = cT + cT + cT + cB + cB + cB - cL - cL - cL - cR - cR - cR;
-    return sqrt(horizEdge * horizEdge + vertEdge * vertEdge);
-}
-
 float4 main(VSOutput vsOut) : SV_Target0
 {
-    //return texIn.Sample(sampIn, vsOut.texCoord);
-    //return texIn.SampleLevel(sampIn, vsOut.texCoord, 4);
-    //return sobel(vsOut.texCoord);
     
     uint texHeight, texWidth, texLods;
     texIn.GetDimensions(0, texWidth, texHeight, texLods);

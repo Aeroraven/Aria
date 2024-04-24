@@ -53,6 +53,24 @@ float schlickFresnel(float f0, float cA)
     return f0 + (1 - f0) * pow(1 - cA, 5.0);
 }
 
+float4 aoBlur(float2 uv)
+{
+    float texH, texW, texLod;
+    texAO.GetDimensions(0, texW, texH, texLod);
+    float2 texelSize = 1.0 / float2(texW, texH);
+    
+    float4 color = float4(0, 0, 0, 0);
+    for (int x = -1; x <= 1; x++)
+    {
+        for (int y = -1; y <= 1; y++)
+        {
+            color += texAO.Sample(sampAO, uv + float2(x, y) * texelSize);
+        }
+    }
+    return color / 9.0;
+}
+
+
 float4 pointColor(float2 uv,float4 posr)
 {
     float4 ret;
