@@ -55,7 +55,8 @@ struct StageConstants {
 	DCONST float WATER_ELEVATION = 50;
 	DCONST float SKYBOX_SIZE = 1800;
 	DCONST float SKYBOX_ELEVATION = 50;
-	DCONST float WORLD_SIZE = 2;
+	DCONST float WORLD_SIZE = 4;
+	DCONST int32_t MAX_TREES = 2000;
 }sc;
 #undef DCONST
 
@@ -63,11 +64,12 @@ struct StageConstants {
 
 struct Chunk {
 	int32_t x, z;
+	int32_t lod;
 	AnthemImage* volDensity;
 	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>, AtBufVecd4f<1>, AtBufVecd4f<1>>* mesh;
 	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* treeInstancing;
 
-	AnthemPushConstantImpl<AtBufVec4f<1>>* pc; //(Loclx,Loclz,0,0)
+	AnthemPushConstantImpl<AtBufVec4f<1>>* pc; //(Loclx,Loclz,Lod,0)
 	AnthemDescriptorPool* descVol;
 	AnthemDescriptorPool* descMesh;
 	AnthemDescriptorPool* descTreeInst;
@@ -143,8 +145,8 @@ struct Stage {
 	AnthemPushConstantImpl<AtBufMat4f<1>>* pcTree;
 
 	// Passes
-	std::unique_ptr<AnthemComputePassHelper> passVol;
-	std::unique_ptr<AnthemComputePassHelper> passMarchingCube;
+	std::unique_ptr<AnthemComputePassHelper> passVol[4];
+	std::unique_ptr<AnthemComputePassHelper> passMarchingCube[4];
 	std::unique_ptr<AnthemPassHelper> passDefer;
 	std::unique_ptr<AnthemPassHelper> passDeferTree;
 	std::unique_ptr<AnthemPassHelper> passAO;
@@ -187,7 +189,7 @@ void initialize() {
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
 	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 20000.0f, 1.0f * rdW / rdH);
-	st.cam.specifyPosition(4, 138, -284);
+	st.cam.specifyPosition(4,298, -594);
 	st.cam.specifyFrontEyeRay(0, 0, 1);
 
 	st.keyController = st.cam.getKeyboardController(2.4);
@@ -233,14 +235,24 @@ void createChunk(int x, int z) {
 	auto& c = st.chunks[{x, z}];
 	c.x = x;
 	c.z = z;
+	c.lod = 0;
+	if (std::max(std::abs(x), std::abs(z)) >= 3) {
+		c.lod = 2;
+	}
+	int lodLv = 1 << c.lod;
 	st.rd.createDescriptorPool(&c.descVol);
-	st.rd.createTexture3d(&c.volDensity, c.descVol, nullptr, sc.CHUNK_SIZE_X + 1, sc.CHUNK_SIZE_ELEVATION + 1, sc.CHUNK_SIZE_X + 1,
+	st.rd.createTexture3d(&c.volDensity, c.descVol, nullptr, 
+		sc.CHUNK_SIZE_X / lodLv + 1,
+		sc.CHUNK_SIZE_ELEVATION / lodLv + 1,
+		sc.CHUNK_SIZE_X / lodLv + 1,
 		1, 0, AT_IF_SIGNED_FLOAT32_MONO, -1, AT_IU_COMPUTE_OUTPUT);
 	c.volDensity->toGeneralLayout();
 	st.rd.addStorageImageArrayToDescriptor({ c.volDensity }, c.descVol, 0, -1);
 	st.rd.createDescriptorPool(&c.descMesh);
 	st.rd.createDescriptorPool(&c.descTreeInst);
-	uint32_t chunkSize = std::min(static_cast<uint32_t>(sc.MAX_TRIANGLES), sc.CHUNK_SIZE_X * sc.CHUNK_SIZE_ELEVATION * sc.CHUNK_SIZE_X * 15u);
+	uint32_t chunkSize = std::min(
+		static_cast<uint32_t>(sc.MAX_TRIANGLES), 
+		sc.CHUNK_SIZE_X * sc.CHUNK_SIZE_ELEVATION * sc.CHUNK_SIZE_X * 15u / (lodLv* lodLv* lodLv));
 	using ssboType = std::remove_cv_t<decltype(c.mesh)>;
 	using ssboType1 = std::remove_cv_t<decltype(c.treeInstancing)>;
 	std::optional<std::function<void(ssboType)>> initFunc = std::nullopt;
@@ -264,7 +276,7 @@ void createChunk(int x, int z) {
 	c.pc->enableShaderStage(AT_APCS_FRAGMENT);
 	auto sA = 0;
 	auto sB = 0;
-	float constpc[4] = { (float)x,(float)z,sA,sB };
+	float constpc[4] = { (float)x,(float)z,lodLv,sB };
 
 	ANTH_LOGI("Random number is:", sA, "-", sB);
 
@@ -344,21 +356,22 @@ void recordChunkCommands(int x, int z) {
 	st.rd.drAllocateCommandBuffer(&c.cmdMcPass);
 
 	// Vol Pass
+	int lodLv = 1 << c.lod;
 	st.rd.drStartCommandRecording(c.cmdVolPass);
-	st.rd.drBindComputePipeline(st.passVol->pipeline, c.cmdVolPass);
-	st.rd.drBindDescriptorSetCustomizedCompute(c.dseVolPass, st.passVol->pipeline, c.cmdVolPass);
-	int gx = sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_X;
-	int gy = sc.CHUNK_SIZE_ELEVATION / sc.COMPUTE_GROUP_Y;
-	int gz = sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_Z;
-	st.rd.drPushConstantsCompute(c.pc, st.passVol->pipeline, c.cmdVolPass);
+	st.rd.drBindComputePipeline(st.passVol[c.lod]->pipeline, c.cmdVolPass);
+	st.rd.drBindDescriptorSetCustomizedCompute(c.dseVolPass, st.passVol[c.lod]->pipeline, c.cmdVolPass);
+	int gx = sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_X / lodLv;
+	int gy = sc.CHUNK_SIZE_ELEVATION / sc.COMPUTE_GROUP_Y / lodLv;
+	int gz = sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_Z / lodLv;
+	st.rd.drPushConstantsCompute(c.pc, st.passVol[c.lod]->pipeline, c.cmdVolPass);
 	st.rd.drComputeDispatch(c.cmdVolPass, gx, gy, gz);
 	st.rd.drEndCommandRecording(c.cmdVolPass);
 
 	// Marching Cube Pass
 	st.rd.drStartCommandRecording(c.cmdMcPass);
-	st.rd.drBindComputePipeline(st.passMarchingCube->pipeline, c.cmdMcPass);
-	st.rd.drBindDescriptorSetCustomizedCompute(c.dseMarchingCubePass, st.passMarchingCube->pipeline, c.cmdMcPass);
-	st.rd.drPushConstantsCompute(c.pc, st.passMarchingCube->pipeline, c.cmdMcPass);
+	st.rd.drBindComputePipeline(st.passMarchingCube[c.lod]->pipeline, c.cmdMcPass);
+	st.rd.drBindDescriptorSetCustomizedCompute(c.dseMarchingCubePass, st.passMarchingCube[c.lod]->pipeline, c.cmdMcPass);
+	st.rd.drPushConstantsCompute(c.pc, st.passMarchingCube[c.lod]->pipeline, c.cmdMcPass);
 	st.rd.drComputeDispatch(c.cmdMcPass, gx, gy, gz);
 	st.rd.drEndCommandRecording(c.cmdMcPass);
 
@@ -372,21 +385,24 @@ void recordChunkCommands(int x, int z) {
 }
 
 void createComputePass() {
-	// Vol Pass : Generate Volume Density
-	st.passVol = std::make_unique<AnthemComputePassHelper>(&st.rd, 1);
-	st.passVol->workGroupSize = { sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_X, sc.CHUNK_SIZE_ELEVATION / sc.COMPUTE_GROUP_Y, sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_Z };
-	st.passVol->shaderPath.computeShader = getShader("vol.comp");
-	st.passVol->pushConstants = {st.demoChunk->pc};
-	st.passVol->setDescriptorLayouts(st.demoChunk->dseVolPass);
-	st.passVol->buildComputePipeline();
+	for (uint32_t i : AT_RANGE2(4)) {
+		// Vol Pass : Generate Volume Density
+		st.passVol[i] = std::make_unique<AnthemComputePassHelper>(&st.rd, 1);
+		st.passVol[i]->workGroupSize = { sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_X /(1u<<i), sc.CHUNK_SIZE_ELEVATION / sc.COMPUTE_GROUP_Y / (1u << i), sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_Z / (1u << i) };
+		st.passVol[i]->shaderPath.computeShader = getShader("vol.comp");
+		st.passVol[i]->pushConstants = { st.demoChunk->pc };
+		st.passVol[i]->setDescriptorLayouts(st.demoChunk->dseVolPass);
+		st.passVol[i]->buildComputePipeline();
 
-	// Marching Cube Pass : Generate Mesh
-	st.passMarchingCube = std::make_unique<AnthemComputePassHelper>(&st.rd, 1);
-	st.passMarchingCube->workGroupSize = { sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_X, sc.CHUNK_SIZE_ELEVATION / sc.COMPUTE_GROUP_Y, sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_Z };
-	st.passMarchingCube->shaderPath.computeShader = getShader("mc.comp");
-	st.passMarchingCube->pushConstants = { st.demoChunk->pc };
-	st.passMarchingCube->setDescriptorLayouts(st.demoChunk->dseMarchingCubePass);
-	st.passMarchingCube->buildComputePipeline();
+		// Marching Cube Pass : Generate Mesh
+		st.passMarchingCube[i] = std::make_unique<AnthemComputePassHelper>(&st.rd, 1);
+		st.passMarchingCube[i]->workGroupSize = { sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_X / (1u << i), sc.CHUNK_SIZE_ELEVATION / sc.COMPUTE_GROUP_Y / (1u << i), sc.CHUNK_SIZE_X / sc.COMPUTE_GROUP_Z / (1u << i) };
+		st.passMarchingCube[i]->shaderPath.computeShader = getShader("mc.comp");
+		st.passMarchingCube[i]->pushConstants = { st.demoChunk->pc };
+		st.passMarchingCube[i]->setDescriptorLayouts(st.demoChunk->dseMarchingCubePass);
+		st.passMarchingCube[i]->buildComputePipeline();
+	}
+
 }
 
 void createSkyPass() {
@@ -417,7 +433,7 @@ void createTreePass() {
 	st.passDeferTree->setRenderTargets({ st.gColor, st.gNormal,st.gPos, st.gTangent });
 	st.passDeferTree->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32, AT_IF_SIGNED_FLOAT32 };
 	st.passDeferTree->passOpt.clearColors = { {0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f,0.0f} ,{0.0f,0.0f,0.0f,0.0f} };
-	st.passDeferTree->pipeOpt.blendPreset = { AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
+	st.passDeferTree->pipeOpt.blendPreset = { AT_ABP_DEFAULT_TRANSPARENCY,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND,AT_ABP_NO_BLEND };
 	st.passDeferTree->setDescriptorLayouts({
 		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0},
 		{st.descPbrBaseTexTree,AT_ACDS_SAMPLER,0},
@@ -678,7 +694,7 @@ void recordDrawCommand() {
 	st.seq[0]->setSequence({
 		{ st.passDefer->getCommandIndex(0), ATC_ASCE_GRAPHICS},
 		{ st.passGround->getCommandIndex(0),ATC_ASCE_GRAPHICS},
-		//{ st.passDeferTree->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+		{ st.passDeferTree->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passSurface->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{  st.passSkybox->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(0), ATC_ASCE_GRAPHICS},
@@ -688,7 +704,7 @@ void recordDrawCommand() {
 	st.seq[1]->setSequence({
 		{ st.passDefer->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
 		{st.passGround->getCommandIndex(1),ATC_ASCE_GRAPHICS},
-		//{st.passDeferTree->getCommandIndex(1),ATC_ASCE_GRAPHICS},
+		{st.passDeferTree->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passSurface->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passSkybox->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{ st.passAO->getCommandIndex(1), ATC_ASCE_GRAPHICS},
@@ -742,9 +758,9 @@ void recordAllChunks() {
 			st.rd.drBindVertexBufferEx2(st.treeModel.getVertexBuffer(), v.treeInstancing, 0, x);
 			st.rd.drBindIndexBuffer(st.treeModel.getIndexBuffer(), x);
 			auto insts = v.treeInstancing->getAtomicCounter(0);
-			for (auto i : AT_RANGE(1,2)) {
+			for (auto i : AT_RANGE(0,2)) {
 				st.rd.drPushConstants(st.pcTree, st.passDeferTree->pipeline, x);
-				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], std::min(insts,500), st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
+				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], std::min(insts,sc.MAX_TREES), st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
 			}
 		}
 	});

@@ -67,7 +67,7 @@ float4 biomeRamp(float height,float3 normal,float3 pos)
     if (height < layerTop)
     {
         float updir = dot(normalize(normal), float3(0, 1, 0));
-        float plainCoef = smoothstep(0.73, 0.78, updir);
+        float plainCoef = smoothstep(0.70, 0.75, updir);
         float prSum = weightPlain + weightRidge + weightBeach;
         float prBeachShare = weightBeach / (weightPlain + weightBeach+1e-3);
         weightPlain = (plainCoef) * prSum * (1 - prBeachShare);

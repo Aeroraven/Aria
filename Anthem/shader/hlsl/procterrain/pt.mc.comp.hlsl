@@ -349,9 +349,11 @@ float3 fieldGradient(float3 co)
 
 void marchingCubes(uint3 co)
 {
+    float3 unitSize = float3(GRID_SIZE / chunkLoc.loc.z - 1, GRID_SIZE_Y / chunkLoc.loc.z - 1, GRID_SIZE / chunkLoc.loc.z - 1);
+    
     uint3 vert[8];
     int mask = 0;
-    uint voxelId = co.x * GRID_SIZE * GRID_SIZE_Y + co.y * GRID_SIZE + co.z;
+    uint voxelId = co.x * GRID_SIZE / int(chunkLoc.loc.z + 0.5) * GRID_SIZE_Y / int(chunkLoc.loc.z + 0.5) + co.y * GRID_SIZE / int(chunkLoc.loc.z + 0.5) + co.z;
 	
     for (int i = 0; i < 8; i++)
     {
@@ -362,10 +364,10 @@ void marchingCubes(uint3 co)
     }
 	
     voxelId = voxelId * 15;
-    float3 cp = float3(co) / float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1);
+    float3 cp = float3(co) / unitSize;
     for (int j = 0; j < 15; j += 3)
     {
-        if (triLUT[mask][j] == -1 || co.x == GRID_SIZE - 1 || co.y == GRID_SIZE_Y - 1 || co.z == GRID_SIZE - 1)
+        if (triLUT[mask][j] == -1 || co.x == GRID_SIZE / int(chunkLoc.loc.z + 0.5) - 1 || co.y >= GRID_SIZE_Y / int(chunkLoc.loc.z + 0.5) - chunkLoc.loc.z-1 || co.z == GRID_SIZE / int(chunkLoc.loc.z + 0.5) - 1)
         {
             break;
         }
@@ -385,11 +387,11 @@ void marchingCubes(uint3 co)
         float3 finalC = interpC * verLUT[linkLUT[triLUT[mask][j + 2]][1]] + (1 - interpC) * verLUT[linkLUT[triLUT[mask][j + 2]][0]];
 		
 		
-        float3 oA = finalA / float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1);
-        float3 oB = finalB / float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1);
-        float3 oC = finalC / float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1);
+        float3 oA = finalA / unitSize;
+        float3 oB = finalB / unitSize;
+        float3 oC = finalC / unitSize;
 		
-		float3 coordScale = float3(COORDINATE_SCALE,Y_ELEVATION,COORDINATE_SCALE);
+		float3 coordScale = float3(COORDINATE_SCALE,Y_ELEVATION ,COORDINATE_SCALE);
 		
         Triangle tri;
         tri.v[0].position = float4((oA + cp + COORDINATE_OFFSET + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y)) * coordScale, 1);
@@ -399,9 +401,9 @@ void marchingCubes(uint3 co)
 
 		
 		// Interpolate field to get normals use gradient
-        float3 gradA = fieldGradient((oA + cp) * float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1));
-        float3 gradB = fieldGradient((oB + cp) * float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1));
-        float3 gradC = fieldGradient((oC + cp) * float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1));
+        float3 gradA = fieldGradient((oA + cp) * unitSize);
+        float3 gradB = fieldGradient((oB + cp) * unitSize);
+        float3 gradC = fieldGradient((oC + cp) * unitSize);
 		
 		tri.v[0].normal = float4(normalize(gradA), 0);
         tri.v[1].normal = float4(normalize(gradB), 0);

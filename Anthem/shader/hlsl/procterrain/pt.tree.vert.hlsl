@@ -17,6 +17,7 @@ struct VSOutput
     [[vk::location(2)]] float4 tangent : TANGENT0;
     [[vk::location(3)]] float4 instancePos : POSITION1;
     [[vk::location(4)]] float4 texIndices : POSITION2;
+    [[vk::location(5)]] float4 uv : TEXCOORD0;
 };
 struct LocalMove
 {
@@ -37,6 +38,7 @@ VSOutput main(VSInput vsIn)
     vsOut.tangent = mul(cam.model, float4(vsIn.tangent.xyz, 0.0));
     vsOut.instancePos = vsIn.instancePos;
     vsOut.texIndices = vsIn.texIndices;
+    vsOut.uv = vsIn.texcoord;
     return vsOut;
 }
 

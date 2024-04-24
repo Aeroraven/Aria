@@ -89,7 +89,7 @@ PSOutput main(VSOutput vsOut)
         
         if (ndcr.w > refw + 1e-2)
         {
-            float rangeCheck = smoothstep(0.0, 1.0, 60.0 / abs(ndcr.z - refw));
+            float rangeCheck = smoothstep(0.0, 1.0, 30.0 / abs(ndcr.z - refw));
             occls += 1.0 * rangeCheck;
         }
         totls += 1.0;

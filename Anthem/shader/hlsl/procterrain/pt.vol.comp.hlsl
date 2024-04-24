@@ -6,7 +6,7 @@
 
 struct ChunkLocation
 {
-    float4 loc;
+    float4 loc; //(locl,locz,lod)
 };
 
 struct TreeLoc
@@ -105,9 +105,10 @@ float centerElevation(float2 v)
 [numthreads(8, 8, 8)]
 void main(uint3 invId : SV_DispatchThreadID)
 {
+    float3 unitSize = float3(GRID_SIZE / chunkLoc.loc.z - 1, GRID_SIZE_Y / chunkLoc.loc.z - 1, GRID_SIZE / chunkLoc.loc.z - 1) ;
     float ampl = 0.25;
     float elev = 14.0;
-    float3 pos = float3(invId) / float3(GRID_SIZE - 1, GRID_SIZE_Y-1,GRID_SIZE-1) + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y) + float3(OFFSET_X, 0, OFFSET_Z);
+    float3 pos = float3(invId) / unitSize + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y) + float3(OFFSET_X, 0, OFFSET_Z);
     float scaler = 1.4;
     float baseScaler = 0.30;
     
@@ -121,17 +122,19 @@ void main(uint3 invId : SV_DispatchThreadID)
     ret += fractalApproxPerlin(pos, scaler, 2)*ampl;
     density[invId] = ret;
     
-    float3 worldPos = (float3(invId) - float3(0.5, 0, 0)) / float3(GRID_SIZE - 1, GRID_SIZE_Y - 1, GRID_SIZE - 1) + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y);
-    worldPos = worldPos * float3(COORDINATE_SCALE, Y_ELEVATION, COORDINATE_SCALE);
+    float3 worldPos = (float3(invId)) / unitSize + float3(chunkLoc.loc.x, 0, chunkLoc.loc.y);
+    worldPos = (worldPos - float3(0.5, 0, 0)) * float3(COORDINATE_SCALE, Y_ELEVATION, COORDINATE_SCALE);
     
     //Tree
     float delta = 1.0 / (GRID_SIZE_Y - 1.0);
     float noise = rand(worldPos.xzy);
-    if (baseHeight > 0.14 && 
-        baseHeight < 0.16 && 
-        pos.y > baseHeight && 
-        pos.y - delta < baseHeight && 
-        noise > 0.98)
+    
+    bool cond0 = baseHeight > 0.44 && baseHeight <= 0.50 && noise > 0.999;
+    bool cond1 = baseHeight > 0.25 && baseHeight <= 0.44 && noise > 0.96;
+    bool cond2 = baseHeight > 0.16 && baseHeight <= 0.25 && noise > 0.98;
+    bool cond3 = baseHeight > 0.10 && baseHeight <= 0.16 && noise > 0.9987;
+
+    if (pos.y > baseHeight && pos.y - delta < baseHeight && (cond0||cond1||cond3||cond2))
     {
         TreeLoc tloc;
         tloc.treeLoc = float4(worldPos, 1) ;
