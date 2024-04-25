@@ -25,6 +25,9 @@ namespace Anthem::Core {
     template<uint32_t Rk, uint32_t Ar>
     using AnthemUniformVecfArray = AnthemUBDesc<float, 1, Rk, Ar>;
 
+    template<uint32_t Rk, uint32_t Ar>
+    using AnthemUniformMatfArray = AnthemUBDesc<float, 2, Rk, Ar>;
+
     template<uint32_t Rk>
     using AtUniformVecf = AnthemUniformVecf<Rk>;
 
@@ -40,6 +43,9 @@ namespace Anthem::Core {
 
     template<uint32_t Rk, uint32_t Ar>
     using AtUniformVecfArray = AnthemUniformVecfArray<Rk, Ar>;
+
+    template<uint32_t Rk, uint32_t Ar>
+    using AtUniformMatfArray = AnthemUniformMatfArray<Rk, Ar>;
 
 
     template<typename... UniTp, uint32_t... UniRk, uint32_t... UniSz, uint32_t... UniArrSz>

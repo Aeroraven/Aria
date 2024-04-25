@@ -33,9 +33,9 @@ VSOutput main(VSInput vsIn)
     float4 localpos = mul(localMove.local, float4(vsIn.position.xyz, 1));
     
     vsOut.position = mul(cam.proj, mul(cam.view, mul(cam.model, float4((localpos + vsIn.instancePos ).xyz, 1))));
-    vsOut.normal = mul(cam.model, float4(vsIn.normal.xyz, 0.0));
+    vsOut.normal = mul(localMove.local, float4(vsIn.normal.xyz, 0.0));
     vsOut.rawPosition = float4((localpos + vsIn.instancePos).xyz, 1);
-    vsOut.tangent = mul(cam.model, float4(vsIn.tangent.xyz, 0.0));
+    vsOut.tangent = mul(localMove.local, float4(vsIn.tangent.xyz, 0.0));
     vsOut.instancePos = vsIn.instancePos;
     vsOut.texIndices = vsIn.texIndices;
     vsOut.uv = vsIn.texcoord;

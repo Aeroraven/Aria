@@ -2,6 +2,7 @@
 struct VSOutput
 {
     [[vk::location(0)]] float4 texCoord : TEXCOORD0;
+    [[vk::location(1)]] float4 worldPos : POSITION0;
 };
 
 struct PSOutput
@@ -19,7 +20,7 @@ PSOutput main(VSOutput vsOut)
     PSOutput psOut;
     psOut.color = float4(texSkybox.Sample(sampSkybox, vsOut.texCoord.xyz).rgb, 2.0);
     psOut.normal = float4(0, 0, 0, 0);
-    psOut.position = float4(0, 0, 0, 2);
+    psOut.position = float4(vsOut.worldPos.xyz, 2);
     psOut.tangent = float4(0, 0, 0, 0);
     
     return psOut;

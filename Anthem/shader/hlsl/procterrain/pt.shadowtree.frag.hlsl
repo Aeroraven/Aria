@@ -9,8 +9,8 @@ struct VSOutput
     [[vk::location(5)]] float4 uv : TEXCOORD0;
 };
 
-Texture2D tex[5] : register(t0, space1);
-SamplerState samp[5] : register(s0, space1);
+Texture2D tex[5] : register(t0, space0);
+SamplerState samp[5] : register(s0, space0);
 
 void main(VSOutput vsOut)
 {

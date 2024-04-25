@@ -75,6 +75,7 @@ Here are all demos implemented in this repository
 | 33. Global Fog                                     | ○ (AD-30)       | ×                |
 | 34. Marching Cubes (Compute Shader)                | ○ (AD-32)       | /                |
 | 35. Procedural Terrain Generation                  | ▲ (AD-32)       | ×                |
+| 36. Cascaded Shadow Mapping                        | ○ (AD-32)       | ×                |
 
 
 

@@ -11,12 +11,11 @@ SamplerState sampPos : register(s0, space1);
 
 static const float SCATTER_F = 0.015;
 static const float HEIGHT_ATTN = 0.3;
-static const float ELEVATION = 0;
 static const float4 FOG_COLOR = float4(0.85, 0.85, 0.85, 1);
 
 struct Attr
 {
-    float4 val; //SCATTER, ATTN
+    float4 val; //SCATTER, ATTN, ELEVATION
 };
 ConstantBuffer<Attr> attr : register(b0, space2);
 
@@ -32,12 +31,12 @@ float4 toSrgb(float4 x)
 float4 main(VSOutput vsOut) : SV_Target0
 {
     float3 pos = texPos.Sample(sampPos, vsOut.texCoord).rgb;
-    float dist = distance(pos, float3(0, ELEVATION, 0));
-    float distH = max(1e-3,pos.y - ELEVATION);
+    float dist = distance(pos, float3(0, attr.val.z, 0));
+    float distH = max(1e-3, pos.y - attr.val.z);
     float sinv = distH / dist;
     
     float4 baseColor = toLinear(texCol.Sample(sampCol, vsOut.texCoord));
-    float thickness = attr.val.x * exp(-attr.val.y * ELEVATION) * (1.0 - exp(-attr.val.y * dist * sinv)) / (attr.val.y * sinv);
+    float thickness = attr.val.x * exp(-attr.val.y * attr.val.z) * (1.0 - exp(-attr.val.y * dist * sinv)) / (attr.val.y * sinv);
 
     float coef = 1 - exp(-thickness);
     

@@ -3,8 +3,8 @@ struct VSOutput
     [[vk::location(0)]] float2 texCoord : TEXCOORD0;
 };
 
-Texture2D texIn : register(t0, space0);
-SamplerState sampIn : register(s0, space0);
+Texture2D texIn[3] : register(t0, space0);
+SamplerState sampIn[3] : register(s0, space0);
 
 static const float LUMIN_MIN_THRESH = 0.0712;
 static const float LUMIN_SCALE_MIN_THRESH = 0.033;
@@ -17,22 +17,22 @@ float lumin(float4 color)
 
 float luminTex(float2 texc)
 {
-    return lumin(texIn.Sample(sampIn, texc));
+    return lumin(texIn[0].Sample(sampIn[0], texc));
 }
 
 float4 main(VSOutput vsOut) : SV_Target0
 {
     
     uint texHeight, texWidth, texLods;
-    texIn.GetDimensions(0, texWidth, texHeight, texLods);
+    texIn[0].GetDimensions(0, texWidth, texHeight, texLods);
     float dx = 1.0 / texWidth, dy = 1.0 / texHeight;
     float2 cpos = vsOut.texCoord;
     
-    float4 cC = texIn.Sample(sampIn, cpos);
-    float4 cL = texIn.Sample(sampIn, cpos + float2(-dx, 0));
-    float4 cR = texIn.Sample(sampIn, cpos + float2(+dx, 0));
-    float4 cT = texIn.Sample(sampIn, cpos + float2(0, -dy));
-    float4 cB = texIn.Sample(sampIn, cpos + float2(0, +dy));
+    float4 cC = texIn[0].Sample(sampIn[0], cpos);
+    float4 cL = texIn[0].Sample(sampIn[0], cpos + float2(-dx, 0));
+    float4 cR = texIn[0].Sample(sampIn[0], cpos + float2(+dx, 0));
+    float4 cT = texIn[0].Sample(sampIn[0], cpos + float2(0, -dy));
+    float4 cB = texIn[0].Sample(sampIn[0], cpos + float2(0, +dy));
     
     float lC = lumin(cC),lL = lumin(cL),lR = lumin(cR), lT = lumin(cT),lB = lumin(cB);
     
@@ -42,10 +42,10 @@ float4 main(VSOutput vsOut) : SV_Target0
 
     if (contrast > min(LUMIN_MIN_THRESH, lMax * LUMIN_SCALE_MIN_THRESH)) //
     {
-        float4 cLT = texIn.Sample(sampIn, cpos + float2(-dx, -dy));
-        float4 cRT = texIn.Sample(sampIn, cpos + float2(dx, -dy));
-        float4 cLB = texIn.Sample(sampIn, cpos + float2(-dx, dy));
-        float4 cRB = texIn.Sample(sampIn, cpos + float2(dx, dy));
+        float4 cLT = texIn[0].Sample(sampIn[0], cpos + float2(-dx, -dy));
+        float4 cRT = texIn[0].Sample(sampIn[0], cpos + float2(dx, -dy));
+        float4 cLB = texIn[0].Sample(sampIn[0], cpos + float2(-dx, dy));
+        float4 cRB = texIn[0].Sample(sampIn[0], cpos + float2(dx, dy));
         
         float lLT = lumin(cLT), lRT = lumin(cRT), lLB = lumin(cLB), lRB = lumin(cRB);
         float filter = ((lL + lR + lT + lB) * 2 + (lRT + lLT + lLB + lRB) * 1) / 12;
@@ -102,7 +102,7 @@ float4 main(VSOutput vsOut) : SV_Target0
         }
         
         float finalFactor = max(edgeBlendFactor, pxBlendFactor);
-        return lerp(texIn.Sample(sampIn, vsOut.texCoord), texIn.Sample(sampIn, vsOut.texCoord + blendDirection * float2(dx, dy)), finalFactor);
+        return lerp(texIn[0].Sample(sampIn[0], vsOut.texCoord), texIn[0].Sample(sampIn[0], vsOut.texCoord + blendDirection * float2(dx, dy)), finalFactor);
 
     }
     return cC;

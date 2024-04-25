@@ -26,9 +26,10 @@ namespace Anthem::Components::PassHelper {
 		uint32_t* cmdIdx;
 		uint32_t copies;
 
-		AnthemViewport* viewport;
 		bool depthCreated = false;
 	public:
+
+		AnthemViewport* viewport = nullptr;
 		bool enableDepthSampler = false;
 		AnthemShaderFilePaths shaderPath;
 		AnthemGraphicsPipelineCreateProps pipeOpt;
@@ -45,6 +46,7 @@ namespace Anthem::Components::PassHelper {
 		void recordCommands(std::function<void(uint32_t)> injectedCommands);
 		void setDepthFromPass(const AnthemPassHelper& p);
 		AnthemSwapchainFramebuffer* getSwapchainBuffer();
+		void setDepthBuffer(AnthemDepthBuffer* p);
 		
 		uint32_t getCommandIndex(uint32_t copy);
 		AnthemDescriptorPool* getDepthDescriptor(uint32_t id);

@@ -102,4 +102,34 @@ namespace Anthem::Components::Camera{
             }
         };
     }
+    std::vector<AnthemCascadeShadowMapAABB> AnthemCamera::getCSMBbox(std::vector<float> splitDepths, AtVecf3 inLight) {
+        // Assume distance to near plane is x, the bounding sphere radius is r, the diagonal of the near plane is N, 
+        // the diagonal of the far plane is F, the sub-frustum depth is d
+        // then r^2 = x^2 + N^2/4, r^2 = (d-x)^2 + F^2/4
+        // x^2 + N^2/4 = (d-x)^2 + F^2/4 => N^2/4 = -2xd + d^2 + F^2/4
+        // 2xd = N^2/4 - d^2 - F^2/4 => x = -(N^2/4 - d^2 - F^2/4) / 2d
+        // r = sqrt(x^2 + N^2/4)
+
+
+        std::vector<AnthemCascadeShadowMapAABB> out;
+        float fov = this->frustumFov;
+        float tanHalfFov = tan(fov / 2.0f);
+        float diagScaler = std::sqrt(1.0f + this->frustumAspectRatio * this->frustumAspectRatio);
+        float aspect = this->frustumAspectRatio;
+        for (int i = 0; i < splitDepths.size() - 1; i++) {
+			float nearDepth = splitDepths[i];
+			float farDepth = splitDepths[i+1];
+			float d = farDepth - nearDepth;
+            float nDiag = 2.0f * tanHalfFov * nearDepth * diagScaler;
+            float fDiag = 2.0f * tanHalfFov * farDepth * diagScaler;
+            float x = -(nDiag * nDiag / 4.0f - d * d - fDiag * fDiag / 4.0f) / (2.0f * d);
+            float r = std::sqrt(x * x + nDiag * nDiag / 4.0f);
+            AnthemCascadeShadowMapAABB aabb;
+            aabb.center = this->pos + this->frontDirection * (nearDepth + x);
+            aabb.radius = r;
+            out.push_back(aabb);
+		}
+        return out;
+    }
+
 }

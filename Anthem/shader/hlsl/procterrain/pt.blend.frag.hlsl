@@ -31,9 +31,15 @@ SamplerState sampWaterDuDv : register(s0, space8);
 Texture2D texWaterUV : register(t0, space9);
 SamplerState sampWaterUV : register(s0, space9);
 
-ConstantBuffer<CameraLight> camLight : register(b0, space10);
-Texture2D texShadowMap : register(t0,space11);
-SamplerState sampShadowMap : register(s0, space11);
+Texture2D texShadowMap[7] : register(t0,space10);
+SamplerState sampShadowMap[7] : register(s0, space10);
+
+struct CameraLights
+{
+    float4x4 mvp[7];
+};
+ConstantBuffer<CameraLights> camLights : register(b0, space11);
+
 
 static const float3 LIGHT_DIR = normalize(float3(0, -1, -1));
 static const float3 WATER_NORMAL = normalize(float3(0, 1, 0));
@@ -47,6 +53,11 @@ static const float WATER_WAVE_STRENGTH = 0.003;
 static const float WATER_NORMAL_OFFSET = 0.03;
 static const float SPECULAR_HIGHLIGHT = 50.0;
 static const float4 WHITE = float4(1, 1, 1, 1);
+static const float CSM_RANGES[7] = { 200.0f, 400.0f, 600.0f, 800.0f, 1500.0f, 4000.0f, 20000.0 };
+static const int PCF_SIZE = 1;
+static const float3 ORIGIN_CAMPOS = float3(4, 298, -594);
+static const float3 ORIGIN_CAMFRONT = float3(0, 0, 1);
+
 float4 gamma(float4 color)
 {
     return pow(color, 1.0 / 2.2);
@@ -76,16 +87,37 @@ float aoBlur(float2 uv)
 
 float getShadow(float4 posr)
 {
-    float4x4 mvpLight = mul(camLight.proj, mul(camLight.view, camLight.model));
+    float frustumDepth = dot((posr.xyz - ORIGIN_CAMPOS), ORIGIN_CAMFRONT);
+    
+    
+    int csmLevel = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        if(frustumDepth<CSM_RANGES[i])
+            break;
+        csmLevel++;
+    }
+    float texH, texW, texLod;
+    texShadowMap[csmLevel].GetDimensions(0, texW, texH, texLod);
+    
+    float4x4 mvpLight = camLights.mvp[csmLevel];
     float4 curDepthN = mul(mvpLight, float4(posr.xyz, 1));
     float curDepth = curDepthN.z / curDepthN.w;
     float2 uv = (curDepthN.xy / curDepthN.w) * 0.5 + 0.5;
-    float refDepth = texShadowMap.Sample(sampShadowMap, uv).r;
-    if ( curDepth-refDepth > 1e-3)
+    float totls = 0;
+    float shadow = 0;
+    for (int x = -PCF_SIZE; x <= PCF_SIZE; x++)
     {
-        return 1.0;
+        for (int y = -PCF_SIZE; y <= PCF_SIZE; y++)
+        {
+            float2 offset = float2(x/texW, y/texH);
+            float refDepth = texShadowMap[csmLevel].Sample(sampShadowMap[csmLevel], uv + offset).r;
+            if(curDepth-refDepth>1e-4)
+                shadow += 1.0;
+            totls += 1.0;
+        }
     }
-    return 0.0;
+    return smoothstep(0.4, 0.6, shadow / totls);
 }
 
 float4 pointColor(float2 uv,float4 posr)

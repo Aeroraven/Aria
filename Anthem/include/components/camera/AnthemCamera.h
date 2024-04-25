@@ -16,6 +16,11 @@ namespace Anthem::Components::Camera{
         AT_ACPT_ORTHO_NDC
     };
 
+    struct AnthemCascadeShadowMapAABB {
+        AtVecf3 center;
+        float radius;
+    };
+
     class AnthemCamera{
     private:
         AnthemCameraProjectionType projType;
@@ -48,5 +53,6 @@ namespace Anthem::Components::Camera{
         bool getPosition(AtVecf3& out);
 
         std::function<void(int, int, int, int)> getKeyboardController(float scaler=10.0f);
+        std::vector<AnthemCascadeShadowMapAABB> getCSMBbox(std::vector<float> splitDepths, AtVecf3 inLight);
     };
 }

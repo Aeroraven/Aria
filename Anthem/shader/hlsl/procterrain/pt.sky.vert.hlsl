@@ -9,6 +9,7 @@ struct VSOutput
 {
     float4 position : SV_Position;
     [[vk::location(0)]] float4 texCoord : TEXCOORD0;
+    [[vk::location(1)]] float4 worldPos : POSITION0;
 };
 
 
@@ -22,6 +23,7 @@ VSOutput main(VSInput vsIn)
     vsOut.position = mul(cam.proj, mul(cam.view, mul(cam.model, float4(pos, 1.0f) + float4(0, 50, 0,0))));
 
     vsOut.texCoord = float4(vsIn.position.xyz, 1);
+    vsOut.worldPos = float4(pos, 1.0f);
     return vsOut;
     
 }

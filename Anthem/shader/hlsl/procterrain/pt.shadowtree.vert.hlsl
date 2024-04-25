@@ -21,16 +21,18 @@ struct VSOutput
 };
 struct LocalMove
 {
+    float4x4 proj;
+    float4x4 view;
+    float4x4 model;
     float4x4 local;
 };
 
-[[vk::push_constant]] LocalMove localMove;
-ConstantBuffer<Camera> cam : register(b0, space0);
+[[vk::push_constant]] LocalMove cam;
 
 VSOutput main(VSInput vsIn)
 {
     VSOutput vsOut;
-    float4 localpos = mul(localMove.local, float4(vsIn.position.xyz, 1));
+    float4 localpos = mul(cam.local, float4(vsIn.position.xyz, 1));
     
     vsOut.position = mul(cam.proj, mul(cam.view, mul(cam.model, float4((localpos + vsIn.instancePos).xyz, 1))));
     vsOut.normal = mul(cam.model, float4(vsIn.normal.xyz, 0.0));

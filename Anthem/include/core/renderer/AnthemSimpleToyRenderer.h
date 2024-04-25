@@ -145,7 +145,7 @@ namespace Anthem::Core{
         bool setupRenderPass(AnthemRenderPass** pRenderPass, AnthemRenderPassSetupOption* setupOption, AnthemDepthBuffer* depthBuffer);
         bool createDepthBuffer(AnthemDepthBuffer** pDepthBuffer, bool enableMsaa);
         bool createDepthStencilBuffer(AnthemDepthBuffer** pBuffer, bool enableMsaa);
-        bool createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa);
+        bool createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa, uint32_t height=0, uint32_t width=0);
         bool createDepthBufferCubicWithSampler(AnthemDepthBuffer** pDepthBuffer, AnthemDescriptorPool* descPool, uint32_t bindLoc, uint32_t height, bool enableMsaa);
         bool createViewportCustom(AnthemViewport** pViewport, float width, float height, float minDepth, float maxDepth);
         bool createTexture(AnthemImage** pImage, AnthemDescriptorPool* descPool, uint8_t* texData, uint32_t texWidth,uint32_t texHeight,
@@ -219,6 +219,7 @@ namespace Anthem::Core{
         bool drSubmitBufferPrimaryCall(uint32_t frameIdx,uint32_t cmdIdx);
         bool drClearCommands(uint32_t cmdIdx);
         bool drPushConstants(AnthemPushConstant* pushConstant, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx);
+        bool drPushConstantsMultiple(std::vector<AnthemPushConstant*> pushConstant, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx);
         bool drPushConstantsCompute(AnthemPushConstant* pushConstant, AnthemComputePipeline* pipeline, uint32_t cmdIdx);
 
         bool drSubmitCommandBufferGraphicsQueueGeneral(uint32_t cmdIdx, uint32_t frameIdx,

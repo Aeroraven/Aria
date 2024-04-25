@@ -686,6 +686,9 @@ namespace Anthem::Core{
     }
 
     bool AnthemSimpleToyRenderer::drPushConstants(AnthemPushConstant* pushConstant, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx) {
+        //if (!(pushConstant->getRange().stageFlags & VK_SHADER_STAGE_VERTEX_BIT)) {
+        //    ANTH_LOGE("Unknown push constant");
+        //}
         vkCmdPushConstants(
             *this->commandBuffers->getCommandBuffer(cmdIdx),
             *(pipeline->getPipelineLayout()),
@@ -696,6 +699,21 @@ namespace Anthem::Core{
             );
         return true;
     }
+    bool AnthemSimpleToyRenderer::drPushConstantsMultiple(std::vector<AnthemPushConstant*> pushConstant, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx){
+        uint32_t accumOffsets = 0;
+        for(const auto& p:pushConstant){
+            vkCmdPushConstants(
+				*this->commandBuffers->getCommandBuffer(cmdIdx),
+				*(pipeline->getPipelineLayout()),
+				p->getRange().stageFlags,
+				p->getRange().offset + accumOffsets,
+				p->getSize(),
+				p->getData()
+			);
+			accumOffsets += p->getSize();
+		}
+		return true;
+	}
     bool AnthemSimpleToyRenderer::drPushConstantsCompute(AnthemPushConstant* pushConstant, AnthemComputePipeline* pipeline, uint32_t cmdIdx) {
         vkCmdPushConstants(
             *this->commandBuffers->getCommandBuffer(cmdIdx),
@@ -970,6 +988,10 @@ namespace Anthem::Core{
         return true;
     }
     bool AnthemSimpleToyRenderer::drBindDescriptorSetCustomizedGraphics(std::vector<AnthemDescriptorSetEntry> descSetEntries, AnthemGraphicsPipeline* pipeline, uint32_t cmdIdx){
+        if (descSetEntries.size() == 0) {
+            ANTH_LOGW("No descriptor set entries specified");
+            return true;
+        }
         std::vector<VkDescriptorSet>* descSets = new std::vector<VkDescriptorSet>();
         for(const auto& p:descSetEntries){
             if(p.descSetType == AnthemDescriptorSetEntrySourceType::AT_ACDS_SAMPLER){
@@ -1065,7 +1087,8 @@ namespace Anthem::Core{
         this->drawLoopHandler = drawLoopHandler;
         return true;
     }
-    bool AnthemSimpleToyRenderer::createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc, bool enableMsaa){
+    bool AnthemSimpleToyRenderer::createDepthBufferWithSampler(AnthemDepthBuffer** pDepthBuffer,AnthemDescriptorPool* descPool, uint32_t bindLoc,
+        bool enableMsaa, uint32_t height, uint32_t width ){
         auto depthBuffer = new AnthemDepthBuffer();
         depthBuffer->specifyLogicalDevice(this->logicalDevice.get());
         depthBuffer->specifyPhyDevice(this->phyDevice.get());
@@ -1074,8 +1097,9 @@ namespace Anthem::Core{
         if(enableMsaa){
             depthBuffer->enableMsaa();
         }
-        depthBuffer->createDepthBufferWithSampler(0,0);
-        descPool->addSampler(depthBuffer,bindLoc,this->imageDescPoolIdx);
+        depthBuffer->createDepthBufferWithSampler(height, height);
+        if(descPool!=nullptr)
+            descPool->addSampler(depthBuffer,bindLoc,this->imageDescPoolIdx);
         this->depthBuffers.push_back(depthBuffer);
         *pDepthBuffer = depthBuffer;
         return true;

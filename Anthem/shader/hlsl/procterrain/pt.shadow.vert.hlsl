@@ -15,7 +15,15 @@ struct VSOutput
     [[vk::location(2)]] float4 tangent : TANGENT0;
 };
 
-ConstantBuffer<Camera> cam : register(b0, space0);
+struct LocalMove
+{
+    float4x4 proj;
+    float4x4 view;
+    float4x4 model;
+    float4x4 local;
+};
+
+[[vk::push_constant]] LocalMove cam;
 
 VSOutput main(VSInput vsIn)
 {

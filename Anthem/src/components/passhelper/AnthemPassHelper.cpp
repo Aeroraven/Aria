@@ -85,7 +85,8 @@ namespace Anthem::Components::PassHelper {
 			}
 			rd->drBindGraphicsPipeline(pipeline, ci);
 			rd->drBindDescriptorSetCustomizedGraphics(descLayout[i], pipeline, ci);
-			rd->drSetViewportScissorFromSwapchain(ci);
+			if(viewport==nullptr)rd->drSetViewportScissorFromSwapchain(ci);
+			else rd->drSetViewportScissor(viewport, ci);
 			injectedCommands(ci);
 			rd->drEndRenderPass(ci);
 			rd->drEndCommandRecording(ci);
@@ -97,6 +98,15 @@ namespace Anthem::Components::PassHelper {
 	void AnthemPassHelper::setDepthFromPass(const AnthemPassHelper& p) {
 		this->depth = p.depth;
 		this->descDepth = p.descDepth;
+		depthCreated = true;
+	}
+	void AnthemPassHelper::setDepthBuffer(AnthemDepthBuffer* p) {
+		ANTH_TODO("memory leaks");
+		this->depth = new AnthemDepthBuffer*[this->copies];
+		for (auto i : AT_RANGE2(this->copies)) {
+			this->depth[i] = p;
+		}
+		this->descDepth = nullptr;
 		depthCreated = true;
 	}
 }
