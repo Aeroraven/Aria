@@ -49,7 +49,7 @@ PSOutput main(VSOutput vsOut)
         psOut.ao = float4(1, 0, 0, 0);
         return psOut;
     }
-        float3 pos = posr.xyz;
+    float3 pos = posr.xyz;
     float3 normal = texNormal.Sample(sampNormal, vsOut.texUv.xy).xyz;
     
     // Generate TBM Matrix
@@ -63,7 +63,11 @@ PSOutput main(VSOutput vsOut)
     float occls = 0;
     float totls = 0;
     int totlsI = 64;
-    for (int i = 0; i < 64; i++)
+    if (pos.z - cam.camPos.z > 150)
+    {
+        totlsI = 16;
+    }
+    for (int i = 0; i < totlsI; i++)
     {
         float3 sp = normalize(attr.vec[i].xyz) * attr.vec[i].w;
         sp = mul(tbn, sp);
@@ -89,7 +93,7 @@ PSOutput main(VSOutput vsOut)
         
         if (ndcr.w > refw + 1e-2)
         {
-            float rangeCheck = smoothstep(0.0, 1.0, 30.0 / abs(ndcr.z - refw));
+            float rangeCheck = smoothstep(0.0, 1.0, 10.0 / abs(ndcr.z - refw));
             occls += 1.0 * rangeCheck;
         }
         totls += 1.0;

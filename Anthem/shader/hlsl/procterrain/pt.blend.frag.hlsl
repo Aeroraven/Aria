@@ -31,6 +31,10 @@ SamplerState sampWaterDuDv : register(s0, space8);
 Texture2D texWaterUV : register(t0, space9);
 SamplerState sampWaterUV : register(s0, space9);
 
+ConstantBuffer<CameraLight> camLight : register(b0, space10);
+Texture2D texShadowMap : register(t0,space11);
+SamplerState sampShadowMap : register(s0, space11);
+
 static const float3 LIGHT_DIR = normalize(float3(0, -1, -1));
 static const float3 WATER_NORMAL = normalize(float3(0, 1, 0));
 static const float SSR_MAXDIST = 1500.0;
@@ -70,6 +74,19 @@ float aoBlur(float2 uv)
     return color / 9.0;
 }
 
+float getShadow(float4 posr)
+{
+    float4x4 mvpLight = mul(camLight.proj, mul(camLight.view, camLight.model));
+    float4 curDepthN = mul(mvpLight, float4(posr.xyz, 1));
+    float curDepth = curDepthN.z / curDepthN.w;
+    float2 uv = (curDepthN.xy / curDepthN.w) * 0.5 + 0.5;
+    float refDepth = texShadowMap.Sample(sampShadowMap, uv).r;
+    if ( curDepth-refDepth > 1e-3)
+    {
+        return 1.0;
+    }
+    return 0.0;
+}
 
 float4 pointColor(float2 uv,float4 posr)
 {
@@ -101,8 +118,11 @@ float4 pointColor(float2 uv,float4 posr)
     
         // Ambient
         float ambient = 0.4;
+        
+        // Shadow
+        float shadow = getShadow(float4(pos, 1));
     
-        float3 finalColor = color.rgb * (ambient + diff) * ao;
+        float3 finalColor = color.rgb * (ambient + diff * (1 - shadow)) * ao;
         ret = float4(finalColor, 1.0);
     }
     return ret;
@@ -126,6 +146,7 @@ PSOutput main(VSOutput vsOut)
     PSOutput psOut;
     
     float4 posr = texPosition.Sample(sampPosition, vsOut.texUv.xy).xyzw;
+
     psOut.color = pointColor(vsOut.texUv.xy, posr);
     
     // Water Blending

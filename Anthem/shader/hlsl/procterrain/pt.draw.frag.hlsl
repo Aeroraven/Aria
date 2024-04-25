@@ -48,7 +48,7 @@ float4 biomeRamp(float height,float3 normal,float3 pos)
     float transitionMod = 0.62;
     float transitionModSnow = 0.92;
     
-    float layerTop = 490 - noise * 80;
+    float layerTop = 530 - noise * 80;
     float layerRidge = 260;
     float layerPlain = 70;
     float layerBeach = 0;

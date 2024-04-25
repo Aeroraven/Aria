@@ -55,7 +55,7 @@ struct StageConstants {
 	DCONST float WATER_ELEVATION = 50;
 	DCONST float SKYBOX_SIZE = 1800;
 	DCONST float SKYBOX_ELEVATION = 50;
-	DCONST float WORLD_SIZE = 4;
+	DCONST float WORLD_SIZE = 2;
 	DCONST int32_t MAX_TREES = 2000;
 }sc;
 #undef DCONST
@@ -96,7 +96,11 @@ struct Stage {
 	AnthemConfig cfg;
 	AnthemOrbitControl orbit;
 	AnthemCamera cam = AnthemCamera(AT_ACPT_PERSPECTIVE);
+	AnthemCamera camLight = AnthemCamera(AT_ACPT_ORTHO);
+
 	AnthemDescriptorPool* descCamera;
+	AnthemDescriptorPool* descCamLight;
+
 	AnthemFrameRateMeter frm = AnthemFrameRateMeter(10);
 	AnthemUniformBufferImpl<
 		AtUniformMatf<4>, 
@@ -105,6 +109,11 @@ struct Stage {
 		AtUniformVecf<4>, //Cam Pos
 		AtUniformVecf<4>  //Tick
 	>* ubCamera;
+	AnthemUniformBufferImpl<
+		AtUniformMatf<4>,
+		AtUniformMatf<4>,
+		AtUniformMatf<4>
+	>* ubCameraLight;
 
 	// Geometry
 	std::map<std::pair<int, int>, Chunk> chunks;
@@ -120,6 +129,8 @@ struct Stage {
 	AnthemDescriptorPool* descGUnderwaterMask;
 	AnthemDescriptorPool* descGWaterUV;
 
+	AnthemDescriptorPool* descDebug;
+
 	AnthemImage* gColor;
 	AnthemImage* gNormal;
 	AnthemImage* gPos;
@@ -128,6 +139,7 @@ struct Stage {
 	AnthemImage* gDeferBlend;
 	AnthemImage* gUnderWaterMask;
 	AnthemImage* gWaterUV;
+	AnthemImage* gDebug;
 
 	// Water Normals
 	AnthemDescriptorPool* descWNormal;
@@ -147,8 +159,13 @@ struct Stage {
 	// Passes
 	std::unique_ptr<AnthemComputePassHelper> passVol[4];
 	std::unique_ptr<AnthemComputePassHelper> passMarchingCube[4];
+
 	std::unique_ptr<AnthemPassHelper> passDefer;
 	std::unique_ptr<AnthemPassHelper> passDeferTree;
+
+	std::unique_ptr<AnthemPassHelper> passShadow;
+	std::unique_ptr<AnthemPassHelper> passShadowTree;
+
 	std::unique_ptr<AnthemPassHelper> passAO;
 	std::unique_ptr<AnthemSimpleBlur> passAOPost;
 	std::unique_ptr<AnthemPassHelper> passDeferBlend;
@@ -174,6 +191,10 @@ struct Stage {
 	AnthemIndexBuffer* ixBox;
 	AnthemDescriptorPool* descBox;
 	AnthemImageCubic* texSkybox;
+
+	// Sync
+	AnthemSemaphore* shadowSemaphore;
+	AnthemFence* shadowFence;
 }st;
 
 struct DeferMesh {
@@ -188,9 +209,13 @@ void initialize() {
 	st.rd.initialize();
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
-	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 20000.0f, 1.0f * rdW / rdH);
+	st.cam.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 40000.0f, 1.0f * rdW / rdH);
 	st.cam.specifyPosition(4,298, -594);
 	st.cam.specifyFrontEyeRay(0, 0, 1);
+
+	st.camLight.specifyOrthoClipSpace(0.1f, 40000.0f, 1.0f * rdW / rdH, 500.0f);
+	st.camLight.specifyFrontEyeRay(0, -1, -1);
+	st.camLight.specifyPosition(0, 9000.0, 9000.0);
 
 	st.keyController = st.cam.getKeyboardController(2.4);
 	st.rd.ctSetKeyBoardController(st.keyController);
@@ -384,6 +409,16 @@ void recordChunkCommands(int x, int z) {
 	c.mcPassDone->waitAndReset();
 }
 
+void bakeTextures() {
+	for (auto i : AT_RANGE2(2)) {
+		st.shadowFence->resetFence();
+		st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.passShadow->getCommandIndex(i), -1, {}, {}, nullptr, { st.shadowSemaphore });
+		st.rd.drSubmitCommandBufferGraphicsQueueGeneral2A(st.passShadowTree->getCommandIndex(i), -1, { st.shadowSemaphore }, {AT_SSW_ALL_COMMAND}, st.shadowFence, {  });
+		st.shadowFence->waitAndReset();
+	}
+
+}
+
 void createComputePass() {
 	for (uint32_t i : AT_RANGE2(4)) {
 		// Vol Pass : Generate Volume Density
@@ -447,6 +482,40 @@ void createTreePass() {
 	st.passDeferTree->passOpt.clearDepthAttachmentOnLoad = false;
 	st.passDeferTree->setDepthFromPass(*st.passDefer);
 	st.passDeferTree->buildGraphicsPipeline();
+}
+
+void createPreBakingGraphicsPass() {
+	//Shadow Pass: Defer
+	st.passShadow = std::make_unique<AnthemPassHelper>(&st.rd, 2);
+	st.passShadow->shaderPath.vertexShader = getShader("shadow.vert");
+	st.passShadow->setRenderTargets({});
+	st.passShadow->passOpt.colorAttachmentFormats = { };
+	st.passShadow->enableDepthSampler = true;
+	st.passShadow->passOpt.renderPassUsage = AT_ARPAA_DEPTH_STENCIL_ONLY_PASS;
+	st.passShadow->passOpt.preserveWritableDepth = true;
+	st.passShadow->setDescriptorLayouts({
+		{st.descCamLight,AT_ACDS_UNIFORM_BUFFER,0}
+	});
+	st.passShadow->vxLayout = st.demoChunk->mesh;
+	st.passShadow->buildGraphicsPipeline();
+
+	st.passShadowTree = std::make_unique<AnthemPassHelper>(&st.rd, 2);
+	st.passShadowTree->shaderPath.vertexShader = getShader("shadowtree.vert");
+	st.passShadowTree->shaderPath.fragmentShader = getShader("shadowtree.frag");
+	st.passShadowTree->setRenderTargets({});
+	st.passShadowTree->passOpt.colorAttachmentFormats = { };
+	st.passShadowTree->enableDepthSampler = true;
+	st.passShadowTree->pushConstants = { st.pcTree };
+	st.passShadowTree->passOpt.renderPassUsage = AT_ARPAA_DEPTH_STENCIL_ONLY_PASS;
+	st.passShadowTree->setDescriptorLayouts({
+		{st.descCamLight,AT_ACDS_UNIFORM_BUFFER,0},
+		{st.descPbrBaseTexTree,AT_ACDS_SAMPLER,0},
+	});
+	st.passShadowTree->vxLayout = nullptr;
+	st.passShadowTree->pipeOpt.vertStageLayout = { st.treeModel.getVertexBuffer(),st.demoChunk->treeInstancing };
+	st.passShadowTree->setDepthFromPass(*st.passShadow);
+	st.passShadowTree->passOpt.clearDepthAttachmentOnLoad = false;
+	st.passShadowTree->buildGraphicsPipeline();
 }
 
 void createGraphicsPass() {
@@ -549,8 +618,9 @@ void createGraphicsPass() {
 		{st.descBox,AT_ACDS_SAMPLER,0},
 		{st.descWNormal,AT_ACDS_SAMPLER,0},
 		{st.descWDuDv,AT_ACDS_SAMPLER,0},
-		{st.descGWaterUV, AT_ACDS_SAMPLER,0}
-
+		{st.descGWaterUV, AT_ACDS_SAMPLER,0},
+		{st.descCamLight, AT_ACDS_UNIFORM_BUFFER,0},
+		{st.passShadow->getDepthDescriptor(0),AT_ACDS_SAMPLER,0}
 	});
 
 	st.passDeferBlend->vxLayout = canvas.vx;
@@ -585,6 +655,8 @@ void prepareAOSamples() {
 void createUniform() {
 	st.rd.createDescriptorPool(&st.descCamera);
 	st.rd.createUniformBuffer(&st.ubCamera, 0, st.descCamera, -1);
+	st.rd.createDescriptorPool(&st.descCamLight);
+	st.rd.createUniformBuffer(&st.ubCameraLight, 0, st.descCamLight, -1);
 
 	// GBuffers
 	st.rd.createDescriptorPool(&st.descGColor);
@@ -605,6 +677,13 @@ void createUniform() {
 	st.rd.createColorAttachmentImage(&st.gUnderWaterMask, st.descGUnderwaterMask, 0, AT_IF_SIGNED_FLOAT32, false, -1);
 	st.rd.createDescriptorPool(&st.descGWaterUV);
 	st.rd.createColorAttachmentImage(&st.gWaterUV, st.descGWaterUV, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+	st.rd.createDescriptorPool(&st.descDebug);
+	st.rd.createColorAttachmentImage(&st.gDebug, st.descDebug, 0, AT_IF_SIGNED_FLOAT32, false, -1);
+
+
+	//Sync
+	st.rd.createSemaphore(&st.shadowSemaphore);
+	st.rd.createFence(&st.shadowFence);
 }
 
 void createWaterGeometry() {
@@ -663,6 +742,9 @@ void recordDrawCommand() {
 	st.passDefer->recordCommands([&](uint32_t x) {
 		injectCommands(x);
 	});
+	st.passShadow->recordCommands([&](uint32_t x) {
+		injectCommands(x);
+	});
 	st.passGround->recordCommands([&](uint32_t x) {
 		st.rd.drBindVertexBuffer(sf.vx, x);
 		st.rd.drBindIndexBuffer(sf.ix, x);
@@ -692,6 +774,7 @@ void recordDrawCommand() {
 	st.seq[1]->markGraphicsOnly();
 
 	st.seq[0]->setSequence({
+		//{st.passShadow->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passDefer->getCommandIndex(0), ATC_ASCE_GRAPHICS},
 		{ st.passGround->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 		{ st.passDeferTree->getCommandIndex(0),ATC_ASCE_GRAPHICS},
@@ -702,6 +785,7 @@ void recordDrawCommand() {
 		{ st.passFXAA->getCommandIdx(0), ATC_ASCE_GRAPHICS},
 	});
 	st.seq[1]->setSequence({
+		//{st.passShadow->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{ st.passDefer->getCommandIndex(1), ATC_ASCE_GRAPHICS} ,
 		{st.passGround->getCommandIndex(1),ATC_ASCE_GRAPHICS},
 		{st.passDeferTree->getCommandIndex(1),ATC_ASCE_GRAPHICS},
@@ -737,6 +821,15 @@ void updateUniform() {
 	for (int i = 0; i < st.cfg.vkcfgMaxImagesInFlight; i++) {
 		st.ubCamera->updateBuffer(i);
 	}
+
+	st.camLight.getProjectionMatrix(proj);
+	st.camLight.getViewMatrix(view);
+	proj.columnMajorVectorization(pm);
+	view.columnMajorVectorization(vm);
+	st.ubCameraLight->specifyUniforms(pm, vm, lm);
+	for (auto i : AT_RANGE2(st.cfg.vkcfgMaxImagesInFlight)) {
+		st.ubCameraLight->updateBuffer(i);
+	}
 }
 
 void createAllChunks() {
@@ -761,6 +854,17 @@ void recordAllChunks() {
 			for (auto i : AT_RANGE(0,2)) {
 				st.rd.drPushConstants(st.pcTree, st.passDeferTree->pipeline, x);
 				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], std::min(insts,sc.MAX_TREES), st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
+			}
+		}
+	});
+	st.passShadowTree->recordCommands([&](uint32_t x) {
+		for (auto& [k, v] : st.chunks) {
+			st.rd.drBindVertexBufferEx2(st.treeModel.getVertexBuffer(), v.treeInstancing, 0, x);
+			st.rd.drBindIndexBuffer(st.treeModel.getIndexBuffer(), x);
+			auto insts = v.treeInstancing->getAtomicCounter(0);
+			for (auto i : AT_RANGE(0, 2)) {
+				st.rd.drPushConstants(st.pcTree, st.passDeferTree->pipeline, x);
+				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], std::min(insts, sc.MAX_TREES), st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
 			}
 		}
 	});
@@ -826,7 +930,9 @@ int main() {
 	prepareDeferCanvas();
 	createAllChunks();
 	createComputePass();
+	createPreBakingGraphicsPass();
 	createGraphicsPass();
+	
 	createTreePass();
 	createSkyPass();
 
@@ -836,6 +942,9 @@ int main() {
 
 	createAllIndexBuffer();
 	recordDrawCommand();
+
+	updateUniform();
+	bakeTextures();
 
 	st.rd.setDrawFunction(drawLoop);
 	st.rd.startDrawLoopDemo();

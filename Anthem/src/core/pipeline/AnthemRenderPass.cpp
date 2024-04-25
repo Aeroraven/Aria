@@ -284,7 +284,7 @@ namespace Anthem::Core{
             depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
             if(opt.renderPassUsage == AT_ARPAA_DEPTH_STENCIL_ONLY_PASS){
-                depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                if(!opt.preserveWritableDepth)depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
             }
             this->renderPassAttachments.push_back(depthAttachment);
             registerAttachmentType(AT_ARPCA_DEPTH);
