@@ -31,12 +31,12 @@ float4 toSrgb(float4 x)
 float4 main(VSOutput vsOut) : SV_Target0
 {
     float3 pos = texPos.Sample(sampPos, vsOut.texCoord).rgb;
-    float dist = distance(pos, float3(0, attr.val.z, 0));
+    float dist = length(float3(pos.x, max(1e-3, pos.y - attr.val.z), pos.z)); //distance(pos, float3(0, attr.val.z, 0));
     float distH = max(1e-3, pos.y - attr.val.z);
     float sinv = distH / dist;
     
     float4 baseColor = toLinear(texCol.Sample(sampCol, vsOut.texCoord));
-    float thickness = attr.val.x * exp(-attr.val.y * attr.val.z) * (1.0 - exp(-attr.val.y * dist * sinv)) / (attr.val.y * sinv);
+    float thickness = attr.val.x * exp(-attr.val.y) * (1.0 - exp(-attr.val.y * dist * sinv)) / (attr.val.y * sinv);
 
     float coef = 1 - exp(-thickness);
     

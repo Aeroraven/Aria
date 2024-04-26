@@ -48,7 +48,7 @@ float4 biomeRamp(float height,float3 normal,float3 pos)
     float transitionMod = 0.62;
     float transitionModSnow = 0.92;
     
-    float layerTop = 530 - noise * 80;
+    float layerTop = 550 - noise * 80;
     float layerRidge = 260;
     float layerPlain = 70;
     float layerBeach = 0;
@@ -58,9 +58,9 @@ float4 biomeRamp(float height,float3 normal,float3 pos)
     float weightPlain = sigmoidMaginfy(height - layerPlain, transitionMod) - weightTop - weightRidge;
     float weightBeach = sigmoidMaginfy(height - layerBeach, transitionMod) - weightTop - weightRidge - weightPlain;
     
-    float4 baseColorTop = float4(0.98, 0.98, 0.98, 1);
-    float4 baseColorRidge = fromRGB(97, 93, 87);
-    float4 baseColorPlain = fromRGB(123, 181, 90)*0.9;
+    float4 baseColorTop = fromRGB(255, 255, 255) * 1.2;
+    float4 baseColorRidge = fromRGB(127, 123, 117);
+    float4 baseColorPlain = fromRGB(101, 174, 69);
     float4 baseColorBeach = fromRGB(239, 239, 169);
     
     // Normal Facing Checks

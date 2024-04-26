@@ -1,4 +1,5 @@
 #include "pt.common.hlsl"
+#include "../common/tonemap.hlsl"
 
 struct VSOutput
 {
@@ -173,6 +174,12 @@ float2 getUVFromPosition(float4 pos)
     return float2(uvX, uvY);
 }
 
+float4 colorPostprocessor(float4 color)
+{
+    float4 toneMapped = gtTonemapping(color);
+    return gamma(toneMapped);
+}
+
 PSOutput main(VSOutput vsOut)
 {
     PSOutput psOut;
@@ -196,7 +203,7 @@ PSOutput main(VSOutput vsOut)
     float waterMask = waterData.a;
     if (waterMask < 0.1)
     {
-        psOut.color = gamma(psOut.color);
+        psOut.color = colorPostprocessor(psOut.color);
         return psOut;
     }
 
@@ -257,7 +264,7 @@ PSOutput main(VSOutput vsOut)
         {
             hit = i;
             float4 dPosr = texPosition.Sample(sampPosition, curPx);
-            reflColor = pointColor(curPx, dPosr); //texColor.Sample(sampColor, curPx);
+            reflColor = pointColor(curPx, dPosr); 
             break;
         }
 
@@ -280,7 +287,7 @@ PSOutput main(VSOutput vsOut)
     psOut.color.rgb = lerp(transColor, waterColor, 0.3) + specular;
     
     // Final Color
-    psOut.color = gamma(psOut.color);
+    psOut.color = colorPostprocessor(psOut.color);
     
     return psOut;
 }

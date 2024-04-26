@@ -733,7 +733,7 @@ namespace Anthem::Core{
     }
 
 
-    bool AnthemSimpleToyRenderer::drBatchedSubmitCommandBuferGraphicsQueueOffscreen(std::vector<uint32_t> cmdIdx,
+    bool AnthemSimpleToyRenderer::drBatchedSubmitCommandBufferGraphicsQueueOffscreen(std::vector<uint32_t> cmdIdx,
         const std::vector<const AnthemSemaphore*>& semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>& semaphoreWaitStages,
         const std::vector<const AnthemSemaphore*>& semaphoreToSignal, const AnthemFence* fenceToSignal) {
 
@@ -833,6 +833,51 @@ namespace Anthem::Core{
 
         return true;
     }
+    bool AnthemSimpleToyRenderer::drBatchedSubmitCommandBufferCompQueue(std::vector<uint32_t> cmdIdx,
+        const std::vector<const AnthemSemaphore*>& semaphoreToWait, const std::vector<AtSyncSemaphoreWaitStage>& semaphoreWaitStages,
+        const std::vector<const AnthemSemaphore*>& semaphoreToSignal, const AnthemFence* fenceToSignal) {
+
+        VkSubmitInfo submitInfo{};
+        std::vector<VkSemaphore> semToSignal;
+        for (const auto& p : semaphoreToSignal) {
+            semToSignal.push_back(*p->getSemaphore());
+        }
+
+        std::vector<VkSemaphore> semToWait;
+        std::vector<VkPipelineStageFlags> waitStages;
+        for (const auto& p : semaphoreToWait) {
+            semToWait.push_back(*p->getSemaphore());
+            waitStages.push_back(VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+        }
+        std::vector<VkCommandBuffer> cmdBufs;
+        for (auto i : AT_RANGE2(cmdIdx.size())) {
+            cmdBufs.push_back(*commandBuffers->getCommandBuffer(cmdIdx[i]));
+        }
+
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = cmdBufs.size();
+        submitInfo.pCommandBuffers = cmdBufs.data();
+        submitInfo.signalSemaphoreCount = static_cast<decltype(submitInfo.signalSemaphoreCount)>(semToSignal.size());
+        submitInfo.pSignalSemaphores = semToSignal.data();
+
+        submitInfo.pWaitSemaphores = semToWait.data();
+        submitInfo.waitSemaphoreCount = static_cast<decltype(submitInfo.signalSemaphoreCount)>(semToWait.size());
+        submitInfo.pWaitDstStageMask = waitStages.data();
+        
+        if (fenceToSignal == nullptr) {
+            if (vkQueueSubmit(this->logicalDevice->getComputeQueue(), 1, &submitInfo, nullptr) != VK_SUCCESS) {
+                ANTH_LOGE("failed to submit compute command buffer!");
+            };
+        }
+        else {
+            if (vkQueueSubmit(this->logicalDevice->getComputeQueue(), 1, &submitInfo, *fenceToSignal->getFence()) != VK_SUCCESS) {
+                ANTH_LOGE("failed to submit compute command buffer!");
+            };
+        }
+
+        return true;
+    }
+
     bool AnthemSimpleToyRenderer::drEndCommandRecording(uint32_t cmdIdx){
         this->commandBuffers->endCommandRecording(cmdIdx);
         //this->drawingCommandHelper->endCommandBuffer(frameIdx);

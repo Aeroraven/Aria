@@ -47,10 +47,11 @@ struct StageConstants {
 	DCONST int32_t COMPUTE_GROUP_X = 8;
 	DCONST int32_t COMPUTE_GROUP_Y = 8;
 	DCONST int32_t COMPUTE_GROUP_Z = 8;
+	DCONST int32_t COMPUTE_GROUP_CULLING = 64;
 	DCONST int32_t DEMO_X = 1;
 	DCONST int32_t DEMO_Z = 1;
 
-	DCONST int32_t MAX_TRIANGLES = 90000*3;
+	DCONST int32_t MAX_TRIANGLES = 270000;
 	DCONST float WATER_WIDTH = 1600;
 	DCONST float WATER_ELEVATION = 50;
 	DCONST float SKYBOX_SIZE = 15800;
@@ -65,8 +66,8 @@ struct StageConstants {
 	DCONST int32_t CSM_RESOL = 4200;
 
 	float FOG_SCATTER = 0.0005;
-	float FOG_HEIGHT_ATTENUATION = 0.001;
-	DCONST float FOG_ELEVATION = 0;
+	float FOG_HEIGHT_ATTENUATION = 0.004;
+	float FOG_ELEVATION = 0;
 }sc;
 #undef DCONST
 
@@ -86,9 +87,10 @@ struct Chunk {
 
 	std::vector<AnthemDescriptorSetEntry> dseVolPass;
 	std::vector<AnthemDescriptorSetEntry> dseMarchingCubePass;
-	uint32_t cmdVolPass, cmdMcPass, cmdDrawPass;
+	uint32_t cmdVolPass, cmdMcPass, cmdDrawPass, cmdCullpass;
 
 	AnthemSemaphore* volPassDone;
+	AnthemSemaphore* cullSemaphore;
 	AnthemFence* mcPassDone;
 	AnthemIndexBuffer* ix;
 	int gpuTriangles = 0;
@@ -221,6 +223,11 @@ struct Stage {
 	// Sync
 	AnthemSemaphore* shadowSemaphore;
 	AnthemFence* shadowFence;
+
+	// Compute Fustrum Culling
+	std::unique_ptr<AnthemComputePassHelper> passCull;
+	AnthemShaderStorageBufferImpl<AtBufVecd4f<1>>* culledTrees;
+	AnthemDescriptorPool* descCull;
 }st;
 
 struct DeferMesh {
@@ -242,7 +249,13 @@ void initialize() {
 	st.keyController = st.cam.getKeyboardController(2.4);
 	st.rd.ctSetKeyBoardController(st.keyController);
 }
+void initCull() {
+	using ssboType = std::remove_cv_t<decltype(st.culledTrees)>;
+	std::optional<std::function<void(ssboType)>> initFunc = std::nullopt;
+	st.rd.createDescriptorPool(&st.descCull);
+	st.rd.createShaderStorageBuffer(&st.culledTrees, sc.MAX_TREES*(sc.WORLD_SIZE*2+1)*(sc.WORLD_SIZEZ+1-sc.WORLD_SIZENZ), 0, st.descCull, initFunc, -1);
 
+}
 void initCSM() {
 	int rdW, rdH;
 	st.rd.exGetWindowSize(rdH, rdW);
@@ -482,12 +495,30 @@ void recordChunkCommands(int x, int z) {
 	st.rd.drComputeDispatch(c.cmdMcPass, gx, gy, gz);
 	st.rd.drEndCommandRecording(c.cmdMcPass);
 
+	// Cull Pass
+	st.rd.drAllocateCommandBuffer(&c.cmdCullpass);
+	st.rd.drStartCommandRecording(c.cmdCullpass);
+	st.rd.drBindComputePipeline(st.passCull->pipeline, c.cmdCullpass);
+	st.rd.drBindDescriptorSetCustomizedCompute(
+	{
+		{c.descTreeInst,AT_ACDS_SHADER_STORAGE_BUFFER,0},
+		{st.descCull,AT_ACDS_SHADER_STORAGE_BUFFER,0},
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0},
+	}, 
+	st.passCull->pipeline, c.cmdCullpass);
+
+	//st.rd.drPushConstantsCompute(c.pc, st.passCull->pipeline, c.cmdCullpass);
+	st.rd.drComputeDispatch(c.cmdCullpass, sc.MAX_TREES / sc.COMPUTE_GROUP_CULLING + 1, 1, 1);
+	st.rd.drEndCommandRecording(c.cmdCullpass);
+
 	// Submit & Wait
 	st.rd.createSemaphore(&c.volPassDone);
+	st.rd.createSemaphore(&c.cullSemaphore);
 	st.rd.createFence(&c.mcPassDone);
 	c.mcPassDone->resetFence();
 	st.rd.drSubmitCommandBufferCompQueueGeneralA(c.cmdVolPass, {}, { c.volPassDone },nullptr);
-	st.rd.drSubmitCommandBufferCompQueueGeneralA(c.cmdMcPass, { c.volPassDone }, {}, c.mcPassDone);
+	st.rd.drSubmitCommandBufferCompQueueGeneralA(c.cmdCullpass, { c.volPassDone }, { c.cullSemaphore }, nullptr);
+	st.rd.drSubmitCommandBufferCompQueueGeneralA(c.cmdMcPass, { c.cullSemaphore }, {}, c.mcPassDone);
 	c.mcPassDone->waitAndReset();
 }
 
@@ -521,7 +552,15 @@ void createComputePass() {
 		st.passMarchingCube[i]->setDescriptorLayouts(st.demoChunk->dseMarchingCubePass);
 		st.passMarchingCube[i]->buildComputePipeline();
 	}
-
+	st.passCull = std::make_unique<AnthemComputePassHelper>(&st.rd, 1);
+	st.passCull->workGroupSize = { sc.COMPUTE_GROUP_CULLING * 1u,1u,1u };
+	st.passCull->shaderPath.computeShader = getShader("cull.comp");
+	st.passCull->setDescriptorLayouts({ 
+		{st.demoChunk->descTreeInst,AT_ACDS_SHADER_STORAGE_BUFFER,0},
+		{st.descCull,AT_ACDS_SHADER_STORAGE_BUFFER,0},
+		{st.descCamera,AT_ACDS_UNIFORM_BUFFER,0},
+	});
+	st.passCull->buildComputePipeline();
 }
 
 void createSkyPass() {
@@ -951,26 +990,22 @@ void recordAllChunks() {
 		}
 	}
 	st.passDeferTree->recordCommands([&](uint32_t x) {
-		for (auto& [k, v] : st.chunks) {
-			st.rd.drBindVertexBufferEx2(st.treeModel.getVertexBuffer(), v.treeInstancing, 0, x);
-			st.rd.drBindIndexBuffer(st.treeModel.getIndexBuffer(), x);
-			auto insts = v.treeInstancing->getAtomicCounter(0);
-			for (auto i : AT_RANGE(0,2)) {
-				st.rd.drPushConstants(st.pcTree, st.passDeferTree->pipeline, x);
-				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], std::min(insts,sc.MAX_TREES), st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
-			}
+		st.rd.drBindVertexBufferEx2(st.treeModel.getVertexBuffer(), st.culledTrees, 0, x);
+		st.rd.drBindIndexBuffer(st.treeModel.getIndexBuffer(), x);
+		auto insts = st.culledTrees->getAtomicCounter(0);
+		for (auto i : AT_RANGE(0,2)) {
+			st.rd.drPushConstants(st.pcTree, st.passDeferTree->pipeline, x);
+			st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], insts, st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
 		}
 	});
 	for (auto i : AT_RANGE2(sc.CSM_LEVELS)) {
 		st.passShadowTree[i]->recordCommands([&](uint32_t x) {
-			for (auto& [k, v] : st.chunks) {
-				st.rd.drBindVertexBufferEx2(st.treeModel.getVertexBuffer(), v.treeInstancing, 0, x);
-				st.rd.drBindIndexBuffer(st.treeModel.getIndexBuffer(), x);
-				auto insts = v.treeInstancing->getAtomicCounter(0);
-				for (auto i : AT_RANGE(0, 2)) {
-					st.rd.drPushConstants(st.pcCSMLight[i], st.passShadowTree[i]->pipeline, x);
-					st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], std::min(insts, sc.MAX_TREES), st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
-				}
+			st.rd.drBindVertexBufferEx2(st.treeModel.getVertexBuffer(), st.culledTrees, 0, x);
+			st.rd.drBindIndexBuffer(st.treeModel.getIndexBuffer(), x);
+			auto insts = st.culledTrees->getAtomicCounter(0);
+			for (auto i : AT_RANGE(0, 2)) {
+				st.rd.drPushConstants(st.pcCSMLight[i], st.passShadowTree[i]->pipeline, x);
+				st.rd.drDrawInstancedAll(st.treeModel.drawVC[i], insts, st.treeModel.drawFI[i], st.treeModel.drawVO[i], 0, x);
 			}
 		});
 	}
@@ -1007,7 +1042,8 @@ void prepareImguiFrame() {
 	ImGui::Begin("Control Panel");
 	ImGui::Text(ss.str().c_str());
 	ImGui::SliderFloat("Fog Scatter", &sc.FOG_SCATTER, 0.0f, 0.0010f,"%.4f");
-	ImGui::SliderFloat("Fog Height Attn", &sc.FOG_HEIGHT_ATTENUATION, 0.0f, 0.025f);
+	ImGui::SliderFloat("Fog Height Attn", &sc.FOG_HEIGHT_ATTENUATION, 0.0f, 0.05f, "%.4f");
+	ImGui::SliderFloat("Fog Elevation", &sc.FOG_ELEVATION, 0.0f, 250.0f);
 	ImGui::End();
 }
 
@@ -1028,6 +1064,7 @@ int main() {
 	initialize();
 	setupImgui();
 	initCSM();
+	initCull();
 	prepareGlobalFog();
 	createUniform();
 	createTextures();

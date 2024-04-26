@@ -41,7 +41,6 @@ PSOutput main(VSOutput vsOut)
         tangent = normalize(tangent - dot(tangent, normal) * normal);
         float3 bitangent = cross(normal, tangent);
         float3x3 tbn = transpose(float3x3(tangent, bitangent, normal));
-        
         float3 normalMap = tex[normalIndex].Sample(samp[normalIndex], vsOut.uv.xy).xyz * 2.0 - 1.0;
     
         psOut.normal = float4(normalize(mul(tbn, normalMap)), 0.0);

@@ -3,13 +3,10 @@
 #include "../../core/renderer/AnthemSimpleToyRenderer.h"
 #include "../../core/utils/AnthemUtlTimeOps.h"
 #include "../camera/AnthemCamera.h"
+#include "AnthemExecutionType.h"
 
 namespace Anthem::Components::PassHelper {
 	using namespace Anthem::Core;
-	enum AnthemSequentialCommandEntryType {
-		ATC_ASCE_GRAPHICS = 1,
-		ATC_ASCE_COMPUTE = 2
-	};
 
 	struct AnthemSequentialCommandEntry {
 		uint32_t commandBufferIndex;

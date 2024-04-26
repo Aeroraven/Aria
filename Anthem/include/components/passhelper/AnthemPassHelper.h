@@ -3,6 +3,7 @@
 #include "../../core/renderer/AnthemSimpleToyRenderer.h"
 #include "../../core/utils/AnthemUtlTimeOps.h"
 #include "../camera/AnthemCamera.h"
+#include "AnthemExecutionType.h"
 
 namespace Anthem::Components::PassHelper {
 	using namespace Anthem::Core;

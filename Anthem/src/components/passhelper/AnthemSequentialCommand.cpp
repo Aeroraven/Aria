@@ -41,7 +41,7 @@ namespace Anthem::Components::PassHelper {
 			for (auto i : AT_RANGE2(seq.size()-((useImGui)?0:1))) {
 				cmds.push_back(seq[i].commandBufferIndex);
 			}
-			rd->drBatchedSubmitCommandBuferGraphicsQueueOffscreen(cmds, {}, {}, { semaphores[seq.size() - 1] }, (forceFence) ? this->fence : nullptr);
+			rd->drBatchedSubmitCommandBufferGraphicsQueueOffscreen(cmds, {}, {}, { semaphores[seq.size() - 1] }, (forceFence) ? this->fence : nullptr);
 			if (!useImGui) {
 				rd->drSubmitCommandBufferGraphicsQueueGeneralA(seq.back().commandBufferIndex, frameImageIdx, { semaphores[seq.size() - 1] }, { AT_SSW_ALL_COMMAND });
 			}
