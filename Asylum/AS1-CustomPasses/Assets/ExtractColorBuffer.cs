@@ -83,5 +83,8 @@ class ExtractColorBuffer : MonoBehaviour {
         depthBakePass.depthTexture = depthTexture;
         depthBakePass.normalTexture = normalTexture;
         depthBakePass.bakingCamera = cameraDepthBake;
+
+        Shader.SetGlobalTexture("_NormalMap", normalTexture);
+        Shader.SetGlobalTexture("_DepthMap", depthTexture);
     }
 }

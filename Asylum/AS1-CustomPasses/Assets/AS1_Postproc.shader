@@ -47,7 +47,8 @@ Shader "Hidden/Shader/GrayScale"
     // List of properties to control your post process effect
     float _Intensity;
     TEXTURE2D_X(_MainTex);
-    TEXTURE2D_X(_CameraDepthNormalsTexture);
+    TEXTURE2D_X(_NormalMap);
+    TEXTURE2D_X(_DepthMap);
 
     inline float3 DecodeViewNormalStereo( float4 enc4 )
     {
@@ -65,14 +66,11 @@ Shader "Hidden/Shader/GrayScale"
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
         float3 sourceColor = SAMPLE_TEXTURE2D_X(_MainTex, s_linear_clamp_sampler, input.texcoord).xyz;
-        float4 data = SAMPLE_TEXTURE2D_X(_CameraDepthNormalsTexture,s_linear_clamp_sampler, input.texcoord);
-        float3 normal = DecodeViewNormalStereo(data);
+        float3 normalColor = SAMPLE_TEXTURE2D_X(_NormalMap, s_linear_clamp_sampler, input.texcoord).xyz;
+        float3 color = lerp(sourceColor,normalColor,_Intensity);
 
-        return float4(data);
-        // Apply greyscale effect
-        //float3 color = lerp(sourceColor, Luminance(sourceColor), _Intensity);
+        return float4(color,1);
 
-        //return float4(color, 1);
     }
 
     ENDHLSL

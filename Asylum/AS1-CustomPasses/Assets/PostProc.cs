@@ -9,6 +9,9 @@ public sealed class GrayScale : CustomPostProcessVolumeComponent, IPostProcessCo
     [Tooltip("Controls the intensity of the effect.")]
     public ClampedFloatParameter intensity = new ClampedFloatParameter(0f, 0f, 1f);
 
+    public RenderTexture normalMap;
+    public RenderTexture depthMap;
+
     Material m_Material;
 
     public bool IsActive() => m_Material != null && intensity.value > 0f;
@@ -27,7 +30,7 @@ public sealed class GrayScale : CustomPostProcessVolumeComponent, IPostProcessCo
             return;
 
         m_Material.SetFloat("_Intensity", intensity.value);
-        Texture tex = Shader.GetGlobalTexture("_CameraNormalsTexture");
+
         cmd.Blit(source, destination, m_Material, 0);
     }
 
