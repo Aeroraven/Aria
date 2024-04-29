@@ -271,6 +271,8 @@ namespace Anthem::Core{
         bool drColorImagePipelineBarrier(AnthemImageContainer* container, AnthemImagePipelineBarrier* srcProp, AnthemImagePipelineBarrier* dstProp, uint32_t cmdIdx);
         bool drStorageBufferPipelineBarrier(AnthemShaderStorageBuffer* buffer, uint32_t copyId, AnthemBufferBarrierProp* src, AnthemBufferBarrierProp* dst, uint32_t cmdIdx);
 
+        bool drClearColorImageFloat(AnthemImage* image, std::array<float, 4> color, VkImageLayout layout, uint32_t cmdIdx);
+
         bool drDraw(uint32_t vertices,uint32_t cmdIdx);
         bool drDrawInstanced(uint32_t vertices, uint32_t instances, uint32_t cmdIdx);
         bool drDrawInstancedAll(uint32_t vertices, uint32_t instances, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance, uint32_t cmdIdx);

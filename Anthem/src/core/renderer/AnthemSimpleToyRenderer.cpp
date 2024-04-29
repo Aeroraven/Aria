@@ -266,7 +266,13 @@ namespace Anthem::Core{
         textureImage->specifyPhyDevice(this->phyDevice.get());
         textureImage->specifyCommandBuffers(this->commandBuffers.get());
         textureImage->specifySwapchain(this->swapChain.get());
-        textureImage->loadImageData(texData, texWidth, texHeight, texChannel);
+        if (imageFmt == AT_IF_SIGNED_FLOAT32 || imageFmt == AT_IF_SIGNED_FLOAT32_MONO) {
+            textureImage->loadImageDataSFloat3((float*)texData, texWidth, texHeight, texChannel,1);
+        }
+        else {
+            textureImage->loadImageData(texData, texWidth, texHeight, texChannel);
+        }
+        
         textureImage->specifyUsage(usage);
         if(generateMipmap2D){
             textureImage->enableMipMapping();
@@ -1082,6 +1088,21 @@ namespace Anthem::Core{
         vkCmdBindDescriptorSets(*this->commandBuffers->getCommandBuffer(cmdIdx), VK_PIPELINE_BIND_POINT_GRAPHICS, *(pipeline->getPipelineLayout()), 0,
             static_cast<uint32_t>(descSets->size()),descSets->data() , 0, nullptr);
         delete descSets;
+        return true;
+    }
+    bool AnthemSimpleToyRenderer::drClearColorImageFloat(AnthemImage* image, std::array<float, 4> color, VkImageLayout layout,uint32_t cmdIdx) {
+        VkClearColorValue ccolor{};
+        for(auto i:AT_RANGE2(4))
+            ccolor.float32[i] = color[i];
+
+        VkImageSubresourceRange srange{};
+        srange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        srange.baseArrayLayer = 0;
+        srange.baseMipLevel = 0;
+        srange.layerCount = 1;
+        srange.levelCount = 1;
+
+        vkCmdClearColorImage(*this->commandBuffers->getCommandBuffer(cmdIdx), *image->getImage(), layout, &ccolor, 1, &srange);
         return true;
     }
     bool AnthemSimpleToyRenderer::drDraw(uint32_t vertices,uint32_t cmdIdx){

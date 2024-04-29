@@ -88,7 +88,7 @@ namespace Anthem::Core{
             this->createSampler();
         }
         else if (this->definedUsage == AT_IU_COMPUTE_OUTPUT) {
-            this->createImageInternal(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, pendingFormat, this->width, this->height, this->depth);
+            this->createImageInternal(VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, pendingFormat, this->width, this->height, this->depth);
             this->createImageViewInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
             this->createImageViewFbInternal(VK_IMAGE_ASPECT_COLOR_BIT, this->depth > 1);
             this->createSampler();
