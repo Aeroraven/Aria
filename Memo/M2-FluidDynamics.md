@@ -16,7 +16,7 @@ $$
 
 where $u$ is a divergence-free field, $\grad p$ is an irrotational field. Then
 $$
-\grad w =\grad u+\grad^2p=\grad^2p
+\grad \cdot w =\grad \cdot u+\grad^2p=\grad^2p
 $$
 let $P$ be projection operator. Consider $\grad\cdot u=0$ indicates that $u$ is divergence-free, then
 $$

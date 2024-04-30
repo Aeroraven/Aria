@@ -35,7 +35,7 @@ void main(uint3 invId:SV_DispatchThreadID){
     float coef = fparams.params.x;
     float dt = fparams.params.y;
     float alpha = 1.0/(coef*dt);
-    float rbeta = (coef*dt)/(1.0+coef*dt*4.0);
+    float rbeta = 1/(4.0+alpha);
 
     float4 diffused;
     jacobiIter(lastVelocity, baseVelocity, invId.xy, alpha, rbeta, diffused);

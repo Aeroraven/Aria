@@ -27,47 +27,87 @@
 
 ## Tutorials Referenced / Acknowledgements
 
-Vulkan Tutorial: https://vulkan-tutorial.com/
+General / Graphics APIs / Game Engine Basics (OpenGL/WebGL/Vulkan/SRPs): 
 
-Basic Tutorial: https://learnopengl.com/
+- Vulkan
+  - https://vulkan-tutorial.com
+  - https://github.com/SaschaWillems/Vulkan
+- OpenGL/WebGL
+  - https://learnopengl.com/
+  - https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial
+- Unity3D (SRP/HDRP/URP)
+  - https://github.com/alelievr/HDRP-Custom-Passes
 
-SSAO: https://learnopengl.com/
+SSAO: 
 
-Volumetric Rendering: https://github.com/lebarba/WebGLVolumeRendering/
+- https://learnopengl.com/
 
-FXAA: https://zhuanlan.zhihu.com/p/431384101
+Volumetric Rendering: 
 
-Gerstner Wave: https://zhuanlan.zhihu.com/p/404778222
+- https://github.com/lebarba/WebGLVolumeRendering/
 
-Volumetric Light: http://www.alexandre-pestana.com/volumetric-lights/
+Volumetric Light: 
 
-Toon Shader: https://zhuanlan.zhihu.com/p/415500177
+- http://www.alexandre-pestana.com/volumetric-lights/
 
-Fluid Simulation: https://blog.csdn.net/zju_fish1996/article/details/52293782
+Toon Shader: 
 
-Caustics: https://madebyevan.com/webgl-water/
+- https://zhuanlan.zhihu.com/p/415500177s
+- https://adrianmendez.artstation.com/projects/wJZ4Gg
+- https://roystan.net/articles/outline-shader/
 
-Mipmap: https://learnopengl.com/
+Water Caustics: 
 
-Omni-directional Shadow Mapping: https://learnopengl.com/
+- https://madebyevan.com/webgl-water/
 
-MLAA: https://zhuanlan.zhihu.com/p/342211163
+Mipmap: 
 
-Bloom: https://zhuanlan.zhihu.com/p/525500877
+- https://learnopengl.com/
 
-Kawase Blur: https://zhuanlan.zhihu.com/p/125744132
+Omni-directional Shadow Mapping: 
 
-SMAA: https://iryoku.com/smaa/downloads/SMAA-Enhanced-Subpixel-Morphological-Antialiasing.pdf
+- https://learnopengl.com/
 
-Path Tracing: https://raytracing.github.io/books/RayTracingInOneWeekend.html
+Bloom: 
 
-Water With Sine Waves: https://www.youtube.com/watch?v=PH9q0HNBjT4
+- https://zhuanlan.zhihu.com/p/525500877
 
-TAA: https://zhuanlan.zhihu.com/p/425233743
+Blur(Kawase Blur):
 
-Compute Fog: https://zhuanlan.zhihu.com/p/366083234
+- https://zhuanlan.zhihu.com/p/125744132
 
-Water Rendering: https://www.youtube.com/playlist?list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh
+Path Tracing: 
+
+- https://raytracing.github.io/books/RayTracingInOneWeekend.html
+
+Anti-aliasing (TAA/SMAA): 
+
+- https://zhuanlan.zhihu.com/p/425233743
+- https://iryoku.com/smaa/downloads/SMAA-Enhanced-Subpixel-Morphological-Antialiasing.pdf
+
+Compute Fog & Global Fog: 
+
+- https://zhuanlan.zhihu.com/p/366083234
+
+Water Rendering:
+
+- https://www.youtube.com/playlist?list=PLRIWtICgwaX23jiqVByUs0bqhnalNTNZh
+- https://www.youtube.com/watch?v=PH9q0HNBjT4
+- https://zhuanlan.zhihu.com/p/404778222
+
+Fluid Dynamics: 
+
+- https://github.com/PavelDoGreat/WebGL-Fluid-Simulation
+- https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu
+- https://blog.csdn.net/zju_fish1996/article/details/52293782
+
+Procedural Terrain:
+
+- https://developer.nvidia.com/gpugems/gpugems3/part-i-geometry/chapter-1-generating-complex-procedural-terrains-using-gpu
+
+Marching Cubes:
+
+- https://github.com/HugePotatoMonster/Dense-Reconstruction/tree/tsdf_dev
 
 
 

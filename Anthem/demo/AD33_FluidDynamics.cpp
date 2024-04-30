@@ -10,7 +10,8 @@
 #include "../include/components/passhelper/AnthemSequentialCommand.h"
 #include "../include/components/postprocessing/AnthemPostIdentity.h"
 #include "../include/components/postprocessing/AnthemFXAA.h"
-#include <Windows.h>
+#include "../include/components/postprocessing/AnthemBloom.h"
+
 using namespace Anthem::Components::Performance;
 using namespace Anthem::Components::Camera;
 using namespace Anthem::Components::PassHelper;
@@ -24,18 +25,24 @@ constexpr inline std::string getShader(std::string x) {
 	return st;
 }
 
+
 #define DCONST constexpr static const
 struct Parameters {
-	DCONST uint32_t GRID_X = 256;
-	DCONST uint32_t GRID_Y = 256;
+	DCONST uint32_t GRID_X = 912;
+	DCONST uint32_t GRID_Y = 512;
 	DCONST uint32_t THREAD_X = 16;
 	DCONST uint32_t THREAD_Y = 16;
-	DCONST float VISCOSITY_COEF = 1e-5;
+
 	DCONST float TIMESTEP = 0.2f;
-	DCONST uint32_t JACOBI_ITERS = 70;
+	DCONST uint32_t JACOBI_ITERS = 60;
 	DCONST std::array<float, 4> CLEAR_COLOR = { 1,0,0,1 };
-	DCONST float SPLAT_RADIUS = 20.0f;
-	DCONST float DYE_DECAY = 0.99f;
+	DCONST uint32_t CLEAR_PRESSURE = 20.0f;
+	
+
+	float VISCOSITY_COEF = -5.0;
+	float SPLAT_RADIUS = 80.0f;
+	float DYE_DECAY = 0.985f;
+	float HUE_CHANGE_RATE = 0.9;
 
 	std::string SHADER_ADVECTION = getShader("advection.comp");
 	std::string SHADER_DIFFUSION_SOLVER = getShader("diffusion.comp");
@@ -55,6 +62,7 @@ struct Assets {
 	// Core
 	AnthemSimpleToyRenderer rd;
 	AnthemConfig cfg;
+	AnthemFrameRateMeter frm = AnthemFrameRateMeter(10);
 
 	// Fluid Attributes
 	AnthemImage* dyeField[2];
@@ -71,6 +79,9 @@ struct Assets {
 	AnthemDescriptorPool* descPressureTemp[2];
 
 	// Pipelines
+	AnthemImage* renderTarget;
+	AnthemDescriptorPool* descTarget;
+
 	std::unique_ptr<AnthemComputePassHelper> pSplat;
 	std::unique_ptr<AnthemComputePassHelper> pAdvection;
 	std::unique_ptr<AnthemComputePassHelper> pDiffusion;
@@ -78,6 +89,8 @@ struct Assets {
 	std::unique_ptr<AnthemComputePassHelper> pDivSubtraction;
 	std::unique_ptr<AnthemComputePassHelper> pInit;
 	std::unique_ptr<AnthemPassHelper> pVisualization;
+	std::unique_ptr<AnthemBloom> pBloom;
+
 
 	// Visualization
 	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>>* vx;
@@ -160,6 +173,10 @@ void createFields() {
 
 void clearImage(uint32_t commandBuffer, AnthemImage* image) {
 	st.rd.drClearColorImageFloat(image, sc.CLEAR_COLOR, VK_IMAGE_LAYOUT_GENERAL, commandBuffer);
+}
+
+void clearPressure(uint32_t commandBuffer, AnthemImage* image) {
+	st.rd.drClearColorImageFloat(image, {sc.CLEAR_PRESSURE*1.0f,0,0,1}, VK_IMAGE_LAYOUT_GENERAL, commandBuffer);
 }
 
 void recordSplat(uint32_t commandBuffer,AnthemDescriptorPool* outVelocity, AnthemDescriptorPool* outDye) {
@@ -310,11 +327,16 @@ void createGraphicsPipeline() {
 
 	st.ix->setIndices({ 0,1,2,2,3,0 });
 
+	st.rd.createDescriptorPool(&st.descTarget);
+	st.rd.createColorAttachmentImage(&st.renderTarget, st.descTarget, 0, AT_IF_SIGNED_FLOAT32, false, -1, false);
+
 	st.pVisualization = std::make_unique<AnthemPassHelper>(&st.rd,2);
 	st.pVisualization->shaderPath.vertexShader = sc.SHADER_VISVS;
 	st.pVisualization->shaderPath.fragmentShader = sc.SHADER_VISFS;
 	st.pVisualization->vxLayout = st.vx;
-	st.pVisualization->passOpt.renderPassUsage = AT_ARPAA_FINAL_PASS;
+	st.pVisualization->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.pVisualization->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.pVisualization->setRenderTargets({ st.renderTarget });
 	st.pVisualization->pipeOpt.blendPreset = { AT_ABP_NO_BLEND };
 	st.pVisualization->setDescriptorLayouts({
 		{st.descDyeVis[0], AT_ACDS_SAMPLER,0},
@@ -323,6 +345,10 @@ void createGraphicsPipeline() {
 		{st.descDyeVis[1], AT_ACDS_SAMPLER,0},
 		}, 1);
 	st.pVisualization->buildGraphicsPipeline();
+
+	st.pBloom = std::make_unique<AnthemBloom>(&st.rd, 2, 5, st.cfg.appcfgResolutionWidth, st.cfg.appcfgResolutionHeight);
+	st.pBloom->setSrcImage(st.descTarget);
+	st.pBloom->prepare(false);
 }
 void recordCommandBuffer() {
 	for (auto i : AT_RANGE2(2)) {
@@ -332,10 +358,10 @@ void recordCommandBuffer() {
 		clearImage(c, st.velocityFieldTemp[0]);
 		clearImage(c, st.velocityFieldTemp[1]);
 		for (auto j : AT_RANGE2(sc.JACOBI_ITERS)) {
-			recordDiffusion(c, st.descVelocity[i], st.descVelocityTemp[1 - j % 2], st.descVelocityTemp[j % 2]);
+			recordDiffusion(c, st.descVelocity[i], j==0? st.descVelocity[i]: st.descVelocityTemp[1 - j % 2], st.descVelocityTemp[j % 2]);
 		}
-		clearImage(c, st.pressureFieldTemp[0]);
-		clearImage(c, st.pressureFieldTemp[1]);
+		clearPressure(c, st.pressureFieldTemp[0]);
+		clearPressure(c, st.pressureFieldTemp[1]);
 		for (auto j : AT_RANGE2(sc.JACOBI_ITERS)) {
 			recorePressureSolver(c, st.descVelocityTemp[1 - sc.JACOBI_ITERS % 2], st.descPressureTemp[1 - j % 2], st.descPressureTemp[j % 2]);
 		}
@@ -350,12 +376,14 @@ void recordCommandBuffer() {
 		st.rd.drBindIndexBuffer(st.ix, x);
 		st.rd.drDraw(6, x);
 	});
+	st.pBloom->recordCommand();
 	
 	for (auto i : AT_RANGE2(2)) {
 		st.execSeq[i] = std::make_unique<AnthemSequentialCommand>(&st.rd);
 		st.execSeq[i]->setSequence({
 			{st.compCmd[i],ATC_ASCE_COMPUTE},
-			{st.pVisualization->getCommandIndex(i),ATC_ASCE_GRAPHICS}
+			{st.pVisualization->getCommandIndex(i),ATC_ASCE_GRAPHICS},
+			{st.pBloom->getCommandIdx(i),ATC_ASCE_GRAPHICS}
 		});
 	}
 }
@@ -396,7 +424,6 @@ void registerSplatHooks() {
 			st.movDx = x - st.lastX;
 			st.movDy = y - st.lastY;
 			st.enableMov = 1;
-			ANTH_LOGI("Splatted:", st.movDx, st.splatX, st.movDy, st.splatY);
 		}
 		else {
 			st.enableMov = 0;
@@ -410,18 +437,47 @@ void registerSplatHooks() {
 	st.rd.ctSetMouseMoveController(st.mouseMoveHandler);
 }
 
+void prepareImguiFrame() {
+	st.frm.record();
+	std::stringstream ss;
+	ss << "FPS:";
+	ss << st.frm.getFrameRate();
+
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin("Control Panel");
+	ImGui::Text(ss.str().c_str());
+	ImGui::SliderFloat("Splat Radius", &sc.SPLAT_RADIUS, 0.0f, 200.0f, "%.4f");
+	ImGui::SliderFloat("Log Viscosity", &sc.VISCOSITY_COEF, 0.0f, 200.0f, "%.4f");
+	ImGui::SliderFloat("Decay", &sc.DYE_DECAY, 0.0f, 1.0f, "%.5f");
+	ImGui::SliderFloat("Hue Freq", &sc.HUE_CHANGE_RATE, 0.0f, 5.0f, "%.5f");
+	ImGui::End();
+}
+
 void updateUniform() {
 	int rdW, rdH;
 	st.rd.exGetWindowSize(rdH, rdW);
-	float data1[4] = { sc.VISCOSITY_COEF,sc.TIMESTEP,sc.SPLAT_RADIUS,st.enableMov };
+	float data1[4] = { std::pow(10.0,sc.VISCOSITY_COEF),sc.TIMESTEP,sc.SPLAT_RADIUS,st.enableMov };
 	int data2[4] = { sc.GRID_X,sc.GRID_Y,0,0 };
 	float splatData[4] = { st.movDx,st.movDy,st.splatX,st.splatY };
 	float windowData[4] = { rdW,rdH,0,0 };
-	float decay[4] = { sc.DYE_DECAY,glfwGetTime() * 0.4,0 };
+	float decay[4] = { sc.DYE_DECAY,glfwGetTime() * sc.HUE_CHANGE_RATE,0 };
 	st.uniform->specifyUniforms(data1, data2, splatData, windowData,decay);
 	for (auto i : AT_RANGE2(2)) {
 		st.uniform->updateBuffer(i);
 	}
+}
+
+void setupImgui() {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.FontGlobalScale = 1.8;
+	ImGui::StyleColorsDark();
+	st.rd.exInitImGui();
 }
 
 void drawLoop() {
@@ -429,7 +485,8 @@ void drawLoop() {
 	uint32_t imgIdx;
 	updateUniform();
 	st.rd.drPrepareFrame(cur, &imgIdx);
-	st.execSeq[cur]->executeCommandToStage(imgIdx, false, false, st.pVisualization->getSwapchainBuffer());
+	prepareImguiFrame();
+	st.execSeq[cur]->executeCommandToStage(imgIdx, false, true, st.pBloom->getSwapchainFb());
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }
@@ -437,6 +494,7 @@ void drawLoop() {
 
 int main() {
 	initialize();
+	setupImgui();
 	registerSplatHooks();
 	createComputeDependency();
 	createFields();
@@ -449,6 +507,7 @@ int main() {
 
 	st.rd.setDrawFunction(drawLoop);
 	st.rd.startDrawLoopDemo();
+	st.rd.exDestroyImgui();
 	st.rd.finalize();
 
 	return 0;

@@ -26,7 +26,7 @@ void main(uint3 invId:SV_DispatchThreadID){
 
     float2 u = lastVelocity[invId.xy].xy;
     float2 uv = float2(int2(invId.xy) - u * fparams.params.y);
-    if(uv.x<0||uv.y>fparams.grid.x||uv.y<0||uv.y>fparams.grid.y){
+    if(uv.x<0||uv.y>=fparams.grid.x||uv.y<0||uv.y>=fparams.grid.y){
         qtyResult[invId.xy] = float4(0,0,0,0);
         return;
     }

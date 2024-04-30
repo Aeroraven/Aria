@@ -10,13 +10,6 @@ struct PSOutput{
 Texture2D texDye: register(t0,space0);
 SamplerState samLinear: register(s0,space0);
 
-float3 hsv2rgb(float3 c)
-{
-    // Reference: http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
-    float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
 
 float4 gammaCorrect(float4 color)
 {
@@ -31,5 +24,6 @@ PSOutput main(VSOutput input)
     float2 delta = float2(texW, texH);
     output.color = texDye.Sample(samLinear, input.TexCoord.xy);
     output.color = gammaCorrect(output.color);
+    output.color.w = max(output.color.r, max(output.color.g, output.color.b))-0.6;
     return output;
 }

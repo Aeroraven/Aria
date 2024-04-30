@@ -6,6 +6,8 @@ This repository serves as the record for the time I used to learn useless algori
 
 ![](Imgs/test_ad30.png)
 
+![](Imgs/test_ad33.png)
+
 ## 0. Clarification
 
 The rectified WebGL ray-tracing is here: https://github.com/Aeroraven/Aria/blob/main/Aria-v2/src/examples/AriaStagePathTracing.ts. 
@@ -77,7 +79,7 @@ Here are all demos implemented in this repository
 | 35. Procedural Terrain Generation                  | ○ (AD-32)       | ×                | ×                  |
 | 36. Cascaded Shadow Mapping                        | ○ (AD-32)       | ×                | ×                  |
 | 37. Frustum Culling (Compute Shader)               | ○ (AD-32)       | /                | ×                  |
-| 38. Fluid Dynamics Simulation / Stam Method        | ▲ (AD-33)       | ×                | ×                  |
+| 38. Fluid Dynamics Simulation / Stam Method        | ○ (AD-33)       | ×                | ×                  |
 
 
 

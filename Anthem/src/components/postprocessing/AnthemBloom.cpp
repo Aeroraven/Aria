@@ -54,10 +54,8 @@ namespace Anthem::Components::Postprocessing {
 
 		rd->createDescriptorPool(&downChain);
 		std::vector<AnthemImageContainer*> imgc;
-		int bw = width, bh = height;
+		int bw = width/2, bh = height/2;
 		for (auto i : AT_RANGE2(layers)) {
-			//bw /= 2;
-			//bh /= 2;
 			rd->createDescriptorPool(&downDescriptorPools[i]);
 			rd->createColorAttachmentImage(&downColorAttachments[i], downDescriptorPools[i], 0, AT_IF_SIGNED_FLOAT32, false, -1, false, bw, bh);
 			rd->createViewportCustom(&downViewports[i], bw, bh, 0, 1);

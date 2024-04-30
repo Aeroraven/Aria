@@ -26,6 +26,6 @@ void main(uint3 invId:SV_DispatchThreadID){
     power = exp(-power*power/fparams.params.z);
     outVelocity[invId.xy] = outVelocity[invId.xy] + float4(dVelocity, 0, 0)*power;
     outVelocity[invId.xy].w=1;
-    outDye[invId.xy] = outDye[invId.xy] + float4(1+hsv2rgb(float3(frac(fparams.dye.y),1,1)),0)*power;
+    outDye[invId.xy] = outDye[invId.xy] + float4(0.3+hsv2rgb(float3(frac(fparams.dye.y),1,1)),0)*power;
     outDye[invId.xy].w=fparams.dye.x;
 }
