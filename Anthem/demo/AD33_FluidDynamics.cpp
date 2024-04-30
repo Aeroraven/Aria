@@ -30,11 +30,12 @@ struct Parameters {
 	DCONST uint32_t GRID_Y = 256;
 	DCONST uint32_t THREAD_X = 16;
 	DCONST uint32_t THREAD_Y = 16;
-	DCONST float VISCOSITY_COEF = 0.001;
-	DCONST float TIMESTEP = 0.1f;
-	DCONST uint32_t JACOBI_ITERS = 80;
+	DCONST float VISCOSITY_COEF = 1e-5;
+	DCONST float TIMESTEP = 0.2f;
+	DCONST uint32_t JACOBI_ITERS = 70;
 	DCONST std::array<float, 4> CLEAR_COLOR = { 1,0,0,1 };
 	DCONST float SPLAT_RADIUS = 20.0f;
+	DCONST float DYE_DECAY = 0.99f;
 
 	std::string SHADER_ADVECTION = getShader("advection.comp");
 	std::string SHADER_DIFFUSION_SOLVER = getShader("diffusion.comp");
@@ -90,7 +91,8 @@ struct Assets {
 		AtUniformVecf<4>,	//Viscosity, timestep, splatRadius, 0
 		AtUniformVeci<4>,
 		AtUniformVecf<4>,
-		AtUniformVecf<4>	//Window
+		AtUniformVecf<4>,	//Window
+		AtUniformVecf<4>	//Decay
 	>* uniform;
 	AnthemDescriptorPool* descUniform;
 
@@ -415,7 +417,8 @@ void updateUniform() {
 	int data2[4] = { sc.GRID_X,sc.GRID_Y,0,0 };
 	float splatData[4] = { st.movDx,st.movDy,st.splatX,st.splatY };
 	float windowData[4] = { rdW,rdH,0,0 };
-	st.uniform->specifyUniforms(data1, data2, splatData, windowData);
+	float decay[4] = { sc.DYE_DECAY,glfwGetTime() * 0.4,0 };
+	st.uniform->specifyUniforms(data1, data2, splatData, windowData,decay);
 	for (auto i : AT_RANGE2(2)) {
 		st.uniform->updateBuffer(i);
 	}

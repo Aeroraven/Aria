@@ -31,6 +31,5 @@ void main(uint3 invId:SV_DispatchThreadID){
         return;
     }
     float4 q = interpolatedQty(uv);
-    qtyResult[invId.xy] = q;
-    //qtyResult[invId.xy] = qtyToAdvect[invId.xy];
+    qtyResult[invId.xy] = float4(q.xyz*q.w,q.w); //Decay
 }

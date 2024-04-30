@@ -3,6 +3,7 @@ struct FluidParams{
     int4 grid;
     float4 splat;
     float4 window;
+    float4 dye; //Decay
 };
 
 void jacobiIter(
