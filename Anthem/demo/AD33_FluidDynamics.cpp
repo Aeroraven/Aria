@@ -26,20 +26,22 @@ constexpr inline std::string getShader(std::string x) {
 
 #define DCONST constexpr static const
 struct Parameters {
-	DCONST uint32_t GRID_X = 1024;
-	DCONST uint32_t GRID_Y = 1024;
+	DCONST uint32_t GRID_X = 256;
+	DCONST uint32_t GRID_Y = 256;
 	DCONST uint32_t THREAD_X = 16;
 	DCONST uint32_t THREAD_Y = 16;
 	DCONST float VISCOSITY_COEF = 0.001;
 	DCONST float TIMESTEP = 0.1f;
 	DCONST uint32_t JACOBI_ITERS = 80;
 	DCONST std::array<float, 4> CLEAR_COLOR = { 1,0,0,1 };
+	DCONST float SPLAT_RADIUS = 20.0f;
 
 	std::string SHADER_ADVECTION = getShader("advection.comp");
 	std::string SHADER_DIFFUSION_SOLVER = getShader("diffusion.comp");
 	std::string SHADER_PRESSURE_SOLVER = getShader("pressure.comp");
 	std::string SHADER_SUBTRACT = getShader("subtract.comp");
 	std::string SHADER_INIT = getShader("init.comp");
+	std::string SHADER_SPLAT = getShader("splat.comp");
 
 	std::string SHADER_VISVS = getShader("vis.vert");
 	std::string SHADER_VISFS = getShader("vis.frag");
@@ -68,6 +70,7 @@ struct Assets {
 	AnthemDescriptorPool* descPressureTemp[2];
 
 	// Pipelines
+	std::unique_ptr<AnthemComputePassHelper> pSplat;
 	std::unique_ptr<AnthemComputePassHelper> pAdvection;
 	std::unique_ptr<AnthemComputePassHelper> pDiffusion;
 	std::unique_ptr<AnthemComputePassHelper> pPressureSolver;
@@ -84,14 +87,28 @@ struct Assets {
 
 	// Uniforms
 	AnthemUniformBufferImpl<
+		AtUniformVecf<4>,	//Viscosity, timestep, splatRadius, 0
+		AtUniformVeci<4>,
 		AtUniformVecf<4>,
-		AtUniformVeci<4>
+		AtUniformVecf<4>	//Window
 	>* uniform;
 	AnthemDescriptorPool* descUniform;
 
-	//Command Buffer
+	// Command Buffer
 	uint32_t compCmd[2];
 	uint32_t initCmd[2];
+
+	// Handlers
+	int lastX = 0;
+	int lastY = 0;
+	int movDx = 0;
+	int movDy = 0;
+	int splatX = 0;
+	int splatY = 0;
+	int enableMov = 0;
+	bool splatEnable = false;
+	std::function<void(int, int, int)> mouseClickHandler;
+	std::function<void(double, double)> mouseMoveHandler;
 }st;
 
 void initialize() {
@@ -142,6 +159,17 @@ void createFields() {
 void clearImage(uint32_t commandBuffer, AnthemImage* image) {
 	st.rd.drClearColorImageFloat(image, sc.CLEAR_COLOR, VK_IMAGE_LAYOUT_GENERAL, commandBuffer);
 }
+
+void recordSplat(uint32_t commandBuffer,AnthemDescriptorPool* outVelocity, AnthemDescriptorPool* outDye) {
+	st.rd.drBindComputePipeline(st.pSplat->pipeline, commandBuffer);
+	st.rd.drBindDescriptorSetCustomizedCompute({
+		{st.descUniform,AT_ACDS_UNIFORM_BUFFER,0},
+		{outVelocity, AT_ACDS_STORAGE_IMAGE,0},
+		{outDye, AT_ACDS_STORAGE_IMAGE,0},
+	}, st.pSplat->pipeline, commandBuffer);
+	st.rd.drComputeDispatch(commandBuffer, st.pSplat->workGroupSize[0], st.pSplat->workGroupSize[1], st.pSplat->workGroupSize[2]);
+
+}
 void recordAdvection(uint32_t commandBuffer, AnthemDescriptorPool* lastVelocity, 
 	AnthemDescriptorPool* qtyToAdvect, AnthemDescriptorPool* qtyAdvected) {
 	st.rd.drBindComputePipeline(st.pAdvection->pipeline, commandBuffer);
@@ -191,6 +219,18 @@ void recordSubtraction(uint32_t commandBuffer, AnthemDescriptorPool* curVelocity
 }
 
 void createComputePipelines() {
+	st.pSplat = std::make_unique<AnthemComputePassHelper>(&st.rd, 2);
+	st.pSplat->workGroupSize[0] = sc.GRID_X / sc.THREAD_X;
+	st.pSplat->workGroupSize[1] = sc.GRID_Y / sc.THREAD_Y;
+	st.pSplat->workGroupSize[2] = 1;
+	st.pSplat->shaderPath.computeShader = sc.SHADER_SPLAT;
+	st.pSplat->setDescriptorLayouts({
+		{st.descUniform,AT_ACDS_UNIFORM_BUFFER,0},
+		{st.descDye[0], AT_ACDS_STORAGE_IMAGE,0},
+		{st.descDye[0], AT_ACDS_STORAGE_IMAGE,0},
+		});
+	st.pSplat->buildComputePipeline();
+
 	st.pInit = std::make_unique<AnthemComputePassHelper>(&st.rd, 2);
 	st.pInit->workGroupSize[0] = sc.GRID_X / sc.THREAD_X;
 	st.pInit->workGroupSize[1] = sc.GRID_Y / sc.THREAD_Y;
@@ -299,6 +339,8 @@ void recordCommandBuffer() {
 		}
 		recordSubtraction(c, st.descVelocityTemp[1 - sc.JACOBI_ITERS % 2], st.descPressureTemp[1 - sc.JACOBI_ITERS % 2], st.descVelocity[i]);
 		recordAdvection(c, st.descVelocity[i], st.descDye[1 - i], st.descDye[i]);
+		
+		recordSplat(c, st.descVelocity[i], st.descDye[i]);
 		st.rd.drEndCommandRecording(c);
 	}
 	st.pVisualization->recordCommands([&](uint32_t x) {
@@ -338,10 +380,42 @@ void initFluid() {
 	}
 }
 
+void registerSplatHooks() {
+	st.mouseClickHandler =  [&](int button, int action, int mods) {
+		if (button == 0 && action == 1) {
+			st.splatEnable = true;
+		}
+		if (button == 0 && action == 0) {
+			st.splatEnable = false;
+		}
+	};
+	st.mouseMoveHandler = [&](double x, double y) {
+		if (st.splatEnable) {
+			st.movDx = x - st.lastX;
+			st.movDy = y - st.lastY;
+			st.enableMov = 1;
+			ANTH_LOGI("Splatted:", st.movDx, st.splatX, st.movDy, st.splatY);
+		}
+		else {
+			st.enableMov = 0;
+		}
+		st.splatX = x;
+		st.splatY = y;
+		st.lastX = x;
+		st.lastY = y;
+	};
+	st.rd.ctSetMouseController(st.mouseClickHandler);
+	st.rd.ctSetMouseMoveController(st.mouseMoveHandler);
+}
+
 void updateUniform() {
-	float data1[4] = { sc.VISCOSITY_COEF,sc.TIMESTEP,0,0 };
+	int rdW, rdH;
+	st.rd.exGetWindowSize(rdH, rdW);
+	float data1[4] = { sc.VISCOSITY_COEF,sc.TIMESTEP,sc.SPLAT_RADIUS,st.enableMov };
 	int data2[4] = { sc.GRID_X,sc.GRID_Y,0,0 };
-	st.uniform->specifyUniforms(data1, data2);
+	float splatData[4] = { st.movDx,st.movDy,st.splatX,st.splatY };
+	float windowData[4] = { rdW,rdH,0,0 };
+	st.uniform->specifyUniforms(data1, data2, splatData, windowData);
 	for (auto i : AT_RANGE2(2)) {
 		st.uniform->updateBuffer(i);
 	}
@@ -360,6 +434,7 @@ void drawLoop() {
 
 int main() {
 	initialize();
+	registerSplatHooks();
 	createComputeDependency();
 	createFields();
 	createComputePipelines();

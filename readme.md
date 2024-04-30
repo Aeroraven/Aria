@@ -61,7 +61,7 @@ Here are all demos implemented in this repository
 | 24-C. Gerstner Wave                                | ×               | ○ (V1-C6S2)      | ×                  |
 | 25-A. Water Refraction                             | ×               | ▲ (V1-C6S13)     | ×                  |
 | 25-B. Water Caustics                               | ×               | ▲ (V1-C6S14)     | ×                  |
-| 25-D. Water Refraction + Reflection (DuDv Mapping) | ▲ (AD-32)       |                  | ×                  |
+| 25-D. Water Refraction + Reflection (DuDv Mapping) | ○ (AD-32)       |                  | ×                  |
 | 26. Voxelization                                   | ×               | ▲ (V2-C7S7)      | ×                  |
 | 27-A. Ray Tracing Triangle                         | ○ (AD-24)       | ×                | ×                  |
 | 27-B. Path Tracing (Graphics Pipeline)             | ×               | ○ (V2-C9S1)      | ×                  |
@@ -77,6 +77,7 @@ Here are all demos implemented in this repository
 | 35. Procedural Terrain Generation                  | ○ (AD-32)       | ×                | ×                  |
 | 36. Cascaded Shadow Mapping                        | ○ (AD-32)       | ×                | ×                  |
 | 37. Frustum Culling (Compute Shader)               | ○ (AD-32)       | /                | ×                  |
+| 38. Fluid Dynamics Simulation / Stam Method        | ▲ (AD-33)       | ×                | ×                  |
 
 
 

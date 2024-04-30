@@ -1,6 +1,8 @@
 struct FluidParams{
     float4 params;
     int4 grid;
+    float4 splat;
+    float4 window;
 };
 
 void jacobiIter(
