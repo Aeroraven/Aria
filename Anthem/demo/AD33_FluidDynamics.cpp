@@ -10,7 +10,7 @@
 #include "../include/components/passhelper/AnthemSequentialCommand.h"
 #include "../include/components/postprocessing/AnthemPostIdentity.h"
 #include "../include/components/postprocessing/AnthemFXAA.h"
-
+#include <Windows.h>
 using namespace Anthem::Components::Performance;
 using namespace Anthem::Components::Camera;
 using namespace Anthem::Components::PassHelper;
@@ -30,8 +30,8 @@ struct Parameters {
 	DCONST uint32_t GRID_Y = 1024;
 	DCONST uint32_t THREAD_X = 16;
 	DCONST uint32_t THREAD_Y = 16;
-	DCONST float DIFFUSION_COEF = 1.0f;
-	DCONST float TIMESTEP = 0.001f;
+	DCONST float VISCOSITY_COEF = 0.001;
+	DCONST float TIMESTEP = 0.1f;
 	DCONST uint32_t JACOBI_ITERS = 80;
 	DCONST std::array<float, 4> CLEAR_COLOR = { 1,0,0,1 };
 
@@ -134,6 +134,7 @@ void createFields() {
 		st.rd.addStorageImageArrayToDescriptor({ st.pressureField[i] }, st.descPressure[i], 0, -1);
 		st.rd.addStorageImageArrayToDescriptor({ st.velocityFieldTemp[i] }, st.descVelocityTemp[i], 0, -1);
 		st.rd.addStorageImageArrayToDescriptor({ st.pressureFieldTemp[i] }, st.descPressureTemp[i], 0, -1);
+
 		st.rd.addSamplerArrayToDescriptor({ st.dyeField[i] }, st.descDyeVis[i], 0, -1);
 	}
 }
@@ -309,7 +310,7 @@ void recordCommandBuffer() {
 	for (auto i : AT_RANGE2(2)) {
 		st.execSeq[i] = std::make_unique<AnthemSequentialCommand>(&st.rd);
 		st.execSeq[i]->setSequence({
-			//{st.compCmd[i],ATC_ASCE_COMPUTE},
+			{st.compCmd[i],ATC_ASCE_COMPUTE},
 			{st.pVisualization->getCommandIndex(i),ATC_ASCE_GRAPHICS}
 		});
 	}
@@ -338,7 +339,7 @@ void initFluid() {
 }
 
 void updateUniform() {
-	float data1[4] = { sc.DIFFUSION_COEF,sc.TIMESTEP,0,0 };
+	float data1[4] = { sc.VISCOSITY_COEF,sc.TIMESTEP,0,0 };
 	int data2[4] = { sc.GRID_X,sc.GRID_Y,0,0 };
 	st.uniform->specifyUniforms(data1, data2);
 	for (auto i : AT_RANGE2(2)) {

@@ -13,6 +13,10 @@ SamplerState samLinear: register(s0,space0);
 PSOutput main(VSOutput input)
 {
     PSOutput output;
+    float texH, texW;
+    texH = 1.0/1024.0;
+    texW = 1.0/1024.0;
+    float2 delta = float2(texW, texH);
     output.color = texDye.Sample(samLinear, input.TexCoord.xy);
     return output;
 }
