@@ -72,6 +72,9 @@ namespace Anthem::Core{
     using AtBufMat4f = AnthemBufferVarDef<float,2,4,ArrSz>;
 
     template<uint32_t ArrSz = 1>
+    using AtBufVecInt = AnthemBufferVarDef<int, 1, 1, ArrSz>;
+
+    template<uint32_t ArrSz = 1>
     using AtBufVecdUint = AnthemBufferVarDynamicDef<uint, 1, 1, ArrSz>;
 
     template<uint32_t ArrSz = 1>

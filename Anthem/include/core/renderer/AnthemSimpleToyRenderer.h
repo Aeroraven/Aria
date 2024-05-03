@@ -286,6 +286,7 @@ namespace Anthem::Core{
         bool drCopyImageToSwapchainImageWithFormatConv(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx);
         bool drCopySwapchainImageToImageWithFormatConv(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx);
         bool drSetImageLayoutSimple(AnthemImage* image, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx);
+        bool drSetDepthImageLayoutSimple(AnthemDepthBuffer* image, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx);
         bool drSetSwapchainImageLayoutSimple(uint32_t swapchainImageIdx, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx);
         
 #ifdef AT_FEATURE_RAYTRACING_ENABLED

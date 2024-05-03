@@ -26,5 +26,8 @@ namespace Anthem::Core {
         uint32_t getLayers() const;
         VkFormat getDepthFormat() const;
         bool isStencilEnabled() const;
+        VkImage* getImage() {
+            return &this->image.image;
+        }
     };
 };

@@ -284,7 +284,7 @@ namespace Anthem::Core{
         textureImage->prepareImage();
 
         //Allocate Descriptor Set For Sampler
-        if (!ignoreDescPool) {
+        if (!ignoreDescPool && descPool!=nullptr) {
             if (descId == -1) {
                 ANTH_LOGW("Descriptor pool index not specified for Tex2D, using the default value", this->imageDescPoolIdx);
                 descId = this->imageDescPoolIdx;
@@ -1280,6 +1280,12 @@ namespace Anthem::Core{
             *image->getImage(), *commandBuffers->getCommandBuffer(cmdIdx),
             srcLayout, dstLayout, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
             image->getLayers(), image->getMipLevels(),VK_IMAGE_ASPECT_COLOR_BIT);
+    }
+    bool AnthemSimpleToyRenderer::drSetDepthImageLayoutSimple(AnthemDepthBuffer* image, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx) {
+        return AnthemImageInfoProcessing::setImageLayout(
+            *image->getImage(), *commandBuffers->getCommandBuffer(cmdIdx),
+            srcLayout, dstLayout, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+            image->getLayers(), 1, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
     bool AnthemSimpleToyRenderer::drSetSwapchainImageLayoutSimple(uint32_t swapchainImageIdx, VkImageLayout srcLayout, VkImageLayout dstLayout, uint32_t cmdIdx) {
         return AnthemImageInfoProcessing::setImageLayout(

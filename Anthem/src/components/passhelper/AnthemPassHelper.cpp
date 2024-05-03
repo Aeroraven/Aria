@@ -44,7 +44,12 @@ namespace Anthem::Components::PassHelper {
 			if (this->enableDepthSampler) {
 				for (auto i : AT_RANGE2(copies)) {
 					rd->createDescriptorPool(&descDepth[i]);
-					rd->createDepthBufferWithSampler(&depth[i], descDepth[i], 0, false);
+					uint32_t h = 0, w = 0;
+					if (this->viewport != nullptr) {
+						h = this->viewport->getViewport()->height;
+						w = this->viewport->getViewport()->width;
+					}
+					rd->createDepthBufferWithSampler(&depth[i], descDepth[i], 0, false, h, w);
 				}
 			}
 			else {
@@ -73,7 +78,11 @@ namespace Anthem::Components::PassHelper {
 	AnthemDescriptorPool* AnthemPassHelper::getDepthDescriptor(uint32_t id) {
 		return descDepth[id];
 	}
+	AnthemDepthBuffer* AnthemPassHelper::getDepthBuffer(uint32_t id) {
+		return depth[id];
+	}
 	void AnthemPassHelper::recordCommands(std::function<void(uint32_t)> injectedCommands) {
+		ANTH_LOGI(copies);
 		for (auto i : AT_RANGE2(copies)) {
 			auto ci = cmdIdx[i];
 			rd->drStartCommandRecording(ci);

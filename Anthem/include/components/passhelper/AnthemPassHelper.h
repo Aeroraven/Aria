@@ -51,5 +51,6 @@ namespace Anthem::Components::PassHelper {
 		
 		uint32_t getCommandIndex(uint32_t copy);
 		AnthemDescriptorPool* getDepthDescriptor(uint32_t id);
+		AnthemDepthBuffer* getDepthBuffer(uint32_t id);
 	};
 }
