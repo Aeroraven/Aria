@@ -2,6 +2,8 @@
 namespace Anthem::Components::PassHelper {
 	AnthemSequentialCommand::AnthemSequentialCommand(AnthemSimpleToyRenderer* renderer) {
 		this->rd = renderer;
+		rd->createFence(&fence);
+		fence->resetFence();
 	}
 	void AnthemSequentialCommand::setSequence(const std::vector<AnthemSequentialCommandEntry>& seq) {
 		this->seq = seq;
@@ -18,7 +20,7 @@ namespace Anthem::Components::PassHelper {
 				std::vector<AtSyncSemaphoreWaitStage> waitStage = (i == 0) ? std::vector<AtSyncSemaphoreWaitStage>{} : std::vector<AtSyncSemaphoreWaitStage>{ AT_SSW_ALL_COMMAND };
 
 				if (i != seq.size() - 1 || useImGui) {
-					AnthemFence* sigFence = ((i == seq.size() - 2 || (i == seq.size() - 1 && useImGui)) && forceFence) ? this->fence : nullptr;
+					AnthemFence* sigFence = (((i == seq.size() - 2&&!useImGui) || (i == seq.size() - 1 && useImGui)) && forceFence) ? this->fence : nullptr;
 					if (seq[i].type == ATC_ASCE_GRAPHICS) {
 						rd->drSubmitCommandBufferGraphicsQueueGeneral2A(seq[i].commandBufferIndex, -1, toWait, waitStage, sigFence, { semaphores[i] });
 					}

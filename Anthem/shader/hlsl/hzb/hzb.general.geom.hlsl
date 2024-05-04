@@ -14,7 +14,7 @@ struct GSOutput{
 void main(triangle VSOutput input[3], inout TriangleStream<GSOutput> triStream){
     float3 edge1 = input[1].worldPos.xyz - input[0].worldPos.xyz;
     float3 edge2 = input[2].worldPos.xyz - input[0].worldPos.xyz;
-    float3 normal = -normalize(cross(edge1, edge2));
+    float3 normal = normalize(cross(edge1, edge2));
 
     GSOutput output;
     for(int i=0;i<3;i++){

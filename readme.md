@@ -34,7 +34,7 @@ Here are all demos implemented in this repository
 | 5. Convolution & Blur                              | ×               | ○ (V0-C3S3)      | ×                  |
 | 6-A. Sky Box (Cubic Texture)                       | ○ (AD-20)       | ○ (V0-C3S4)      | ×                  |
 | 6-B. Environment Mapping                           | ○ (AD-30)       | ○ (V0-C3S4)      | ×                  |
-| 7. Instancing                                      | ○ (AD-11/AD-16) | ○ (V0-C3S5)      | ×                  |
+| 7. Instancing                                      | ○ (AD-11/16/34) | ○ (V0-C3S5)      | ×                  |
 | 8. Blinn-Phong Shading                             | ×               | ○ (V0-C4S1)      | ×                  |
 | 9. Normal Mapping                                  | ○ (AD-29)       | ○ (V0-C4S2)      | ×                  |
 | 10. HDR                                            | ○ (AD-29)       | ○ (V0-C4S3)      | ×                  |
@@ -71,15 +71,16 @@ Here are all demos implemented in this repository
 | 27-D. Path Tracing (Hardware Accelerated)          | ○ (AD-25-B)     | /                | ×                  |
 | 28. Terrain Generation (Tessellation)              | ○ (AD-17)       | ×                | ×                  |
 | 29. OIT                                            | ○ (AD-18)       | ×                | ×                  |
-| 30. Indirect Draw                                  | ○ (AD-13)       | /                | ×                  |
+| 30. Indirect Draw                                  | ○ (AD-13/34)    | /                | ×                  |
 | 31. Mesh Shader                                    | ○ (AD-19)       | /                | ×                  |
 | 32. LTC Area Light                                 | ○ (AD-28)       | ×                | ×                  |
 | 33. Global Fog                                     | ○ (AD-30)       | ×                | ×                  |
 | 34. Marching Cubes (Compute Shader)                | ○ (AD-32)       | /                | ×                  |
 | 35. Procedural Terrain Generation                  | ○ (AD-32)       | ×                | ×                  |
 | 36. Cascaded Shadow Mapping                        | ○ (AD-32)       | ×                | ×                  |
-| 37. Frustum Culling (Compute Shader)               | ○ (AD-32)       | /                | ×                  |
+| 37. Frustum Culling (Compute Shader)               | ○ (AD-32/34)    | /                | ×                  |
 | 38. Fluid Dynamics Simulation / Stam Method        | ○ (AD-33)       | ×                | ×                  |
+| 39. Hierarchical Z-Buffer / Occlusion Culling      | ○ (AD-34)       | ×                | ×                  |
 
 
 

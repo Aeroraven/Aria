@@ -12,7 +12,7 @@ float4 gamma(float4 color){
 
 PSOutput main(GSOutput gsOut){
     PSOutput output;
-    float3 lightDir = normalize(float3(-1, -1, 1));
+    float3 lightDir = normalize(float3(-1, -1, 2));
     float diffuse = max(0, dot(gsOut.normal.xyz, lightDir));
     float ambient = 0.1;
     output.color = float4(gsOut.color.rgb * (diffuse + ambient), 1);

@@ -22,63 +22,73 @@ void appendBuffer(float4 pos){
 
 [numthreads(1, 1, 1)]
 void main(uint3 invId:SV_DispatchThreadID){
-	if(invId.x==0){
-		culledPosCounter[0] = 0;
-	}
-	GroupMemoryBarrier();
-	//Test
-	// Append to culledPos
-	appendBuffer(orgPos[invId.x].pos);
-	return;
 
 	// Occlusion Culling
 	float3 pos = orgPos[invId.x].pos.xyz;
-	float3 aabbPts[4];
-	aabbPts[0] = pos + float3(-1, -1, 0);
-	aabbPts[1] = pos + float3(1, -1, 0);
-	aabbPts[2] = pos + float3(-1, 1, 0);
-	aabbPts[3] = pos + float3(1, 1, 0);
+	float3 aabbPts[8];
+	aabbPts[0] = pos + float3(-1, -1, -1);
+	aabbPts[1] = pos + float3(1, -1, -1);
+	aabbPts[2] = pos + float3(-1, 1, -1);
+	aabbPts[3] = pos + float3(1, 1, -1);
+	aabbPts[4] = pos + float3(-1, -1, 1);
+	aabbPts[5] = pos + float3(1, -1, 1);
+	aabbPts[6] = pos + float3(-1, 1, 1);
+	aabbPts[7] = pos + float3(1, 1, 1);
 
-	float4 clipPos[4];
-	float2 uv[4];
+	float4 clipPos[8];
+	float2 uv[8];
 	float maxz = -1e9;
+	float minUvX = 1e9, maxUvX = -1e9, minUvY = 1e9, maxUvY = -1e9;
 	bool frustumCulled = true;
-	for(int i=0;i<4;i++){
+	bool atBorder = false;
+
+	for(int i=0;i<8;i++){
 		clipPos[i] = mul(camera.mvp, float4(aabbPts[i], 1));
 		clipPos[i] /= clipPos[i].w;
 		uv[i] = clipPos[i].xy * 0.5 + 0.5;
 		maxz = max(maxz, clipPos[i].z);
-		if(uv[i].x >= 0 && uv[i].x <= 1 && uv[i].y >= 0 && uv[i].y <= 1){
-			frustumCulled = false;
+		minUvX = min(minUvX, uv[i].x);
+		maxUvX = max(maxUvX, uv[i].x);
+		minUvY = min(minUvY, uv[i].y);
+		maxUvY = max(maxUvY, uv[i].y);
+		if(uv[i].x >= 0.0f && uv[i].x <= 1.0f && uv[i].y >= 0.0f && uv[i].y <= 1.0f){
+			if(clipPos[i].z >= 0.0f){
+				frustumCulled = false;
+			}
+		}else{
+			atBorder=true;
 		}
 	}
-
 	// Frustum Culling
-	if (frustumCulled) return;
+	if (frustumCulled) {
+		return;
+	}
+	if(atBorder){
+		appendBuffer(float4(orgPos[invId.x].pos.xyz,1));
+		return;
+	}
 
-	float uvDx = 0, uvDy = 0, mxUv = 0;
-	uvDx = abs(uv[0].x - uv[1].x);
-	uvDy = abs(uv[0].y - uv[2].y);
-	mxUv = max(uvDx, uvDy);
-
+	float mxUv = max(maxUvX - minUvX, maxUvY - minUvY);
 	// Find depth level
 	int level = 0;
-	int2 uvInt[4];
-	int depTexH, depTexW;
-	depths[0].GetDimensions(depTexW, depTexH);
-	for(int i=0;i<4;i++){
-		uvInt[i] = int2(uv[i] * float2(depTexW, depTexH));
-	}
-	int mxUvInt = max(abs(uvInt[0].x - uvInt[1].x), abs(uvInt[0].y - uvInt[2].y));
+	int mxUvInt = int(mxUv * 2048);
 	level = min(TOTAL_LEVELS - 1, (int)log2(mxUvInt)+1);
+	for(;level<TOTAL_LEVELS;level++){
+		int Xmin = int(minUvX*2048.0f)/(int(1)<<level);
+		int Xmax = int(maxUvX*2048.0f)/(int(1)<<level);
+		int Ymin = int(minUvY*2048.0f)/(int(1)<<level);
+		int Ymax = int(maxUvY*2048.0f)/(int(1)<<level);
+		if(Xmin == Xmax && Ymin == Ymax) break;
+	}
 
 	// Find depth in Hierarchical Z-Buffer
-	int2 hUV = uvInt[0]/(int(1)<<level);
+	int2 hUV = int2(uv[0]*2048.0f)/(int(1)<<level);
 	float depth = depths[level][hUV];
-	if(maxz < depth) return;
+	if(maxz > depth) return;
 
 	// Append to culledPos
-	appendBuffer(orgPos[invId.x].pos);
+	appendBuffer(float4(orgPos[invId.x].pos.xyz,1));
+	return;
 }
 
 

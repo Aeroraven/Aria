@@ -71,6 +71,10 @@ namespace Anthem::Core{
             this->cmdBufs->submitTaskToGraphicsQueue(cmdIdx, true);
             return true;
         }
+        bool drFillAtomicCounter(uint32_t cmdIdx, uint32_t copyId, int counter) {
+			vkCmdFillBuffer(*this->cmdBufs->getCommandBuffer(cmdIdx), this->bufferProp.ssboCounter[copyId].buffer, 0, VK_WHOLE_SIZE, counter);
+			return true;
+		}
         bool setAtomicCounter(uint32_t idx, int counter) {
             AnthemGeneralBufferProp backStaging;
             this->createBufferInternal(&backStaging, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,

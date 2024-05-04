@@ -14,7 +14,6 @@ struct DrawParams{
 
 RWStructuredBuffer<OccludeePos> occludeePos : register(u0, space0);
 RWStructuredBuffer<uint> posCounter : register(u1, space0);
-
 RWStructuredBuffer<IndirectBuffer> indirectBuffer : register(u0, space1);
 [[vk::push_constant]] DrawParams params;
 

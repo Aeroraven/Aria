@@ -27,7 +27,7 @@ constexpr inline std::string getShader(std::string x) {
 
 #define DCONST static constexpr const
 struct Parameters {
-	DCONST uint32_t MAX_INSTANCE = 10000;
+	DCONST uint32_t MAX_INSTANCE = 40000;
 
 	DCONST uint32_t GEN_WORLD_X = 128;
 	DCONST uint32_t GEN_WORLD_Y = 128;
@@ -38,7 +38,9 @@ struct Parameters {
 	DCONST uint32_t GEN_THREAD_Z = 8;
 
 	DCONST uint32_t VIEWPORT_SIZE = 2048;
-	DCONST float OCCLUDER_SCALE = 1;
+	DCONST float OCCLUDER_SCALE = 4;
+	DCONST float OCCLUDER_SCALEY = 36;
+	DCONST int32_t SPHERE_PREC = 50;
 
 	std::string SHADER_OCCLUDER_GEN = getShader("occluderGen.comp");
 	std::string SHADER_OCCLUDEE_GEN = getShader("occludeeGen.comp");
@@ -87,6 +89,7 @@ struct Assets {
 
 	uint32_t occluderNums = 0;
 	uint32_t occludeeNums = 0;
+	int32_t occludeeNumsCulled = -1;
 
 	AnthemVertexBufferImpl<AtAttributeVecf<4>, AtAttributeVecf<4>>* blitGeom = nullptr;
 	AnthemIndexBuffer* blitIdx = nullptr;
@@ -96,6 +99,7 @@ struct Assets {
 	std::unique_ptr<AnthemComputePassHelper> pOccludeeGen;
 	std::unique_ptr<AnthemPassHelper> pOccluderRender;
 	std::unique_ptr<AnthemPassHelper> pOccludeeRender;
+	std::unique_ptr<AnthemPassHelper> pOccludeeRenderRaw;
 
 	std::unique_ptr<AnthemComputePassHelper> pOccludeeFilter;
 	std::unique_ptr<AnthemComputePassHelper> pIndirectGen;
@@ -116,8 +120,16 @@ struct Assets {
 
 	// Commands
 	uint32_t depthBlitCmd[2];
+	uint32_t hzbCull[2];
 	uint32_t indirectGenCmd[2];
 	AnthemViewport* viewport;
+	std::function<void(int, int, int, int)> keyController;
+
+	// Comp
+	uint32_t indirectGenCmdRaw[2];
+	std::unique_ptr<AnthemSequentialCommand> execSeqCmp[2];
+	bool useHzb = true;
+
 }st;
 
 void createViewport() {
@@ -180,14 +192,14 @@ void createGeometry() {
 
 	// Occluder
 	st.occluder->setTotalVertices(8);
-	st.occluder->insertData(0, { -sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
-	st.occluder->insertData(1, { sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
-	st.occluder->insertData(2, { sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
-	st.occluder->insertData(3, { -sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
-	st.occluder->insertData(4, { -sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
-	st.occluder->insertData(5, { sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
-	st.occluder->insertData(6, { sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
-	st.occluder->insertData(7, { -sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(0, { -sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALEY,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(1, { sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALEY,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(2, { sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALEY,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(3, { -sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALEY,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(4, { -sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALEY,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(5, { sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALEY,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(6, { sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALEY,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(7, { -sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALEY,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
 
 	std::vector<uint32_t> indices = {
 		0,1,2, 2,3,0,
@@ -203,22 +215,22 @@ void createGeometry() {
 	// Occludee Sphere
 	std::vector < std::array<float, 4>> spherePts;
 	std::vector<uint32_t> sphereIdx;
-	for (int i = 0; i < 100; i++) {
-		for (int j = 0; j < 100; j++) {
-			float x = cos(2 * 3.14159265359f / 99 * i) * sin(3.14159265359f / 99 * j);
-			float y = sin(2 * 3.14159265359f / 99 * i) * sin(3.14159265359f / 99 * j);
-			float z = cos(3.14159265359f / 99 * j);
+	for (int i = 0; i < sc.SPHERE_PREC; i++) {
+		for (int j = 0; j < sc.SPHERE_PREC; j++) {
+			float x = cos(2 * 3.14159265359f / (sc.SPHERE_PREC-1) * i) * sin(3.14159265359f / (sc.SPHERE_PREC - 1) * j);
+			float y = sin(2 * 3.14159265359f / (sc.SPHERE_PREC - 1) * i) * sin(3.14159265359f / (sc.SPHERE_PREC - 1) * j);
+			float z = cos(3.14159265359f / (sc.SPHERE_PREC - 1) * j);
 			spherePts.push_back({ x,y,z,1 });
 		}
 	}
-	for (int i = 0; i < 99; i++) {
-		for (int j = 0; j < 99; j++) {
-			sphereIdx.push_back(i * 100 + j);
-			sphereIdx.push_back((i + 1) * 100 + j);
-			sphereIdx.push_back(i * 100 + j + 1);
-			sphereIdx.push_back((i + 1) * 100 + j);
-			sphereIdx.push_back((i + 1) * 100 + j + 1);
-			sphereIdx.push_back(i * 100 + j + 1);
+	for (int i = 0; i < (sc.SPHERE_PREC - 1); i++) {
+		for (int j = 0; j < (sc.SPHERE_PREC - 1); j++) {
+			sphereIdx.push_back(i * sc.SPHERE_PREC + j);
+			sphereIdx.push_back((i + 1) * sc.SPHERE_PREC + j);
+			sphereIdx.push_back(i * sc.SPHERE_PREC + j + 1);
+			sphereIdx.push_back((i + 1) * sc.SPHERE_PREC + j);
+			sphereIdx.push_back((i + 1) * sc.SPHERE_PREC + j + 1);
+			sphereIdx.push_back(i * sc.SPHERE_PREC + j + 1);
 		}
 	}
 	st.rd.createIndexBuffer(&st.occludeeIdx);
@@ -226,7 +238,7 @@ void createGeometry() {
 
 	st.occludee->setTotalVertices(spherePts.size());
 	for (int i = 0; i < spherePts.size(); i++) {
-		st.occludee->insertData(i, spherePts[i], { 0,0,1,0 });
+		st.occludee->insertData(i, spherePts[i], { 0,1,0,0 });
 	}
 
 	// Instancing Buffer
@@ -351,6 +363,26 @@ void createGraphicsPass() {
 	});
 	st.pOccludeeRender->buildGraphicsPipeline();
 
+	st.pOccludeeRenderRaw = std::make_unique<AnthemPassHelper>(&st.rd, 2);
+	st.pOccludeeRenderRaw->shaderPath.vertexShader = sc.SHADER_GENERAL_VS;
+	st.pOccludeeRenderRaw->shaderPath.geometryShader = sc.SHADER_GENERAL_GS;
+	st.pOccludeeRenderRaw->shaderPath.fragmentShader = sc.SHADER_GENERAL_FS;
+	st.pOccludeeRenderRaw->pipeOpt.vertStageLayout = { st.occludee,st.occludeePos };
+	st.pOccludeeRenderRaw->viewport = st.viewport;
+	st.pOccludeeRenderRaw->passOpt.clearColorAttachmentOnLoad = { false };
+	st.pOccludeeRenderRaw->passOpt.clearDepthAttachmentOnLoad = false;
+	st.pOccludeeRenderRaw->passOpt.renderPassUsage = AT_ARPAA_INTERMEDIATE_PASS;
+	st.pOccludeeRenderRaw->passOpt.colorAttachmentFormats = { AT_IF_SIGNED_FLOAT32 };
+	st.pOccludeeRenderRaw->viewport = st.viewport;
+	st.pOccludeeRenderRaw->setRenderTargets({ st.colorImg });
+	st.pOccludeeRenderRaw->setDepthFromPass(*st.pOccluderRender);
+	st.pOccludeeRenderRaw->setDescriptorLayouts({
+		{st.descUniform , AT_ACDS_UNIFORM_BUFFER,0}
+		});
+	st.pOccludeeRenderRaw->buildGraphicsPipeline();
+
+
+
 	st.pPostFx = std::make_unique<AnthemPostIdentity>(&st.rd, 2);
 	st.pPostFx->addInput({
 		{st.descColor,AT_ACDS_SAMPLER,0}
@@ -374,11 +406,14 @@ void createDepthCopyPass() {
 void recordIndirectDrawGeneration() {
 	for (auto i : AT_RANGE2(2)) {
 		st.rd.drAllocateCommandBuffer(&st.indirectGenCmd[i]);
+		st.rd.drAllocateCommandBuffer(&st.hzbCull[i]);
+
 		auto c = st.indirectGenCmd[i];
 		st.rd.drStartCommandRecording(c);
 
 		// Dispatch Culling
 		st.rd.drBindComputePipeline(st.pOccludeeFilter->pipeline, c);
+		st.occludeePosCulled->drFillAtomicCounter(c, 0, 0);
 		st.rd.drBindDescriptorSetCustomizedCompute({
 			{st.descUniform , AT_ACDS_UNIFORM_BUFFER,0},
 			{st.descDepthAll,AT_ACDS_STORAGE_IMAGE,0},
@@ -387,6 +422,10 @@ void recordIndirectDrawGeneration() {
 			}, st.pOccludeeFilter->pipeline, c);
 		st.rd.drComputeDispatch(c, std::min(st.occludeeNums, sc.MAX_INSTANCE), 1, 1);
 
+		st.rd.drEndCommandRecording(c);
+
+		c = st.hzbCull[i];
+		st.rd.drStartCommandRecording(c);
 		// Generate Indirect Buffer
 		st.rd.drBindComputePipeline(st.pIndirectGen->pipeline, c);
 		st.rd.drPushConstantsCompute(st.pc, st.pIndirectGen->pipeline, c);
@@ -399,7 +438,25 @@ void recordIndirectDrawGeneration() {
 
 		st.rd.drEndCommandRecording(c);
 	}
-		
+	//Comparsion
+	for (auto i : AT_RANGE2(2)) {
+		st.rd.drAllocateCommandBuffer(&st.indirectGenCmdRaw[i]);
+
+		auto c = st.indirectGenCmdRaw[i];
+		st.rd.drStartCommandRecording(c);
+		// Generate Indirect Buffer
+		st.rd.drBindComputePipeline(st.pIndirectGen->pipeline, c);
+		st.rd.drPushConstantsCompute(st.pc, st.pIndirectGen->pipeline, c);
+		st.rd.drBindDescriptorSetCustomizedCompute({
+			{st.descPoolOccludee,AT_ACDS_SHADER_STORAGE_BUFFER,0},
+			{st.descPoolIndirect,AT_ACDS_SHADER_STORAGE_BUFFER,0},
+			}, st.pIndirectGen->pipeline, c);
+		st.rd.drComputeDispatch(c, 1, 1, 1);
+
+
+		st.rd.drEndCommandRecording(c);
+	}
+
 }
 
 void recordDepthBlit() {
@@ -459,11 +516,11 @@ void instanceGeneration() {
 
 	st.rd.drBindComputePipeline(st.pOccludeeGen->pipeline, cmdIdx);
 	st.rd.drBindDescriptorSetCustomizedCompute({ {st.descPoolOccludee,AT_ACDS_SHADER_STORAGE_BUFFER,0} }, st.pOccludeeGen->pipeline, cmdIdx);
-	st.rd.drComputeDispatch(cmdIdx, sc.GEN_WORLD_X / sc.GEN_THREAD_X, sc.GEN_THREAD_Y / sc.GEN_THREAD_Y, sc.GEN_WORLD_Z / sc.GEN_THREAD_Z);
+	st.rd.drComputeDispatch(cmdIdx, sc.GEN_WORLD_X / sc.GEN_THREAD_X, sc.GEN_WORLD_Y / sc.GEN_THREAD_Y, sc.GEN_WORLD_Z / sc.GEN_THREAD_Z);
 
 	st.rd.drBindComputePipeline(st.pOccluderGen->pipeline, cmdIdx);
 	st.rd.drBindDescriptorSetCustomizedCompute({ {st.descPoolOccluder,AT_ACDS_SHADER_STORAGE_BUFFER,0} }, st.pOccluderGen->pipeline, cmdIdx);
-	st.rd.drComputeDispatch(cmdIdx, sc.GEN_WORLD_X / sc.GEN_THREAD_X, sc.GEN_THREAD_Y / sc.GEN_THREAD_Y, sc.GEN_WORLD_Z / sc.GEN_THREAD_Z);
+	st.rd.drComputeDispatch(cmdIdx, sc.GEN_WORLD_X / sc.GEN_THREAD_X, sc.GEN_WORLD_Y / sc.GEN_THREAD_Y, sc.GEN_WORLD_Z / sc.GEN_THREAD_Z);
 
 	st.rd.drEndCommandRecording(cmdIdx);
 	fence->resetFence();
@@ -479,9 +536,13 @@ void instanceGeneration() {
 
 void recordGraphicsCommands() {
 	st.pOccludeeRender->recordCommands([&](uint32_t x) {
-		st.rd.drBindVertexBufferEx2(st.occludee, st.occludeePos, 0, x);
+		st.rd.drBindVertexBufferEx2(st.occludee, st.occludeePosCulled, 0, x);
 		st.rd.drBindIndexBuffer(st.occludeeIdx,x);
-		//st.rd.drDrawInstanced(st.occludeeIdx->getIndexCount(), std::min(sc.MAX_INSTANCE, st.occludeeNums), x);
+		st.rd.drDrawIndexedIndirectSsbo(st.indirectBuffer, 0, 1, x);
+	});
+	st.pOccludeeRenderRaw->recordCommands([&](uint32_t x) {
+		st.rd.drBindVertexBufferEx2(st.occludee, st.occludeePos, 0, x);
+		st.rd.drBindIndexBuffer(st.occludeeIdx, x);
 		st.rd.drDrawIndexedIndirectSsbo(st.indirectBuffer, 0, 1, x);
 	});
 	st.pOccluderRender->recordCommands([&](uint32_t x) {
@@ -495,10 +556,18 @@ void recordGraphicsCommands() {
 	for (auto i : AT_RANGE2(2)) {
 		st.execSeq[i] = std::make_unique<AnthemSequentialCommand>(&st.rd);
 		st.execSeq[i]->setSequence({
-			{st.pOccluderRender->getCommandIndex(i),ATC_ASCE_GRAPHICS},
-			{st.depthBlitCmd[i],ATC_ASCE_COMPUTE},
-			{st.indirectGenCmd[i],ATC_ASCE_COMPUTE},
-			{st.pOccludeeRender->getCommandIndex(i),ATC_ASCE_GRAPHICS},
+			{st.pOccluderRender->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+			{st.depthBlitCmd[0],ATC_ASCE_COMPUTE},
+			{st.hzbCull[0],ATC_ASCE_COMPUTE},
+			{st.indirectGenCmd[0],ATC_ASCE_COMPUTE},
+			{st.pOccludeeRender->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+			{st.pPostFx->getCommandIdx(i),ATC_ASCE_GRAPHICS}
+		});
+		st.execSeqCmp[i] = std::make_unique<AnthemSequentialCommand>(&st.rd);
+		st.execSeqCmp[i]->setSequence({
+			{st.pOccluderRender->getCommandIndex(0),ATC_ASCE_GRAPHICS},
+			{st.indirectGenCmdRaw[0],ATC_ASCE_COMPUTE},
+			{st.pOccludeeRenderRaw->getCommandIndex(0),ATC_ASCE_GRAPHICS},
 			{st.pPostFx->getCommandIdx(i),ATC_ASCE_GRAPHICS}
 		});
 	}
@@ -524,12 +593,66 @@ void updateUniform() {
 	}
 }
 
+void setupImgui() {
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.FontGlobalScale = 1.8;
+	ImGui::StyleColorsDark();
+	st.rd.exInitImGui();
+}
+
+void prepareImguiFrame() {
+	st.frm.record();
+	std::stringstream ss;
+	ss << "FPS:";
+	ss << st.frm.getFrameRate();
+
+	std::stringstream ss2;
+	ss2 << "Total Spheres:";
+	ss2 << st.occludeeNums;
+
+	std::stringstream ss3;
+	ss3 << "Visible Spheres:";
+	if(st.occludeeNumsCulled==-1)ss3 << "N/A";
+	else ss3 << st.occludeeNumsCulled;
+
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+	ImGui::Begin("Control Panel");
+	ImGui::Text(ss.str().c_str());
+	ImGui::Text(ss2.str().c_str());
+	ImGui::Text(ss3.str().c_str());
+	ImGui::Checkbox("Hierarchical Z-Culling", &st.useHzb);
+	if (st.useHzb) {
+		if (ImGui::Button("Fetch Object Counter", ImVec2(400, 30))) {
+			st.occludeeNumsCulled = st.occludeePosCulled->getAtomicCounter(0);
+		}
+	}
+
+	ImGui::End();
+}
+
 void mainLoop() {
 	static int cur = 0;
 	uint32_t imgIdx;
 	updateUniform();
 	st.rd.drPrepareFrame(cur, &imgIdx);
-	st.execSeq[cur]->executeCommandToStage(imgIdx, false, false, st.pOccludeeRender->getSwapchainBuffer());
+	prepareImguiFrame();
+	if (st.useHzb) {
+		st.execSeq[cur]->executeCommandToStage(imgIdx, true, true, st.pPostFx->getSwapchainFb());
+		st.execSeq[cur]->waitExecutionToStage();
+	}
+	else {
+		st.execSeqCmp[cur]->executeCommandToStage(imgIdx, true, true, st.pPostFx->getSwapchainFb());
+		st.execSeqCmp[cur]->waitExecutionToStage();
+	
+	}
+
+	//ANTH_LOGI("atomic counter=", st.occludeePosCulled->getAtomicCounter(0));
 	st.rd.drPresentFrame(cur, imgIdx);
 	cur = 1 - cur;
 }
@@ -541,13 +664,17 @@ void initialize() {
 	st.rd.initialize();
 	int rdH, rdW;
 	st.rd.exGetWindowSize(rdH, rdW);
-	st.camera.specifyFrustum((float)AT_PI * 1.0f / 2.0f, 0.01f, 1000.0f, 1.0f * rdW/rdH);
-	st.camera.specifyPosition(0, 0, -25);
+	st.camera.specifyFrustum((float)AT_PI * 1.0f / 3.0f, 0.01f, 1000.0f, 1.0f * rdW/rdH);
+	st.camera.specifyPosition(0, 0, -45);
 	st.camera.specifyFrontEyeRay(0, 0, 1);
+
+	st.keyController = st.camera.getKeyboardController(2.4);
+	st.rd.ctSetKeyBoardController(st.keyController);
 }
 
 int main() {
 	initialize();
+	setupImgui();
 	createViewport();
 	createUniform();
 	createDepthMipMaps();
@@ -564,6 +691,7 @@ int main() {
 
 	st.rd.setDrawFunction(mainLoop);
 	st.rd.startDrawLoopDemo();
+	st.rd.exDestroyImgui();	
 	st.rd.finalize();
 	return 0;
 }

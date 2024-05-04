@@ -20,6 +20,6 @@ VSOutput main(VSInput input){
     VSOutput output;
     output.pos = mul(camera.mvp, input.pos+float4(input.instPos.xyz, 0));
     output.color = input.color;
-    output.worldPos = input.instPos;
+    output.worldPos = input.pos+float4(input.instPos.xyz, 0);
     return output;
 }
