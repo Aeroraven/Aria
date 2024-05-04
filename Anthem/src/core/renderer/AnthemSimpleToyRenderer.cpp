@@ -1132,6 +1132,13 @@ namespace Anthem::Core{
         }
         return true;
     }
+    bool AnthemSimpleToyRenderer::drDrawIndexedIndirectSsbo(AnthemShaderStorageBuffer* buffer, uint32_t copy, uint32_t commands, uint32_t cmdIdx) {
+        auto feats = (*this->phyDevice).getDeviceFeatures();
+        ANTH_ASSERT(feats.multiDrawIndirect == VK_TRUE, "Mulitdraw not supported");
+        vkCmdDrawIndexedIndirect(*this->commandBuffers->getCommandBuffer(cmdIdx),
+            *buffer->getDestBufferObject(copy), 0, commands, sizeof(VkDrawIndexedIndirectCommand));
+        return true;
+    }
     bool AnthemSimpleToyRenderer::drDrawMesh(uint32_t groupX, uint32_t groupY, uint32_t groupZ, uint32_t cmdIdx) {
         this->logicalDevice->vkCall_vkCmdDrawMeshTaskExt(*this->commandBuffers->getCommandBuffer(cmdIdx), groupX, groupY, groupZ);
         return true;

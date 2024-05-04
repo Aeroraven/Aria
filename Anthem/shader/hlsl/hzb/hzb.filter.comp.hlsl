@@ -8,9 +8,17 @@ struct OccludeePos{
 static const int TOTAL_LEVELS = 12;
 ConstantBuffer<Camera> camera : register(b0);
 RWTexture2D<float> depths[TOTAL_LEVELS] : register(u0, space1);
-AppendStructuredBuffer<OccludeePos> culledPos : register(u0, space2);
+RWStructuredBuffer<OccludeePos> culledPos : register(u0, space2);
 RWStructuredBuffer<int> culledPosCounter : register(u1, space2);
 RWStructuredBuffer<OccludeePos> orgPos : register(u0, space3);
+
+void appendBuffer(float4 pos){
+	OccludeePos occludeePos;
+	occludeePos.pos = pos;
+	int src=0;
+	InterlockedAdd(culledPosCounter[0], 1,src);
+	culledPos[src] = occludeePos;
+}
 
 [numthreads(1, 1, 1)]
 void main(uint3 invId:SV_DispatchThreadID){
@@ -20,9 +28,7 @@ void main(uint3 invId:SV_DispatchThreadID){
 	GroupMemoryBarrier();
 	//Test
 	// Append to culledPos
-	OccludeePos occludeePos;
-	occludeePos.pos = float4(orgPos[invId.x].pos.xyz, 1);
-	culledPos.Append(occludeePos);
+	appendBuffer(orgPos[invId.x].pos);
 	return;
 
 	// Occlusion Culling
@@ -72,9 +78,7 @@ void main(uint3 invId:SV_DispatchThreadID){
 	if(maxz < depth) return;
 
 	// Append to culledPos
-	OccludeePos occludeePosX;
-	occludeePosX.pos = float4(pos, 1);
-	culledPos.Append(occludeePosX);
+	appendBuffer(orgPos[invId.x].pos);
 }
 
 

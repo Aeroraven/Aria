@@ -277,6 +277,7 @@ namespace Anthem::Core{
         bool drDrawInstanced(uint32_t vertices, uint32_t instances, uint32_t cmdIdx);
         bool drDrawInstancedAll(uint32_t vertices, uint32_t instances, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance, uint32_t cmdIdx);
         bool drDrawIndexedIndirect(AnthemIndirectDrawBuffer* buffer, uint32_t cmdIdx);
+        bool drDrawIndexedIndirectSsbo(AnthemShaderStorageBuffer* buffer, uint32_t copy,uint32_t commands, uint32_t cmdIdx);
         bool drDrawMesh(uint32_t groupX, uint32_t groupY, uint32_t groupZ, uint32_t cmdIdx);
 
         bool drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ);

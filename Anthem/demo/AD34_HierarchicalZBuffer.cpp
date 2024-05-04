@@ -38,11 +38,13 @@ struct Parameters {
 	DCONST uint32_t GEN_THREAD_Z = 8;
 
 	DCONST uint32_t VIEWPORT_SIZE = 2048;
+	DCONST float OCCLUDER_SCALE = 1;
 
 	std::string SHADER_OCCLUDER_GEN = getShader("occluderGen.comp");
 	std::string SHADER_OCCLUDEE_GEN = getShader("occludeeGen.comp");
 
 	std::string SHADER_GENERAL_VS = getShader("general.vert");
+	std::string SHADER_GENERAL_GS = getShader("general.geom");
 	std::string SHADER_GENERAL_FS = getShader("general.frag");
 	std::string SHADER_BLIT = getShader("blit.comp");
 	std::string SHADER_COPY = getShader("copy.comp");
@@ -178,14 +180,14 @@ void createGeometry() {
 
 	// Occluder
 	st.occluder->setTotalVertices(8);
-	st.occluder->insertData(0, { -1,-1,-1,1 }, { 1,0,0,0 });
-	st.occluder->insertData(1, { 1,-1,-1,1 }, { 1,0,0,0 });
-	st.occluder->insertData(2, { 1,1,-1,1 }, { 1,0,0,0 });
-	st.occluder->insertData(3, { -1,1,-1,1 }, { 1,0,0,0 });
-	st.occluder->insertData(4, { -1,-1,1,1 }, { 1,0,0,0 });
-	st.occluder->insertData(5, { 1,-1,1,1 }, { 1,0,0,0 });
-	st.occluder->insertData(6, { 1,1,1,1 }, { 1,0,0,0 });
-	st.occluder->insertData(7, { -1,1,1,1 }, { 1,0,0,0 });
+	st.occluder->insertData(0, { -sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(1, { sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(2, { sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(3, { -sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(4, { -sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(5, { sc.OCCLUDER_SCALE,-sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(6, { sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
+	st.occluder->insertData(7, { -sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,sc.OCCLUDER_SCALE,1 }, { 1,0,0,0 });
 
 	std::vector<uint32_t> indices = {
 		0,1,2, 2,3,0,
@@ -317,6 +319,7 @@ void createComputePass() {
 void createGraphicsPass() {
 	st.pOccluderRender = std::make_unique<AnthemPassHelper>(&st.rd, 2);
 	st.pOccluderRender->shaderPath.vertexShader = sc.SHADER_GENERAL_VS;
+	st.pOccluderRender->shaderPath.geometryShader = sc.SHADER_GENERAL_GS;
 	st.pOccluderRender->shaderPath.fragmentShader = sc.SHADER_GENERAL_FS;
 	st.pOccluderRender->pipeOpt.vertStageLayout = { st.occluder,st.occluderPos };
 	st.pOccluderRender->setRenderTargets({ st.colorImg });
@@ -332,6 +335,7 @@ void createGraphicsPass() {
 
 	st.pOccludeeRender = std::make_unique<AnthemPassHelper>(&st.rd, 2);
 	st.pOccludeeRender->shaderPath.vertexShader = sc.SHADER_GENERAL_VS;
+	st.pOccludeeRender->shaderPath.geometryShader = sc.SHADER_GENERAL_GS;
 	st.pOccludeeRender->shaderPath.fragmentShader = sc.SHADER_GENERAL_FS;
 	st.pOccludeeRender->pipeOpt.vertStageLayout = { st.occludee,st.occludeePos };
 	st.pOccludeeRender->viewport = st.viewport;
@@ -468,7 +472,7 @@ void instanceGeneration() {
 
 	st.occludeeNums = st.occludeePos->getAtomicCounter(0);
 	st.occluderNums = st.occluderPos->getAtomicCounter(0);
-	int x = st.occludeeNums;
+	int x = st.occludeeIdx->getIndexCount();
 	st.pc->setConstant(&x);
 	ANTH_LOGI("Instances Generated");
 }
@@ -477,12 +481,14 @@ void recordGraphicsCommands() {
 	st.pOccludeeRender->recordCommands([&](uint32_t x) {
 		st.rd.drBindVertexBufferEx2(st.occludee, st.occludeePos, 0, x);
 		st.rd.drBindIndexBuffer(st.occludeeIdx,x);
-		st.rd.drDrawInstanced(st.occludeeIdx->getIndexCount(), std::min(sc.MAX_INSTANCE, st.occludeeNums), x);
+		//st.rd.drDrawInstanced(st.occludeeIdx->getIndexCount(), std::min(sc.MAX_INSTANCE, st.occludeeNums), x);
+		st.rd.drDrawIndexedIndirectSsbo(st.indirectBuffer, 0, 1, x);
 	});
 	st.pOccluderRender->recordCommands([&](uint32_t x) {
 		st.rd.drBindVertexBufferEx2(st.occluder, st.occluderPos, 0, x);
 		st.rd.drBindIndexBuffer(st.occluderIdx, x);
 		st.rd.drDrawInstanced(st.occluderIdx->getIndexCount(), std::min(sc.MAX_INSTANCE, st.occluderNums), x);
+
 	});
 	st.pPostFx->recordCommand();
 
