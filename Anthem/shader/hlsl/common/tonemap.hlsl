@@ -1,3 +1,5 @@
+#ifndef AT_H_TONEMAP
+#define AT_H_TONEMAP
 
 // GT Tonemap From: https://www.desmos.com/calculator/gslcdxvipg
 
@@ -36,3 +38,5 @@ float4 gtTonemapping(float4 x, float maxBrightness=1.0,float contrast=1,float li
     float4 blended = T * w0 + L * w1 + S * w2;
     return blended;
 }
+
+#endif // AT_H_TONEMAP

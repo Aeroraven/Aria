@@ -56,6 +56,7 @@ if __name__ == "__main__":
                                             "-T", hlsl_profile[y[-9:]], 
                                             "./shader/hlsl/"+x+"/"+y, 
                                             extra_args[y[-9:]] , 
+                                            '-HV 2021',
                                             '-fspv-extension=SPV_KHR_ray_tracing',
                                             '-fspv-extension=SPV_KHR_multiview',
                                             '-fspv-extension=SPV_KHR_shader_draw_parameters',
