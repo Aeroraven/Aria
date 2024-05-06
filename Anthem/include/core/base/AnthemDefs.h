@@ -27,20 +27,44 @@
 #include <sstream>
 #include <deque>
 
-#ifndef _HAS_CXX23
-    #if __cplusplus >= 202302L
-        #define _HAS_CXX23 1
-    #else
-        #define _HAS_CXX23 0
+// Flags
+//#define AT_FEATURE_RAYTRACING_ENABLED 1
+//#define AT_FEATURE_CUDA_ENABLED 1
+
+// Core
+#ifndef AT_FEATURE_CUDA_ENABLED
+    #ifdef _HAS_CXX23
+	    #define AT_CXX23_ENABLED 1
+    #endif
+    #ifndef _HAS_CXX23
+        #if __cplusplus >= 202302L
+            #define AT_CXX23_ENABLED 1
+        #endif
     #endif
 #endif
 
-#ifdef _HAS_CXX23
+// Intellisense for cuda
+#ifdef __INTELLISENSE__
+    #define AT_KARG2(grid, block)
+    #define AT_KARG3(grid, block, sh_mem)
+    #define AT_KARG4(grid, block, sh_mem, stream)
+#else
+    #ifdef __CUDACC__
+	    #define AT_KARG2(grid, block) <<<grid, block>>>
+	    #define AT_KARG3(grid, block, sh_mem) <<<grid, block, sh_mem>>>
+	    #define AT_KARG4(grid, block, sh_mem, stream) <<<grid, block, sh_mem, stream>>>
+    #else
+        #define AT_KARG2(grid, block)
+        #define AT_KARG3(grid, block, sh_mem)
+        #define AT_KARG4(grid, block, sh_mem, stream)
+    #endif
+#endif
+
+#ifdef AT_CXX23_ENABLED
 #include <stacktrace>
 #endif
 
 // Options
-//#define AT_FEATURE_RAYTRACING_ENABLED 1
 #define AT_ENABLE_LOG 1 
 #define AT_LOG_IGNORE_VERBOSE 1
 
@@ -162,7 +186,7 @@ namespace Anthem::Core::BaseUtility {
 
 #define AT_CHECKRES(expr) if(auto atRes = (expr);atRes!=VK_SUCCESS){ANTH_LOGE("Returned:",atRes);}
 
-#ifdef _HAS_CXX23
+#ifdef AT_CXX23_ENABLED
     #define ANTH_CLASSNAME (Anthem::Core::AnthemLogger::getInstance().classNameTrack(std::stacktrace::current().at(0).description()).c_str())
 #else
     #ifdef _MSC_VER

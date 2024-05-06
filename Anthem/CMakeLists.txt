@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Anthem)
+project(Anthem LANGUAGES CUDA CXX)
 
 # Compile Arguments
 #add_compile_definitions(AT_FEATURE_RAYTRACING_ENABLED)
@@ -14,6 +14,7 @@ set(AT_REQ_VULKAN_BASE "C:/VulkanSDK/1.3.261.1")
 set(AT_REQ_GLFW3_BASE "C:/Program Files (x86)/GLFW/")
 set(AT_REQ_FREETYPE_BASE "C:/Program Files (x86)/freetype/")
 set(AT_REQ_OPENCV_INSTALL "C:/Users/Huang/Desktop/Work/OpenCV/opencv/sources/build/install")
+set(AT_REQ_CUDA_INCLUDE "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4/include")
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
@@ -51,6 +52,7 @@ include_directories(${AT_REQ_GLFW3_BASE}/include)
 include_directories(${AT_REQ_FREETYPE_BASE}/include/freetype2)
 include_directories(${AT_REQ_OPENCV_INSTALL}/include)
 include_directories("imgui2/")
+include_directories(${AT_REQ_CUDA_INCLUDE})
 
 file(GLOB_RECURSE SOURCE_0 "include/*.h")
 file(GLOB_RECURSE SOURCE_1 "src/*.cpp")
@@ -61,6 +63,7 @@ file(GLOB_RECURSE SOURCE_IMGUI_2 "imgui2/*.cpp")
 
 
 file(GLOB SOURCE_STAGES "demo/*.cpp")
+file(GLOB SOURCE_STAGES_CUDA "demo/*.cu")
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -71,3 +74,13 @@ foreach( SRC_FILE_NAME ${SOURCE_STAGES} )
     add_executable( ${SRC_FILE_NAME_SHORT} ${SRC_FILE_NAME} ${SOURCE_0} ${SOURCE_1} ${SOURCE_IMGUI} ${SOURCE_IMGUI_2})
     target_link_libraries( ${SRC_FILE_NAME_SHORT} Vulkan::Vulkan ${glfw3_LIB} ${FREETYPE_LIBRARY} ${OpenCV_LIBS})
 endforeach( SRC_FILE_NAME ${SOURCE_STAGES} )
+
+foreach( SRC_FILE_NAME ${SOURCE_STAGES_CUDA} )
+    get_filename_component( SRC_FILE_NAME_SHORT ${SRC_FILE_NAME} NAME_WE )
+
+    add_executable( ${SRC_FILE_NAME_SHORT} ${SRC_FILE_NAME} ${SOURCE_0} ${SOURCE_1} ${SOURCE_IMGUI} ${SOURCE_IMGUI_2})
+    set_property(TARGET ${SRC_FILE_NAME_SHORT} PROPERTY CUDA_ARCHITECTURES  75)
+    set_property(TARGET ${SRC_FILE_NAME_SHORT} PROPERTY CXX_STANDARD 20)
+    target_compile_definitions(${SRC_FILE_NAME_SHORT} PUBLIC AT_FEATURE_CUDA_ENABLED)
+    target_link_libraries( ${SRC_FILE_NAME_SHORT} Vulkan::Vulkan ${glfw3_LIB} ${FREETYPE_LIBRARY} ${OpenCV_LIBS} cuda)
+endforeach( SRC_FILE_NAME ${SOURCE_STAGES_CUDA} )

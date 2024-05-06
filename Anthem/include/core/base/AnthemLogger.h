@@ -84,7 +84,7 @@ namespace Anthem{
             }
 
             void exceptionTrigger() {
-#ifdef _HAS_CXX23
+#ifdef AT_CXX23_ENABLED
                 std::cout << std::endl;
                 std::cout << ANTH_LOGGER_RED << "Traceback Stack:" << ANTH_LOGGER_RESET << std::endl;
                 auto stacktrace = std::stacktrace::current();
