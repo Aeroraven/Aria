@@ -78,5 +78,4 @@ void main(uint GlobalInvo: SV_DispatchThreadID, uint3 WorkGroupId:SV_GroupID, ui
     if(elemId<bitCandidates){
         gBins[elemId*numBlocks+blockId] = localBlockSum[elemId];
     }
-    AllMemoryBarrierWithGroupSync();
 }
