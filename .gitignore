@@ -21,3 +21,5 @@ ComputerGraphics/Iris/.vs/Iris/v16/.suo
 *.db
 *.ipch
 Active-v3
+/Anthem/assets/radixbins.txt
+/Anthem/assets/radixresult.txt
