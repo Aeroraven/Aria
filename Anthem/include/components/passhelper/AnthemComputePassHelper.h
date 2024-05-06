@@ -11,11 +11,12 @@ namespace Anthem::Components::PassHelper {
 	protected:
 		AnthemSimpleToyRenderer* rd;
 		AnthemShaderModule* shader;
-		std::vector<std::vector<AnthemDescriptorSetEntry>> descLayout;
+		
 		uint32_t* cmdIdx;
 		uint32_t copies;
 
 	public:
+		std::vector<std::vector<AnthemDescriptorSetEntry>> descLayout;
 		AnthemComputePipeline* pipeline;
 		std::vector<AnthemPushConstant*> pushConstants = {};
 		std::array<uint32_t, 3> workGroupSize;

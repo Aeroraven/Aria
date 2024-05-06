@@ -283,6 +283,7 @@ namespace Anthem::Core{
         bool drComputeDispatch(uint32_t cmdIdx, uint32_t workgroupX, uint32_t workgroupY, uint32_t workgroupZ);
 
         bool drCopyImageToSwapchainImage(AnthemImage* image,uint32_t swapchainImageIdx, uint32_t cmdIdx);
+        //bool drForceSwapchainRepresentable(uint32_t swapchainImageIdx, uint32_t cmdIdx);
         bool drCopySwapchainImageToImage(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx);
         bool drCopyImageToSwapchainImageWithFormatConv(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx);
         bool drCopySwapchainImageToImageWithFormatConv(AnthemImage* image, uint32_t swapchainImageIdx, uint32_t cmdIdx);

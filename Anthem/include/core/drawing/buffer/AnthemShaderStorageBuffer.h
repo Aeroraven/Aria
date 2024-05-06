@@ -47,6 +47,25 @@ namespace Anthem::Core{
             this->bufferProp.ssboCounter.resize(numCopies);
             return true;
         }
+        void RWBarrier(uint32_t cmdIdx,uint32_t copyId) {
+            VkBufferMemoryBarrier barrier = {};
+            barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.buffer = this->bufferProp.ssbo[copyId].buffer;
+            barrier.offset = 0;
+            barrier.size = VK_WHOLE_SIZE;
+
+            vkCmdPipelineBarrier(*this->cmdBufs->getCommandBuffer(cmdIdx),
+                				VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                				0,
+                				0, nullptr,
+                				1, &barrier,
+                				0, nullptr);
+        }
         bool specifyUsage(AnthemSSBOUsage bufferUsage){
             this->usage = bufferUsage;
             return true;
