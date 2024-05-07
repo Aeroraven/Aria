@@ -48,6 +48,7 @@
     #define AT_KARG2(grid, block)
     #define AT_KARG3(grid, block, sh_mem)
     #define AT_KARG4(grid, block, sh_mem, stream)
+    #define __CUDACC__
 #else
     #ifdef __CUDACC__
 	    #define AT_KARG2(grid, block) <<<grid, block>>>
