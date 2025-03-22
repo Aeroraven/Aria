@@ -3,7 +3,9 @@
 This repository serves as the record for the time I used to learn miscellaneous algorithms.
 
 - **Aria**: Some scenes rendered via WebGL2
+  - No third-party library (like `three.js` or `babylon.js`) is used
 - **Anthem**: Some scenes rendered via Vulkan
+  - The project is aimed at learning (including programming language basics), so the architectural design is messy. This has been alleviated in refactored version [Ifrit-v2](https://github.com/Aeroraven/ifrit-v2)
 
 
 
