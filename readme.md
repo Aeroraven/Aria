@@ -7,6 +7,8 @@ This repository serves as the record for the time I used to learn miscellaneous 
 
 
 
+Some WebGL2 screenshots below were made using integrated graphics card, so the fps might matter.
+
 | Anthem (Vulkan) / Volume Lighting (AD-29)     | Anthem (Vulkan) / Ocean (AD-30)                     |
 | --------------------------------------------- | --------------------------------------------------- |
 | ![](Imgs/test_ad29.png)                       | ![](Imgs/test_ad30.png)                             |
