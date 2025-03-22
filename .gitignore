@@ -15,7 +15,10 @@ MachineLearning/MNISTGAN/mnist_data/MNIST/raw/t10k-images-idx3-ubyte
 MachineLearning/MNISTGAN/mnist_data/MNIST/raw/t10k-labels-idx1-ubyte
 MachineLearning/MNISTGAN/mnist_data/MNIST/raw/train-labels-idx1-ubyte
 *.bmp
-*.jpg
+Aria-v1/*.jpg
+Aria-v2/*.jpg
+Aria-v0/*.jpg
+Anthem/*.jpg
 *.tga
 ComputerGraphics/Iris/.vs/Iris/v16/.suo
 *.db
